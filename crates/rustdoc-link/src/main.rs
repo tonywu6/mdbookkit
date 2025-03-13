@@ -35,6 +35,10 @@ mod terminal;
 struct BuildOptions {
     #[arg(long)]
     #[serde(default)]
+    rust_analyzer: Option<String>,
+
+    #[arg(long)]
+    #[serde(default)]
     manifest_dir: Option<PathBuf>,
 
     #[arg(long)]

@@ -1,9 +1,0 @@
-- [ ] jupytext
-- [ ] local links
-- [x] let \_: T = T;
-  - [x] turbofish
-- [x] strict parsing
-- [x] cache trait and use toml text
-- [x] spinner
-- [x] cache local link
-- [ ] ra-multiplex

@@ -161,7 +161,12 @@ impl Server {
                 .service(router)
         });
 
-        let proc = Command::new("rust-analyzer")
+        let proc = env
+            .build_opts
+            .rust_analyzer
+            .as_deref()
+            .unwrap_or("rust-analyzer")
+            .pipe(Command::new)
             .current_dir(env.crate_dir.path())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
