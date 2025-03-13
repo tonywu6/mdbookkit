@@ -1,30 +1,29 @@
 use std::{
     collections::HashMap,
     ops::ControlFlow,
-    path::{Path, PathBuf},
     process::Stdio,
     sync::{Arc, RwLock},
     task::Poll,
     time::Duration,
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use async_lsp::{
     concurrency::ConcurrencyLayer, panic::CatchUnwindLayer, router::Router, tracing::TracingLayer,
     LanguageServer, MainLoop, ServerSocket,
 };
-use cargo_toml::{Manifest, Product};
 use lsp_types::{
     notification::{Progress, PublishDiagnostics, ShowMessage},
     request::Request,
     ClientCapabilities, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
-    GeneralClientCapabilities, InitializeParams, InitializedParams, NumberOrString, Position,
-    PositionEncodingKind, ProgressParams, ProgressParamsValue, TextDocumentIdentifier,
-    TextDocumentItem, TextDocumentPositionParams, Url, WindowClientCapabilities, WorkDoneProgress,
-    WorkspaceFolder,
+    GeneralClientCapabilities, GotoDefinitionParams, GotoDefinitionResponse, InitializeParams,
+    InitializedParams, NumberOrString, Position, PositionEncodingKind, ProgressParams,
+    ProgressParamsValue, TextDocumentIdentifier, TextDocumentItem, TextDocumentPositionParams, Url,
+    WindowClientCapabilities, WorkDoneProgress, WorkspaceFolder,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use tap::TapFallible;
 use tokio::{
     process::Command,
     sync::{mpsc, OwnedSemaphorePermit, Semaphore},
@@ -34,20 +33,18 @@ use tokio::{
 use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 use tower::ServiceBuilder;
 
-use crate::{sync::Subsample, BuildOptions};
+use crate::{env::Environment, sync::Subsample};
 
 #[derive(Debug, Clone)]
 pub struct Client {
-    pub server: ServerSocket,
-    pub config: Environment,
-    stabilizer: Subsample<()>,
+    pub env: Environment,
+    server: ServerSocket,
     documents: DocumentLock,
+    stabilizer: Subsample<()>,
 }
 
 impl Client {
-    pub async fn spawn(options: BuildOptions) -> Result<(Self, DisposeClient)> {
-        let config = Environment::new(options)?;
-
+    pub async fn spawn(config: Environment) -> Result<(Self, DisposeClient)> {
         let (tx, rx) = mpsc::channel(16);
 
         let stabilizer = Subsample::new(rx, Duration::from_secs(1));
@@ -108,7 +105,7 @@ impl Client {
         });
 
         let proc = Command::new("rust-analyzer")
-            .current_dir(&config.root_dir)
+            .current_dir(config.crate_dir.path())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
@@ -126,12 +123,10 @@ impl Client {
                 .unwrap();
         });
 
-        let root_uri = Url::from_directory_path(&config.root_dir).unwrap();
-
         let init = server
             .initialize(InitializeParams {
                 workspace_folders: Some(vec![WorkspaceFolder {
-                    uri: root_uri.clone(),
+                    uri: config.crate_dir.clone(),
                     name: "root".into(),
                 }]),
                 capabilities: ClientCapabilities {
@@ -164,7 +159,7 @@ impl Client {
 
         let client = Self {
             server,
-            config,
+            env: config,
             stabilizer,
             documents,
         };
@@ -176,74 +171,8 @@ impl Client {
         let document = self.documents.open(self.server.clone(), uri, text).await?;
         timeout(Duration::from_secs(60), self.stabilizer.wait())
             .await
-            .context("timed out waiting for rust-analyzer to open document")?;
+            .context("timed out waiting for rust-analyzer to finish indexing")?;
         Ok(document)
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Environment {
-    pub root_dir: PathBuf,
-    pub entrypoint: Url,
-    pub build_opts: BuildOptions,
-}
-
-impl Environment {
-    fn new(build_opts: BuildOptions) -> Result<Self> {
-        let root_dir = build_opts
-            .manifest_dir
-            .clone()
-            .map(Ok)
-            .unwrap_or_else(std::env::current_dir)?
-            .canonicalize()?;
-
-        let entrypoint = find_entrypoint(&root_dir)?;
-
-        Ok(Self {
-            root_dir,
-            entrypoint,
-            build_opts,
-        })
-    }
-}
-
-pub fn find_entrypoint<P: AsRef<Path>>(from_dir: P) -> Result<Url> {
-    let dir = from_dir.as_ref().canonicalize()?;
-
-    let path = {
-        let mut dir = dir.as_path();
-        loop {
-            let path = dir.join("Cargo.toml");
-            if path.exists() {
-                break path;
-            }
-            dir = match dir.parent() {
-                Some(dir) => dir,
-                None => {
-                    return Err(anyhow!(from_dir.as_ref().display().to_string()))
-                        .context("failed to find a Cargo.toml");
-                }
-            };
-        }
-    };
-
-    let manifest = {
-        let mut manifest = Manifest::from_path(&path)?;
-        manifest.complete_from_path(&path)?;
-        manifest
-    };
-
-    let root_url = Url::from_file_path(&path).unwrap();
-
-    if let Some(Product {
-        path: Some(lib), ..
-    }) = manifest.lib
-    {
-        Ok(root_url.join(&lib)?)
-    } else if let Some(bin) = manifest.bin.iter().find_map(|bin| bin.path.as_ref()) {
-        Ok(root_url.join(bin)?)
-    } else {
-        Err(anyhow!("{}", path.display())).context("Cargo.toml does not have a lib or bin target")
     }
 }
 
@@ -273,7 +202,7 @@ type DocumentMap = HashMap<Url, (Arc<Semaphore>, i32)>;
 impl DocumentLock {
     pub async fn open(
         &self,
-        mut sock: ServerSocket,
+        mut server: ServerSocket,
         uri: Url,
         text: String,
     ) -> Result<OpenDocument> {
@@ -288,7 +217,7 @@ impl DocumentLock {
 
         let _permit = sema.acquire_owned().await?;
 
-        sock.did_open(DidOpenTextDocumentParams {
+        server.did_open(DidOpenTextDocumentParams {
             text_document: TextDocumentItem {
                 language_id: "rust".into(),
                 uri: uri.clone(),
@@ -297,33 +226,110 @@ impl DocumentLock {
             },
         })?;
 
-        let closing = Some(DidCloseTextDocumentParams {
-            text_document: TextDocumentIdentifier { uri },
-        });
-
         Ok(OpenDocument {
-            sock,
-            closing,
+            uri,
+            server,
             _permit,
         })
     }
 }
 
+/// [OpenDocument] does not implement [Clone] because it will cause extraneous
+/// `textDocument/didClose` notifications. Cloning should be done via [Arc].
 #[derive(Debug)]
 #[must_use = "bind this to a variable or document will be immediately closed"]
 pub struct OpenDocument {
-    sock: ServerSocket,
-    closing: Option<DidCloseTextDocumentParams>,
+    uri: Url,
+    server: ServerSocket,
     _permit: OwnedSemaphorePermit,
+}
+
+impl OpenDocument {
+    pub async fn resolve(&self, position: Position) -> Result<ItemLinks> {
+        let sources = self
+            .server
+            .clone()
+            .definition(GotoDefinitionParams {
+                text_document_position_params: document_position(self.uri.clone(), position),
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            })
+            .await
+            .context("failed to request for source definition")
+            .tap_err(|err| log::warn!("{err:#?}"))
+            .unwrap_or_default()
+            .map(|defs| match defs {
+                GotoDefinitionResponse::Scalar(loc) => vec![loc.uri],
+                GotoDefinitionResponse::Array(locs) => {
+                    locs.into_iter().map(|loc| loc.uri).collect()
+                }
+                GotoDefinitionResponse::Link(links) => {
+                    links.into_iter().map(|link| link.target_uri).collect()
+                }
+            })
+            .unwrap_or_default();
+
+        let ExternalDocLinks { web, local } = self
+            .server
+            .request::<ExternalDocs>(document_position(self.uri.clone(), position))
+            .await
+            .context("failed to request for external docs")
+            .tap_err(|err| log::warn!("{err:#?}"))
+            .unwrap_or_default()
+            .context("server returned no result for external docs")?;
+
+        if web.is_none() && local.is_none() {
+            bail!("server returned no result for external docs");
+        } else {
+            Ok(ItemLinks {
+                web,
+                local,
+                defs: sources,
+            })
+        }
+    }
 }
 
 impl Drop for OpenDocument {
     fn drop(&mut self) {
-        self.sock.did_close(self.closing.take().unwrap()).ok();
+        self.server
+            .did_close(DidCloseTextDocumentParams {
+                text_document: TextDocumentIdentifier {
+                    uri: self.uri.clone(),
+                },
+            })
+            .context("error sending textDocument/didClose")
+            .tap_err(|err| log::debug!("{err}"))
+            .ok();
     }
 }
 
-pub enum ExternalDocs {}
+#[derive(Debug, Default)]
+pub struct ItemLinks {
+    pub web: Option<Url>,
+    pub local: Option<Url>,
+    pub defs: Vec<Url>,
+}
+
+impl ItemLinks {
+    pub fn is_empty(&self) -> bool {
+        self.web.is_none() && self.local.is_none()
+    }
+
+    pub fn with_fragment(mut self, fragment: Option<&str>) -> Self {
+        if let Some(fragment) = fragment {
+            if let Some(web) = &mut self.web {
+                web.set_fragment(Some(fragment));
+            }
+            if let Some(local) = &mut self.local {
+                local.set_fragment(Some(fragment));
+            }
+        }
+        self
+    }
+}
+
+enum ExternalDocs {}
 
 impl Request for ExternalDocs {
     const METHOD: &'static str = "experimental/externalDocs";
@@ -332,12 +338,12 @@ impl Request for ExternalDocs {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct ExternalDocLinks {
-    pub web: Option<Url>,
-    pub local: Option<Url>,
+struct ExternalDocLinks {
+    web: Option<Url>,
+    local: Option<Url>,
 }
 
-pub fn document_position(uri: Url, position: Position) -> TextDocumentPositionParams {
+fn document_position(uri: Url, position: Position) -> TextDocumentPositionParams {
     TextDocumentPositionParams {
         text_document: TextDocumentIdentifier { uri },
         position,

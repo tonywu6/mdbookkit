@@ -23,12 +23,15 @@ pulldown-cmark-to-cmark = { workspace = true }
 quote = "1.0.39"
 serde = { workspace = true }
 serde_json = { workspace = true }
+sha2 = "0.10.8"
 syn = "2.0.99"
 tap = { workspace = true }
+tempfile = "3.18.0"
 tokio = { workspace = true, features = [
+  "fs",
   "macros",
-  "rt-multi-thread",
   "process",
+  "rt-multi-thread",
   "time",
 ] }
 tokio-util = { version = "0.7.13", features = ["compat"] }

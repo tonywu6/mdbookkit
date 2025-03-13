@@ -2,22 +2,28 @@ use std::{
     collections::{HashMap, HashSet},
     io::{Read, Write},
     path::PathBuf,
+    sync::Arc,
 };
 
-use anyhow::Result;
+use anyhow::{Context, Result};
+use client::ItemLinks;
 use lsp_types::Position;
 use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
 use serde::Deserialize;
-use tap::{Pipe, Tap, TapFallible, TapOptional};
+use tap::{Pipe, TapFallible};
 use tokio::task::JoinSet;
 
 use crate::{
-    client::{document_position, Client, ExternalDocLinks, ExternalDocs},
-    item::ItemName,
+    cache::{Cache, Cacheable},
+    client::Client,
+    env::Environment,
+    item::{Carets, Item},
     markdown::{markdown_parser, Pages},
 };
 
+mod cache;
 mod client;
+mod env;
 mod item;
 mod markdown;
 mod sync;
@@ -28,9 +34,15 @@ struct BuildOptions {
     #[arg(long)]
     #[serde(default)]
     manifest_dir: Option<PathBuf>,
+
+    #[arg(long)]
+    #[serde(default)]
+    cache_dir: Option<PathBuf>,
+
     #[arg(long)]
     #[serde(default)]
     pub smart_punctuation: bool,
+
     #[arg(long)]
     #[serde(default)]
     pub prefer_local_links: bool,
@@ -72,22 +84,31 @@ async fn mdbook() -> Result<()> {
         } else {
             Default::default()
         };
+
         if let Some(path) = options.manifest_dir {
             options.manifest_dir = Some(context.root.join(path))
         } else {
-            options.manifest_dir = Some(context.root)
+            options.manifest_dir = Some(context.root.clone())
         }
+
+        if let Some(path) = options.cache_dir {
+            options.cache_dir = Some(context.root.join(path))
+        }
+
         options.smart_punctuation = context
             .config
             .get_deserialized_opt::<bool, _>("output.html.smart-punctuation")
             .unwrap_or_default()
             .unwrap_or(true);
+
         options
     };
 
-    let (mut client, dispose) = Client::spawn(options).await?;
+    let config = Environment::new(options)?;
 
-    let (pages, items) = book.iter().fold(
+    let (client, dispose) = Client::spawn(config).await?;
+
+    let (pages, request) = book.iter().fold(
         (Pages::default(), HashSet::new()),
         |(mut pages, mut items), item| {
             let BookItem::Chapter(ch) = item else {
@@ -96,13 +117,15 @@ async fn mdbook() -> Result<()> {
             let Some(key) = &ch.source_path else {
                 return (pages, items);
             };
-            let stream = markdown_parser(&ch.content, client.config.build_opts.smart_punctuation);
+            let stream = markdown_parser(&ch.content, client.env.build_opts.smart_punctuation);
             items.extend(pages.read(key.clone(), stream));
             (pages, items)
         },
     );
 
-    let links = client.resolve(items.into_iter().collect()).await?;
+    let request = Item::parse_all(request.iter());
+
+    let symbols = Client::request.cached::<Cache>(&client, request).await?;
 
     let mut result = book
         .iter()
@@ -113,9 +136,12 @@ async fn mdbook() -> Result<()> {
             let Some(key) = &ch.source_path else {
                 return None;
             };
+            let BuildOptions {
+                prefer_local_links, ..
+            } = client.env.build_opts;
             pages
-                .emit(key, |k| links.get(k))
-                .tap_err(|e| log::warn!("{e:?}"))
+                .emit(key, |k| symbols.get(k, prefer_local_links))
+                .tap_err(|err| log::warn!("{err:?}"))
                 .ok()
                 .map(|output| (key.clone(), output))
         })
@@ -137,7 +163,9 @@ async fn mdbook() -> Result<()> {
 }
 
 async fn markdown(options: BuildOptions) -> Result<()> {
-    let (mut client, dispose) = Client::spawn(options).await?;
+    let config = Environment::new(options)?;
+
+    let (client, dispose) = Client::spawn(config).await?;
 
     let mut pages = Pages::default();
 
@@ -145,13 +173,17 @@ async fn markdown(options: BuildOptions) -> Result<()> {
         .pipe(|mut buf| std::io::stdin().read_to_end(&mut buf).and(Ok(buf)))?
         .pipe(String::from_utf8)?;
 
-    let stream = markdown_parser(&stream, client.config.build_opts.smart_punctuation);
+    let stream = markdown_parser(&stream, client.env.build_opts.smart_punctuation);
 
-    let items = pages.read((), stream);
+    let request = Item::parse_all(pages.read((), stream).iter());
 
-    let links = client.resolve(items.into_iter().collect()).await?;
+    let symbols = Client::request.cached::<Cache>(&client, request).await?;
 
-    let output = pages.emit(&(), |k| links.get(k))?;
+    let BuildOptions {
+        prefer_local_links, ..
+    } = client.env.build_opts;
+
+    let output = pages.emit(&(), |k| symbols.get(k, prefer_local_links))?;
 
     std::io::stdout().write_all(output.as_bytes())?;
 
@@ -161,153 +193,105 @@ async fn markdown(options: BuildOptions) -> Result<()> {
 }
 
 impl Client {
-    async fn resolve(&mut self, request: Vec<String>) -> Result<ItemLinks> {
-        let src = std::fs::read_to_string(self.config.entrypoint.path())?;
+    async fn request(&self, request: Vec<Item>) -> Result<SymbolMap> {
+        let src = std::fs::read_to_string(self.env.entrypoint.path())?;
 
-        let request = ItemRequestBatch::new(&src, request);
+        let request = Request::new(&src, request);
 
-        let mut links = HashMap::new();
-
-        let local = self.config.build_opts.prefer_local_links;
+        let mut items = HashMap::new();
 
         if request.request.is_empty() {
-            return Ok(ItemLinks { links, local });
+            return Ok(SymbolMap { items });
         }
 
-        let _document = self
-            .open(self.config.entrypoint.clone(), request.context)
-            .await?;
+        let document = self
+            .open(self.env.entrypoint.clone(), request.context)
+            .await?
+            .pipe(Arc::new);
 
-        let mut tasks = JoinSet::new();
+        let mut tasks: JoinSet<Result<(Item, ItemLinks)>> = JoinSet::new();
 
-        for ItemRequest {
-            path,
-            hash,
-            position,
-        } in &request.request
-        {
-            if links.contains_key(path) {
-                continue;
-            }
-
-            let server = self.server.clone();
-            let uri = self.config.entrypoint.clone();
-            let pos = *position;
-            let path = path.clone();
-            let hash = hash.clone();
-
+        for (item, line) in request.request {
+            let document = document.clone();
             tasks.spawn(async move {
-                let ExternalDocLinks { web, local } = server
-                    .request::<ExternalDocs>(document_position(uri, pos))
-                    .await
-                    .tap_err(|err| log::warn!("{err:#?}"))
-                    .unwrap_or_default()?;
-
-                let (web, local) = if let Some(hash) = hash.as_deref() {
-                    let web = web.tap_some_mut(|u| u.set_fragment(Some(hash)));
-                    let local = local.tap_some_mut(|u| u.set_fragment(Some(hash)));
-                    (web, local)
-                } else {
-                    (web, local)
+                let positions = match item.cols {
+                    Carets::Decl(c1, c2) => &[
+                        Position::new(line as _, c1 as _),
+                        Position::new(line as _, c2 as _),
+                    ] as &[Position],
+                    Carets::Expr(c) => &[Position::new(line as _, c as _)],
                 };
-
-                if web.is_none() && local.is_none() {
-                    None
-                } else {
-                    let links = ExternalDocLinks { web, local };
-                    let key = if let Some(hash) = hash {
-                        format!("{path}#{hash}")
-                    } else {
-                        path
-                    };
-                    Some((key, links))
+                for &p in positions {
+                    let links = document
+                        .resolve(p)
+                        .await
+                        .context("error while resolving external docs")
+                        .tap_err(|e| log::debug!("{e}"))
+                        .unwrap_or_default();
+                    if !links.is_empty() {
+                        let links = links.with_fragment(item.fragment.as_deref());
+                        return Ok((item, links));
+                    }
                 }
+                Ok((item, Default::default()))
             });
         }
 
         while let Some(res) = tasks.join_next().await {
-            if let Ok(Some((key, resolved))) = res {
-                links.insert(key, resolved);
+            if let Ok(Ok((item, links))) = res {
+                items.insert(item.key, links);
             };
         }
 
-        Ok(ItemLinks { links, local })
+        Ok(SymbolMap { items })
     }
 }
 
 #[derive(Debug)]
-struct ItemRequestBatch {
+struct Request {
     context: String,
-    request: Vec<ItemRequest>,
+    request: Vec<(Item, Line)>,
 }
 
-#[derive(Debug)]
-struct ItemRequest {
-    path: String,
-    hash: Option<String>,
-    position: Position,
-}
+type Line = usize;
 
-impl ItemRequestBatch {
-    fn new(source: &str, items: Vec<String>) -> Self {
-        use syn::parse::{Parse, Parser};
+impl Request {
+    fn new(source: &str, request: Vec<Item>) -> Self {
+        let mut context = format!("{source}\nfn __6c0db446e2fa428eb93e3c71945e9654() {{\n");
 
-        let source = format!("{source}\nfn __6c0db446e2fa428eb93e3c71945e9654() {{\n");
+        let mut current = context.chars().filter(|&c| c == '\n').count();
 
-        let mut request = vec![];
-        let mut line = source.chars().filter(|&c| c == '\n').count();
-
-        let context = HashSet::<String>::from_iter(items)
+        let request = request
             .into_iter()
-            .filter_map(|name| {
-                let mut name = name.split('#');
-                let path = name.next().unwrap();
-                let item = ItemName::parse.parse_str(path).ok()?;
-                let position = item.ident().span().start();
-                if position.line == 1 {
-                    let path = path.to_owned();
-                    let hash = name.next().map(ToOwned::to_owned);
-                    Some((path, hash, position.column))
-                } else {
-                    None
-                }
-            })
-            .fold(source, |mut output, (path, hash, column)| {
+            .map(|item| {
                 use std::fmt::Write;
-                let _ = writeln!(output, "{path};");
-                let position = Position::new(line as _, column as _);
-                request.push(ItemRequest {
-                    path,
-                    hash,
-                    position,
-                });
-                line += 1;
-                output
-            });
+                let _ = writeln!(context, "{}", item.stmt);
+                let line = current;
+                current += 1;
+                (item, line)
+            })
+            .collect();
 
-        let context = context.tap_mut(|c| c.push('}'));
+        context.push('}');
 
         Self { context, request }
     }
 }
 
-struct ItemLinks {
-    links: HashMap<String, client::ExternalDocLinks>,
-    local: bool,
+#[derive(Debug)]
+struct SymbolMap {
+    items: HashMap<String, ItemLinks>,
 }
 
-impl ItemLinks {
-    fn get(&self, key: &str) -> Option<&str> {
-        self.links
-            .get(key)
-            .and_then(|links| {
-                if self.local {
-                    links.local.as_ref()
-                } else {
-                    links.web.as_ref()
-                }
-            })
-            .map(|u| u.as_str())
+impl SymbolMap {
+    fn get(&self, key: &str, local: bool) -> Option<&str> {
+        let sym = self.items.get(key)?;
+        if local {
+            sym.local.as_ref()
+        } else {
+            sym.web.as_ref()
+        }
+        .map(|u| u.as_str())
     }
 }
 
