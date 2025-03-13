@@ -4,6 +4,6 @@
   - [x] turbofish
 - [x] strict parsing
 - [x] cache trait and use toml text
-- [ ] spinner
+- [x] spinner
 - [x] cache local link
-- [ ] cache dir cannot be build dir
+- [ ] ra-multiplex

@@ -23,28 +23,71 @@ use lsp_types::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use tap::TapFallible;
+use tap::{Pipe, TapFallible};
 use tokio::{
     process::Command,
-    sync::{mpsc, OwnedSemaphorePermit, Semaphore},
+    sync::{mpsc, OnceCell, OwnedSemaphorePermit, Semaphore},
     task::JoinHandle,
     time::timeout,
 };
 use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 use tower::ServiceBuilder;
 
-use crate::{env::Environment, sync::Subsample};
+use crate::{env::Environment, log_debug, log_warning, sync::Subsample, terminal::spinner};
 
 #[derive(Debug, Clone)]
 pub struct Client {
     pub env: Environment,
-    server: ServerSocket,
-    documents: DocumentLock,
-    stabilizer: Subsample<()>,
+    server: OnceCell<Server>,
+    docs: DocumentLock,
 }
 
 impl Client {
-    pub async fn spawn(config: Environment) -> Result<(Self, DisposeClient)> {
+    pub fn new(env: Environment) -> Self {
+        let server = OnceCell::new();
+        let docs = DocumentLock::default();
+        Self { env, server, docs }
+    }
+
+    pub async fn open(&self, uri: Url, text: String) -> Result<OpenDocument> {
+        let server = self
+            .server
+            .get_or_try_init(|| Server::spawn(&self.env))
+            .await?
+            .clone();
+
+        let document = self.docs.open(server.server, uri, text).await?;
+
+        timeout(Duration::from_secs(60), server.stabilizer.wait())
+            .await
+            .context("timed out waiting for rust-analyzer to finish indexing")?;
+
+        Ok(document)
+    }
+
+    pub async fn dispose(self) -> Result<()> {
+        if let Some(server) = self.server.into_inner() {
+            server.dispose().await?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Server {
+    server: ServerSocket,
+    stabilizer: Subsample<()>,
+    background: Arc<JoinHandle<()>>,
+}
+
+impl Server {
+    async fn spawn(env: &Environment) -> Result<Self> {
+        macro_rules! ra_spinner {
+            () => {
+                "rust-analyzer"
+            };
+        }
+
         let (tx, rx) = mpsc::channel(16);
 
         let stabilizer = Subsample::new(rx, Duration::from_secs(1));
@@ -52,47 +95,61 @@ impl Client {
         let (background, mut server) = MainLoop::new_client(move |_| {
             struct State {
                 tx: mpsc::Sender<Poll<()>>,
+                percent_indexed: u32,
             }
 
-            let state = State { tx };
+            let state = State {
+                tx,
+                percent_indexed: 0,
+            };
 
             let mut router = Router::new(state);
 
             router
                 .notification::<Progress>(|state, progress| {
-                    log::debug!("{progress:#?}");
-
                     match indexing_progress(&progress) {
-                        None => log::debug!("{progress:#?}"),
                         Some(WorkDoneProgress::Begin(begin)) => {
-                            log::info!(
-                                "{} {}",
-                                begin.title,
-                                begin.message.as_deref().unwrap_or_default()
-                            );
+                            state.percent_indexed = 0;
+
+                            let msg = begin.message.as_deref().unwrap_or_default();
+                            spinner().update(ra_spinner!(), msg);
+
                             let tx = state.tx.clone();
                             tokio::spawn(async move { tx.send(Poll::Pending).await.ok() });
                         }
+
                         Some(WorkDoneProgress::End(end)) => {
-                            log::info!("{}", end.message.as_deref().unwrap_or("Done"));
-                            let tx = state.tx.clone();
-                            tokio::spawn(async move { tx.send(Poll::Ready(())).await.ok() });
-                        }
-                        Some(WorkDoneProgress::Report(report)) => {
-                            if let Some(message) = &report.message {
-                                log::info!("{message}");
+                            if state.percent_indexed >= 99 {
+                                let msg = end.message.as_deref().unwrap_or("indexing done");
+                                spinner().update(ra_spinner!(), msg);
+
+                                let tx = state.tx.clone();
+                                tokio::spawn(async move { tx.send(Poll::Ready(())).await.ok() });
                             }
                         }
+
+                        Some(WorkDoneProgress::Report(report)) => {
+                            if let Some(pc) = report.percentage {
+                                if pc >= state.percent_indexed {
+                                    state.percent_indexed = pc;
+                                }
+                            }
+                            if let Some(message) = &report.message {
+                                spinner().update(ra_spinner!(), message);
+                            }
+                        }
+
+                        None => {}
                     }
 
                     ControlFlow::Continue(())
                 })
                 .notification::<PublishDiagnostics>(|_, diagnostics| {
-                    log::debug!("{diagnostics:#?}");
+                    log::trace!("{diagnostics:#?}");
                     ControlFlow::Continue(())
                 })
                 .notification::<ShowMessage>(|_, message| {
-                    log::debug!("{message:#?}");
+                    log::trace!("{message:#?}");
                     ControlFlow::Continue(())
                 })
                 .event(|_, _: StopEvent| ControlFlow::Break(Ok(())));
@@ -105,7 +162,7 @@ impl Client {
         });
 
         let proc = Command::new("rust-analyzer")
-            .current_dir(config.crate_dir.path())
+            .current_dir(env.crate_dir.path())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
@@ -121,12 +178,13 @@ impl Client {
                 .run_buffered(stdout.compat(), stdin.compat_write())
                 .await
                 .unwrap();
-        });
+        })
+        .pipe(Arc::new);
 
         let init = server
             .initialize(InitializeParams {
                 workspace_folders: Some(vec![WorkspaceFolder {
-                    uri: config.crate_dir.clone(),
+                    uri: env.crate_dir.clone(),
                     name: "root".into(),
                 }]),
                 capabilities: ClientCapabilities {
@@ -147,7 +205,7 @@ impl Client {
             })
             .await?;
 
-        log::debug!("{init:#?}");
+        log::trace!("{init:#?}");
 
         if init.capabilities.position_encoding != Some(PositionEncodingKind::UTF8) {
             bail!("this rust-analyzer does not support utf-8 positions")
@@ -155,42 +213,32 @@ impl Client {
 
         server.initialized(InitializedParams {})?;
 
-        let documents = DocumentLock::default();
+        spinner().create(ra_spinner!(), None);
 
-        let client = Self {
+        Ok(Self {
             server,
-            env: config,
             stabilizer,
-            documents,
-        };
-
-        Ok((client, DisposeClient(background)))
+            background,
+        })
     }
 
-    pub async fn open(&self, uri: Url, text: String) -> Result<OpenDocument> {
-        let document = self.documents.open(self.server.clone(), uri, text).await?;
-        timeout(Duration::from_secs(60), self.stabilizer.wait())
-            .await
-            .context("timed out waiting for rust-analyzer to finish indexing")?;
-        Ok(document)
+    async fn dispose(self) -> Result<()> {
+        let Self {
+            mut server,
+            background,
+            ..
+        } = self;
+        server.shutdown(()).await?;
+        server.exit(())?;
+        server.emit(StopEvent)?;
+        Arc::into_inner(background)
+            .expect("dispose called while multiple references exist")
+            .await?;
+        Ok(())
     }
 }
 
 struct StopEvent;
-
-#[must_use]
-pub struct DisposeClient(JoinHandle<()>);
-
-impl DisposeClient {
-    pub async fn of(self, client: Client) -> Result<()> {
-        let Client { mut server, .. } = client;
-        server.shutdown(()).await?;
-        server.exit(())?;
-        server.emit(StopEvent)?;
-        self.0.await?;
-        Ok(())
-    }
-}
 
 #[derive(Debug, Default, Clone)]
 struct DocumentLock {
@@ -256,7 +304,7 @@ impl OpenDocument {
             })
             .await
             .context("failed to request for source definition")
-            .tap_err(|err| log::warn!("{err:#?}"))
+            .tap_err(log_warning!())
             .unwrap_or_default()
             .map(|defs| match defs {
                 GotoDefinitionResponse::Scalar(loc) => vec![loc.uri],
@@ -274,7 +322,7 @@ impl OpenDocument {
             .request::<ExternalDocs>(document_position(self.uri.clone(), position))
             .await
             .context("failed to request for external docs")
-            .tap_err(|err| log::warn!("{err:#?}"))
+            .tap_err(log_warning!())
             .unwrap_or_default()
             .context("server returned no result for external docs")?;
 
@@ -299,7 +347,7 @@ impl Drop for OpenDocument {
                 },
             })
             .context("error sending textDocument/didClose")
-            .tap_err(|err| log::debug!("{err}"))
+            .tap_err(log_debug!())
             .ok();
     }
 }

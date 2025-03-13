@@ -56,8 +56,18 @@ impl Environment {
                 let entry = crate_dir.join(bin)?;
                 Ok((crate_dir, entry))
             } else {
-                Err(anyhow!("{}", manifest_path.display()))
-                    .context("Cargo.toml does not have a lib or bin target")
+                Err(anyhow!(
+                    "help: resolved Cargo.toml is {}",
+                    manifest_path.display()
+                ))
+                .pipe(|r| {
+                    if manifest.workspace.is_some() {
+                        r.context("help: to use in a workspace, set `manifest-dir` option to root of a member crate")
+                    } else {
+                        r
+                    }
+                })
+                .context("Cargo.toml does not have a lib or bin target")
             }
         }?;
 

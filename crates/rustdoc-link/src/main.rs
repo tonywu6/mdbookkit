@@ -6,7 +6,6 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use client::ItemLinks;
 use lsp_types::Position;
 use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
 use serde::Deserialize;
@@ -15,18 +14,21 @@ use tokio::task::JoinSet;
 
 use crate::{
     cache::{Cache, Cacheable},
-    client::Client,
+    client::{Client, ItemLinks},
     env::Environment,
     item::{Carets, Item},
     markdown::{markdown_parser, Pages},
+    terminal::{spinner, TermLogger},
 };
 
 mod cache;
 mod client;
 mod env;
+mod error;
 mod item;
 mod markdown;
 mod sync;
+mod terminal;
 
 #[derive(clap::Parser, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "kebab-case")]
@@ -63,7 +65,7 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<()> {
     use clap::Parser;
-    env_logger::init();
+    TermLogger::init();
     match Command::parse().command {
         Some(Commands::Supports { .. }) => Ok(()),
         Some(Commands::Markdown(options)) => markdown(options).await,
@@ -106,7 +108,7 @@ async fn mdbook() -> Result<()> {
 
     let config = Environment::new(options)?;
 
-    let (client, dispose) = Client::spawn(config).await?;
+    let client = Client::new(config);
 
     let (pages, request) = book.iter().fold(
         (Pages::default(), HashSet::new()),
@@ -141,7 +143,7 @@ async fn mdbook() -> Result<()> {
             } = client.env.build_opts;
             pages
                 .emit(key, |k| symbols.get(k, prefer_local_links))
-                .tap_err(|err| log::warn!("{err:?}"))
+                .tap_err(log_warning!())
                 .ok()
                 .map(|output| (key.clone(), output))
         })
@@ -155,7 +157,7 @@ async fn mdbook() -> Result<()> {
         }
     });
 
-    dispose.of(client).await?;
+    client.dispose().await?;
 
     serde_json::to_string(&book)?.pipe(|out| std::io::stdout().write_all(out.as_bytes()))?;
 
@@ -165,7 +167,7 @@ async fn mdbook() -> Result<()> {
 async fn markdown(options: BuildOptions) -> Result<()> {
     let config = Environment::new(options)?;
 
-    let (client, dispose) = Client::spawn(config).await?;
+    let client = Client::new(config);
 
     let mut pages = Pages::default();
 
@@ -187,7 +189,7 @@ async fn markdown(options: BuildOptions) -> Result<()> {
 
     std::io::stdout().write_all(output.as_bytes())?;
 
-    dispose.of(client).await?;
+    client.dispose().await?;
 
     Ok(())
 }
@@ -209,6 +211,8 @@ impl Client {
             .await?
             .pipe(Arc::new);
 
+        spinner().create("resolve", Some(request.request.len() as _));
+
         let mut tasks: JoinSet<Result<(Item, ItemLinks)>> = JoinSet::new();
 
         for (item, line) in request.request {
@@ -221,18 +225,25 @@ impl Client {
                     ] as &[Position],
                     Carets::Expr(c) => &[Position::new(line as _, c as _)],
                 };
+
+                spinner().task("resolve", &item.key);
+
                 for &p in positions {
                     let links = document
                         .resolve(p)
                         .await
                         .context("error while resolving external docs")
-                        .tap_err(|e| log::debug!("{e}"))
+                        .tap_err(log_debug!())
                         .unwrap_or_default();
+
                     if !links.is_empty() {
+                        spinner().done("resolve", &item.key);
                         let links = links.with_fragment(item.fragment.as_deref());
                         return Ok((item, links));
                     }
                 }
+
+                spinner().done("resolve", &item.key);
                 Ok((item, Default::default()))
             });
         }
@@ -242,6 +253,8 @@ impl Client {
                 items.insert(item.key, links);
             };
         }
+
+        spinner().finish("resolve", "done");
 
         Ok(SymbolMap { items })
     }

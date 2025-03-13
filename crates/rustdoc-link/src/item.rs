@@ -1,3 +1,4 @@
+use anyhow::Context;
 use syn::{
     parenthesized,
     parse::{End, Parse, ParseStream, Parser},
@@ -6,6 +7,8 @@ use syn::{
     PathArguments, QSelf, Token, TypePath,
 };
 use tap::TapFallible;
+
+use crate::log_debug;
 
 #[derive(Debug)]
 pub struct Item {
@@ -106,7 +109,8 @@ impl Item {
     {
         iter.filter_map(|link| {
             Item::parse(link.as_ref())
-                .tap_err(|err| log::trace!("failed to parse {}: {err:?}", link.as_ref()))
+                .with_context(|| format!("could not parse {:?}", link.as_ref()))
+                .tap_err(log_debug!())
                 .ok()
         })
         .collect()
