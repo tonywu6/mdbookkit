@@ -11,16 +11,17 @@ similar.opt-level = 3
 
 [workspace]
 default-members = ["crates/*"]
-members = ["crates/*"]
+members = ["crates/*", "tools/cargo-bin", "tools/rust-analyzer"]
 resolver = "2"
 
 [workspace.dependencies]
 anyhow = "1.0.95"
+cargo-run-bin = { version = "1.7.4", default-features = false }
 clap = { version = "4.5.31", features = ["derive"] }
 env_logger = "0.11.6"
 insta = { version = "1.40.0", features = ["yaml"] }
 log = "0.4.26"
-mdbook = { version = "0.4.46", default-features = false }
+mdbook = { version = "0.4.47", default-features = false }
 pulldown-cmark = "0.13.0"
 pulldown-cmark-to-cmark = "21.0.0"
 serde = { version = "1", features = ["derive"] }
@@ -28,3 +29,6 @@ serde_json = "1.0.139"
 tap = "1.0.1"
 tokio = { version = "1", features = ["macros"] }
 toml = "0.5"
+
+[workspace.metadata.bin]
+mdbook = { version = "0.4.47" }
