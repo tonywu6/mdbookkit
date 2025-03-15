@@ -4,21 +4,46 @@ use std::{
     time::Duration,
 };
 
+use anyhow::{bail, Result};
 use tokio::{
     sync::{mpsc, Notify},
     task::JoinHandle,
-    time::sleep,
+    time,
 };
 
+pub struct EventSampling {
+    pub buffer: Duration,
+    pub timeout: Duration,
+}
+
+impl EventSampling {
+    pub fn using<T>(self, rx: mpsc::Receiver<Poll<T>>) -> EventSampler<T>
+    where
+        T: Clone + Send + Sync + 'static,
+    {
+        EventSampler::new(rx, self)
+    }
+}
+
 #[derive(Debug, Clone)]
-pub struct Subsample<T> {
-    state: Arc<RwLock<Poll<T>>>,
+pub struct EventSampler<T> {
+    state: Arc<RwLock<State<T>>>,
     event: Arc<Notify>,
 }
 
-impl<T: Clone + Send + Sync + 'static> Subsample<T> {
-    pub fn new(mut rx: mpsc::Receiver<Poll<T>>, wait: Duration) -> Self {
-        let state = Arc::new(RwLock::new(Poll::Pending));
+#[derive(Debug, Clone)]
+enum State<T> {
+    Pending,
+    Ready(T),
+    Timeout,
+}
+
+impl<T: Clone + Send + Sync + 'static> EventSampler<T> {
+    fn new(
+        mut rx: mpsc::Receiver<Poll<T>>,
+        EventSampling { buffer, timeout }: EventSampling,
+    ) -> Self {
+        let state = Arc::new(RwLock::new(State::Pending));
         let event = Arc::new(Notify::new());
 
         tokio::spawn({
@@ -26,20 +51,28 @@ impl<T: Clone + Send + Sync + 'static> Subsample<T> {
             let event = event.clone();
             async move {
                 let mut abort: Option<JoinHandle<()>> = None;
-                while let Some(value) = rx.recv().await {
+                while let Some(value) = time::timeout(timeout, rx.recv()).await.transpose() {
                     if let Some(abort) = abort.take() {
                         abort.abort();
                     }
-                    if value.is_ready() {
-                        let event = event.clone();
-                        let state = state.clone();
-                        abort = Some(tokio::spawn(async move {
-                            sleep(wait).await;
-                            *state.write().unwrap() = value;
+                    match value {
+                        Ok(Poll::Ready(value)) => {
+                            let event = event.clone();
+                            let state = state.clone();
+                            abort = Some(tokio::spawn(async move {
+                                time::sleep(buffer).await;
+                                *state.write().unwrap() = State::Ready(value);
+                                event.notify_waiters();
+                            }));
+                        }
+                        Ok(Poll::Pending) => {
+                            *state.write().unwrap() = State::Pending;
                             event.notify_waiters();
-                        }));
-                    } else {
-                        *state.write().unwrap() = value;
+                        }
+                        Err(_) => {
+                            *state.write().unwrap() = State::Timeout;
+                            event.notify_waiters();
+                        }
                     }
                 }
             }
@@ -48,11 +81,13 @@ impl<T: Clone + Send + Sync + 'static> Subsample<T> {
         Self { event, state }
     }
 
-    pub async fn wait(&self) -> T {
+    pub async fn wait(&self) -> Result<T> {
         loop {
             {
-                if let Poll::Ready(value) = self.state.read().unwrap().clone() {
-                    return value;
+                match self.state.read().unwrap().clone() {
+                    State::Pending => {}
+                    State::Ready(value) => return Ok(value),
+                    State::Timeout => bail!("timed out waiting for ready event"),
                 }
             }
             self.event.notified().await;

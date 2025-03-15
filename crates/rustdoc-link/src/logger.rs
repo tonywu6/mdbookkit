@@ -1,31 +1,47 @@
 use std::{
     collections::BTreeSet,
-    fmt::Display,
+    fmt, io,
     sync::mpsc,
     thread,
     time::{Duration, Instant},
 };
 
+use anyhow::Context;
 use console::{style, Term};
 use env_logger::Logger;
 use indicatif::{HumanDuration, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{Level, LevelFilter, Log};
 use once_cell::sync::Lazy;
-use tap::Pipe;
+use tap::{Pipe, TapFallible};
 
 use crate::preprocessor_name;
 
+#[macro_export]
+macro_rules! log_debug {
+    () => {
+        |err| log::debug!("{err:?}")
+    };
+}
+
+#[macro_export]
+macro_rules! log_warning {
+    () => {
+        |err| log::warn!("{err}")
+    };
+}
+
+/// Either a [console::Term] or an [env_logger::Logger].
 #[derive(Debug)]
-pub enum TermLogger {
-    Term(Term),
+pub enum ConsoleLogger {
+    Console(Term),
     Logger(Logger),
 }
 
-impl Log for TermLogger {
+impl Log for ConsoleLogger {
     fn enabled(&self, metadata: &log::Metadata) -> bool {
         match self {
-            TermLogger::Logger(logger) => logger.enabled(metadata),
-            TermLogger::Term(_) => {
+            ConsoleLogger::Logger(logger) => logger.enabled(metadata),
+            ConsoleLogger::Console(_) => {
                 if is_from_main(metadata.target()) {
                     metadata.level() <= Level::Info
                 } else {
@@ -37,15 +53,19 @@ impl Log for TermLogger {
 
     fn log(&self, record: &log::Record) {
         match self {
-            TermLogger::Logger(logger) => logger.log(record),
-            TermLogger::Term(term) => {
+            ConsoleLogger::Logger(logger) => logger.log(record),
+            ConsoleLogger::Console(term) => {
                 if !self.enabled(record.metadata()) {
                     return;
                 }
-                let message = if is_from_main(record.target()) {
-                    format!("{}", record.args())
-                } else {
-                    format!("[{}] {}", record.target(), record.args())
+                let Ok(message) = Vec::<u8>::new()
+                    .pipe(|mut buf| log_format(&mut buf, record).and(Ok(buf)))
+                    .context("failed to emit log message")
+                    .and_then(|buf| Ok(String::from_utf8(buf)?))
+                    .context("failed to emit log message")
+                    .tap_err(log_debug!())
+                else {
+                    return;
                 };
                 let message = match record.level() {
                     Level::Warn => style(message).yellow(),
@@ -59,34 +79,24 @@ impl Log for TermLogger {
 
     fn flush(&self) {
         match self {
-            TermLogger::Logger(logger) => logger.flush(),
-            TermLogger::Term(_) => {}
+            ConsoleLogger::Logger(logger) => logger.flush(),
+            ConsoleLogger::Console(_) => {}
         }
     }
 }
 
-impl TermLogger {
+impl ConsoleLogger {
     #[must_use]
     pub fn new() -> Self {
         if logging_enabled() {
-            use std::io::Write;
             env_logger::Builder::new()
                 // https://github.com/rust-lang/mdBook/blob/07b25cdb643899aeca2307fbab7690fa7eeec36b/src/main.rs#L100-L109
-                .format(|formatter, record| {
-                    writeln!(
-                        formatter,
-                        "{} [{}] ({}): {}",
-                        chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
-                        record.level(),
-                        record.target(),
-                        record.args()
-                    )
-                })
+                .format(log_format)
                 .parse_default_env()
                 .build()
                 .pipe(Self::Logger)
         } else {
-            Self::Term(Term::stderr())
+            Self::Console(Term::stderr())
         }
     }
 
@@ -94,6 +104,17 @@ impl TermLogger {
         log::set_boxed_logger(Box::new(Self::new())).expect("log init should not fail");
         log::set_max_level(LevelFilter::max());
     }
+}
+
+fn log_format<W: io::Write>(formatter: &mut W, record: &log::Record) -> io::Result<()> {
+    writeln!(
+        formatter,
+        "{} [{}] ({}): {}",
+        chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
+        record.level(),
+        record.target(),
+        record.args()
+    )
 }
 
 fn get_logging_enabled() -> bool {
@@ -126,32 +147,48 @@ impl Spinner {
         self
     }
 
-    pub fn update<D: Display>(&self, prefix: &str, update: D) -> &Self {
+    pub fn update<D: fmt::Display>(&self, prefix: &str, update: D) -> &Self {
         let key = prefix.into();
         let update = update.to_string();
         self.tx.send(Message::Update { key, update }).ok();
         self
     }
 
-    pub fn task<D: Display>(&self, prefix: &str, task: D) -> &Self {
-        let key = prefix.into();
+    pub fn task<D: fmt::Display>(&self, prefix: &str, task: D) -> SpinnerHandle {
+        let key = String::from(prefix);
         let task = task.to_string();
-        self.tx.send(Message::Task { key, task }).ok();
-        self
+
+        let done = Message::Done {
+            key: key.clone(),
+            task: task.clone(),
+        };
+
+        let open = Message::Task { key, task };
+        self.tx.send(open).ok();
+
+        let tx = self.tx.clone();
+        let done = Some(done);
+        SpinnerHandle { tx, done }
     }
 
-    pub fn done<D: Display>(&self, prefix: &str, task: D) -> &Self {
-        let key = prefix.into();
-        let task = task.to_string();
-        self.tx.send(Message::Done { key, task }).ok();
-        self
-    }
-
-    pub fn finish<D: Display>(&self, prefix: &str, update: D) -> &Self {
+    pub fn finish<D: fmt::Display>(&self, prefix: &str, update: D) {
         let key = prefix.into();
         let update = update.to_string();
         self.tx.send(Message::Finish { key, update }).ok();
-        self
+    }
+}
+
+#[must_use]
+pub struct SpinnerHandle {
+    tx: mpsc::Sender<Message>,
+    done: Option<Message>,
+}
+
+impl Drop for SpinnerHandle {
+    fn drop(&mut self) {
+        if let Some(done) = self.done.take() {
+            self.tx.send(done).ok();
+        }
     }
 }
 

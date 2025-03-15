@@ -17,18 +17,17 @@ use crate::{
     client::{Client, ItemLinks},
     env::Environment,
     item::{Carets, Item},
+    logger::{spinner, ConsoleLogger},
     markdown::{markdown_parser, Pages},
-    terminal::{spinner, TermLogger},
 };
 
 mod cache;
 mod client;
 mod env;
-mod error;
 mod item;
+mod logger;
 mod markdown;
 mod sync;
-mod terminal;
 
 #[derive(clap::Parser, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "kebab-case")]
@@ -69,7 +68,7 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<()> {
     use clap::Parser;
-    TermLogger::init();
+    ConsoleLogger::init();
     match Command::parse().command {
         Some(Commands::Supports { .. }) => Ok(()),
         Some(Commands::Markdown(options)) => markdown(options).await,
@@ -210,6 +209,8 @@ impl Client {
             return Ok(SymbolMap { items });
         }
 
+        log::trace!("request context\n\n{}\n", request.context);
+
         let document = self
             .open(self.env.entrypoint.clone(), request.context)
             .await?
@@ -230,7 +231,7 @@ impl Client {
                     Carets::Expr(c) => &[Position::new(line as _, c as _)],
                 };
 
-                spinner().task("resolve", &item.key);
+                let _task = spinner().task("resolve", &item.key);
 
                 for &p in positions {
                     let links = document
@@ -240,14 +241,14 @@ impl Client {
                         .tap_err(log_debug!())
                         .unwrap_or_default();
 
+                    log::trace!("resolve {} {links:#?}", item.key);
+
                     if !links.is_empty() {
-                        spinner().done("resolve", &item.key);
                         let links = links.with_fragment(item.fragment.as_deref());
                         return Ok((item, links));
                     }
                 }
 
-                spinner().done("resolve", &item.key);
                 Ok((item, Default::default()))
             });
         }

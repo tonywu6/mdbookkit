@@ -13,27 +13,31 @@ use async_lsp::{
     LanguageServer, MainLoop, ServerSocket,
 };
 use lsp_types::{
-    notification::{Progress, PublishDiagnostics, ShowMessage},
+    notification::{LogMessage, Progress, PublishDiagnostics, ShowMessage},
     request::Request,
-    ClientCapabilities, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
+    ClientCapabilities, ClientInfo, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
     GeneralClientCapabilities, GotoDefinitionParams, GotoDefinitionResponse, InitializeParams,
-    InitializedParams, NumberOrString, Position, PositionEncodingKind, ProgressParams,
-    ProgressParamsValue, TextDocumentIdentifier, TextDocumentItem, TextDocumentPositionParams, Url,
+    InitializedParams, LogMessageParams, MessageType, NumberOrString, Position,
+    PositionEncodingKind, ProgressParams, ProgressParamsValue, ShowMessageParams,
+    TextDocumentIdentifier, TextDocumentItem, TextDocumentPositionParams, Url,
     WindowClientCapabilities, WorkDoneProgress, WorkspaceFolder,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tap::{Pipe, TapFallible};
 use tokio::{
-    process::Command,
     sync::{mpsc, OnceCell, OwnedSemaphorePermit, Semaphore},
     task::JoinHandle,
-    time::timeout,
 };
 use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 use tower::ServiceBuilder;
 
-use crate::{env::Environment, log_debug, log_warning, sync::Subsample, terminal::spinner};
+use crate::{
+    env::Environment,
+    log_debug, log_warning,
+    logger::spinner,
+    sync::{EventSampler, EventSampling},
+};
 
 #[derive(Debug, Clone)]
 pub struct Client {
@@ -58,7 +62,9 @@ impl Client {
 
         let document = self.docs.open(server.server, uri, text).await?;
 
-        timeout(Duration::from_secs(60), server.stabilizer.wait())
+        server
+            .stabilizer
+            .wait()
             .await
             .context("timed out waiting for rust-analyzer to finish indexing")?;
 
@@ -76,7 +82,7 @@ impl Client {
 #[derive(Debug, Clone)]
 struct Server {
     server: ServerSocket,
-    stabilizer: Subsample<()>,
+    stabilizer: EventSampler<()>,
     background: Arc<JoinHandle<()>>,
 }
 
@@ -90,7 +96,11 @@ impl Server {
 
         let (tx, rx) = mpsc::channel(16);
 
-        let stabilizer = Subsample::new(rx, Duration::from_secs(1));
+        let stabilizer = EventSampling {
+            buffer: Duration::from_secs(1),
+            timeout: Duration::from_secs(15),
+        }
+        .using(rx);
 
         let (background, mut server) = MainLoop::new_client(move |_| {
             struct State {
@@ -139,7 +149,9 @@ impl Server {
                             }
                         }
 
-                        None => {}
+                        None => {
+                            log::trace!("{progress:#?}")
+                        }
                     }
 
                     ControlFlow::Continue(())
@@ -148,11 +160,15 @@ impl Server {
                     log::trace!("{diagnostics:#?}");
                     ControlFlow::Continue(())
                 })
-                .notification::<ShowMessage>(|_, message| {
-                    log::trace!("{message:#?}");
+                .notification::<ShowMessage>(|_, ShowMessageParams { typ, message }| {
+                    log_message(message, typ);
                     ControlFlow::Continue(())
                 })
-                .event(|_, _: StopEvent| ControlFlow::Break(Ok(())));
+                .notification::<LogMessage>(|_, LogMessageParams { typ, message }| {
+                    log_message(message, typ);
+                    ControlFlow::Continue(())
+                })
+                .event::<StopEvent>(|_, _| ControlFlow::Break(Ok(())));
 
             ServiceBuilder::new()
                 .layer(TracingLayer::default())
@@ -162,11 +178,7 @@ impl Server {
         });
 
         let proc = env
-            .build_opts
-            .rust_analyzer
-            .as_deref()
-            .unwrap_or("rust-analyzer")
-            .pipe(Command::new)
+            .command()?
             .current_dir(env.crate_dir.path())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -206,6 +218,16 @@ impl Server {
                     }),
                     ..Default::default()
                 },
+                initialization_options: Some(json! {{
+                    "cachePriming": {
+                        "enable": true,
+                        "numThreads": "physical",
+                    },
+                }}),
+                client_info: Some(ClientInfo {
+                    name: env!("CARGO_PKG_NAME").into(),
+                    version: Some(env!("CARGO_PKG_VERSION").into()),
+                }),
                 ..Default::default()
             })
             .await?;
@@ -409,12 +431,27 @@ fn indexing_progress(progress: &ProgressParams) -> Option<&WorkDoneProgress> {
         value: ProgressParamsValue::WorkDone(progress),
     } = progress
     {
-        if token == "rustAnalyzer/Indexing" {
+        if matches!(
+            token.as_ref(),
+            "rustAnalyzer/Indexing" | "rustAnalyzer/cachePriming"
+        ) {
             Some(progress)
         } else {
             None
         }
     } else {
         None
+    }
+}
+
+fn log_message(message: String, typ: MessageType) {
+    match typ {
+        MessageType::ERROR | MessageType::WARNING => {
+            log::warn!("rust-analyzer: {message}")
+        }
+        MessageType::INFO | MessageType::LOG => {
+            log::debug!("rust-analyzer: {message}")
+        }
+        _ => log::trace!("rust-analyzer: {message}"),
     }
 }

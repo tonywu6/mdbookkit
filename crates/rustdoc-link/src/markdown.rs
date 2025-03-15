@@ -152,11 +152,13 @@ impl<'input> BrokenLinkCallback<'input> for BrokenLinks {
         if inner.is_empty() {
             None
         } else {
-            Some((inner, link.reference))
+            let title = inner.clone();
+            Some((inner, title))
         }
     }
 }
 
+/// <https://github.com/rust-lang/mdBook/blob/v0.4.47/src/utils/mod.rs#L197-L208>
 fn options(smart_punctuation: bool) -> Options {
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);

@@ -15,7 +15,7 @@ use crate::{
     env::Environment,
     item::Item,
     log_debug,
-    terminal::spinner,
+    logger::spinner,
     SymbolMap,
 };
 
@@ -51,13 +51,9 @@ where
             None
         };
 
-        spinner().create("cache", None);
-
         if let Some(cached) = cached {
-            spinner().finish("cache", "found");
+            spinner().create("cache", None).finish("cache", "found");
             return Ok(cached);
-        } else {
-            spinner().finish("cache", "none reusable");
         }
 
         let symbols = self(this, request).await?;

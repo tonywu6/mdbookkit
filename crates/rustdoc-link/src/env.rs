@@ -8,7 +8,9 @@ use anyhow::{anyhow, Context, Result};
 use cargo_toml::{Manifest, Product};
 use lsp_types::Url;
 use serde::{Deserialize, Serialize};
+use shlex::Shlex;
 use tap::Pipe;
+use tokio::process::Command;
 
 use crate::BuildOptions;
 
@@ -67,7 +69,7 @@ impl Environment {
                         r
                     }
                 })
-                .context("Cargo.toml does not have a lib or bin target")
+                .context("Cargo.toml does not have any lib or bin target")
             }
         }?;
 
@@ -97,6 +99,24 @@ impl Environment {
             entrypoint,
             build_opts,
         })
+    }
+
+    pub fn command(&self) -> Result<Command> {
+        let Some(command) = self.build_opts.rust_analyzer.as_deref() else {
+            return Ok(Command::new("rust-analyzer"));
+        };
+
+        let mut words = Shlex::new(command);
+
+        let executable = words
+            .next()
+            .context("unexpected empty string for option `rust-analyzer`")?;
+
+        let mut cmd = Command::new(executable);
+
+        cmd.args(words);
+
+        Ok(cmd)
     }
 
     pub fn read_cache<C: for<'de> Deserialize<'de>>(&self) -> Result<C> {
