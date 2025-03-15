@@ -16,25 +16,25 @@ use crate::{
     item::Item,
     log_debug,
     logger::spinner,
-    SymbolMap,
+    Resolved,
 };
 
 pub trait Caching: DeserializeOwned + Serialize {
-    async fn reuse(self, env: &Environment, req: &[Item]) -> Result<SymbolMap>;
-    async fn build(env: &Environment, map: &SymbolMap) -> Result<Self>;
+    async fn reuse(self, env: &Environment, req: &[Item]) -> Result<Resolved>;
+    async fn build(env: &Environment, map: &Resolved) -> Result<Self>;
 }
 
 pub trait Cacheable<'a> {
-    async fn cached<C: Caching>(self, this: &'a Client, request: Vec<Item>) -> Result<SymbolMap>;
+    async fn cached<C: Caching>(self, this: &'a Client, request: Vec<Item>) -> Result<Resolved>;
 }
 
 impl<'a, F, R> Cacheable<'a> for F
 where
     // AsyncFnOnce
     F: FnOnce(&'a Client, Vec<Item>) -> R,
-    R: Future<Output = Result<SymbolMap>>,
+    R: Future<Output = Result<Resolved>>,
 {
-    async fn cached<C: Caching>(self, this: &'a Client, request: Vec<Item>) -> Result<SymbolMap> {
+    async fn cached<C: Caching>(self, this: &'a Client, request: Vec<Item>) -> Result<Resolved> {
         let cached = if let Ok(cache) = this
             .env
             .read_cache::<C>()
@@ -88,19 +88,19 @@ pub struct CacheV1 {
 }
 
 impl Caching for Cache {
-    async fn reuse(self, env: &Environment, req: &[Item]) -> Result<SymbolMap> {
+    async fn reuse(self, env: &Environment, req: &[Item]) -> Result<Resolved> {
         match self {
             Self::V1(cache) => cache.reuse(env, req).await,
         }
     }
 
-    async fn build(env: &Environment, map: &SymbolMap) -> Result<Self> {
+    async fn build(env: &Environment, map: &Resolved) -> Result<Self> {
         Ok(Self::V1(CacheV1::build(env, map).await?))
     }
 }
 
 impl Caching for CacheV1 {
-    async fn reuse(self, _: &Environment, req: &[Item]) -> Result<SymbolMap> {
+    async fn reuse(self, _: &Environment, req: &[Item]) -> Result<Resolved> {
         let hash = JoinSet::<Result<(String, String)>>::new()
             .tap_mut(|tasks| {
                 for dep in self.deps.iter() {
@@ -155,10 +155,10 @@ impl Caching for CacheV1 {
             })
             .collect();
 
-        Ok(SymbolMap { items })
+        Ok(Resolved { items })
     }
 
-    async fn build(env: &Environment, map: &SymbolMap) -> Result<Self> {
+    async fn build(env: &Environment, res: &Resolved) -> Result<Self> {
         let (hash, deps) = JoinSet::<Result<(String, String)>>::new()
             .tap_mut(|tasks| {
                 tasks.spawn(read_dep(env.crate_dir.join("Cargo.toml").unwrap()));
@@ -169,7 +169,7 @@ impl Caching for CacheV1 {
                 }
             })
             .tap_mut(|tasks| {
-                for dep in map
+                for dep in res
                     .items
                     .iter()
                     .filter_map(|(_, sym)| {
@@ -212,7 +212,7 @@ impl Caching for CacheV1 {
             )
             .pipe(|(hash, deps)| (format!("{:x}", hash.finalize()), deps));
 
-        let urls = map
+        let urls = res
             .items
             .iter()
             .map(|(k, s)| (k.clone(), (s.web.clone(), s.local.clone())))

@@ -198,7 +198,7 @@ async fn markdown(options: BuildOptions) -> Result<()> {
 }
 
 impl Client {
-    async fn request(&self, request: Vec<Item>) -> Result<SymbolMap> {
+    async fn request(&self, request: Vec<Item>) -> Result<Resolved> {
         let src = std::fs::read_to_string(self.env.entrypoint.path())?;
 
         let request = Request::new(&src, request);
@@ -206,7 +206,7 @@ impl Client {
         let mut items = HashMap::new();
 
         if request.request.is_empty() {
-            return Ok(SymbolMap { items });
+            return Ok(Resolved { items });
         }
 
         log::trace!("request context\n\n{}\n", request.context);
@@ -261,7 +261,7 @@ impl Client {
 
         spinner().finish("resolve", "done");
 
-        Ok(SymbolMap { items })
+        Ok(Resolved { items })
     }
 }
 
@@ -297,11 +297,11 @@ impl Request {
 }
 
 #[derive(Debug)]
-struct SymbolMap {
+struct Resolved {
     items: HashMap<String, ItemLinks>,
 }
 
-impl SymbolMap {
+impl Resolved {
     fn get(&self, key: &str, local: bool) -> Option<&str> {
         let sym = self.items.get(key)?;
         if local {

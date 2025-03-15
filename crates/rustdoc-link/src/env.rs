@@ -102,21 +102,20 @@ impl Environment {
     }
 
     pub fn command(&self) -> Result<Command> {
-        let Some(command) = self.build_opts.rust_analyzer.as_deref() else {
-            return Ok(Command::new("rust-analyzer"));
-        };
-
-        let mut words = Shlex::new(command);
-
-        let executable = words
-            .next()
-            .context("unexpected empty string for option `rust-analyzer`")?;
-
-        let mut cmd = Command::new(executable);
-
-        cmd.args(words);
-
-        Ok(cmd)
+        if let Some(command) = self.build_opts.rust_analyzer.as_deref() {
+            let mut words = Shlex::new(command);
+            let executable = words
+                .next()
+                .context("unexpected empty string for option `rust-analyzer`")?;
+            let mut cmd = Command::new(executable);
+            cmd.args(words);
+            Ok(cmd)
+        } else if let Some(extension) = find_code_extension() {
+            log::debug!("using rust-analyzer from {}", extension.display());
+            Ok(Command::new(extension))
+        } else {
+            Ok(Command::new("rust-analyzer"))
+        }
     }
 
     pub fn read_cache<C: for<'de> Deserialize<'de>>(&self) -> Result<C> {
@@ -185,4 +184,27 @@ impl LocateProject {
                 .pipe(Err)
         }
     }
+}
+
+fn find_code_extension() -> Option<PathBuf> {
+    let home = dirs::home_dir()?;
+    [
+        home.join(".vscode/extensions"),
+        home.join(".vscode-server/extensions"),
+    ]
+    .iter()
+    .flat_map(|p| p.read_dir().ok())
+    .flatten()
+    .flatten()
+    .find_map(|extension| {
+        if extension
+            .file_name()
+            .to_string_lossy()
+            .starts_with("rust-lang.rust-analyzer-")
+        {
+            Some(extension.path().join("server/rust-analyzer"))
+        } else {
+            None
+        }
+    })
 }

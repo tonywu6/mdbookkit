@@ -15,6 +15,7 @@ cargo_toml = "0.21.0"
 chrono = { version = "0.4.40", features = ["clock"], default-features = false }
 clap = { workspace = true }
 console = "0.15.11"
+dirs = "6.0.0"
 env_logger = { workspace = true }
 indicatif = "0.17.11"
 log = { workspace = true }

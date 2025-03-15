@@ -67,6 +67,7 @@ impl Log for ConsoleLogger {
                 else {
                     return;
                 };
+                let message = message.trim_end();
                 let message = match record.level() {
                     Level::Warn => style(message).yellow(),
                     Level::Error => style(message).red(),

@@ -204,6 +204,7 @@ impl Server {
                     uri: env.crate_dir.clone(),
                     name: "root".into(),
                 }]),
+
                 capabilities: ClientCapabilities {
                     experimental: Some(json! {{
                         "localDocs": true,
@@ -218,16 +219,19 @@ impl Server {
                     }),
                     ..Default::default()
                 },
+
                 initialization_options: Some(json! {{
                     "cachePriming": {
                         "enable": true,
                         "numThreads": "physical",
                     },
                 }}),
+
                 client_info: Some(ClientInfo {
                     name: env!("CARGO_PKG_NAME").into(),
                     version: Some(env!("CARGO_PKG_VERSION").into()),
                 }),
+
                 ..Default::default()
             })
             .await?;
