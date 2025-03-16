@@ -25,6 +25,11 @@ impl Item {
             Some((path, fragment)) => (path, Some(fragment)),
         };
 
+        let path = match path.split_once('@') {
+            None => path,
+            Some((_, path)) => path,
+        };
+
         let item = ItemName::parse.parse_str(path)?;
 
         let (name, column) = {

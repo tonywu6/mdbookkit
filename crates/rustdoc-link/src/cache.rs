@@ -126,7 +126,7 @@ impl Caching for CacheV1 {
                 hash.update(src);
                 hash
             })
-            .pipe(|hash| format!("{:x}", hash.finalize()));
+            .pipe(|hash| hash.finalize().digest());
 
         if hash != self.hash {
             bail!("checksum mismatch, expected {}, actual {hash}", self.hash)
@@ -210,7 +210,7 @@ impl Caching for CacheV1 {
                     (hash, deps)
                 },
             )
-            .pipe(|(hash, deps)| (format!("{:x}", hash.finalize()), deps));
+            .pipe(|(hash, deps)| (hash.finalize().digest(), deps));
 
         let urls = res
             .items
@@ -225,4 +225,14 @@ impl Caching for CacheV1 {
 async fn read_dep(url: Url) -> Result<(String, String)> {
     let content = tokio::fs::read_to_string(&url.path()).await?;
     Ok((url.to_string(), content))
+}
+
+trait HexDigest {
+    fn digest(&self) -> String;
+}
+
+impl HexDigest for sha2::digest::Output<Sha256> {
+    fn digest(&self) -> String {
+        format!("{:064x}", self)
+    }
 }

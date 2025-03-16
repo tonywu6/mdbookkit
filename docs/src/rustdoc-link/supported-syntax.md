@@ -1,6 +1,6 @@
 # Supported syntax
 
-This page lists all syntax supported by the `mdbook-rustdoc-link`.
+This page lists all syntax supported by `mdbook-rustdoc-link`.
 
 Most of the formats [supported by rustdoc][rustdoc-linking] are supported. Unsupported
 syntax and differences in behavior are emphasized below.
@@ -69,8 +69,8 @@ This includes if you use turbofish:
 ## Functions and macros
 
 To indicate that an item is a function, add `()` after the function name. To indicate
-that an item is a macro, add `!` after the macro name, which can be optionally followed
-by `()`, `[]`, or `{}`. This is compatible with rustdoc.
+that an item is a macro, add `!` after the macro name, optionally followed by `()`,
+`[]`, or `{}`. This is compatible with rustdoc.
 
 Note that there cannot be arguments within `()`, `[]`, or `{}`.
 
@@ -82,8 +82,8 @@ Note that there cannot be arguments within `()`, `[]`, or `{}`.
 > [`vec!`][std::vec!] is different from [`vec`][std::vec], and don't accidentally use
 > [`format()`][std::fmt::format()] in place of [`format!()`][std::format!()]!
 
-The macro syntax works for attribute and derive macros as well, even though this is not
-how they are invoked.
+The macro syntax works for attribute and derive macros as well (even though this is not
+how they are invoked).
 
 > ```md
 > There is a [derive macro][serde::Serialize!] to generate implementations of the
@@ -93,14 +93,14 @@ how they are invoked.
 > There is a [derive macro][serde::Serialize!] to generate implementations of the
 > [`Serialize`][serde::Serialize] trait.
 
-> [!WARNING]
+> [!NOTE]
 >
 > As of `rust-analyzer 2025-03-10`, links generated for re-exported items don't always
-> work. This is because rust-analyzer resolves items to the modules that define them,
-> but docs for the source modules may not be have been published.
+> work. This happens often with macros. Examples include [`std::format!`] (seen above)
+> and [`tokio::main!`].
 >
-> This happens often with macros. Examples include [`std::format!`] (seen above) and
-> [`tokio::main!`].
+> This is because rust-analyzer resolves items to the modules that define them, but docs
+> for the source modules may not be have been published.
 
 ## Implementors and fully qualified syntax
 
@@ -112,36 +112,42 @@ how they are invoked.
 
 All Markdown link formats supported by rustdoc are supported:
 
-**Shortcut links**:
+Linking with URL inlined:
 
 > ```md
-> [Vec] or [Vec][]
+> [The Option type](std::option::Option)
 > ```
 >
-> [Vec] or [Vec][]
+> [The Option type](std::option::Option)
 
-**Reference links**:
+Linking with reusable references:
 
 > ```md
-> [A contiguous growable array type][Vec]
+> [The Option type][option-type]
 >
-> [The Option type][Option]
->
-> [Option]: std::option::Option
+> [option-type]: std::option::Option
 > ```
 >
-> [A contiguous growable array type][Vec]
+> [The Option type][option-type]
 >
-> [The Option type][Option]
->
-> [Option]: std::option::Option
+> [option-type]: std::option::Option
 
-**Inline markups** are supported within shortcut links:
+Reference-style links `[text][id]` without a corresponding `[id]: name` part will be
+treated the same as inline style links `[text](id)`:
 
 > ```md
-> You can explicitly create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_]
-> macro.
+> [The Option type][std::option::Option]
 > ```
 >
-> You can explicitly create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_]
-> macro.
+> [The Option type][std::option::Option]
+
+Shortcuts are supported, and can contain inline markups:
+
+> ```md
+> Explicitly create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_] macro.
+> ```
+>
+> Explicitly create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_] macro.
+
+(The items must still be resolvable; in this case `Vec` and `vec!` come from the
+prelude.)

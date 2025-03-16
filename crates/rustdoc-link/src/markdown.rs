@@ -3,114 +3,157 @@ use std::{
     collections::{HashMap, HashSet},
     fmt::Debug,
     hash::Hash,
+    ops::Range,
 };
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use pulldown_cmark::{
     BrokenLink, BrokenLinkCallback, CowStr, Event, LinkType, Options, Parser, Tag, TagEnd,
 };
 use pulldown_cmark_to_cmark::cmark;
 use tap::Pipe;
 
-#[derive(Debug, Default)]
-pub struct Pages<'a, K> {
-    pages: HashMap<K, Vec<Event<'a>>>,
+#[derive(Debug)]
+pub struct Page<'a> {
+    source: &'a str,
+    links: Vec<ParsedLink<'a>>,
+}
+
+#[derive(Debug)]
+struct ParsedLink<'a> {
+    dest_url: CowStr<'a>,
+    title: CowStr<'a>,
+    span: Range<usize>,
+    inner: Vec<Event<'a>>,
+}
+
+impl<'a> Page<'a> {
+    pub fn read<S>(source: &'a str, stream: S) -> Result<(Self, HashSet<String>)>
+    where
+        S: Iterator<Item = (Event<'a>, Range<usize>)>,
+    {
+        let mut items = HashSet::new();
+        let mut links = Vec::new();
+        let mut link: Option<ParsedLink> = None;
+
+        for (event, span) in stream {
+            if matches!(event, Event::End(TagEnd::Link)) {
+                match link.take() {
+                    Some(link) => {
+                        if link.span == span {
+                            links.push(link);
+                            continue;
+                        } else {
+                            bail!("mismatching span, expected {:?}, found {span:?}", link.span)
+                        }
+                    }
+                    None => bail!("unexpected `TagEnd::Link` at {span:?}"),
+                }
+            }
+
+            let Event::Start(Tag::Link {
+                dest_url, title, ..
+            }) = event
+            else {
+                if let Some(link) = link.as_mut() {
+                    link.inner.push(event);
+                }
+                continue;
+            };
+
+            if link.is_some() {
+                bail!("unexpected `Tag::Link` in `Tag::Link`")
+            }
+
+            items.insert(dest_url.to_string());
+
+            link = Some(ParsedLink {
+                dest_url,
+                title,
+                span,
+                inner: vec![],
+            });
+        }
+
+        Ok((Page { source, links }, items))
+    }
+
+    pub fn emit<L>(&self, mut link_getter: L) -> Result<String>
+    where
+        L: FnMut(&str) -> Option<&'a str>,
+    {
+        let Self { source, links } = self;
+
+        let mut output = String::with_capacity(source.len());
+        let mut start = 0usize;
+
+        for ParsedLink {
+            dest_url,
+            title,
+            span,
+            inner,
+        } in links
+        {
+            output.push_str(&source[start..span.start]);
+
+            if let Some(dest_url) = link_getter(dest_url) {
+                let link = Tag::Link {
+                    link_type: LinkType::Inline,
+                    dest_url: dest_url.into(),
+                    title: title.clone(),
+                    id: CowStr::Borrowed(""),
+                };
+
+                let stream = std::iter::once(Event::Start(link))
+                    .chain(inner.iter().cloned())
+                    .chain(std::iter::once(Event::End(TagEnd::Link)));
+
+                String::new()
+                    .pipe(|mut wr| cmark(stream, &mut wr).and(Ok(wr)))?
+                    .pipe(|out| output.push_str(&out));
+            } else {
+                output.push_str(&source[span.clone()]);
+            }
+
+            start = span.end;
+        }
+
+        if start < source.len() {
+            output.push_str(&source[start..]);
+        }
+
+        Ok(output)
+    }
 }
 
 impl<'a, K: Eq + Hash> Pages<'a, K> {
-    pub fn read<S>(&mut self, key: K, stream: S) -> HashSet<String>
+    pub fn read<S>(&mut self, key: K, source: &'a str, stream: S) -> Result<HashSet<String>>
     where
-        S: Iterator<Item = Event<'a>>,
+        S: Iterator<Item = (Event<'a>, Range<usize>)>,
     {
-        let mut items = HashSet::new();
-        let buffer = stream
-            .inspect(|event| {
-                if let Event::Start(Tag::Link { dest_url, .. }) = &event {
-                    items.insert(dest_url.to_string());
-                }
-            })
-            .collect::<Vec<_>>();
-        self.pages.insert(key, buffer);
-        items
+        let (page, items) = Page::read(source, stream)?;
+        self.pages.insert(key, page);
+        Ok(items)
     }
 
-    pub fn emit<Q, L>(&self, key: &Q, mut links: L) -> Result<String>
+    pub fn emit<Q, L>(&self, key: &Q, links: L) -> Result<String>
     where
         K: Borrow<Q>,
         Q: Eq + Hash + Debug + ?Sized,
         L: FnMut(&str) -> Option<&'a str>,
     {
-        let buffer = self
+        let page = self
             .pages
             .get(key)
             .with_context(|| format!("no such document {key:?}"))?;
 
-        enum Suffix<'a> {
-            Collapsed,
-            Shortcut,
-            Reference(CowStr<'a>),
-        }
-
-        impl Suffix<'_> {
-            // how is this 'static ?
-            fn as_str(&self) -> CowStr<'static> {
-                match self {
-                    Self::Collapsed => "][]".into(),
-                    Self::Shortcut => "]".into(),
-                    Self::Reference(id) => format!("][{id}]").into(),
-                }
-            }
-        }
-
-        let stream = buffer
-            .iter()
-            .cloned()
-            .scan(Option::<Suffix>::None, |suffix, mut event| {
-                if let Event::Start(Tag::Link {
-                    dest_url,
-                    id,
-                    link_type,
-                    ..
-                }) = &mut event
-                {
-                    if let Some(found) = links(dest_url) {
-                        *dest_url = found.to_owned().into();
-                        Some(event)
-                    } else if matches!(
-                        link_type,
-                        LinkType::CollapsedUnknown
-                            | LinkType::ReferenceUnknown
-                            | LinkType::ShortcutUnknown
-                    ) {
-                        // don't emit unresolved "broken" links as links
-                        *suffix = match link_type {
-                            LinkType::ShortcutUnknown => Some(Suffix::Shortcut),
-                            LinkType::CollapsedUnknown => Some(Suffix::Collapsed),
-                            LinkType::ReferenceUnknown => Some(Suffix::Reference(id.clone())),
-                            _ => unreachable!(),
-                        };
-                        Some(Event::Text(CowStr::Borrowed("[")))
-                    } else {
-                        Some(event)
-                    }
-                } else if matches!(event, Event::End(TagEnd::Link)) {
-                    if let Some(suffix) = suffix.take() {
-                        // a link was dropped, patch corresponding TagEnd::Link
-                        Some(Event::Text(suffix.as_str()))
-                    } else {
-                        Some(event)
-                    }
-                } else {
-                    Some(event)
-                }
-                .pipe(Some)
-            })
-            .flatten();
-
-        String::new()
-            .pipe(|mut wr| cmark(stream, &mut wr).and(Ok(wr)))?
-            .pipe(Ok)
+        page.emit(links)
     }
+}
+
+#[derive(Debug, Default)]
+pub struct Pages<'a, K> {
+    pages: HashMap<K, Page<'a>>,
 }
 
 pub fn markdown_parser(text: &str, smart_punctuation: bool) -> MarkdownStream<'_> {

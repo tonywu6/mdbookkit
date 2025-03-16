@@ -18,7 +18,7 @@ use crate::{
     env::Environment,
     item::{Carets, Item},
     logger::{spinner, ConsoleLogger},
-    markdown::{markdown_parser, Pages},
+    markdown::{markdown_parser, Page, Pages},
 };
 
 mod cache;
@@ -113,20 +113,25 @@ async fn mdbook() -> Result<()> {
 
     let client = Client::new(config);
 
-    let (pages, request) = book.iter().fold(
+    let (pages, request) = book.iter().try_fold(
         (Pages::default(), HashSet::new()),
         |(mut pages, mut items), item| {
             let BookItem::Chapter(ch) = item else {
-                return (pages, items);
+                return Ok((pages, items));
             };
             let Some(key) = &ch.source_path else {
-                return (pages, items);
+                return Ok((pages, items));
             };
-            let stream = markdown_parser(&ch.content, client.env.build_opts.smart_punctuation);
-            items.extend(pages.read(key.clone(), stream));
-            (pages, items)
+            let stream = markdown_parser(&ch.content, client.env.build_opts.smart_punctuation)
+                .into_offset_iter();
+            let parsed = match pages.read(key.clone(), &ch.content, stream) {
+                Ok(parsed) => parsed,
+                Err(error) => return Err(error),
+            };
+            items.extend(parsed);
+            Ok((pages, items))
         },
-    );
+    )?;
 
     let request = Item::parse_all(request.iter());
 
@@ -172,15 +177,16 @@ async fn markdown(options: BuildOptions) -> Result<()> {
 
     let client = Client::new(config);
 
-    let mut pages = Pages::default();
-
-    let stream = Vec::new()
+    let source = Vec::new()
         .pipe(|mut buf| std::io::stdin().read_to_end(&mut buf).and(Ok(buf)))?
         .pipe(String::from_utf8)?;
 
-    let stream = markdown_parser(&stream, client.env.build_opts.smart_punctuation);
+    let stream =
+        markdown_parser(&source, client.env.build_opts.smart_punctuation).into_offset_iter();
 
-    let request = Item::parse_all(pages.read((), stream).iter());
+    let (page, request) = Page::read(&source, stream)?;
+
+    let request = Item::parse_all(request.iter());
 
     let symbols = Client::request.cached::<Cache>(&client, request).await?;
 
@@ -188,7 +194,7 @@ async fn markdown(options: BuildOptions) -> Result<()> {
         prefer_local_links, ..
     } = client.env.build_opts;
 
-    let output = pages.emit(&(), |k| symbols.get(k, prefer_local_links))?;
+    let output = page.emit(|k| symbols.get(k, prefer_local_links))?;
 
     std::io::stdout().write_all(output.as_bytes())?;
 
@@ -222,6 +228,7 @@ impl Client {
 
         for (item, line) in request.request {
             let document = document.clone();
+
             tasks.spawn(async move {
                 let positions = match item.cols {
                     Carets::Decl(c1, c2) => &[
@@ -254,9 +261,14 @@ impl Client {
         }
 
         while let Some(res) = tasks.join_next().await {
-            if let Ok(Ok((item, links))) = res {
-                items.insert(item.key, links);
+            let Ok(Ok((item, links))) = res else {
+                continue;
             };
+            if links.is_empty() {
+                log::warn!("failed to resolve links for {:?}", item.key);
+                continue;
+            }
+            items.insert(item.key, links);
         }
 
         spinner().finish("resolve", "done");
