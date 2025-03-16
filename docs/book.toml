@@ -1,0 +1,41 @@
+[book]
+authors = ["Tony Wu"]
+language = "en"
+multilingual = false
+src = "src"
+title = "mdbookkit"
+
+[build]
+build-dir = "dist"
+create-missing = false
+extra-watch-dirs = ["app"]
+
+[rust]
+edition = "2021"
+
+[output.html]
+additional-css = ["theme/index.css"]
+default-theme = "ayu"
+git-repository-icon = "fa-github"
+git-repository-url = "https://github.com/tonywu6/mdbookkit"
+hash-files = true
+preferred-dark-theme = "ayu"
+site-url = "/mdbookkit/"
+
+[output.html.playground]
+runnable = false
+
+[preprocessor.rustdoc-link]
+after = ["links"]
+command = "cargo run --release --package mdbook-rustdoc-link"
+
+cache-dir = "build"
+manifest-dir = "../crates/rustdoc-link"
+rust-analyzer = "cargo run --release --package rust-analyzer --"
+
+[preprocessor.alerts]
+after = ["links"]
+before = ["rustdoc-link"]
+
+[preprocessor.app]
+command = "deno run -A app/build/preprocessor.ts"
