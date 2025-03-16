@@ -10,7 +10,7 @@ use crate::{
     cache::{Cache, Cacheable},
     client::{Client, ItemLinks},
     env::Environment,
-    item::{Carets, Item},
+    item::Item,
     logger::spinner,
     markdown::{markdown_parser, Page},
 };
@@ -95,17 +95,15 @@ impl Client {
             let document = document.clone();
 
             tasks.spawn(async move {
-                let positions = match item.cols {
-                    Carets::Decl(c1, c2) => &[
-                        Position::new(line as _, c1 as _),
-                        Position::new(line as _, c2 as _),
-                    ] as &[Position],
-                    Carets::Expr(c) => &[Position::new(line as _, c as _)],
-                };
+                let positions = item
+                    .cols
+                    .as_ref()
+                    .iter()
+                    .map(|&c| Position::new(line as _, c as _));
 
                 let _task = spinner().task("resolve", &item.key);
 
-                for &p in positions {
+                for p in positions {
                     let links = document
                         .resolve(p)
                         .await

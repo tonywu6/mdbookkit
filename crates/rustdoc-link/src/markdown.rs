@@ -11,7 +11,7 @@ use pulldown_cmark::{
     BrokenLink, BrokenLinkCallback, CowStr, Event, LinkType, Options, Parser, Tag, TagEnd,
 };
 use pulldown_cmark_to_cmark::cmark;
-use tap::Pipe;
+use tap::{Conv, Pipe};
 
 #[derive(Debug)]
 pub struct Page<'a> {
@@ -186,7 +186,9 @@ impl<'input> BrokenLinkCallback<'input> for BrokenLinks {
                 inner
                     .iter()
                     .map(ToString::to_string)
-                    .collect::<Box<str>>()
+                    .collect::<String>()
+                    // MSRV: impl FromIterator<String> for Box<str> is 1.80
+                    .conv::<Box<str>>()
                     .pipe(CowStr::Boxed)
             }
         } else {

@@ -88,12 +88,12 @@ impl Item {
 
                 let c1 = pattern.len() + column;
                 let c2 = pattern.len() + name.len() + assign.len() + column;
-                let cols = Carets::Decl(c1, c2);
+                let cols = Carets::Decl([c1, c2]);
 
                 (stmt, cols)
             }
-            Some(ItemKind::Call) => (format!("{name}();"), Carets::Expr(column)),
-            Some(ItemKind::Macro) => (format!("{name}!();"), Carets::Expr(column)),
+            Some(ItemKind::Call) => (format!("{name}();"), Carets::Expr([column])),
+            Some(ItemKind::Macro) => (format!("{name}!();"), Carets::Expr([column])),
         };
 
         let key = input.into();
@@ -124,8 +124,17 @@ impl Item {
 
 #[derive(Debug, Clone, Copy)]
 pub enum Carets {
-    Decl(usize, usize),
-    Expr(usize),
+    Decl([usize; 2]),
+    Expr([usize; 1]),
+}
+
+impl AsRef<[usize]> for Carets {
+    fn as_ref(&self) -> &[usize] {
+        match self {
+            Self::Decl(c) => c,
+            Self::Expr(c) => c,
+        }
+    }
 }
 
 struct ItemName {
