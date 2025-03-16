@@ -1,6 +1,7 @@
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
-use anyhow::{Context, Result};
+// not shadowing std::Result because rustdoc-link.md needs to link to std
+use anyhow::{Context, Result as Result2};
 use lsp_types::Position;
 use serde::Deserialize;
 use tap::{Pipe, TapFallible};
@@ -48,8 +49,14 @@ pub struct ClientConfig {
 }
 
 impl Client {
-    pub async fn process(&self, content: &str) -> Result<String> {
-        let stream = markdown_parser(content, self.env.config.smart_punctuation).into_offset_iter();
+    pub async fn process(&self, content: &str) -> Result2<String> {
+        let ClientConfig {
+            prefer_local_links,
+            smart_punctuation,
+            ..
+        } = self.env.config;
+
+        let stream = markdown_parser(content, smart_punctuation).into_offset_iter();
 
         let (page, request) = Page::read(content, stream)?;
 
@@ -57,14 +64,10 @@ impl Client {
 
         let symbols = Client::request.cached::<Cache>(self, request).await?;
 
-        let ClientConfig {
-            prefer_local_links, ..
-        } = self.env.config;
-
         page.emit(|k| symbols.get(k, prefer_local_links))
     }
 
-    pub async fn request(&self, request: Vec<Item>) -> Result<Resolved> {
+    pub async fn request(&self, request: Vec<Item>) -> Result2<Resolved> {
         let src = std::fs::read_to_string(self.env.entrypoint.path())?;
 
         let request = Request::new(&src, request);
@@ -84,7 +87,7 @@ impl Client {
 
         spinner().create("resolve", Some(request.request.len() as _));
 
-        let mut tasks: JoinSet<Result<(Item, ItemLinks)>> = JoinSet::new();
+        let mut tasks: JoinSet<Result2<(Item, ItemLinks)>> = JoinSet::new();
 
         for (item, line) in request.request {
             let document = document.clone();

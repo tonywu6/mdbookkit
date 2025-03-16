@@ -76,6 +76,12 @@ async fn mdbook() -> Result<()> {
 
     let client = Client::new(Environment::new(options)?);
 
+    let ClientConfig {
+        prefer_local_links,
+        smart_punctuation,
+        ..
+    } = client.env.config;
+
     let (pages, request) = book.iter().try_fold(
         (Pages::default(), HashSet::new()),
         |(mut pages, mut items), item| {
@@ -85,8 +91,7 @@ async fn mdbook() -> Result<()> {
             let Some(key) = &ch.source_path else {
                 return Ok((pages, items));
             };
-            let stream = markdown_parser(&ch.content, client.env.config.smart_punctuation)
-                .into_offset_iter();
+            let stream = markdown_parser(&ch.content, smart_punctuation).into_offset_iter();
             let parsed = match pages.read(key.clone(), &ch.content, stream) {
                 Ok(parsed) => parsed,
                 Err(error) => return Err(error),
@@ -109,9 +114,6 @@ async fn mdbook() -> Result<()> {
             let Some(key) = &ch.source_path else {
                 return None;
             };
-            let ClientConfig {
-                prefer_local_links, ..
-            } = client.env.config;
             pages
                 .emit(key, |k| symbols.get(k, prefer_local_links))
                 .tap_err(log_warning!())

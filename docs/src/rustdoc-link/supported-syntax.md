@@ -220,7 +220,7 @@ Linking with reusable references:
 > [option-type]: std::option::Option
 
 Reference-style links `[text][id]` without a corresponding `[id]: name` part will be
-treated the same as inline style links `[text](id)`:
+treated the same as inline-style links `[text](id)`:
 
 > ```md
 > [The Option type][std::option::Option]

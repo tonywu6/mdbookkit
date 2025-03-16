@@ -163,6 +163,9 @@ impl Caching for CacheV1 {
     async fn build(env: &Environment, res: &Resolved) -> Result<Self> {
         let (hash, deps) = JoinSet::<Result<(String, String)>>::new()
             .tap_mut(|tasks| {
+                tasks.spawn(read_dep(env.entrypoint.clone()));
+            })
+            .tap_mut(|tasks| {
                 tasks.spawn(read_dep(env.crate_dir.join("Cargo.toml").unwrap()));
             })
             .tap_mut(|tasks| {

@@ -126,7 +126,7 @@ currently support.
 > [**`into_iter()`**][<Vec<()> as IntoIterator>::into_iter].
 > ```
 >
-> [`Result<T, E>`](https://docs.rs/anyhow/1.0.97/anyhow/type.Result.html "Result<T, E>") implements [`IntoIterator`](https://doc.rust-lang.org/stable/core/iter/traits/collect/trait.IntoIterator.html "IntoIterator"); its
+> [`Result<T, E>`](https://doc.rust-lang.org/stable/core/result/enum.Result.html "Result<T, E>") implements [`IntoIterator`](https://doc.rust-lang.org/stable/core/iter/traits/collect/trait.IntoIterator.html "IntoIterator"); its
 > [**`into_iter()`**](https://doc.rust-lang.org/stable/core/result/enum.Result.html#method.into_iter "Result::<(), ()>::into_iter") returns an iterator that yields one
 > value if the result is [`Result::Ok`](https://doc.rust-lang.org/stable/core/result/enum.Result.html#variant.Ok "Result::Ok"), otherwise none.
 >
@@ -224,7 +224,7 @@ Linking with reusable references:
 > [option-type]: std::option::Option
 
 Reference-style links `[text][id]` without a corresponding `[id]: name` part will be
-treated the same as inline style links `[text](id)`:
+treated the same as inline-style links `[text](id)`:
 
 > ```md
 > [The Option type][std::option::Option]
