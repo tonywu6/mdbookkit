@@ -6,17 +6,17 @@ use serde::Deserialize;
 use tap::{Pipe, TapFallible};
 use tokio::task::JoinSet;
 
+pub use crate::client::Client;
 use crate::{
     cache::{Cache, Cacheable},
-    client::{Client, ItemLinks},
-    env::Environment,
+    client::ItemLinks,
     item::Item,
     logger::spinner,
     markdown::{markdown_parser, Page},
 };
 
 pub mod cache;
-pub mod client;
+mod client;
 pub mod env;
 pub mod item;
 pub mod logger;
@@ -25,7 +25,7 @@ mod sync;
 
 #[derive(clap::Parser, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "kebab-case")]
-pub struct BuildOptions {
+pub struct ClientConfig {
     #[arg(long)]
     #[serde(default)]
     pub rust_analyzer: Option<String>,
@@ -47,28 +47,23 @@ pub struct BuildOptions {
     pub prefer_local_links: bool,
 }
 
-pub async fn process(content: &str, options: BuildOptions) -> Result<String> {
-    let client = Client::new(Environment::new(options)?);
-
-    let stream =
-        markdown_parser(content, client.env.build_opts.smart_punctuation).into_offset_iter();
-
-    let (page, request) = Page::read(content, stream)?;
-
-    let request = Item::parse_all(request.iter());
-
-    let symbols = Client::request.cached::<Cache>(&client, request).await?;
-
-    let BuildOptions {
-        prefer_local_links, ..
-    } = client.env.build_opts;
-
-    client.dispose().await?;
-
-    page.emit(|k| symbols.get(k, prefer_local_links))
-}
-
 impl Client {
+    pub async fn process(&self, content: &str) -> Result<String> {
+        let stream = markdown_parser(content, self.env.config.smart_punctuation).into_offset_iter();
+
+        let (page, request) = Page::read(content, stream)?;
+
+        let request = Item::parse_all(request.iter());
+
+        let symbols = Client::request.cached::<Cache>(self, request).await?;
+
+        let ClientConfig {
+            prefer_local_links, ..
+        } = self.env.config;
+
+        page.emit(|k| symbols.get(k, prefer_local_links))
+    }
+
     pub async fn request(&self, request: Vec<Item>) -> Result<Resolved> {
         let src = std::fs::read_to_string(self.env.entrypoint.path())?;
 

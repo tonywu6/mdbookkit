@@ -1,0 +1,22 @@
+---
+source: crates/rustdoc-link/tests/lib.rs
+expression: output
+---
+primitive types resolved to nightly:
+
+- [u8](https://doc.rust-lang.org/nightly/core/primitive.u8.html "u8")
+- [u32](https://doc.rust-lang.org/nightly/core/primitive.u32.html "u32")
+- [f64](https://doc.rust-lang.org/nightly/core/primitive.f64.html "f64")
+- [char](https://doc.rust-lang.org/nightly/core/primitive.char.html "char")
+- [str](https://doc.rust-lang.org/nightly/core/primitive.str.html "str")
+
+associated items on primitive types:
+
+- [str::parse]
+- [f64::MIN_POSITIVE]
+
+re-exported items:
+
+- [std::vec!](https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html "std::vec!")
+- [std::format!](https://doc.rust-lang.org/stable/alloc/macros/macro.format.html "std::format!")
+- [tokio::main!](https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html "tokio::main!")

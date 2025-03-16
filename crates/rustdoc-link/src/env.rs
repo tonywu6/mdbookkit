@@ -12,7 +12,7 @@ use shlex::Shlex;
 use tap::Pipe;
 use tokio::process::Command;
 
-use crate::BuildOptions;
+use crate::ClientConfig;
 
 #[derive(Debug, Clone)]
 pub struct Environment {
@@ -20,11 +20,11 @@ pub struct Environment {
     pub crate_dir: Url,
     pub source_dir: Url,
     pub entrypoint: Url,
-    pub build_opts: BuildOptions,
+    pub config: ClientConfig,
 }
 
 impl Environment {
-    pub fn new(build_opts: BuildOptions) -> Result<Self> {
+    pub fn new(build_opts: ClientConfig) -> Result<Self> {
         let cwd = build_opts
             .manifest_dir
             .clone()
@@ -97,12 +97,12 @@ impl Environment {
             cache_dir,
             source_dir,
             entrypoint,
-            build_opts,
+            config: build_opts,
         })
     }
 
     pub fn command(&self) -> Result<Command> {
-        if let Some(command) = self.build_opts.rust_analyzer.as_deref() {
+        if let Some(command) = self.config.rust_analyzer.as_deref() {
             let mut words = Shlex::new(command);
             let executable = words
                 .next()

@@ -8,13 +8,12 @@ use anyhow::Result;
 use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
 use mdbook_rustdoc_link::{
     cache::{Cache, Cacheable},
-    client::Client,
     env::Environment,
     item::Item,
     log_warning,
     logger::ConsoleLogger,
     markdown::{markdown_parser, Pages},
-    preprocessor_name, process, BuildOptions,
+    preprocessor_name, Client, ClientConfig,
 };
 use serde::Deserialize;
 use tap::{Pipe, TapFallible};
@@ -39,7 +38,7 @@ struct Command {
 #[derive(clap::Subcommand, Debug, Clone)]
 enum Commands {
     Supports { renderer: String },
-    Markdown(BuildOptions),
+    Markdown(ClientConfig),
 }
 
 async fn mdbook() -> Result<()> {
@@ -51,7 +50,7 @@ async fn mdbook() -> Result<()> {
     let options = {
         let mut options = if let Some(config) = context.config.get_preprocessor(preprocessor_name())
         {
-            BuildOptions::deserialize(toml::Value::Table(config.clone()))?
+            ClientConfig::deserialize(toml::Value::Table(config.clone()))?
         } else {
             Default::default()
         };
@@ -86,7 +85,7 @@ async fn mdbook() -> Result<()> {
             let Some(key) = &ch.source_path else {
                 return Ok((pages, items));
             };
-            let stream = markdown_parser(&ch.content, client.env.build_opts.smart_punctuation)
+            let stream = markdown_parser(&ch.content, client.env.config.smart_punctuation)
                 .into_offset_iter();
             let parsed = match pages.read(key.clone(), &ch.content, stream) {
                 Ok(parsed) => parsed,
@@ -110,9 +109,9 @@ async fn mdbook() -> Result<()> {
             let Some(key) = &ch.source_path else {
                 return None;
             };
-            let BuildOptions {
+            let ClientConfig {
                 prefer_local_links, ..
-            } = client.env.build_opts;
+            } = client.env.config;
             pages
                 .emit(key, |k| symbols.get(k, prefer_local_links))
                 .tap_err(log_warning!())
@@ -136,12 +135,17 @@ async fn mdbook() -> Result<()> {
     Ok(())
 }
 
-async fn markdown(options: BuildOptions) -> Result<()> {
+async fn markdown(options: ClientConfig) -> Result<()> {
+    let client = Client::new(Environment::new(options)?);
+
     Vec::new()
         .pipe(|mut buf| std::io::stdin().read_to_end(&mut buf).and(Ok(buf)))?
         .pipe(String::from_utf8)?
-        .pipe_as_ref(|content| process(content, options))
+        .pipe_as_ref(|content| client.process(content))
         .await?
-        .pipe(|output| std::io::stdout().write_all(output.as_bytes()))?
-        .pipe(Ok)
+        .pipe(|output| std::io::stdout().write_all(output.as_bytes()))?;
+
+    client.dispose().await?;
+
+    Ok(())
 }

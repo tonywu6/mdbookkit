@@ -1,6 +1,10 @@
 {
   "cSpell.words": ["cmark"],
   "deno.enable": true,
+  "files.associations": {
+    "**/*.snap": "markdown",
+    "**/*.snap.new": "markdown"
+  },
   "javascript.validate.enable": false,
   "markdown.extension.toc.updateOnSave": true,
   "markdown.extension.toc.levels": "2..6",
