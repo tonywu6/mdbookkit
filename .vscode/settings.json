@@ -2,6 +2,8 @@
   "cSpell.words": ["cmark"],
   "deno.enable": true,
   "javascript.validate.enable": false,
+  "markdown.extension.toc.updateOnSave": true,
+  "markdown.extension.toc.levels": "2..6",
   "typescript.validate.enable": false,
   "typescript.tsserver.experimental.enableProjectDiagnostics": false
 }

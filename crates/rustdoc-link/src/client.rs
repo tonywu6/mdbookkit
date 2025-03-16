@@ -194,7 +194,8 @@ impl Server {
             background
                 .run_buffered(stdout.compat(), stdin.compat_write())
                 .await
-                .unwrap();
+                .tap_err(log_debug!())
+                .ok();
         })
         .pipe(Arc::new);
 
@@ -430,21 +431,18 @@ fn document_position(uri: Url, position: Position) -> TextDocumentPositionParams
 }
 
 fn indexing_progress(progress: &ProgressParams) -> Option<&WorkDoneProgress> {
-    if let ProgressParams {
-        token: NumberOrString::String(token),
-        value: ProgressParamsValue::WorkDone(progress),
-    } = progress
-    {
-        if matches!(
+    match progress {
+        ProgressParams {
+            token: NumberOrString::String(token),
+            value: ProgressParamsValue::WorkDone(progress),
+        } if matches!(
             token.as_ref(),
             "rustAnalyzer/Indexing" | "rustAnalyzer/cachePriming"
-        ) {
+        ) =>
+        {
             Some(progress)
-        } else {
-            None
         }
-    } else {
-        None
+        _ => None,
     }
 }
 

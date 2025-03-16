@@ -38,7 +38,7 @@ impl Item {
 
             let gt = if let Some(QSelf { ty, position, .. }) = item.path.qself {
                 name.push('<');
-                name.push_str(&input[ty.span().byte_range()]);
+                name.push_str(&path[ty.span().byte_range()]);
                 name.push_str(" as ");
                 Some(position - 1)
             } else {
@@ -50,7 +50,7 @@ impl Item {
 
                 let leading = &chunk.value().ident.span();
 
-                name.push_str(&input[leading.span().byte_range()]);
+                name.push_str(&path[leading.span().byte_range()]);
 
                 match &chunk.value().arguments {
                     PathArguments::None => {}
@@ -60,11 +60,11 @@ impl Item {
                             // make it a turbofish
                             name.push_str("::");
                         }
-                        name.push_str(&input[args.span().byte_range()])
+                        name.push_str(&path[args.span().byte_range()])
                     }
 
                     PathArguments::Parenthesized(args) => {
-                        name.push_str(&input[args.span().byte_range()])
+                        name.push_str(&path[args.span().byte_range()])
                     }
                 }
 
@@ -73,7 +73,7 @@ impl Item {
                 }
 
                 if let Some(punct) = chunk.punct() {
-                    name.push_str(&input[punct.span().byte_range()]);
+                    name.push_str(&path[punct.span().byte_range()]);
                 }
             }
 
