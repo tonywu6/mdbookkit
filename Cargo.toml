@@ -4,7 +4,7 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 publish = false
 repository = "https://github.com/tonywu6/mdbook.rust"
-rust-version = "1.75.0"
+rust-version = "1.81.0"
 
 [profile.dev.package]
 insta.opt-level = 3
@@ -23,6 +23,7 @@ crate-testing = { path = "crates/testing" }
 env_logger = "0.11.6"
 insta = { version = "1.40.0", features = ["yaml"] }
 log = "0.4.26"
+mdbook = { version = "0.4.47", default-features = false }
 pulldown-cmark = "0.13.0"
 pulldown-cmark-to-cmark = "21.0.0"
 serde = { version = "1", features = ["derive"] }
@@ -30,10 +31,6 @@ serde_json = "1.0.139"
 tap = "1.0.1"
 tokio = { version = "1", features = ["macros"] }
 toml = "0.5"
-
-[workspace.dependencies.mdbook]
-default-features = false
-version = "0.4.40"       # MSRV
 
 [workspace.metadata.bin]
 mdbook = { version = "0.4.47" }
