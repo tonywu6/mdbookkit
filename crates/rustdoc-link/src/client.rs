@@ -98,7 +98,7 @@ impl Server {
 
         let stabilizer = EventSampling {
             buffer: Duration::from_secs(1),
-            timeout: Duration::from_secs(15),
+            timeout: Duration::from_secs(60),
         }
         .using(rx);
 

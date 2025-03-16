@@ -19,11 +19,13 @@ use crate::{
     Resolved,
 };
 
+#[allow(async_fn_in_trait)]
 pub trait Caching: DeserializeOwned + Serialize {
     async fn reuse(self, env: &Environment, req: &[Item]) -> Result<Resolved>;
     async fn build(env: &Environment, map: &Resolved) -> Result<Self>;
 }
 
+#[allow(async_fn_in_trait)]
 pub trait Cacheable<'a> {
     async fn cached<C: Caching>(self, this: &'a Client, request: Vec<Item>) -> Result<Resolved>;
 }

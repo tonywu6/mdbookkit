@@ -87,8 +87,14 @@ impl Log for ConsoleLogger {
 }
 
 impl ConsoleLogger {
-    #[must_use]
-    pub fn new() -> Self {
+    pub fn init() {
+        log::set_boxed_logger(Box::new(Self::default())).expect("log init should not fail");
+        log::set_max_level(LevelFilter::max());
+    }
+}
+
+impl Default for ConsoleLogger {
+    fn default() -> Self {
         if logging_enabled() {
             env_logger::Builder::new()
                 // https://github.com/rust-lang/mdBook/blob/07b25cdb643899aeca2307fbab7690fa7eeec36b/src/main.rs#L100-L109
@@ -99,11 +105,6 @@ impl ConsoleLogger {
         } else {
             Self::Console(Term::stderr())
         }
-    }
-
-    pub fn init() {
-        log::set_boxed_logger(Box::new(Self::new())).expect("log init should not fail");
-        log::set_max_level(LevelFilter::max());
     }
 }
 
