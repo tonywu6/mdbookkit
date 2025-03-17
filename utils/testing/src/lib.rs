@@ -21,7 +21,7 @@ pub struct PortableSnapshots {
 }
 
 impl PortableSnapshots {
-    pub fn test<T: FnOnce()>(&self, cb: T) -> Result<()> {
+    pub fn test<T: FnOnce() -> R, R>(&self, cb: T) -> Result<R> {
         let Self { manifest, module } = self;
 
         let snapshot_dir = Path::new(manifest).join("tests").join("snaps");
@@ -30,12 +30,12 @@ impl PortableSnapshots {
             .split("::")
             .fold(snapshot_dir, |dir, path| dir.join(path));
 
-        insta::Settings::clone_current()
+        let result = insta::Settings::clone_current()
             .tap_mut(|settings| settings.set_snapshot_path(path))
             .tap_mut(|settings| settings.set_prepend_module_to_snapshot(false))
             .bind(cb);
 
-        Ok(())
+        Ok(result)
     }
 }
 

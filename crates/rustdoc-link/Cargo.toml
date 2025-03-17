@@ -46,5 +46,6 @@ toml = { workspace = true }
 tower = "0.5.2"
 
 [dev-dependencies]
-crate-testing = { workspace = true }
 insta = { workspace = true }
+similar = { workspace = true }
+util-testing = { workspace = true }

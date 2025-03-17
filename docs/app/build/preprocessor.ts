@@ -1,8 +1,8 @@
-import "./build.ts";
-
 if (Deno.args[0] === "supports") {
-  Deno.exit(1);
+  Deno.exit(Deno.args[1] === "html" ? 0 : 1);
 }
+
+await import("./build.ts");
 
 const [, book] = await read(Deno.stdin.readable).then(JSON.parse);
 

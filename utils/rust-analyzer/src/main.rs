@@ -15,7 +15,7 @@ use tap::{Pipe, Tap};
 fn main() -> Result<()> {
     let release = std::env::var("RA_VERSION")
         .ok()
-        .unwrap_or("2025-03-10".into());
+        .unwrap_or("2025-03-17".into());
 
     let path = get_project_root()?
         .join(".bin/rust-analyzer")

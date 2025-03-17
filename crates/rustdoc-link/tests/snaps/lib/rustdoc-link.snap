@@ -1,3 +1,7 @@
+---
+source: crates/rustdoc-link/tests/lib.rs
+expression: output
+---
 # mdbook-rustdoc-link
 
 **[rustdoc-style linking][rustdoc] for [mdBook]** (with the help of [rust-analyzer]).
@@ -9,9 +13,9 @@
 > access collections.
 > ```
 >
-> The [`option`][std::option] and [`result`][std::result] modules define optional and
-> error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter]
-> module defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to
+> The [`option`](https://doc.rust-lang.org/stable/core/option/index.html "std::option") and [`result`](https://doc.rust-lang.org/stable/core/result/index.html "std::result") modules define optional and
+> error-handling types, [`Option<T>`](https://doc.rust-lang.org/stable/core/option/enum.Option.html "Option<T>") and [`Result<T, E>`](https://doc.rust-lang.org/stable/core/result/enum.Result.html "Result<T, E>"). The [`iter`](https://doc.rust-lang.org/stable/core/iter/index.html "std::iter")
+> module defines Rust's iterator trait, [`Iterator`](https://doc.rust-lang.org/stable/core/iter/traits/iterator/trait.Iterator.html "Iterator"), which works with the `for` loop to
 > access collections.
 >
 > — adapted from [<cite>A Tour of The Rust Standard Library</cite>][tour]

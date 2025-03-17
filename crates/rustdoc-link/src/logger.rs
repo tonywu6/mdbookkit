@@ -11,7 +11,7 @@ use console::{style, Term};
 use env_logger::Logger;
 use indicatif::{HumanDuration, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{Level, LevelFilter, Log};
-use once_cell::sync::Lazy;
+use once_cell::sync::{Lazy, OnceCell};
 use tap::{Pipe, TapFallible};
 
 use crate::preprocessor_name;
@@ -26,7 +26,13 @@ macro_rules! log_debug {
 #[macro_export]
 macro_rules! log_warning {
     () => {
-        |err| log::warn!("{err}")
+        |err| {
+            if log::log_enabled!(log::Level::Debug) {
+                log::warn!("{err:?}")
+            } else {
+                log::warn!("{err}")
+            }
+        }
     };
 }
 
@@ -88,16 +94,23 @@ impl Log for ConsoleLogger {
 
 impl ConsoleLogger {
     pub fn init() {
-        log::set_boxed_logger(Box::new(Self::default())).expect("log init should not fail");
+        let logger = Box::new(Self::default());
+        log::set_boxed_logger(logger).expect("logger should not have been set");
         log::set_max_level(LevelFilter::max());
+        IS_CONSOLE_LOG.set(()).unwrap();
     }
+}
+
+static IS_CONSOLE_LOG: OnceCell<()> = OnceCell::new();
+
+fn is_console_log() -> bool {
+    IS_CONSOLE_LOG.get().is_some()
 }
 
 impl Default for ConsoleLogger {
     fn default() -> Self {
         if logging_enabled() {
             env_logger::Builder::new()
-                // https://github.com/rust-lang/mdBook/blob/07b25cdb643899aeca2307fbab7690fa7eeec36b/src/main.rs#L100-L109
                 .format(log_format)
                 .parse_default_env()
                 .build()
@@ -108,6 +121,7 @@ impl Default for ConsoleLogger {
     }
 }
 
+/// <https://github.com/rust-lang/mdBook/blob/07b25cdb643899aeca2307fbab7690fa7eeec36b/src/main.rs#L100-L109>
 fn log_format<W: io::Write>(formatter: &mut W, record: &log::Record) -> io::Result<()> {
     writeln!(
         formatter,
@@ -119,6 +133,11 @@ fn log_format<W: io::Write>(formatter: &mut W, record: &log::Record) -> io::Resu
     )
 }
 
+pub fn logging_enabled() -> bool {
+    static ENABLED: Lazy<bool> = Lazy::new(get_logging_enabled);
+    *ENABLED
+}
+
 fn get_logging_enabled() -> bool {
     let ci = std::env::var("CI").map(|v| v == "true").unwrap_or(false);
     let rust_log = std::env::var("RUST_LOG")
@@ -127,14 +146,14 @@ fn get_logging_enabled() -> bool {
     ci || rust_log
 }
 
-pub fn logging_enabled() -> bool {
-    static ENABLED: Lazy<bool> = Lazy::new(get_logging_enabled);
-    *ENABLED
+fn is_from_main(target: &str) -> bool {
+    target.starts_with(env!("CARGO_CRATE_NAME"))
 }
 
-fn is_from_main(target: &str) -> bool {
-    let root_crate = module_path!().split("::").next().unwrap();
-    target.starts_with(root_crate)
+macro_rules! should_spin {
+    ($($retval:tt)*) => {
+        if !is_console_log() { return $($retval)* }
+    };
 }
 
 #[derive(Debug)]
@@ -144,12 +163,14 @@ pub struct Spinner {
 
 impl Spinner {
     pub fn create(&self, prefix: &str, total: Option<u64>) -> &Self {
+        should_spin!(self);
         let prefix = prefix.into();
         self.tx.send(Message::Create { prefix, total }).ok();
         self
     }
 
     pub fn update<D: fmt::Display>(&self, prefix: &str, update: D) -> &Self {
+        should_spin!(self);
         let key = prefix.into();
         let update = update.to_string();
         self.tx.send(Message::Update { key, update }).ok();
@@ -157,23 +178,25 @@ impl Spinner {
     }
 
     pub fn task<D: fmt::Display>(&self, prefix: &str, task: D) -> SpinnerHandle {
+        let tx = self.tx.clone();
+
+        should_spin!(SpinnerHandle { tx, done: None });
+
         let key = String::from(prefix);
         let task = task.to_string();
 
-        let done = Message::Done {
+        let open = Message::Task {
             key: key.clone(),
             task: task.clone(),
         };
+        tx.send(open).ok();
 
-        let open = Message::Task { key, task };
-        self.tx.send(open).ok();
-
-        let tx = self.tx.clone();
-        let done = Some(done);
+        let done = Some(Message::Done { key, task });
         SpinnerHandle { tx, done }
     }
 
     pub fn finish<D: fmt::Display>(&self, prefix: &str, update: D) {
+        should_spin!();
         let key = prefix.into();
         let update = update.to_string();
         self.tx.send(Message::Finish { key, update }).ok();

@@ -32,12 +32,12 @@ In general, specifying items should "just work" as you would when writing Rust c
 > Module [`alloc`][std::alloc] — Memory allocation APIs.
 >
 > ```md
-> Type [`Option`] represents an optional value: every [`Option`] is either
-> [`Some`][Option::Some] and contains a value, or [`None`][Option::None], and does not.
+> Every [`Option`] is either [`Some`][Option::Some][^1] and contains a value, or
+> [`None`][Option::None][^1], and does not.
 > ```
 >
-> Type [`Option`] represents an optional value: every [`Option`] is either
-> [`Some`][Option::Some] and contains a value, or [`None`][Option::None], and does not.
+> Every [`Option`] is either [`Some`][Option::Some][^1] and contains a value, or
+> [`None`][Option::None][^1], and does not.
 >
 > ```md
 > [`Ipv4Addr::LOCALHOST`][core::net::Ipv4Addr::LOCALHOST] — An IPv4 address with the
@@ -88,12 +88,12 @@ that an item is a macro, add `!` after the macro name, optionally followed by `(
 Note that there cannot be arguments within `()`, `[]`, or `{}`.
 
 > ```md
-> [`vec!`][std::vec!][^1] is different from [`vec`][std::vec], and don't accidentally
-> use [`format()`][std::fmt::format()] in place of [`format!()`][std::format!()][^1]!
+> [`vec!`][std::vec!][^2] is different from [`vec`][std::vec], and don't accidentally
+> use [`format()`][std::fmt::format()] in place of [`format!()`][std::format!()][^2]!
 > ```
 >
-> [`vec!`][std::vec!][^1] is different from [`vec`][std::vec], and don't accidentally
-> use [`format()`][std::fmt::format()] in place of [`format!()`][std::format!()][^1]!
+> [`vec!`][std::vec!][^2] is different from [`vec`][std::vec], and don't accidentally
+> use [`format()`][std::fmt::format()] in place of [`format!()`][std::format!()][^2]!
 
 The macro syntax works for attribute and derive macros as well (even though this is not
 how they are invoked).
@@ -231,17 +231,18 @@ treated the same as inline-style links `[text](id)`:
 Shortcuts are supported, and can contain inline markups:
 
 > ```md
-> You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^1] macro.
+> You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
 > ```
 >
-> You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^1] macro.
+> You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
 
 (The items must still be resolvable; in this case `Vec` and `vec!` come from the
 prelude.)
 
 ---
 
-[^1]:
+[^1]: TODO:
+[^2]:
     As of `rust-analyzer 2025-03-10`, links generated for re-exported items don't always
     work. This happens often with macros. Examples include [`std::format!`] (seen above)
     and [`tokio::main!`]. For more info, see [Caveats](caveats.md#re-exported-items).

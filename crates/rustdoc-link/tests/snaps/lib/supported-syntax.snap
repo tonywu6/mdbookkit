@@ -36,12 +36,12 @@ In general, specifying items should "just work" as you would when writing Rust c
 > Module [`alloc`](https://doc.rust-lang.org/stable/std/alloc/index.html "std::alloc") — Memory allocation APIs.
 >
 > ```md
-> Type [`Option`] represents an optional value: every [`Option`] is either
-> [`Some`][Option::Some] and contains a value, or [`None`][Option::None], and does not.
+> Every [`Option`] is either [`Some`][Option::Some][^1] and contains a value, or
+> [`None`][Option::None][^1], and does not.
 > ```
 >
-> Type [`Option`](https://doc.rust-lang.org/stable/core/option/enum.Option.html "Option") represents an optional value: every [`Option`](https://doc.rust-lang.org/stable/core/option/enum.Option.html "Option") is either
-> [`Some`](https://doc.rust-lang.org/stable/core/option/enum.Option.html#variant.Some "Option::Some") and contains a value, or [`None`](https://doc.rust-lang.org/stable/core/option/enum.Option.html#variant.None "Option::None"), and does not.
+> Every [`Option`](https://doc.rust-lang.org/stable/core/option/enum.Option.html "Option") is either [`Some`](https://doc.rust-lang.org/stable/core/option/enum.Option.html#variant.Some "Option::Some")[^1] and contains a value, or
+> [`None`](https://doc.rust-lang.org/stable/core/option/enum.Option.html#variant.None "Option::None")[^1], and does not.
 >
 > ```md
 > [`Ipv4Addr::LOCALHOST`][core::net::Ipv4Addr::LOCALHOST] — An IPv4 address with the
@@ -92,12 +92,12 @@ that an item is a macro, add `!` after the macro name, optionally followed by `(
 Note that there cannot be arguments within `()`, `[]`, or `{}`.
 
 > ```md
-> [`vec!`][std::vec!][^1] is different from [`vec`][std::vec], and don't accidentally
-> use [`format()`][std::fmt::format()] in place of [`format!()`][std::format!()][^1]!
+> [`vec!`][std::vec!][^2] is different from [`vec`][std::vec], and don't accidentally
+> use [`format()`][std::fmt::format()] in place of [`format!()`][std::format!()][^2]!
 > ```
 >
-> [`vec!`](https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html "std::vec!")[^1] is different from [`vec`](https://doc.rust-lang.org/stable/alloc/vec/index.html "std::vec"), and don't accidentally
-> use [`format()`](https://doc.rust-lang.org/stable/alloc/fmt/fn.format.html "std::fmt::format()") in place of [`format!()`](https://doc.rust-lang.org/stable/alloc/macros/macro.format.html "std::format!()")[^1]!
+> [`vec!`](https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html "std::vec!")[^2] is different from [`vec`](https://doc.rust-lang.org/stable/alloc/vec/index.html "std::vec"), and don't accidentally
+> use [`format()`](https://doc.rust-lang.org/stable/alloc/fmt/fn.format.html "std::fmt::format()") in place of [`format!()`](https://doc.rust-lang.org/stable/alloc/macros/macro.format.html "std::format!()")[^2]!
 
 The macro syntax works for attribute and derive macros as well (even though this is not
 how they are invoked).
@@ -235,17 +235,18 @@ treated the same as inline-style links `[text](id)`:
 Shortcuts are supported, and can contain inline markups:
 
 > ```md
-> You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^1] macro.
+> You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
 > ```
 >
-> You can create a [`Vec`](https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html "Vec") with [**`Vec::new`**](https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html#method.new "Vec::new"), or by using the [*`vec!`*](https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html "vec!")[^1] macro.
+> You can create a [`Vec`](https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html "Vec") with [**`Vec::new`**](https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html#method.new "Vec::new"), or by using the [*`vec!`*](https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html "vec!")[^2] macro.
 
 (The items must still be resolvable; in this case `Vec` and `vec!` come from the
 prelude.)
 
 ---
 
-[^1]:
+[^1]: TODO:
+[^2]:
     As of `rust-analyzer 2025-03-10`, links generated for re-exported items don't always
     work. This happens often with macros. Examples include [`std::format!`](https://doc.rust-lang.org/stable/alloc/macros/macro.format.html "std::format!") (seen above)
     and [`tokio::main!`](https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html "tokio::main!"). For more info, see [Caveats](caveats.md#re-exported-items).

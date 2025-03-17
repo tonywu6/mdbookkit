@@ -108,9 +108,7 @@ impl<'a> Page<'a> {
                     .chain(inner.iter().cloned())
                     .chain(std::iter::once(Event::End(TagEnd::Link)));
 
-                String::new()
-                    .pipe(|mut wr| cmark(stream, &mut wr).and(Ok(wr)))?
-                    .pipe(|out| output.push_str(&out));
+                cmark(stream, &mut output)?;
             } else {
                 output.push_str(&source[span.clone()]);
             }
@@ -118,9 +116,7 @@ impl<'a> Page<'a> {
             start = span.end;
         }
 
-        if start < source.len() {
-            output.push_str(&source[start..]);
-        }
+        output.push_str(&source[start..]);
 
         Ok(output)
     }
@@ -142,12 +138,10 @@ impl<'a, K: Eq + Hash> Pages<'a, K> {
         Q: Eq + Hash + Debug + ?Sized,
         L: FnMut(&str) -> Option<&'a str>,
     {
-        let page = self
-            .pages
+        self.pages
             .get(key)
-            .with_context(|| format!("no such document {key:?}"))?;
-
-        page.emit(links)
+            .with_context(|| format!("no such document {key:?}"))?
+            .emit(links)
     }
 }
 

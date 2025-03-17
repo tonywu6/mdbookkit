@@ -1,5 +1,5 @@
 [package]
-name = "crate-testing"
+name = "util-testing"
 version = "0.1.0"
 
 authors.workspace = true

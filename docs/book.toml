@@ -31,7 +31,7 @@ command = "cargo run --release --package mdbook-rustdoc-link"
 
 cache-dir = "build"
 manifest-dir = "../crates/rustdoc-link"
-rust-analyzer = "cargo run --release --package rust-analyzer --"
+rust-analyzer = "cargo run --release --package util-rust-analyzer --"
 
 [preprocessor.alerts]
 after = ["links"]

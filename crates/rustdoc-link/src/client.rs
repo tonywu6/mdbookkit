@@ -9,8 +9,8 @@ use std::{
 
 use anyhow::{bail, Context, Result};
 use async_lsp::{
-    concurrency::ConcurrencyLayer, panic::CatchUnwindLayer, router::Router, tracing::TracingLayer,
-    LanguageServer, MainLoop, ServerSocket,
+    concurrency::ConcurrencyLayer, panic::CatchUnwindLayer, router::Router, LanguageServer,
+    MainLoop, ServerSocket,
 };
 use lsp_types::{
     notification::{LogMessage, Progress, PublishDiagnostics, ShowMessage},
@@ -39,7 +39,7 @@ use crate::{
     sync::{EventSampler, EventSampling},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Client {
     pub env: Environment,
     server: OnceCell<Server>,
@@ -60,7 +60,7 @@ impl Client {
             .await?
             .clone();
 
-        let document = self.docs.open(server.server, uri, text).await?;
+        let opened = self.docs.open(server.server.clone(), uri, text).await?;
 
         server
             .stabilizer
@@ -68,7 +68,7 @@ impl Client {
             .await
             .context("timed out waiting for rust-analyzer to finish indexing")?;
 
-        Ok(document)
+        Ok(opened)
     }
 
     pub async fn dispose(self) -> Result<()> {
@@ -76,6 +76,22 @@ impl Client {
             server.dispose().await?;
         }
         Ok(())
+    }
+
+    // FIXME: investigate why impl Clone for Client causes async_lsp ServerSocket to
+    // disconnect when clone is dropped:
+    //
+    // let client = Client::new();
+    // let task1 = tokio::spawn({
+    //     let client = client.clone();
+    //     async move {
+    //         let _ = client.process("...").await;
+    //         drop(client);
+    //     }
+    // });
+    // task1.await; <-- thread panicked: (expected) sender (to be) alive
+    pub async fn dispose_shared(self: Arc<Self>) -> Result<()> {
+        Arc::into_inner(self).unwrap().dispose().await
     }
 }
 
@@ -171,7 +187,6 @@ impl Server {
                 .event::<StopEvent>(|_, _| ControlFlow::Break(Ok(())));
 
             ServiceBuilder::new()
-                .layer(TracingLayer::default())
                 .layer(CatchUnwindLayer::default())
                 .layer(ConcurrencyLayer::default())
                 .service(router)
@@ -183,7 +198,6 @@ impl Server {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())
-            .kill_on_drop(true)
             .spawn()
             .context("failed to spawn rust-analyzer")?;
 
@@ -260,12 +274,12 @@ impl Server {
             background,
             ..
         } = self;
+        let background = Arc::into_inner(background)
+            .expect("should not dispose while multiple server sockets still alive");
         server.shutdown(()).await?;
         server.exit(())?;
         server.emit(StopEvent)?;
-        Arc::into_inner(background)
-            .expect("dispose called while multiple references exist")
-            .await?;
+        background.await?;
         Ok(())
     }
 }
@@ -306,6 +320,8 @@ impl DocumentLock {
             },
         })?;
 
+        log::debug!("textDocument/didOpen {}", uri);
+
         Ok(OpenDocument {
             uri,
             server,
@@ -315,7 +331,7 @@ impl DocumentLock {
 }
 
 /// [OpenDocument] does not implement [Clone] because it will cause extraneous
-/// `textDocument/didClose` notifications. Cloning should be done via [Arc].
+/// `textDocument/didClose` notifications. Cloning should be done using [Arc].
 #[derive(Debug)]
 #[must_use = "bind this to a variable or document will be immediately closed"]
 pub struct OpenDocument {
@@ -335,7 +351,7 @@ impl OpenDocument {
                 partial_result_params: Default::default(),
             })
             .await
-            .context("failed to request for source definition")
+            .context("failed to request source definition")
             .tap_err(log_warning!())
             .unwrap_or_default()
             .map(|defs| match defs {
@@ -353,7 +369,7 @@ impl OpenDocument {
             .server
             .request::<ExternalDocs>(document_position(self.uri.clone(), position))
             .await
-            .context("failed to request for external docs")
+            .context("failed to request external docs")
             .tap_err(log_warning!())
             .unwrap_or_default()
             .context("server returned no result for external docs")?;
@@ -378,6 +394,7 @@ impl Drop for OpenDocument {
                     uri: self.uri.clone(),
                 },
             })
+            .tap_ok(|_| log::debug!("textDocument/didClose {}", self.uri))
             .context("error sending textDocument/didClose")
             .tap_err(log_debug!())
             .ok();
