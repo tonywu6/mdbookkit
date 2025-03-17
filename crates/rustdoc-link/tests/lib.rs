@@ -1,20 +1,18 @@
-use std::sync::Arc;
-
-use anyhow::Result;
+use anyhow::{Ok, Result};
 
 use mdbook_rustdoc_link::{env::Environment, logger::ConsoleLogger, Client, ClientConfig};
 use tap::Pipe;
 use tokio::task::JoinSet;
 use util_testing::{portable_snapshots, test_document, TestDocument};
 
-async fn snapshot(client: Arc<Client>, TestDocument { source, name }: TestDocument) -> Result<()> {
+async fn snapshot(client: Client, TestDocument { source, name }: TestDocument) -> Result<()> {
     let output = client.process(source).await?;
     portable_snapshots!().test(|| insta::assert_snapshot!(name, output))
 }
 
 #[tokio::test]
 async fn test_snapshots() -> Result<()> {
-    let client = client()?;
+    let client = setup()?;
 
     let tests = [
         test_document!("../../../docs/src/rustdoc-link/supported-syntax.md"),
@@ -41,12 +39,12 @@ async fn test_snapshots() -> Result<()> {
         panic!("{errors}")
     }
 
-    client.dispose_shared().await?;
+    client.dispose().await?;
 
     Ok(())
 }
 
-fn client() -> Result<Arc<Client>> {
+fn setup() -> Result<Client> {
     ConsoleLogger::init();
     ClientConfig {
         rust_analyzer: Some("cargo run --release --package util-rust-analyzer --".into()),
@@ -54,6 +52,5 @@ fn client() -> Result<Arc<Client>> {
     }
     .pipe(Environment::new)?
     .pipe(Client::new)
-    .pipe(Arc::new)
     .pipe(Ok)
 }

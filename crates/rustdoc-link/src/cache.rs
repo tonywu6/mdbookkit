@@ -38,13 +38,13 @@ where
 {
     async fn cached<C: Caching>(self, this: &'a Client, request: Vec<Item>) -> Result<Resolved> {
         let cached = if let Ok(cache) = this
-            .env
+            .env()
             .read_cache::<C>()
             .context("could not read cache")
             .tap_err(log_debug!())
         {
             cache
-                .reuse(&this.env, &request)
+                .reuse(this.env(), &request)
                 .await
                 .context("could not reuse cache")
                 .tap_err(log_debug!())
@@ -60,12 +60,12 @@ where
 
         let symbols = self(this, request).await?;
 
-        if let Ok(cache) = C::build(&this.env, &symbols)
+        if let Ok(cache) = C::build(this.env(), &symbols)
             .await
             .context("could not build cache")
             .tap_err(log_debug!())
         {
-            this.env
+            this.env()
                 .save_cache(cache)
                 .context("could not save cache")
                 .tap_err(log_debug!())

@@ -80,7 +80,7 @@ async fn mdbook() -> Result<()> {
         prefer_local_links,
         smart_punctuation,
         ..
-    } = client.env.config;
+    } = client.env().config;
 
     let (pages, request) = book.iter().try_fold(
         (Pages::default(), HashSet::new()),

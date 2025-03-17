@@ -54,7 +54,7 @@ impl Client {
             prefer_local_links,
             smart_punctuation,
             ..
-        } = self.env.config;
+        } = self.env().config;
 
         let stream = markdown_parser(content, smart_punctuation).into_offset_iter();
 
@@ -68,7 +68,7 @@ impl Client {
     }
 
     pub async fn request(&self, request: Vec<Item>) -> Result2<Resolved> {
-        let src = std::fs::read_to_string(self.env.entrypoint.path())?;
+        let src = std::fs::read_to_string(self.env().entrypoint.path())?;
 
         let request = Request::new(&src, request);
 
@@ -81,7 +81,7 @@ impl Client {
         log::trace!("request context\n\n{}\n", request.context);
 
         let document = self
-            .open(self.env.entrypoint.clone(), request.context)
+            .open(self.env().entrypoint.clone(), request.context)
             .await?
             .pipe(Arc::new);
 

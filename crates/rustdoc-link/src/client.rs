@@ -39,16 +39,17 @@ use crate::{
     sync::{EventSampler, EventSampling},
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Client {
-    pub env: Environment,
-    server: OnceCell<Server>,
+    env: Arc<Environment>,
+    server: Arc<OnceCell<Server>>,
     docs: DocumentLock,
 }
 
 impl Client {
     pub fn new(env: Environment) -> Self {
-        let server = OnceCell::new();
+        let env = env.into();
+        let server = OnceCell::new().into();
         let docs = DocumentLock::default();
         Self { env, server, docs }
     }
@@ -72,26 +73,16 @@ impl Client {
     }
 
     pub async fn dispose(self) -> Result<()> {
-        if let Some(server) = self.server.into_inner() {
+        let mut server = Arc::into_inner(self.server)
+            .expect("should not dispose while multiple server sockets are still alive");
+        if let Some(server) = server.take() {
             server.dispose().await?;
         }
         Ok(())
     }
 
-    // FIXME: investigate why impl Clone for Client causes async_lsp ServerSocket to
-    // disconnect when clone is dropped:
-    //
-    // let client = Client::new();
-    // let task1 = tokio::spawn({
-    //     let client = client.clone();
-    //     async move {
-    //         let _ = client.process("...").await;
-    //         drop(client);
-    //     }
-    // });
-    // task1.await; <-- thread panicked: (expected) sender (to be) alive
-    pub async fn dispose_shared(self: Arc<Self>) -> Result<()> {
-        Arc::into_inner(self).unwrap().dispose().await
+    pub fn env(&self) -> &Environment {
+        &self.env
     }
 }
 
@@ -275,7 +266,7 @@ impl Server {
             ..
         } = self;
         let background = Arc::into_inner(background)
-            .expect("should not dispose while multiple server sockets still alive");
+            .expect("should not dispose while multiple server sockets are still alive");
         server.shutdown(()).await?;
         server.exit(())?;
         server.emit(StopEvent)?;
