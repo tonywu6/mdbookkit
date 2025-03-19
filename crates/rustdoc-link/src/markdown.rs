@@ -1,153 +1,42 @@
-use std::{
-    borrow::Borrow,
-    collections::{HashMap, HashSet},
-    fmt::Debug,
-    hash::Hash,
-    ops::Range,
-};
+use std::{borrow::Cow, fmt};
 
-use anyhow::{bail, Context, Result};
-use pulldown_cmark::{
-    BrokenLink, BrokenLinkCallback, CowStr, Event, LinkType, Options, Parser, Tag, TagEnd,
-};
+use anyhow::Result;
+use pulldown_cmark::{BrokenLink, BrokenLinkCallback, CowStr, Event, Options, Parser};
 use pulldown_cmark_to_cmark::cmark;
 use tap::Pipe;
 
-#[derive(Debug)]
-pub struct Page<'a> {
-    source: &'a str,
-    links: Vec<ParsedLink<'a>>,
-}
+use crate::Spanned;
 
-#[derive(Debug)]
-struct ParsedLink<'a> {
-    dest_url: CowStr<'a>,
-    title: CowStr<'a>,
-    span: Range<usize>,
-    inner: Vec<Event<'a>>,
-}
+pub struct PatchStream<'s>(Vec<Cow<'s, str>>);
 
-impl<'a> Page<'a> {
-    pub fn read<S>(source: &'a str, stream: S) -> Result<(Self, HashSet<String>)>
+impl<'s> PatchStream<'s> {
+    pub fn patch<'a, E, S>(source: &'s str, stream: S) -> Result<Self>
     where
-        S: Iterator<Item = (Event<'a>, Range<usize>)>,
+        E: Iterator<Item = Event<'a>>,
+        S: Iterator<Item = Spanned<E>>,
     {
-        let mut items = HashSet::new();
-        let mut links = Vec::new();
-        let mut link: Option<ParsedLink> = None;
-
-        for (event, span) in stream {
-            if matches!(event, Event::End(TagEnd::Link)) {
-                match link.take() {
-                    Some(link) => {
-                        if link.span == span {
-                            links.push(link);
-                            continue;
-                        } else {
-                            bail!("mismatching span, expected {:?}, found {span:?}", link.span)
-                        }
-                    }
-                    None => bail!("unexpected `TagEnd::Link` at {span:?}"),
-                }
-            }
-
-            let Event::Start(Tag::Link {
-                dest_url, title, ..
-            }) = event
-            else {
-                if let Some(link) = link.as_mut() {
-                    link.inner.push(event);
-                }
-                continue;
-            };
-
-            if link.is_some() {
-                bail!("unexpected `Tag::Link` in `Tag::Link`")
-            }
-
-            items.insert(dest_url.to_string());
-
-            link = Some(ParsedLink {
-                dest_url,
-                title,
-                span,
-                inner: vec![],
-            });
-        }
-
-        Ok((Page { source, links }, items))
-    }
-
-    pub fn emit<L>(&self, mut link_getter: L) -> Result<String>
-    where
-        L: FnMut(&str) -> Option<&'a str>,
-    {
-        let Self { source, links } = self;
-
-        let mut output = String::with_capacity(source.len());
+        let mut output = vec![];
         let mut start = 0usize;
 
-        for ParsedLink {
-            dest_url,
-            title,
-            span,
-            inner,
-        } in links
-        {
-            output.push_str(&source[start..span.start]);
-
-            if let Some(dest_url) = link_getter(dest_url) {
-                let link = Tag::Link {
-                    link_type: LinkType::Inline,
-                    dest_url: dest_url.into(),
-                    title: title.clone(),
-                    id: CowStr::Borrowed(""),
-                };
-
-                let stream = std::iter::once(Event::Start(link))
-                    .chain(inner.iter().cloned())
-                    .chain(std::iter::once(Event::End(TagEnd::Link)));
-
-                cmark(stream, &mut output)?;
-            } else {
-                output.push_str(&source[span.clone()]);
-            }
-
+        for (events, span) in stream {
+            let patch = String::new().pipe(|mut out| cmark(events, &mut out).and(Ok(out)))?;
+            output.push(Cow::Borrowed(&source[start..span.start]));
+            output.push(Cow::Owned(patch));
             start = span.end;
         }
+        output.push(Cow::Borrowed(&source[start..]));
 
-        output.push_str(&source[start..]);
-
-        Ok(output)
+        Ok(Self(output))
     }
 }
 
-impl<'a, K: Eq + Hash> Pages<'a, K> {
-    pub fn read<S>(&mut self, key: K, source: &'a str, stream: S) -> Result<HashSet<String>>
-    where
-        S: Iterator<Item = (Event<'a>, Range<usize>)>,
-    {
-        let (page, items) = Page::read(source, stream)?;
-        self.pages.insert(key, page);
-        Ok(items)
+impl fmt::Display for PatchStream<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for p in self.0.iter() {
+            fmt::Display::fmt(p, f)?;
+        }
+        Ok(())
     }
-
-    pub fn emit<Q, L>(&self, key: &Q, links: L) -> Result<String>
-    where
-        K: Borrow<Q>,
-        Q: Eq + Hash + Debug + ?Sized,
-        L: FnMut(&str) -> Option<&'a str>,
-    {
-        self.pages
-            .get(key)
-            .with_context(|| format!("no such document {key:?}"))?
-            .emit(links)
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct Pages<'a, K> {
-    pages: HashMap<K, Page<'a>>,
 }
 
 pub fn markdown_parser(text: &str, smart_punctuation: bool) -> MarkdownStream<'_> {

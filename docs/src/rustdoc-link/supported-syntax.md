@@ -163,7 +163,7 @@ issue][issues]!
 
 ## Special types
 
-As of `rust-analyzer 2025-03-10`, there is **very limited support** on many [built-in
+As of `rust-analyzer 2025-03-17`, there is **very limited support** on many [built-in
 types][rust-types]:
 
 **Primitive types**:
@@ -243,6 +243,6 @@ prelude.)
 
 [^1]: TODO:
 [^2]:
-    As of `rust-analyzer 2025-03-10`, links generated for re-exported items don't always
+    As of `rust-analyzer 2025-03-17`, links generated for re-exported items don't always
     work. This happens often with macros. Examples include [`std::format!`] (seen above)
     and [`tokio::main!`]. For more info, see [Caveats](caveats.md#re-exported-items).

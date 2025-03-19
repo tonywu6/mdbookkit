@@ -1,229 +1,161 @@
 use std::{
-    collections::{HashMap, HashSet},
-    future::Future,
+    borrow::Cow,
+    collections::{BTreeSet, HashMap},
+    hash::Hash,
+    iter,
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use lsp_types::Url;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tap::{Pipe, Tap, TapFallible};
 use tokio::task::JoinSet;
 
-use crate::{
-    client::{Client, ItemLinks},
-    env::Environment,
-    item::Item,
-    log_debug,
-    logger::spinner,
-    Resolved,
-};
+use crate::{env::Environment, link::ItemLinks, log_debug, page::Pages, Resolver};
 
 #[allow(async_fn_in_trait)]
-pub trait Caching: DeserializeOwned + Serialize {
-    async fn reuse(self, env: &Environment, req: &[Item]) -> Result<Resolved>;
-    async fn build(env: &Environment, map: &Resolved) -> Result<Self>;
-}
+pub trait Cache: DeserializeOwned + Serialize {
+    type Validated: Resolver;
 
-#[allow(async_fn_in_trait)]
-pub trait Cacheable<'a> {
-    async fn cached<C: Caching>(self, this: &'a Client, request: Vec<Item>) -> Result<Resolved>;
-}
+    async fn reuse(self, env: &Environment) -> Result<Self::Validated>;
 
-impl<'a, F, R> Cacheable<'a> for F
-where
-    // AsyncFnOnce
-    F: FnOnce(&'a Client, Vec<Item>) -> R,
-    R: Future<Output = Result<Resolved>>,
-{
-    async fn cached<C: Caching>(self, this: &'a Client, request: Vec<Item>) -> Result<Resolved> {
-        let cached = if let Ok(cache) = this
-            .env()
-            .read_cache::<C>()
-            .context("could not read cache")
-            .tap_err(log_debug!())
-        {
-            cache
-                .reuse(this.env(), &request)
-                .await
-                .context("could not reuse cache")
-                .tap_err(log_debug!())
-                .ok()
-        } else {
-            None
-        };
+    async fn build<K>(env: &Environment, content: &Pages<'_, K>) -> Result<Self>
+    where
+        K: Eq + Hash;
 
-        if let Some(cached) = cached {
-            spinner().create("cache", None).finish("cache", "found");
-            return Ok(cached);
-        }
-
-        let symbols = self(this, request).await?;
-
-        if let Ok(cache) = C::build(this.env(), &symbols)
+    async fn load(env: &Environment) -> Result<Self::Validated> {
+        env.load_temp::<Self, _>("cache.json")
+            .tap_err(log_debug!())?
+            .reuse(env)
             .await
-            .context("could not build cache")
             .tap_err(log_debug!())
-        {
-            this.env()
-                .save_cache(cache)
-                .context("could not save cache")
-                .tap_err(log_debug!())
-                .ok();
-        }
+    }
 
-        Ok(symbols)
+    async fn save<K>(env: &Environment, content: &Pages<'_, K>) -> Result<()>
+    where
+        K: Eq + Hash,
+    {
+        let this = Self::build(env, content).await?;
+        env.save_temp::<Self, _>("cache.json", &this)
+            .tap_err(log_debug!())
     }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
-pub enum Cache {
-    V1(CacheV1),
+pub enum FileCache {
+    V1(FileCacheV1),
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CacheV1 {
-    hash: String,
-    urls: HashMap<String, (Option<Url>, Option<Url>)>,
-    deps: Vec<String>,
-}
+impl Cache for FileCache {
+    type Validated = HashMap<String, ItemLinks>;
 
-impl Caching for Cache {
-    async fn reuse(self, env: &Environment, req: &[Item]) -> Result<Resolved> {
+    async fn reuse(self, env: &Environment) -> Result<Self::Validated> {
         match self {
-            Self::V1(cache) => cache.reuse(env, req).await,
+            Self::V1(cache) => Ok(cache.reuse(env).await?),
         }
     }
 
-    async fn build(env: &Environment, map: &Resolved) -> Result<Self> {
-        Ok(Self::V1(CacheV1::build(env, map).await?))
+    async fn build<K>(env: &Environment, content: &Pages<'_, K>) -> Result<Self>
+    where
+        K: Eq + Hash,
+    {
+        Ok(Self::V1(FileCacheV1::build(env, content).await?))
     }
 }
 
-impl Caching for CacheV1 {
-    async fn reuse(self, _: &Environment, req: &[Item]) -> Result<Resolved> {
-        let hash = JoinSet::<Result<(String, String)>>::new()
-            .tap_mut(|tasks| {
-                for dep in self.deps.iter() {
-                    let Ok(dep) = dep.parse() else {
-                        continue;
-                    };
-                    tasks.spawn(read_dep(dep));
-                }
-            })
-            .join_all()
-            .await
-            .into_iter()
-            .filter_map(|result| {
-                result
-                    .context("failed to read cache dependency")
-                    .tap_err(log_debug!())
-                    .ok()
-            })
-            .collect::<Vec<_>>()
-            .tap_mut(|deps| deps.sort_by(|(k1, _), (k2, _)| k1.cmp(k2)))
-            .into_iter()
-            .fold(Sha256::new(), |mut hash, (_, src)| {
-                hash.update(src);
-                hash
-            })
-            .pipe(|hash| hash.finalize().digest());
+#[derive(Debug, Deserialize, Serialize)]
+pub struct FileCacheV1 {
+    hash: String,
+    urls: Vec<(String, ItemLinks)>,
+}
+
+impl Cache for FileCacheV1 {
+    type Validated = HashMap<String, ItemLinks>;
+
+    async fn reuse(self, env: &Environment) -> Result<Self::Validated> {
+        let deps = self
+            .urls
+            .iter()
+            .flat_map(|(_, links)| links.deps())
+            .map(Cow::Borrowed);
+
+        let hash = Self::hash(env, deps).await;
 
         if hash != self.hash {
             bail!("checksum mismatch, expected {}, actual {hash}", self.hash)
         }
 
-        let expected = req.iter().map(|item| &item.key).collect::<HashSet<_>>();
-        let existing = self.urls.keys().collect::<HashSet<_>>();
-
-        if !expected.is_subset(&existing) {
-            return Err(anyhow!("expected  {expected:#?}, found {existing:#?}"))
-                .context("could not reuse cache");
-        }
-
-        let items = self
-            .urls
-            .into_iter()
-            .map(|(key, (web, local))| {
-                (
-                    key,
-                    ItemLinks {
-                        web,
-                        local,
-                        defs: vec![],
-                    },
-                )
-            })
-            .collect();
-
-        Ok(Resolved { items })
+        Ok(self.urls.into_iter().collect())
     }
 
-    async fn build(env: &Environment, res: &Resolved) -> Result<Self> {
-        let (hash, deps) = JoinSet::<Result<(String, String)>>::new()
-            .tap_mut(|tasks| {
-                tasks.spawn(read_dep(env.entrypoint.clone()));
-            })
-            .tap_mut(|tasks| {
-                tasks.spawn(read_dep(env.crate_dir.join("Cargo.toml").unwrap()));
-            })
-            .tap_mut(|tasks| {
-                if env.source_dir != env.crate_dir {
-                    tasks.spawn(read_dep(env.source_dir.join("Cargo.toml").unwrap()));
-                }
-            })
-            .tap_mut(|tasks| {
-                for dep in res
-                    .items
-                    .iter()
-                    .filter_map(|(_, sym)| {
-                        if sym.is_empty() {
-                            None
-                        } else {
-                            Some(sym.defs.iter())
-                        }
-                    })
-                    .flatten()
-                {
-                    let Some(relpath) = env.source_dir.make_relative(dep) else {
-                        continue;
-                    };
-                    if relpath.starts_with("../") {
-                        continue;
-                    }
-                    tasks.spawn(read_dep(dep.clone()));
-                }
-            })
-            .join_all()
-            .await
-            .into_iter()
-            .filter_map(|result| {
-                result
-                    .context("failed to read cache dependency")
-                    .tap_err(log_debug!())
-                    .ok()
-            })
-            .collect::<Vec<_>>()
-            .tap_mut(|deps| deps.sort_by(|(k1, _), (k2, _)| k1.cmp(k2)))
-            .into_iter()
-            .fold(
-                (Sha256::new(), vec![]),
-                |(mut hash, mut deps), (key, src)| {
-                    deps.push(key);
-                    hash.update(src);
-                    (hash, deps)
-                },
-            )
-            .pipe(|(hash, deps)| (hash.finalize().digest(), deps));
-
-        let urls = res
-            .items
+    async fn build<K>(env: &Environment, content: &Pages<'_, K>) -> Result<Self>
+    where
+        K: Eq + Hash,
+    {
+        let urls = content
+            .links()
             .iter()
-            .map(|(k, s)| (k.clone(), (s.web.clone(), s.local.clone())))
-            .collect::<HashMap<_, _>>();
+            .map(|(k, v)| (k.to_string(), v.clone()))
+            .collect::<Vec<_>>();
 
-        Ok(Self { hash, urls, deps })
+        let deps = urls
+            .iter()
+            .flat_map(|(_, links)| links.deps())
+            .map(Cow::Borrowed);
+
+        let hash = Self::hash(env, deps).await;
+
+        Ok(Self { hash, urls })
+    }
+}
+
+impl FileCacheV1 {
+    async fn hash<'a, D>(env: &'a Environment, deps: D) -> String
+    where
+        D: Iterator<Item = Cow<'a, Url>>,
+    {
+        deps.chain(
+            iter::once(Cow::Borrowed(&env.entrypoint))
+                .chain(iter::once(Cow::Owned(
+                    env.crate_dir.join("Cargo.toml").unwrap(),
+                )))
+                .chain(if env.source_dir != env.crate_dir {
+                    Some(Cow::Owned(env.source_dir.join("Cargo.toml").unwrap()))
+                } else {
+                    None
+                }),
+        )
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .filter_map(|dep| {
+            let relpath = env.source_dir.make_relative(&dep)?;
+            if relpath.starts_with("../") {
+                None
+            } else {
+                Some(dep.into_owned())
+            }
+        })
+        .map(read_dep)
+        .collect::<JoinSet<_>>()
+        .join_all()
+        .await
+        .into_iter()
+        .filter_map(|result| {
+            result
+                .context("failed to read cache dependency")
+                .tap_err(log_debug!())
+                .ok()
+        })
+        .collect::<Vec<_>>()
+        .tap_mut(|deps| deps.sort_by(|(k1, _), (k2, _)| k1.cmp(k2)))
+        .into_iter()
+        .fold(Sha256::new(), |mut hash, (_, src)| {
+            hash.update(src);
+            hash
+        })
+        .pipe(|hash| hash.finalize().digest())
     }
 }
 

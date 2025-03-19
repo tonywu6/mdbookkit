@@ -34,24 +34,28 @@ use tower::ServiceBuilder;
 
 use crate::{
     env::Environment,
+    link::ItemLinks,
     log_debug, log_warning,
     logger::spinner,
     sync::{EventSampler, EventSampling},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Client {
-    env: Arc<Environment>,
-    server: Arc<OnceCell<Server>>,
+    env: Environment,
+    server: OnceCell<Server>,
     docs: DocumentLock,
 }
 
 impl Client {
     pub fn new(env: Environment) -> Self {
-        let env = env.into();
-        let server = OnceCell::new().into();
+        let server = OnceCell::new();
         let docs = DocumentLock::default();
         Self { env, server, docs }
+    }
+
+    pub fn env(&self) -> &Environment {
+        &self.env
     }
 
     pub async fn open(&self, uri: Url, text: String) -> Result<OpenDocument> {
@@ -72,17 +76,18 @@ impl Client {
         Ok(opened)
     }
 
-    pub async fn dispose(self) -> Result<()> {
-        let mut server = Arc::into_inner(self.server)
-            .expect("should not dispose while multiple server sockets are still alive");
-        if let Some(server) = server.take() {
+    pub async fn stop(self) -> Result<()> {
+        if let Some(server) = self.server.into_inner() {
             server.dispose().await?;
         }
         Ok(())
     }
 
-    pub fn env(&self) -> &Environment {
-        &self.env
+    pub async fn drop(self: Arc<Self>) -> Result<()> {
+        let Some(this) = Arc::into_inner(self) else {
+            bail!("attempted to shutdown a client that is still referenced")
+        };
+        this.stop().await
     }
 }
 
@@ -277,9 +282,9 @@ impl Server {
 
 struct StopEvent;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default)]
 struct DocumentLock {
-    opened: Arc<RwLock<DocumentMap>>,
+    opened: RwLock<DocumentMap>,
 }
 
 type DocumentMap = HashMap<Url, (Arc<Semaphore>, i32)>;
@@ -333,7 +338,7 @@ pub struct OpenDocument {
 
 impl OpenDocument {
     pub async fn resolve(&self, position: Position) -> Result<ItemLinks> {
-        let sources = self
+        let defs = self
             .server
             .clone()
             .definition(GotoDefinitionParams {
@@ -365,15 +370,7 @@ impl OpenDocument {
             .unwrap_or_default()
             .context("server returned no result for external docs")?;
 
-        if web.is_none() && local.is_none() {
-            bail!("server returned no result for external docs");
-        } else {
-            Ok(ItemLinks {
-                web,
-                local,
-                defs: sources,
-            })
-        }
+        ItemLinks::new(web, local, defs)
     }
 }
 
@@ -389,31 +386,6 @@ impl Drop for OpenDocument {
             .context("error sending textDocument/didClose")
             .tap_err(log_debug!())
             .ok();
-    }
-}
-
-#[derive(Debug, Default)]
-pub struct ItemLinks {
-    pub web: Option<Url>,
-    pub local: Option<Url>,
-    pub defs: Vec<Url>,
-}
-
-impl ItemLinks {
-    pub fn is_empty(&self) -> bool {
-        self.web.is_none() && self.local.is_none()
-    }
-
-    pub fn with_fragment(mut self, fragment: Option<&str>) -> Self {
-        if let Some(fragment) = fragment {
-            if let Some(web) = &mut self.web {
-                web.set_fragment(Some(fragment));
-            }
-            if let Some(local) = &mut self.local {
-                local.set_fragment(Some(fragment));
-            }
-        }
-        self
     }
 }
 

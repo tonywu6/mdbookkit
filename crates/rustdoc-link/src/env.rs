@@ -7,25 +7,49 @@ use std::{
 use anyhow::{anyhow, Context, Result};
 use cargo_toml::{Manifest, Product};
 use lsp_types::Url;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use shlex::Shlex;
 use tap::Pipe;
 use tokio::process::Command;
 
-use crate::ClientConfig;
+use crate::markdown::{markdown_parser, MarkdownStream};
+
+#[derive(clap::Parser, Deserialize, Debug, Default, Clone)]
+#[serde(rename_all = "kebab-case")]
+pub struct Config {
+    #[arg(long)]
+    #[serde(default)]
+    pub rust_analyzer: Option<String>,
+
+    #[arg(long)]
+    #[serde(default)]
+    pub manifest_dir: Option<PathBuf>,
+
+    #[arg(long)]
+    #[serde(default)]
+    pub cache_dir: Option<PathBuf>,
+
+    #[arg(long)]
+    #[serde(default)]
+    pub smart_punctuation: bool,
+
+    #[arg(long)]
+    #[serde(default)]
+    pub prefer_local_links: bool,
+}
 
 #[derive(Debug, Clone)]
 pub struct Environment {
-    pub cache_dir: TempDir,
+    pub temp_dir: TempDir,
     pub crate_dir: Url,
     pub source_dir: Url,
     pub entrypoint: Url,
-    pub config: ClientConfig,
+    pub config: Config,
 }
 
 impl Environment {
-    pub fn new(build_opts: ClientConfig) -> Result<Self> {
-        let cwd = build_opts
+    pub fn new(config: Config) -> Result<Self> {
+        let cwd = config
             .manifest_dir
             .clone()
             .map(Ok)
@@ -80,7 +104,7 @@ impl Environment {
             .pipe(Url::from_directory_path)
             .unwrap();
 
-        let cache_dir = build_opts
+        let cache_dir = config
             .cache_dir
             .clone()
             .map(TempDir::Persistent)
@@ -94,10 +118,10 @@ impl Environment {
 
         Ok(Self {
             crate_dir,
-            cache_dir,
+            temp_dir: cache_dir,
             source_dir,
             entrypoint,
-            config: build_opts,
+            config,
         })
     }
 
@@ -118,19 +142,45 @@ impl Environment {
         }
     }
 
-    pub fn read_cache<C: for<'de> Deserialize<'de>>(&self) -> Result<C> {
-        let path = self.cache_dir.as_ref().join("cache.json");
-        let text = std::fs::read_to_string(&path).context("failed to read cache file")?;
+    pub fn markdown<'a>(&self, source: &'a str) -> MarkdownStream<'a> {
+        let Config {
+            smart_punctuation, ..
+        } = self.config;
+        markdown_parser(source, smart_punctuation)
+    }
+
+    pub fn emit_config(&self) -> EmitConfig {
+        let Config {
+            prefer_local_links, ..
+        } = self.config;
+        EmitConfig { prefer_local_links }
+    }
+
+    pub fn load_temp<T, P>(&self, path: P) -> Result<T>
+    where
+        T: DeserializeOwned,
+        P: AsRef<Path>,
+    {
+        let path = self.temp_dir.as_ref().join(path);
+        let text = std::fs::read_to_string(&path).context("failed to read from cache dir")?;
         Ok(serde_json::from_str(&text)?)
     }
 
-    pub fn save_cache<C: Serialize>(&self, cache: C) -> Result<()> {
-        let path = self.cache_dir.as_ref().join("cache.json");
-        let text = serde_json::to_string(&cache).context("failed to serialize cache")?;
+    pub fn save_temp<T, P>(&self, path: P, temp: &T) -> Result<()>
+    where
+        T: Serialize,
+        P: AsRef<Path>,
+    {
+        let path = self.temp_dir.as_ref().join(path);
+        let text = serde_json::to_string(&temp).context("failed to serialize cache data")?;
         std::fs::create_dir_all(path.parent().unwrap()).context("failed to create cache dir")?;
-        std::fs::write(path, text).context("failed to write cache")?;
+        std::fs::write(path, text).context("failed to write to cache dir")?;
         Ok(())
     }
+}
+
+pub struct EmitConfig {
+    pub prefer_local_links: bool,
 }
 
 #[derive(Debug, Clone)]

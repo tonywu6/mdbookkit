@@ -1,22 +1,27 @@
+use std::sync::Arc;
+
 use anyhow::{bail, Result};
 
-use mdbook_rustdoc_link::{env::Environment, logger::ConsoleLogger, Client, ClientConfig};
+use mdbook_rustdoc_link::{
+    env::{Config, Environment},
+    logger::ConsoleLogger,
+    Client,
+};
 use similar::{ChangeTag, TextDiff};
 use tap::Pipe;
 use tokio::task::JoinSet;
 use util_testing::{portable_snapshots, test_document, TestDocument};
 
-async fn snapshot(client: Client, TestDocument { source, name }: TestDocument) -> Result<()> {
+async fn snapshot(client: Arc<Client>, TestDocument { source, name }: TestDocument) -> Result<()> {
     let output = client.process(source).await?;
 
     portable_snapshots!().test(|| insta::assert_snapshot!(name, output))?;
-
-    invariant_whitespace(source, &output)?;
+    assert_no_whitespace_change(source, &output)?;
 
     Ok(())
 }
 
-fn invariant_whitespace(source: &str, output: &str) -> Result<()> {
+fn assert_no_whitespace_change(source: &str, output: &str) -> Result<()> {
     let changed_lines = TextDiff::from_words(source, output)
         .iter_all_changes()
         .filter_map(|change| {
@@ -67,18 +72,19 @@ async fn test_snapshots() -> Result<()> {
         panic!("{errors}")
     }
 
-    client.dispose().await?;
+    client.drop().await?;
 
     Ok(())
 }
 
-fn setup() -> Result<Client> {
+fn setup() -> Result<Arc<Client>> {
     ConsoleLogger::init();
-    ClientConfig {
+    Config {
         rust_analyzer: Some("cargo run --release --package util-rust-analyzer --".into()),
         ..Default::default()
     }
     .pipe(Environment::new)?
     .pipe(Client::new)
+    .pipe(Arc::new)
     .pipe(Ok)
 }

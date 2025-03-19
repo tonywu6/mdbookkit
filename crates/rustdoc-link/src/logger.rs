@@ -24,6 +24,13 @@ macro_rules! log_debug {
 }
 
 #[macro_export]
+macro_rules! log_trace {
+    () => {
+        |err| log::trace!("{err:?}")
+    };
+}
+
+#[macro_export]
 macro_rules! log_warning {
     () => {
         |err| {

@@ -1,22 +1,21 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     io::{Read, Write},
 };
 
 use anyhow::Result;
 
 use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
-use mdbook_rustdoc_link::{
-    cache::{Cache, Cacheable},
-    env::Environment,
-    item::Item,
-    log_warning,
-    logger::ConsoleLogger,
-    markdown::{markdown_parser, Pages},
-    preprocessor_name, Client, ClientConfig,
-};
 use serde::Deserialize;
 use tap::{Pipe, TapFallible};
+
+use mdbook_rustdoc_link::{
+    cache::{Cache, FileCache},
+    env::{Config, Environment},
+    log_debug, log_warning,
+    logger::ConsoleLogger,
+    preprocessor_name, Client, Pages, Resolver,
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -38,7 +37,7 @@ struct Command {
 #[derive(clap::Subcommand, Debug, Clone)]
 enum Commands {
     Supports { renderer: String },
-    Markdown(ClientConfig),
+    Markdown(Config),
 }
 
 async fn mdbook() -> Result<()> {
@@ -47,63 +46,59 @@ async fn mdbook() -> Result<()> {
         .pipe(String::from_utf8)?
         .pipe_as_ref(serde_json::from_str)?;
 
-    let options = {
-        let mut options = if let Some(config) = context.config.get_preprocessor(preprocessor_name())
+    let config = {
+        let mut config = if let Some(config) = context.config.get_preprocessor(preprocessor_name())
         {
-            ClientConfig::deserialize(toml::Value::Table(config.clone()))?
+            Config::deserialize(toml::Value::Table(config.clone()))?
         } else {
             Default::default()
         };
 
-        if let Some(path) = options.manifest_dir {
-            options.manifest_dir = Some(context.root.join(path))
+        if let Some(path) = config.manifest_dir {
+            config.manifest_dir = Some(context.root.join(path))
         } else {
-            options.manifest_dir = Some(context.root.clone())
+            config.manifest_dir = Some(context.root.clone())
         }
 
-        if let Some(path) = options.cache_dir {
-            options.cache_dir = Some(context.root.join(path))
+        if let Some(path) = config.cache_dir {
+            config.cache_dir = Some(context.root.join(path))
         }
 
-        options.smart_punctuation = context
+        config.smart_punctuation = context
             .config
             .get_deserialized_opt::<bool, _>("output.html.smart-punctuation")
             .unwrap_or_default()
             .unwrap_or(true);
 
-        options
+        config
     };
 
-    let client = Client::new(Environment::new(options)?);
+    let client = Client::new(Environment::new(config)?);
 
-    let ClientConfig {
-        prefer_local_links,
-        smart_punctuation,
-        ..
-    } = client.env().config;
+    let cached = FileCache::load(client.env()).await.ok();
 
-    let (pages, request) = book.iter().try_fold(
-        (Pages::default(), HashSet::new()),
-        |(mut pages, mut items), item| {
-            let BookItem::Chapter(ch) = item else {
-                return Ok((pages, items));
-            };
-            let Some(key) = &ch.source_path else {
-                return Ok((pages, items));
-            };
-            let stream = markdown_parser(&ch.content, smart_punctuation).into_offset_iter();
-            let parsed = match pages.read(key.clone(), &ch.content, stream) {
-                Ok(parsed) => parsed,
-                Err(error) => return Err(error),
-            };
-            items.extend(parsed);
-            Ok((pages, items))
-        },
-    )?;
+    let mut content = Pages::default();
 
-    let request = Item::parse_all(request.iter());
+    for item in book.iter() {
+        let BookItem::Chapter(ch) = item else {
+            continue;
+        };
+        let Some(key) = &ch.source_path else {
+            continue;
+        };
+        let stream = client.env().markdown(&ch.content).into_offset_iter();
+        content.read(key.clone(), &ch.content, stream)?;
+    }
 
-    let symbols = Client::request.cached::<Cache>(&client, request).await?;
+    if let Some(cached) = cached {
+        cached
+            .resolve(&mut content)
+            .await
+            .tap_err(log_debug!())
+            .ok();
+    }
+
+    client.resolve(&mut content).await?;
 
     let mut result = book
         .iter()
@@ -114,40 +109,65 @@ async fn mdbook() -> Result<()> {
             let Some(key) = &ch.source_path else {
                 return None;
             };
-            pages
-                .emit(key, |k| symbols.get(k, prefer_local_links))
+            content
+                .emit(key, &client.env().emit_config())
                 .tap_err(log_warning!())
                 .ok()
-                .map(|output| (key.clone(), output))
+                .map(|output| (key.clone(), output.to_string()))
         })
         .collect::<HashMap<_, _>>();
+
+    if content.modified() {
+        FileCache::save(client.env(), &content).await.ok();
+    }
 
     book.for_each_mut(|item| {
         let BookItem::Chapter(ch) = item else { return };
         let Some(key) = &ch.source_path else { return };
         if let Some(output) = result.remove(key) {
-            ch.content = output;
+            ch.content = output
         }
     });
 
-    client.dispose().await?;
+    let output = serde_json::to_string(&book)?;
 
-    serde_json::to_string(&book)?.pipe(|out| std::io::stdout().write_all(out.as_bytes()))?;
+    std::io::stdout().write_all(output.as_bytes())?;
+
+    client.stop().await?;
 
     Ok(())
 }
 
-async fn markdown(options: ClientConfig) -> Result<()> {
+async fn markdown(options: Config) -> Result<()> {
     let client = Client::new(Environment::new(options)?);
 
-    Vec::new()
+    let source = Vec::new()
         .pipe(|mut buf| std::io::stdin().read_to_end(&mut buf).and(Ok(buf)))?
-        .pipe(String::from_utf8)?
-        .pipe_as_ref(|content| client.process(content))
-        .await?
-        .pipe(|output| std::io::stdout().write_all(output.as_bytes()))?;
+        .pipe(String::from_utf8)?;
 
-    client.dispose().await?;
+    let stream = client.env().markdown(&source).into_offset_iter();
+
+    let mut content = Pages::one(&source, stream)?;
+
+    if let Ok(cached) = FileCache::load(client.env()).await {
+        cached
+            .resolve(&mut content)
+            .await
+            .tap_err(log_debug!())
+            .ok();
+    }
+
+    client.resolve(&mut content).await?;
+
+    if content.modified() {
+        FileCache::save(client.env(), &content).await.ok();
+    }
+
+    let output = content.get(&client.env().emit_config())?.to_string();
+
+    std::io::stdout().write_all(output.as_bytes())?;
+
+    client.stop().await?;
 
     Ok(())
 }

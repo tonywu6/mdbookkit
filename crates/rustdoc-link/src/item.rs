@@ -1,4 +1,3 @@
-use anyhow::Context;
 use syn::{
     parenthesized,
     parse::{End, Parse, ParseStream, Parser},
@@ -6,25 +5,15 @@ use syn::{
     token::Paren,
     PathArguments, QSelf, Token, TypePath,
 };
-use tap::TapFallible;
-
-use crate::log_debug;
 
 #[derive(Debug)]
 pub struct Item {
-    pub stmt: String,
-    pub cols: Carets,
-    pub key: String,
-    pub fragment: Option<String>,
+    pub query: String,
+    pub cursor: Cursor,
 }
 
 impl Item {
-    pub fn parse(input: &str) -> anyhow::Result<Self> {
-        let (path, fragment) = match input.split_once('#') {
-            None => (input, None),
-            Some((path, fragment)) => (path, Some(fragment)),
-        };
-
+    pub fn parse(path: &str) -> anyhow::Result<Self> {
         let path = match path.split_once('@') {
             None => path,
             Some((_, path)) => path,
@@ -80,55 +69,33 @@ impl Item {
             (name, column)
         };
 
-        let (stmt, cols) = match item.kind {
+        let (query, cursor) = match item.kind {
             None => {
                 let pattern = "let _: ";
                 let assign = " = ";
-                let stmt = format!("{pattern}{name}{assign}{name};");
+                let query = format!("{pattern}{name}{assign}{name};");
 
                 let c1 = pattern.len() + column;
                 let c2 = pattern.len() + name.len() + assign.len() + column;
-                let cols = Carets::Decl([c1, c2]);
+                let cursor = Cursor::Decl([c1, c2]);
 
-                (stmt, cols)
+                (query, cursor)
             }
-            Some(ItemKind::Call) => (format!("{name}();"), Carets::Expr([column])),
-            Some(ItemKind::Macro) => (format!("{name}!();"), Carets::Expr([column])),
+            Some(ItemKind::Call) => (format!("{name}();"), Cursor::Expr([column])),
+            Some(ItemKind::Macro) => (format!("{name}!();"), Cursor::Expr([column])),
         };
 
-        let key = input.into();
-        let fragment = fragment.map(Into::into);
-
-        Ok(Self {
-            stmt,
-            cols,
-            key,
-            fragment,
-        })
-    }
-
-    pub fn parse_all<R, T>(iter: R) -> Vec<Self>
-    where
-        R: Iterator<Item = T>,
-        T: AsRef<str>,
-    {
-        iter.filter_map(|link| {
-            Item::parse(link.as_ref())
-                .with_context(|| format!("could not parse {:?}", link.as_ref()))
-                .tap_err(log_debug!())
-                .ok()
-        })
-        .collect()
+        Ok(Self { query, cursor })
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum Carets {
+#[derive(Debug)]
+pub enum Cursor {
     Decl([usize; 2]),
     Expr([usize; 1]),
 }
 
-impl AsRef<[usize]> for Carets {
+impl AsRef<[usize]> for Cursor {
     fn as_ref(&self) -> &[usize] {
         match self {
             Self::Decl(c) => c,
