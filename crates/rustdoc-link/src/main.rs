@@ -12,7 +12,7 @@ use tap::{Pipe, TapFallible};
 use mdbook_rustdoc_link::{
     cache::{Cache, FileCache},
     env::{Config, Environment},
-    log_debug, log_warning,
+    log_warning,
     logger::ConsoleLogger,
     preprocessor_name, Client, Pages, Resolver,
 };
@@ -20,7 +20,7 @@ use mdbook_rustdoc_link::{
 #[tokio::main]
 async fn main() -> Result<()> {
     use clap::Parser;
-    ConsoleLogger::init();
+    ConsoleLogger::install();
     match Command::parse().command {
         Some(Commands::Supports { .. }) => Ok(()),
         Some(Commands::Markdown(options)) => markdown(options).await,
@@ -91,11 +91,7 @@ async fn mdbook() -> Result<()> {
     }
 
     if let Some(cached) = cached {
-        cached
-            .resolve(&mut content)
-            .await
-            .tap_err(log_debug!())
-            .ok();
+        cached.resolve(&mut content).await.ok();
     }
 
     client.resolve(&mut content).await?;
@@ -150,11 +146,7 @@ async fn markdown(options: Config) -> Result<()> {
     let mut content = Pages::one(&source, stream)?;
 
     if let Ok(cached) = FileCache::load(client.env()).await {
-        cached
-            .resolve(&mut content)
-            .await
-            .tap_err(log_debug!())
-            .ok();
+        cached.resolve(&mut content).await.ok();
     }
 
     client.resolve(&mut content).await?;

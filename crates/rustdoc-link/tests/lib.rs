@@ -78,7 +78,7 @@ async fn test_snapshots() -> Result<()> {
 }
 
 fn setup() -> Result<Arc<Client>> {
-    ConsoleLogger::init();
+    ConsoleLogger::install();
     Config {
         rust_analyzer: Some("cargo run --release --package util-rust-analyzer --".into()),
         ..Default::default()

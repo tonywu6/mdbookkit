@@ -116,46 +116,40 @@ impl FileCacheV1 {
     where
         D: Iterator<Item = Cow<'a, Url>>,
     {
-        deps.chain(
-            iter::once(Cow::Borrowed(&env.entrypoint))
-                .chain(iter::once(Cow::Owned(
-                    env.crate_dir.join("Cargo.toml").unwrap(),
-                )))
-                .chain(if env.source_dir != env.crate_dir {
-                    Some(Cow::Owned(env.source_dir.join("Cargo.toml").unwrap()))
-                } else {
+        iter::once(Cow::Owned(env.source_dir.join("Cargo.toml").unwrap()))
+            .chain(iter::once(Cow::Owned(
+                env.crate_dir.join("Cargo.toml").unwrap(),
+            )))
+            .chain(iter::once(Cow::Borrowed(&env.entrypoint)))
+            .chain(deps)
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .filter_map(|dep| {
+                if env.source_dir.make_relative(&dep)?.starts_with("../") {
                     None
-                }),
-        )
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .filter_map(|dep| {
-            let relpath = env.source_dir.make_relative(&dep)?;
-            if relpath.starts_with("../") {
-                None
-            } else {
-                Some(dep.into_owned())
-            }
-        })
-        .map(read_dep)
-        .collect::<JoinSet<_>>()
-        .join_all()
-        .await
-        .into_iter()
-        .filter_map(|result| {
-            result
-                .context("failed to read cache dependency")
-                .tap_err(log_debug!())
-                .ok()
-        })
-        .collect::<Vec<_>>()
-        .tap_mut(|deps| deps.sort_by(|(k1, _), (k2, _)| k1.cmp(k2)))
-        .into_iter()
-        .fold(Sha256::new(), |mut hash, (_, src)| {
-            hash.update(src);
-            hash
-        })
-        .pipe(|hash| hash.finalize().digest())
+                } else {
+                    Some(dep.into_owned())
+                }
+            })
+            .map(read_dep)
+            .collect::<JoinSet<_>>()
+            .join_all()
+            .await
+            .into_iter()
+            .filter_map(|result| {
+                result
+                    .context("failed to read cache dependency")
+                    .tap_err(log_debug!())
+                    .ok()
+            })
+            .collect::<Vec<_>>()
+            .tap_mut(|deps| deps.sort_by(|(k1, _), (k2, _)| k1.cmp(k2)))
+            .into_iter()
+            .fold(Sha256::new(), |mut hash, (_, src)| {
+                hash.update(src);
+                hash
+            })
+            .pipe(|hash| hash.finalize().digest())
     }
 }
 

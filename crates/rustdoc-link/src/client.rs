@@ -156,8 +156,8 @@ impl Server {
                                     state.percent_indexed = pc;
                                 }
                             }
-                            if let Some(message) = &report.message {
-                                spinner().update(ra_spinner!(), message);
+                            if let Some(msg) = &report.message {
+                                spinner().update(ra_spinner!(), msg);
                             }
                         }
 

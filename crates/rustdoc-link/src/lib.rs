@@ -17,7 +17,11 @@ mod page;
 mod sync;
 
 pub use crate::{client::Client, page::Pages};
-use crate::{item::Item, link::ItemLinks, logger::spinner};
+use crate::{
+    item::Item,
+    link::ItemLinks,
+    logger::{spinner, styled},
+};
 
 #[allow(async_fn_in_trait)]
 pub trait Resolver {
@@ -112,7 +116,7 @@ impl Resolver for Client {
             .flatten()
             .collect::<HashMap<_, _>>();
 
-        spinner().finish("resolve", "done");
+        spinner().finish("resolve", styled("done").green());
 
         content.apply(&resolved);
 
