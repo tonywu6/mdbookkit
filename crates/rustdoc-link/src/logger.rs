@@ -1,7 +1,7 @@
 use std::{
     collections::BTreeSet,
     fmt, io,
-    sync::mpsc,
+    sync::{mpsc, OnceLock},
     thread,
     time::{Duration, Instant},
 };
@@ -11,7 +11,6 @@ use console::{colors_enabled_stderr, set_colors_enabled, StyledObject, Term};
 use env_logger::Logger;
 use indicatif::{HumanDuration, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{Level, LevelFilter, Log};
-use once_cell::sync::Lazy;
 use tap::Pipe;
 
 use crate::preprocessor_name;
@@ -24,7 +23,7 @@ pub enum ConsoleLogger {
 
 impl Default for ConsoleLogger {
     fn default() -> Self {
-        if let Some(spinner) = &*SPINNER {
+        if let Some(spinner) = SPINNER.get() {
             Self::Console(spinner.term.clone())
         } else {
             env_logger::Builder::new()
@@ -38,10 +37,29 @@ impl Default for ConsoleLogger {
 
 impl ConsoleLogger {
     pub fn install() {
+        maybe_spinner();
         let logger = Box::new(Self::default());
         log::set_boxed_logger(logger).expect("logger should not have been set");
         log::set_max_level(LevelFilter::max());
     }
+}
+
+fn maybe_spinner() {
+    fn rust_log() -> bool {
+        std::env::var("RUST_LOG")
+            .map(|v| !v.is_empty())
+            .unwrap_or(false)
+    }
+
+    fn attended() -> bool {
+        console::user_attended_stderr()
+    }
+
+    if rust_log() || !attended() {
+        return;
+    }
+
+    SPINNER.set(spawn_spinner()).ok();
 }
 
 impl Log for ConsoleLogger {
@@ -111,7 +129,7 @@ impl SpinnerHandle {
     pub fn create(&self, prefix: &str, total: Option<u64>) -> &Self {
         let prefix = prefix.into();
         let msg = Message::Create { prefix, total };
-        if let Some(Spinner { tx, .. }) = &*SPINNER {
+        if let Some(Spinner { tx, .. }) = SPINNER.get() {
             tx.send(msg).ok();
         } else {
             spinner_log!(info!("{msg}"));
@@ -123,7 +141,7 @@ impl SpinnerHandle {
         let key = prefix.into();
         let update = update.to_string();
         let msg = Message::Update { key, update };
-        if let Some(Spinner { tx, .. }) = &*SPINNER {
+        if let Some(Spinner { tx, .. }) = SPINNER.get() {
             tx.send(msg).ok();
         } else {
             spinner_log!(info!("{msg}"));
@@ -141,7 +159,7 @@ impl SpinnerHandle {
         };
         let done = Some(Message::Done { key, task });
 
-        if let Some(Spinner { tx, .. }) = &*SPINNER {
+        if let Some(Spinner { tx, .. }) = SPINNER.get() {
             tx.send(open).ok();
             let spin = Some(tx.clone());
             TaskHandle { spin, done }
@@ -156,7 +174,7 @@ impl SpinnerHandle {
         let key = prefix.into();
         let update = update.to_string();
         let msg = Message::Finish { key, update };
-        if let Some(Spinner { tx, .. }) = &*SPINNER {
+        if let Some(Spinner { tx, .. }) = SPINNER.get() {
             tx.send(msg).ok();
         } else {
             spinner_log!(info!("{msg}"));
@@ -164,23 +182,7 @@ impl SpinnerHandle {
     }
 }
 
-static SPINNER: Lazy<Option<Spinner>> = Lazy::new(|| {
-    fn rust_log() -> bool {
-        std::env::var("RUST_LOG")
-            .map(|v| !v.is_empty())
-            .unwrap_or(false)
-    }
-
-    fn attended() -> bool {
-        console::user_attended_stderr()
-    }
-
-    if rust_log() || !attended() {
-        None
-    } else {
-        Some(spawn_spinner())
-    }
-});
+static SPINNER: OnceLock<Spinner> = OnceLock::new();
 
 struct Spinner {
     tx: mpsc::Sender<Message>,
@@ -409,7 +411,7 @@ impl fmt::Display for Message {
 }
 
 pub fn styled<D>(val: D) -> StyledObject<D> {
-    if let Some(Spinner { term, .. }) = &*SPINNER {
+    if let Some(Spinner { term, .. }) = SPINNER.get() {
         term.style()
     } else {
         console::Style::new().for_stderr()

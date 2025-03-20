@@ -1,7 +1,7 @@
 use std::{borrow::Borrow, collections::HashMap, fmt::Debug, hash::Hash};
 
 use anyhow::{bail, Context, Result};
-use pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
+use pulldown_cmark::{CowStr, Event, Tag, TagEnd};
 use tap::Pipe;
 
 use crate::{
@@ -46,7 +46,7 @@ impl<'a, K: Eq + Hash> Pages<'a, K> {
         self.pages
             .values()
             .flat_map(|page| page.links.iter())
-            .filter_map(|link| link.item().map(|item| (link.url.clone(), item)))
+            .filter_map(|link| link.item().map(|item| (link.key().clone(), item)))
             .collect::<HashMap<_, _>>()
     }
 
@@ -54,7 +54,7 @@ impl<'a, K: Eq + Hash> Pages<'a, K> {
         self.pages
             .values()
             .flat_map(|page| page.links.iter())
-            .filter_map(|link| link.link().map(|item| (link.url.clone(), item)))
+            .filter_map(|link| link.link().map(|item| (link.key().clone(), item)))
             .collect::<HashMap<_, _>>()
     }
 
@@ -64,8 +64,8 @@ impl<'a, K: Eq + Hash> Pages<'a, K> {
     {
         for page in self.pages.values_mut() {
             for link in page.links.iter_mut() {
-                if let Some(links) = links.get(&link.url) {
-                    link.state = LinkState::Resolved(links.clone());
+                if let Some(links) = links.get(link.key()) {
+                    *link.state() = LinkState::Resolved(links.clone());
                     self.modified = true;
                 }
             }
@@ -104,11 +104,11 @@ impl<'a> Page<'a> {
             if matches!(event, Event::End(TagEnd::Link)) {
                 match link.take() {
                     Some(link) => {
-                        if link.span == span {
+                        if link.span() == &span {
                             links.push(link);
                             continue;
                         } else {
-                            bail!("mismatching span, expected {:?} != {span:?}", link.span)
+                            bail!("mismatching span, expected {:?} != {span:?}", link.span())
                         }
                     }
                     None => bail!("unexpected `TagEnd::Link` at {span:?}"),
@@ -122,7 +122,7 @@ impl<'a> Page<'a> {
             }) = event
             else {
                 if let Some(link) = link.as_mut() {
-                    link.inner.push(event);
+                    link.inner().push(event);
                 }
                 continue;
             };
@@ -140,18 +140,7 @@ impl<'a> Page<'a> {
     fn emit(&self, options: &EmitConfig) -> Result<PatchStream<'a>> {
         self.links
             .iter()
-            .filter_map(|link| {
-                Tag::Link {
-                    dest_url: link.emit(options)?.to_string().into(),
-                    link_type: LinkType::Inline,
-                    title: link.title.clone(),
-                    id: CowStr::Borrowed(""),
-                }
-                .pipe(|tag| std::iter::once(Event::Start(tag)))
-                .chain(link.inner.iter().cloned())
-                .chain(std::iter::once(Event::End(TagEnd::Link)))
-                .pipe(|events| Some((events, link.span.clone())))
-            })
+            .filter_map(|link| link.emit(options))
             .pipe(|stream| PatchStream::patch(self.source, stream))
     }
 }

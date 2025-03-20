@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::Result;
-
+use clap::{Parser, Subcommand};
 use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
 use serde::Deserialize;
 use tap::{Pipe, TapFallible};
@@ -19,7 +19,6 @@ use mdbook_rustdoc_link::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    use clap::Parser;
     ConsoleLogger::install();
     match Command::parse().command {
         Some(Commands::Supports { .. }) => Ok(()),
@@ -28,13 +27,13 @@ async fn main() -> Result<()> {
     }
 }
 
-#[derive(clap::Parser, Debug, Clone)]
+#[derive(Parser, Debug, Clone)]
 struct Command {
     #[command(subcommand)]
     command: Option<Commands>,
 }
 
-#[derive(clap::Subcommand, Debug, Clone)]
+#[derive(Subcommand, Debug, Clone)]
 enum Commands {
     Supports { renderer: String },
     Markdown(Config),

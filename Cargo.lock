@@ -1264,7 +1264,6 @@ dependencies = [
  "log",
  "lsp-types",
  "mdbook",
- "once_cell",
  "proc-macro2",
  "pulldown-cmark 0.13.0",
  "pulldown-cmark-to-cmark",

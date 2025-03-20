@@ -2,7 +2,7 @@ use std::{borrow::Cow, ops::Range, sync::Arc};
 
 use anyhow::{bail, Result};
 use lsp_types::Url;
-use pulldown_cmark::{CowStr, Event};
+use pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
 use serde::{Deserialize, Serialize};
 use tap::{Pipe, Tap};
 
@@ -10,11 +10,11 @@ use crate::{env::EmitConfig, log_trace, Item};
 
 #[derive(Debug)]
 pub struct Link<'a> {
-    pub span: Range<usize>,
-    pub url: CowStr<'a>,
-    pub state: LinkState,
-    pub title: CowStr<'a>,
-    pub inner: Vec<Event<'a>>,
+    span: Range<usize>,
+    url: CowStr<'a>,
+    state: LinkState,
+    title: CowStr<'a>,
+    inner: Vec<Event<'a>>,
 }
 
 #[derive(Debug, Default)]
@@ -49,6 +49,22 @@ impl<'a> Link<'a> {
         }
     }
 
+    pub fn span(&self) -> &Range<usize> {
+        &self.span
+    }
+
+    pub fn key(&self) -> &CowStr<'a> {
+        &self.url
+    }
+
+    pub fn state(&mut self) -> &mut LinkState {
+        &mut self.state
+    }
+
+    pub fn inner(&mut self) -> &mut Vec<Event<'a>> {
+        &mut self.inner
+    }
+
     pub fn item(&self) -> Option<&Item> {
         if let LinkState::Parsed(item) = &self.state {
             Some(item)
@@ -65,7 +81,20 @@ impl<'a> Link<'a> {
         }
     }
 
-    pub fn emit(&self, options: &EmitConfig) -> Option<Cow<'_, Url>> {
+    pub fn emit(&self, options: &EmitConfig) -> Option<(__emit::EmitLink<'_>, Range<usize>)> {
+        Tag::Link {
+            dest_url: self.url(options)?.to_string().into(),
+            link_type: LinkType::Inline,
+            title: self.title.clone(),
+            id: CowStr::Borrowed(""),
+        }
+        .pipe(|tag| std::iter::once(Event::Start(tag)))
+        .chain(self.inner.iter().cloned())
+        .chain(std::iter::once(Event::End(TagEnd::Link)))
+        .pipe(|events| Some((events, self.span().clone())))
+    }
+
+    fn url(&self, options: &EmitConfig) -> Option<Cow<'_, Url>> {
         let LinkState::Resolved(refs) = &self.state else {
             return None;
         };
@@ -87,6 +116,18 @@ impl<'a> Link<'a> {
     fn fragment(&self) -> Option<&str> {
         self.url.split_once('#').map(|split| split.1)
     }
+}
+
+mod __emit {
+    use std::{
+        iter::{Chain, Cloned, Once},
+        slice::Iter,
+    };
+
+    use pulldown_cmark::Event;
+
+    pub type EmitLink<'a> =
+        Chain<Chain<Once<Event<'a>>, Cloned<Iter<'a, Event<'a>>>>, Once<Event<'a>>>;
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
