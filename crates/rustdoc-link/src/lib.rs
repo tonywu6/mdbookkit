@@ -57,7 +57,7 @@ impl Resolver for Client {
 
             fn build(context: &mut String, line: &mut usize, item: &Item) -> Option<Vec<Position>> {
                 use std::fmt::Write;
-                let _ = writeln!(context, "{}", item.query);
+                let _ = writeln!(context, "{}", item.stmt);
                 let cursors = item
                     .cursor
                     .as_ref()
@@ -121,33 +121,6 @@ impl Resolver for Client {
         content.apply(&resolved);
 
         Ok(())
-    }
-}
-
-impl Client {
-    pub async fn process(&self, source: &str) -> Result2<String> {
-        self.env()
-            .markdown(source)
-            .into_offset_iter()
-            .pipe(|stream| Pages::one(source, stream))?
-            .resolve_with(self)
-            .await?
-            .get(&self.env().emit_config())?
-            .to_string()
-            .pipe(Ok)
-    }
-}
-
-impl<K> Pages<'_, K>
-where
-    K: Eq + Hash,
-{
-    pub async fn resolve_with<R>(&mut self, resolver: &R) -> Result2<&mut Self>
-    where
-        R: Resolver,
-    {
-        resolver.resolve(self).await?;
-        Ok(self)
     }
 }
 

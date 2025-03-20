@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, collections::HashMap, fmt::Debug, hash::Hash};
+use std::{borrow::Borrow, collections::HashMap, fmt, hash::Hash};
 
 use anyhow::{bail, Context, Result};
 use pulldown_cmark::{CowStr, Event, Tag, TagEnd};
@@ -10,6 +10,8 @@ use crate::{
     markdown::PatchStream,
     Item, Spanned,
 };
+
+mod diagnostic;
 
 #[derive(Debug, Default)]
 pub struct Pages<'a, K> {
@@ -35,7 +37,7 @@ impl<'a, K: Eq + Hash> Pages<'a, K> {
     pub fn emit<Q>(&self, key: &Q, options: &EmitConfig) -> Result<PatchStream<'a>>
     where
         K: Borrow<Q>,
-        Q: Eq + Hash + Debug + ?Sized,
+        Q: Eq + Hash + fmt::Debug + ?Sized,
     {
         let page = self.pages.get(key);
         let page = page.with_context(|| format!("no such document {key:?}"))?;

@@ -90,12 +90,7 @@ impl Log for ConsoleLogger {
                 else {
                     return;
                 };
-                let message = message.trim_end();
-                let message = match record.level() {
-                    Level::Warn => styled(message).yellow(),
-                    Level::Error => styled(message).red(),
-                    _ => styled(message).dim(),
-                };
+                let message = styled_log(message.trim_end(), record);
                 term.write_line(&message.to_string()).ok();
             }
         }
@@ -419,16 +414,30 @@ pub fn styled<D>(val: D) -> StyledObject<D> {
     .apply_to(val)
 }
 
+pub fn is_logging() -> bool {
+    SPINNER.get().is_none()
+}
+
 /// <https://github.com/rust-lang/mdBook/blob/07b25cdb643899aeca2307fbab7690fa7eeec36b/src/main.rs#L100-L109>
 fn log_format<W: io::Write>(formatter: &mut W, record: &log::Record) -> io::Result<()> {
-    writeln!(
-        formatter,
+    let message = format!(
         "{} [{}] ({}): {}",
         chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
         record.level(),
         record.target(),
         record.args()
-    )
+    );
+    let message = styled_log(message, record);
+    writeln!(formatter, "{message}",)
+}
+
+fn styled_log<D>(message: D, record: &log::Record) -> StyledObject<D> {
+    match record.level() {
+        Level::Warn => styled(message).yellow(),
+        Level::Error => styled(message).red(),
+        Level::Info => styled(message),
+        _ => styled(message).dim(),
+    }
 }
 
 #[macro_export]

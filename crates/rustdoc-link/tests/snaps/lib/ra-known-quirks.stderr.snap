@@ -1,0 +1,44 @@
+---
+source: crates/rustdoc-link/tests/lib.rs
+expression: report
+---
+  warning: failed to resolve some links
+    ╭─[ra-known-quirks:3:3]
+  2 │ 
+  3 │ - [u8]
+    ·   ──┬─
+    ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.u8.html
+  4 │ - [u32]
+    ·   ──┬──
+    ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.u32.html
+  5 │ - [f64]
+    ·   ──┬──
+    ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.f64.html
+  6 │ - [char]
+    ·   ───┬──
+    ·      ╰── https://doc.rust-lang.org/nightly/core/primitive.char.html
+  7 │ - [str]
+    ·   ──┬──
+    ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.str.html
+  8 │ 
+  9 │ associated items on primitive types:
+ 10 │ 
+ 11 │ - [str::parse]
+    ·   ──────┬─────
+    ·         ╰── failed to resolve links for "str::parse"
+ 12 │ - [f64::MIN_POSITIVE]
+    ·   ─────────┬─────────
+    ·            ╰── failed to resolve links for "f64::MIN_POSITIVE"
+ 13 │ 
+ 14 │ re-exported items:
+ 15 │ 
+ 16 │ - [std::vec!]
+    ·   ─────┬─────
+    ·        ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html
+ 17 │ - [std::format!]
+    ·   ───────┬──────
+    ·          ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.format.html
+ 18 │ - [tokio::main!]
+    ·   ───────┬──────
+    ·          ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
+    ╰────

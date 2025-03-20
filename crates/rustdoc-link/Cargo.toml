@@ -22,6 +22,10 @@ indicatif = "0.17.11"
 log = { workspace = true }
 lsp-types = "0.95.0"
 mdbook = { workspace = true }
+miette = { version = "7.5.0", features = [
+  "fancy-no-backtrace",
+], default-features = false }
+owo-colors = "4.2.0"
 proc-macro2 = { version = "1.0.94", features = ["span-locations"] }
 pulldown-cmark = { workspace = true }
 pulldown-cmark-to-cmark = { workspace = true }

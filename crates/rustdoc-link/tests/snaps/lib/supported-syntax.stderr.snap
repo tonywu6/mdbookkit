@@ -1,0 +1,324 @@
+---
+source: crates/rustdoc-link/tests/lib.rs
+expression: report
+---
+  info: successfully resolved all links
+   ╭─[supported-syntax:5:21]
+ 4 │ 
+ 5 │ Most of the formats [supported by rustdoc][rustdoc-linking] are supported. Unsupported
+   ·                     ───────────────────┬───────────────────
+   ·                                        ╰── https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
+ 6 │ syntax and differences in behavior are emphasized below.
+   ╰────
+     ╭─[supported-syntax:16:3]
+  15 │ 
+  16 │ - [Types, modules, and associated items](#types-modules-and-associated-items)
+     ·   ─────────────────────────────────────┬─────────────────────────────────────
+     ·                                        ╰── #types-modules-and-associated-items
+  17 │ - [Generic parameters](#generic-parameters)
+     ·   ────────────────────┬────────────────────
+     ·                       ╰── #generic-parameters
+  18 │ - [Functions and macros](#functions-and-macros)
+     ·   ──────────────────────┬──────────────────────
+     ·                         ╰── #functions-and-macros
+  19 │ - [Implementors and fully qualified syntax](#implementors-and-fully-qualified-syntax)
+     ·   ─────────────────────────────────────────┬─────────────────────────────────────────
+     ·                                            ╰── #implementors-and-fully-qualified-syntax
+  20 │ - [Disambiguators](#disambiguators)
+     ·   ────────────────┬────────────────
+     ·                   ╰── #disambiguators
+  21 │ - [Special types](#special-types)
+     ·   ───────────────┬───────────────
+     ·                  ╰── #special-types
+  22 │ - [Markdown link syntax](#markdown-link-syntax)
+     ·   ──────────────────────┬──────────────────────
+     ·                         ╰── #markdown-link-syntax
+  23 │ 
+  24 │ </details>
+  25 │ 
+  26 │ ## Types, modules, and associated items
+  27 │ 
+  28 │ > ```md
+  29 │ > Module [`alloc`][std::alloc] — Memory allocation APIs.
+  30 │ > ```
+  31 │ >
+  32 │ > Module [`alloc`][std::alloc] — Memory allocation APIs.
+     ·          ──────────┬──────────
+     ·                    ╰── https://doc.rust-lang.org/stable/std/alloc/index.html
+  33 │ >
+  34 │ > ```md
+  35 │ > Every [`Option`] is either [`Some`][Option::Some][^1] and contains a value, or
+  36 │ > [`None`][Option::None][^1], and does not.
+  37 │ > ```
+  38 │ >
+  39 │ > Every [`Option`] is either [`Some`][Option::Some][^1] and contains a value, or
+     ·         ─────┬────           ───────────┬──────────
+     ·              │                          ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html#variant.Some
+     ·              ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
+  40 │ > [`None`][Option::None][^1], and does not.
+     ·   ───────────┬──────────
+     ·              ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html#variant.None
+  41 │ >
+  42 │ > ```md
+  43 │ > [`Ipv4Addr::LOCALHOST`][core::net::Ipv4Addr::LOCALHOST] — An IPv4 address with the
+  44 │ > address pointing to localhost: `127.0.0.1`.
+  45 │ > ```
+  46 │ >
+  47 │ > [`Ipv4Addr::LOCALHOST`][core::net::Ipv4Addr::LOCALHOST] — An IPv4 address with the
+     ·   ───────────────────────────┬───────────────────────────
+     ·                              ╰── https://doc.rust-lang.org/stable/core/net/ip_addr/struct.Ipv4Addr.html#associatedconstant.LOCALHOST
+  48 │ > address pointing to localhost: `127.0.0.1`.
+  49 │ 
+  50 │ ## Generic parameters
+  51 │ 
+  52 │ Types can contain generic parameters. This is _compatible_ with rustdoc.
+  53 │ 
+  54 │ > ```md
+  55 │ > [`Vec<T>`] — A heap-allocated _vector_ that is resizable at runtime.
+  56 │ > ```
+  57 │ >
+  58 │ > [`Vec<T>`] — A heap-allocated _vector_ that is resizable at runtime.
+     ·   ─────┬────
+     ·        ╰── https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html
+  59 │ >
+  60 │ > ```md
+  61 │ > | Phantom type                                       | variance of `T`   |
+  62 │ > | :------------------------------------------------- | :---------------- |
+  63 │ > | [`&'a mut T`][std::marker::PhantomData<&'a mut T>] | **inv**ariant     |
+  64 │ > | [`fn(T)`][std::marker::PhantomData<fn(T)>]         | **contra**variant |
+  65 │ > ```
+  66 │ >
+  67 │ > | Phantom type                                       | variance of `T`   |
+  68 │ > | :------------------------------------------------- | :---------------- |
+  69 │ > | [`&'a mut T`][std::marker::PhantomData<&'a mut T>] | **inv**ariant     |
+     ·     ─────────────────────────┬────────────────────────
+     ·                              ╰── https://doc.rust-lang.org/stable/core/marker/struct.PhantomData.html
+  70 │ > | [`fn(T)`][std::marker::PhantomData<fn(T)>]         | **contra**variant |
+     ·     ─────────────────────┬────────────────────
+     ·                          ╰── https://doc.rust-lang.org/stable/core/marker/struct.PhantomData.html
+  71 │ 
+  72 │ This includes if you use turbofish:
+  73 │ 
+  74 │ > ```md
+  75 │ > `collect()` is one of the few times you’ll see the syntax affectionately known as the
+  76 │ > "turbofish", for example: [`Iterator::collect::<Vec<i32>>()`].
+  77 │ > ```
+  78 │ >
+  79 │ > `collect()` is one of the few times you’ll see the syntax affectionately known as the
+  80 │ > "turbofish", for example: [`Iterator::collect::<Vec<i32>>()`].
+     ·                             ─────────────────┬─────────────────
+     ·                                              ╰── https://doc.rust-lang.org/stable/core/iter/traits/iterator/trait.Iterator.html#method.collect
+  81 │ 
+  82 │ ## Functions and macros
+  83 │ 
+  84 │ To indicate that an item is a function, add `()` after the function name. To indicate
+  85 │ that an item is a macro, add `!` after the macro name, optionally followed by `()`,
+  86 │ `[]`, or `{}`. This is _compatible_ with rustdoc.
+  87 │ 
+  88 │ Note that there cannot be arguments within `()`, `[]`, or `{}`.
+  89 │ 
+  90 │ > ```md
+  91 │ > [`vec!`][std::vec!][^2] is different from [`vec`][std::vec], and don't accidentally
+  92 │ > use [`format()`][std::fmt::format()] in place of [`format!()`][std::format!()][^2]!
+  93 │ > ```
+  94 │ >
+  95 │ > [`vec!`][std::vec!][^2] is different from [`vec`][std::vec], and don't accidentally
+     ·   ─────────┬─────────                       ────────┬────────
+     ·            │                                        ╰── https://doc.rust-lang.org/stable/alloc/vec/index.html
+     ·            ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html
+  96 │ > use [`format()`][std::fmt::format()] in place of [`format!()`][std::format!()][^2]!
+     ·       ────────────────┬───────────────             ──────────────┬──────────────
+     ·                       │                                          ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.format.html
+     ·                       ╰── https://doc.rust-lang.org/stable/alloc/fmt/fn.format.html
+  97 │ 
+  98 │ The macro syntax works for attribute and derive macros as well (even though this is not
+  99 │ how they are invoked).
+ 100 │ 
+ 101 │ > ```md
+ 102 │ > There is a [derive macro][serde::Serialize!] to generate implementations of the
+ 103 │ > [`Serialize`][serde::Serialize] trait.
+ 104 │ > ```
+ 105 │ >
+ 106 │ > There is a [derive macro][serde::Serialize!] to generate implementations of the
+     ·              ────────────────┬────────────────
+     ·                              ╰── https://docs.rs/serde_derive/1.0.219/serde_derive/derive.Serialize.html
+ 107 │ > [`Serialize`][serde::Serialize] trait.
+     ·   ───────────────┬───────────────
+     ·                  ╰── https://docs.rs/serde/1.0.219/serde/ser/trait.Serialize.html
+ 108 │ 
+     ╰────
+     ╭─[supported-syntax:125:3]
+ 124 │     >
+ 125 │     > [`Result<T, E>`] implements [`IntoIterator`]; its
+     ·       ────────┬───────            ────────┬───────
+     ·               │                           ╰── https://doc.rust-lang.org/stable/core/iter/traits/collect/trait.IntoIterator.html
+     ·               ╰── https://doc.rust-lang.org/stable/core/result/enum.Result.html
+ 126 │     > [**`into_iter()`**][Result::<(), ()>::into_iter] returns an iterator that yields one
+     ·       ────────────────────────┬───────────────────────
+     ·                               ╰── https://doc.rust-lang.org/stable/core/result/enum.Result.html#method.into_iter
+ 127 │     > value if the result is [`Result::Ok`], otherwise none.
+     ·                              ───────┬──────
+     ·                                     ╰── https://doc.rust-lang.org/stable/core/result/enum.Result.html#variant.Ok
+ 128 │     >
+ 129 │     > [`Vec<T>`] also implements [`IntoIterator`]; a vector cannot be used after you call
+     ·       ─────┬────                 ────────┬───────
+     ·            │                             ╰── https://doc.rust-lang.org/stable/core/iter/traits/collect/trait.IntoIterator.html
+     ·            ╰── https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html
+ 130 │     > [**`into_iter()`**][<Vec<()> as IntoIterator>::into_iter].
+     ·       ────────────────────────────┬────────────────────────────
+     ·                                   ╰── https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html#method.into_iter
+ 131 │     
+ 132 │     > [!NOTE]
+     ·       ───┬───
+     ·          ╰── !NOTE
+ 133 │     >
+ 134 │     > If your type has generic parameters, you must supply concrete types for them for
+ 135 │     > rust-analyzer to be able to locate an implementation. That is, `Result<T, E>` won't
+ 136 │     > work, but `Result<(), ()>` will (unless there happen to be types `T` and `E` literally
+ 137 │     > in scope).
+ 138 │     
+ 139 │     ## Disambiguators
+ 140 │     
+ 141 │     rustdoc's [disambiguator syntax][disambiguator] `prefix@name` is **accepted but
+     ·               ──────────────────┬──────────────────
+     ·                                 ╰── https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html#namespaces-and-disambiguators
+ 142 │     ignored**:
+ 143 │     
+ 144 │     > ```md
+ 145 │     > [`std::vec`], [`mod@std::vec`], and [`macro@std::vec`] all link to the `vec` _module_.
+ 146 │     > ```
+ 147 │     >
+ 148 │     > [`std::vec`], [`mod@std::vec`], and [`macro@std::vec`] all link to the `vec` _module_.
+     ·       ──────┬─────  ────────┬───────      ─────────┬────────
+     ·             │               │                      ╰── https://doc.rust-lang.org/stable/alloc/vec/index.html
+     ·             │               ╰── https://doc.rust-lang.org/stable/alloc/vec/index.html
+     ·             ╰── https://doc.rust-lang.org/stable/alloc/vec/index.html
+ 149 │     
+ 150 │     Currently, duplicate names in Rust are allowed only if they correspond to items in
+ 151 │     different [namespaces], for example, between macros and modules, and between struct
+     ·               ──────┬─────
+     ·                     ╰── https://doc.rust-lang.org/reference/names/namespaces.html
+ 152 │     fields and methods. This is mostly covered by the function and macro syntax, described
+ 153 │     [above](#functions-and-macros).
+     ·     ───────────────┬──────────────
+     ·                    ╰── #functions-and-macros
+ 154 │     
+ 155 │     If you encounter items that must be disambiguated using rustdoc's disambiguator syntax,
+ 156 │ ╭─▶ other than [the "special types" listed below](#special-types), please [file an
+     · │              ─────────────────────────┬────────────────────────
+     · │                                       ╰── #special-types
+ 157 │ ├─▶ issue][issues]!
+     · ╰──── github:/issues
+ 158 │     
+ 159 │     [disambiguator]:
+ 160 │       https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html#namespaces-and-disambiguators
+ 161 │     [namespaces]: https://doc.rust-lang.org/reference/names/namespaces.html
+ 162 │     [issues]: github:/issues
+ 163 │     
+ 164 │     ## Special types
+ 165 │     
+ 166 │ ╭─▶ As of `rust-analyzer 2025-03-17`, there is **very limited support** on many [built-in
+ 167 │ ├─▶ types][rust-types]:
+     · ╰──── https://doc.rust-lang.org/reference/types.html#r-type.kinds
+ 168 │     
+ 169 │     **Primitive types**:
+ 170 │     
+ 171 │     Links to named primitive types are resolved:
+ 172 │     
+ 173 │     > ```md
+ 174 │     > [`bool`], [`u8`], [`str`], and [`char`]
+ 175 │     > ```
+ 176 │     >
+ 177 │     > [`bool`], [`u8`], [`str`], and [`char`].
+     ·       ────┬───  ───┬──  ───┬───      ────┬───
+     ·           │        │       │             ╰── https://doc.rust-lang.org/nightly/core/primitive.char.html
+     ·           │        │       ╰── https://doc.rust-lang.org/nightly/core/primitive.str.html
+     ·           │        ╰── https://doc.rust-lang.org/nightly/core/primitive.u8.html
+     ·           ╰── https://doc.rust-lang.org/nightly/core/primitive.bool.html
+ 178 │     
+ 179 │     Links to associated methods and items on primitive types are **not resolved** by
+ 180 │     rust-analyzer:
+ 181 │     
+ 182 │     > ```md
+ 183 │     > [`str::parse`], [`f64::MIN_POSITIVE`]
+ 184 │     > ```
+ 185 │     >
+ 186 │     > \[`str::parse`], \[`f64::MIN_POSITIVE`]
+ 187 │     
+ 188 │     There is **no support** on types whose syntax is not a path; they are currently not
+ 189 │     parsed at all:
+ 190 │     
+ 191 │     > references `&T`, slices `[T]`, arrays `[T; N]`, tuples `(T1, T2)`, pointers like
+ 192 │     > `*const T`, trait objects like `dyn Any`, and the never type `!`
+ 193 │     
+ 194 │     Note that such types can still be used as generic params, just not as standalone types.
+ 195 │     
+ 196 │     [rust-types]: https://doc.rust-lang.org/reference/types.html#r-type.kinds
+ 197 │     
+ 198 │     ## Markdown link syntax
+ 199 │     
+ 200 │     All Markdown link formats supported by rustdoc are supported:
+ 201 │     
+ 202 │     Linking with URL inlined:
+ 203 │     
+ 204 │     > ```md
+ 205 │     > [The Option type](std::option::Option)
+ 206 │     > ```
+ 207 │     >
+ 208 │     > [The Option type](std::option::Option)
+     ·       ───────────────────┬──────────────────
+     ·                          ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
+ 209 │     
+ 210 │     Linking with reusable references:
+ 211 │     
+ 212 │     > ```md
+ 213 │     > [The Option type][option-type]
+ 214 │     >
+ 215 │     > [option-type]: std::option::Option
+ 216 │     > ```
+ 217 │     >
+ 218 │     > [The Option type][option-type]
+     ·       ───────────────┬──────────────
+     ·                      ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
+ 219 │     >
+ 220 │     > [option-type]: std::option::Option
+ 221 │     
+ 222 │     Reference-style links `[text][id]` without a corresponding `[id]: name` part will be
+ 223 │     treated the same as inline-style links `[text](id)`:
+ 224 │     
+ 225 │     > ```md
+ 226 │     > [The Option type][std::option::Option]
+ 227 │     > ```
+ 228 │     >
+ 229 │     > [The Option type][std::option::Option]
+     ·       ───────────────────┬──────────────────
+     ·                          ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
+ 230 │     
+ 231 │     Shortcuts are supported, and can contain inline markups:
+ 232 │     
+ 233 │     > ```md
+ 234 │     > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
+ 235 │     > ```
+ 236 │     >
+ 237 │     > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
+     ·                        ───┬───      ────────┬───────                  ─────┬────
+     ·                           │                 │                              ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html
+     ·                           │                 ╰── https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html#method.new
+     ·                           ╰── https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html
+ 238 │     
+ 239 │     (The items must still be resolvable; in this case `Vec` and `vec!` come from the
+ 240 │     prelude.)
+ 241 │     
+ 242 │     ---
+ 243 │     
+ 244 │     [^1]: TODO:
+ 245 │     [^2]:
+ 246 │         As of `rust-analyzer 2025-03-17`, links generated for re-exported items don't always
+ 247 │         work. This happens often with macros. Examples include [`std::format!`] (seen above)
+     ·                                                                ────────┬───────
+     ·                                                                        ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.format.html
+ 248 │         and [`tokio::main!`]. For more info, see [Caveats](caveats.md#re-exported-items).
+     ·             ────────┬───────                     ───────────────────┬───────────────────
+     ·                     │                                               ╰── caveats.md#re-exported-items
+     ·                     ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
+     ╰────

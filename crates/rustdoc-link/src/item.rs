@@ -8,7 +8,8 @@ use syn::{
 
 #[derive(Debug)]
 pub struct Item {
-    pub query: String,
+    pub name: String,
+    pub stmt: String,
     pub cursor: Cursor,
 }
 
@@ -69,23 +70,23 @@ impl Item {
             (name, column)
         };
 
-        let (query, cursor) = match item.kind {
+        let (stmt, cursor) = match item.kind {
             None => {
                 let pattern = "let _: ";
                 let assign = " = ";
-                let query = format!("{pattern}{name}{assign}{name};");
+                let stmt = format!("{pattern}{name}{assign}{name};");
 
                 let c1 = pattern.len() + column;
                 let c2 = pattern.len() + name.len() + assign.len() + column;
                 let cursor = Cursor::Decl([c1, c2]);
 
-                (query, cursor)
+                (stmt, cursor)
             }
             Some(ItemKind::Call) => (format!("{name}();"), Cursor::Expr([column])),
             Some(ItemKind::Macro) => (format!("{name}!();"), Cursor::Expr([column])),
         };
 
-        Ok(Self { query, cursor })
+        Ok(Self { name, stmt, cursor })
     }
 }
 

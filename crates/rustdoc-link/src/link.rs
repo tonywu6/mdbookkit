@@ -8,6 +8,8 @@ use tap::{Pipe, Tap};
 
 use crate::{env::EmitConfig, log_trace, Item};
 
+pub mod diagnostic;
+
 #[derive(Debug)]
 pub struct Link<'a> {
     span: Range<usize>,
@@ -118,18 +120,6 @@ impl<'a> Link<'a> {
     }
 }
 
-mod __emit {
-    use std::{
-        iter::{Chain, Cloned, Once},
-        slice::Iter,
-    };
-
-    use pulldown_cmark::Event;
-
-    pub type EmitLink<'a> =
-        Chain<Chain<Once<Event<'a>>, Cloned<Iter<'a, Event<'a>>>>, Once<Event<'a>>>;
-}
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub struct ItemLinks {
@@ -164,6 +154,14 @@ impl ItemLinks {
         Ok(Self { refs, defs })
     }
 
+    pub fn url(&self) -> &Url {
+        match &self.refs {
+            Locations::Http { http } => http,
+            Locations::File { file } => file,
+            Locations::Multiple { http, .. } => http,
+        }
+    }
+
     pub fn web(&self) -> Option<&Url> {
         match &self.refs {
             Locations::Http { http } => Some(http),
@@ -183,4 +181,16 @@ impl ItemLinks {
     pub fn deps(&self) -> impl Iterator<Item = &'_ Url> {
         self.defs.iter().map(|u| u.as_ref())
     }
+}
+
+mod __emit {
+    use std::{
+        iter::{Chain, Cloned, Once},
+        slice::Iter,
+    };
+
+    use pulldown_cmark::Event;
+
+    pub type EmitLink<'a> =
+        Chain<Chain<Once<Event<'a>>, Cloned<Iter<'a, Event<'a>>>>, Once<Event<'a>>>;
 }

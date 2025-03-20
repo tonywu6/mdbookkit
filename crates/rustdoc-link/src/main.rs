@@ -5,6 +5,7 @@ use std::{
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use log::LevelFilter;
 use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
 use serde::Deserialize;
 use tap::{Pipe, TapFallible};
@@ -112,6 +113,12 @@ async fn mdbook() -> Result<()> {
         })
         .collect::<HashMap<_, _>>();
 
+    content
+        .reporter()
+        .paths(|path| path.display().to_string())
+        .level(LevelFilter::Warn)
+        .stderr();
+
     if content.modified() {
         FileCache::save(client.env(), &content).await.ok();
     }
@@ -149,6 +156,12 @@ async fn markdown(options: Config) -> Result<()> {
     }
 
     client.resolve(&mut content).await?;
+
+    content
+        .reporter()
+        .paths(|_| "<stdin>".into())
+        .level(LevelFilter::Warn)
+        .stderr();
 
     if content.modified() {
         FileCache::save(client.env(), &content).await.ok();
