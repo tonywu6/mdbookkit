@@ -147,7 +147,7 @@ impl ItemLinks {
             (None, Some(file)) => Locations::File {
                 file: Arc::new(file),
             },
-            (None, None) => bail!("doc links not resolved"),
+            (None, None) => bail!("neither web nor local link provided"),
         };
         let defs = defs.into_iter().map(Into::into).collect();
         Ok(Self { refs, defs })

@@ -94,7 +94,7 @@ fn setup() -> Result<Arc<Client>> {
     set_colors_enabled_stderr(false);
     ConsoleLogger::install();
     Config {
-        rust_analyzer: Some("cargo run --release --package util-rust-analyzer --".into()),
+        rust_analyzer: Some("cargo run --release --package util-rust-analyzer -- analyzer".into()),
         ..Default::default()
     }
     .pipe(Environment::new)?

@@ -109,7 +109,7 @@ impl Server {
         let (tx, rx) = mpsc::channel(16);
 
         let stabilizer = EventSampling {
-            buffer: Duration::from_secs(1),
+            buffer: Duration::from_millis(500),
             timeout: Duration::from_secs(60),
         }
         .using(rx);

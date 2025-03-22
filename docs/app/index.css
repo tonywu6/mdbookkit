@@ -7,14 +7,24 @@
 }
 
 :root {
-  --mono-font: "Source Code Pro", "Consolas", "Ubuntu Mono", "Menlo", "DejaVu Sans Mono",
+  --mono-font:
+    "Source Code Pro", "Consolas", "Ubuntu Mono", "Menlo", "DejaVu Sans Mono",
     ui-monospace, monospace;
   font-size: 16px;
 }
 
 html {
-  font-family: "Noto Sans", "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "Noto Sans", "Helvetica Neue", ui-sans-serif, sans-serif, "Apple Color Emoji",
+  font-family:
+    "Noto Sans",
+    "Open Sans",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Noto Sans",
+    "Helvetica Neue",
+    ui-sans-serif,
+    sans-serif,
+    "Apple Color Emoji",
     "Segoe UI Emoji";
 }
 
@@ -45,9 +55,17 @@ body {
   }
 
   a {
-    & :hover {
-      text-decoration: underline;
-      text-underline-offset: 0.2rem;
+    text-decoration: underline;
+    text-decoration-thickness: 0.1ex;
+    text-underline-offset: 0.6ex;
+
+    &:hover,
+    &:active {
+      text-decoration: none;
+
+      > .hljs {
+        text-decoration: none;
+      }
     }
 
     strong,
@@ -76,6 +94,7 @@ body {
 
   ul,
   ol {
+    line-height: 1.6;
     padding-inline-start: 1.8rem;
   }
 
@@ -192,6 +211,12 @@ body {
   :not(h1, h2, h3, h4, h5, h6):target {
     background-color: #ffb45420;
     outline: 0.5rem solid #ffb45420;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
   }
 }
 

@@ -290,6 +290,11 @@ fn spawn_spinner() -> Spinner {
                         continue;
                     }
 
+                    if let Some(length) = bar.length() {
+                        let counter = styled(format!("({}/{length})", bar.position())).dim();
+                        bar.set_prefix(format!("{prefix} {counter}"))
+                    }
+
                     bar.set_message(styled(&task).magenta().to_string());
                     bar.tick();
 
@@ -310,13 +315,11 @@ fn spawn_spinner() -> Spinner {
                         continue;
                     }
 
+                    bar.inc(1);
+
                     if let Some(length) = bar.length() {
-                        bar.inc(1);
-                        bar.set_prefix(format!(
-                            "{} {}",
-                            prefix,
-                            styled(format!("({}/{length})", bar.position())).dim()
-                        ))
+                        let counter = styled(format!("({}/{length})", bar.position())).dim();
+                        bar.set_prefix(format!("{prefix} {counter}"))
                     }
 
                     bar.set_message(styled(&task).green().to_string());

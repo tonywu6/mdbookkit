@@ -1,22 +1,23 @@
 # mdbook-rustdoc-link
 
-**[_rustdoc_-style linking][rustdoc] for [mdBook]** (with the help of [rust-analyzer]).
+**[_rustdoc_-style linking][rustdoc] for [mdBook]** (with the help of
+[rust-analyzer]).
 
-> _You write:_
->
+You write:
+
 > ```md
-> The [`option`][std::option] and [`result`][std::result] modules define optional and
-> error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter]
-> module defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to
-> access collections. [^1]
+> The [`option`][std::option] and [`result`][std::result] modules define
+> optional and error-handling types, [`Option<T>`] and [`Result<T, E>`]. The
+> [`iter`][std::iter] module defines Rust's iterator trait, [`Iterator`], which
+> works with the `for` loop to access collections. [^1]
 > ```
->
-> _You get:_
->
-> The [`option`][std::option] and [`result`][std::result] modules define optional and
-> error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter]
-> module defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to
-> access collections. [^1]
+
+You get:
+
+> The [`option`][std::option] and [`result`][std::result] modules define
+> optional and error-handling types, [`Option<T>`] and [`Result<T, E>`]. The
+> [`iter`][std::iter] module defines Rust's iterator trait, [`Iterator`], which
+> works with the `for` loop to access collections. [^1]
 
 ## Getting started
 
@@ -26,20 +27,44 @@
 cargo install mdbook-rustdoc-link
 ```
 
+You will also need [rust-analyzer]:
+
+- If you already use the [VS Code extension][ra-extension], `rustdoc-link` will
+  automatically use the server binary that comes with it, no extra setup is
+  needed!
+- Otherwise, [install it][ra-install] (e.g. via `rustup`) and make sure it's on
+  your `PATH`.
+
 Next, configure your `book.toml`:
 
 ```toml
 [book]
 title = "My Book"
-# other configuration
 
 [preprocessor.rustdoc-link]
-# ^ mdBook will run `mdbook-rustdoc-link`
+# mdBook will run `mdbook-rustdoc-link`
 after = ["links"]
-# ^ recommended, so that it can see content from {{#include}} as well
+# recommended, so that it can see content from {{#include}} as well
 ```
 
-## Problem statement
+Now, when you want to link to a Rust item, such as a type, a function, etc.,
+simply use its name instead of a URL, like this:
+
+> ```md
+> Like [`std::thread::spawn`], [`tokio::spawn`] returns a
+> [`JoinHandle`][tokio::task::JoinHandle] struct.
+> ```
+
+`mdbook-rustdoc-link` will then rewrite them as hyperlinks:
+
+> Like [`std::thread::spawn`], [`tokio::spawn`] returns a
+> [`JoinHandle`][tokio::task::JoinHandle] struct.
+
+This works in both `mdbook build` and `mdbook serve`!
+
+<img src="rustdoc-link/media/screencap.webp"
+  alt="screen recording of mdbook-rustdoc-link during mdbook build"
+  width="1920" height="480">
 
 ---
 
@@ -49,6 +74,10 @@ after = ["links"]
   https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
 [preprocessor]:
   https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
+[ra-extension]:
+  https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer
+[ra-install]: https://rust-analyzer.github.io/book/rust_analyzer_binary.html
 [rust-analyzer]: https://rust-analyzer.github.io/
 [mdBook]: https://rust-lang.github.io/mdBook/
-[tour]: https://doc.rust-lang.org/stable/std/#a-tour-of-the-rust-standard-library
+[tour]:
+  https://doc.rust-lang.org/stable/std/#a-tour-of-the-rust-standard-library

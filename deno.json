@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "esbuild": "npm:esbuild@^0.25.1",
+    "prettier": "npm:prettier@^3.5.3"
+  },
+  "nodeModulesDir": "auto"
+}

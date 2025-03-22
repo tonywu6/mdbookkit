@@ -5,31 +5,75 @@ expression: report
   info: successfully resolved all links
    ╭─[rustdoc-link:3:3]
  2 │ 
- 3 │ **[rustdoc-style linking][rustdoc] for [mdBook]** (with the help of [rust-analyzer]).
-   ·   ────────────────┬───────────────     ────┬───                     ───────┬───────
-   ·                   │                        │                               ╰── https://rust-analyzer.github.io/
-   ·                   │                        ╰── https://rust-lang.github.io/mdBook/
-   ·                   ╰── https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
- 4 │ 
+ 3 │ **[_rustdoc_-style linking][rustdoc] for [mdBook]** (with the help of
+   ·   ─────────────────┬────────────────     ────┬───
+   ·                    │                         ╰── https://rust-lang.github.io/mdBook/
+   ·                    ╰── https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
+ 4 │ [rust-analyzer]).
+   · ───────┬───────
+   ·        ╰── https://rust-analyzer.github.io/
+ 5 │ 
    ╰────
-    ╭─[rustdoc-link:12:7]
- 11 │ >
- 12 │ > The [`option`][std::option] and [`result`][std::result] modules define optional and
+    ╭─[rustdoc-link:17:7]
+ 16 │ 
+ 17 │ > The [`option`][std::option] and [`result`][std::result] modules define
     ·       ───────────┬───────────     ───────────┬───────────
     ·                  │                           ╰── https://doc.rust-lang.org/stable/core/result/index.html
     ·                  ╰── https://doc.rust-lang.org/stable/core/option/index.html
- 13 │ > error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter]
-    ·                         ──────┬──────     ────────┬───────      ─────────┬─────────
-    ·                               │                   │                      ╰── https://doc.rust-lang.org/stable/core/iter/index.html
-    ·                               │                   ╰── https://doc.rust-lang.org/stable/core/result/enum.Result.html
-    ·                               ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
- 14 │ > module defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to
-    ·                                         ──────┬─────
-    ·                                               ╰── https://doc.rust-lang.org/stable/core/iter/traits/iterator/trait.Iterator.html
- 15 │ > access collections.
- 16 │ >
- 17 │ > — adapted from [<cite>A Tour of The Rust Standard Library</cite>][tour]
-    ·                  ────────────────────────────┬───────────────────────────
-    ·                                              ╰── https://doc.rust-lang.org/stable/std/#a-tour-of-the-rust-standard-library
- 18 │ 
+ 18 │ > optional and error-handling types, [`Option<T>`] and [`Result<T, E>`]. The
+    ·                                      ──────┬──────     ────────┬───────
+    ·                                            │                   ╰── https://doc.rust-lang.org/stable/core/result/enum.Result.html
+    ·                                            ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
+ 19 │ > [`iter`][std::iter] module defines Rust's iterator trait, [`Iterator`], which
+    ·   ─────────┬─────────                                       ──────┬─────
+    ·            │                                                      ╰── https://doc.rust-lang.org/stable/core/iter/traits/iterator/trait.Iterator.html
+    ·            ╰── https://doc.rust-lang.org/stable/core/iter/index.html
+ 20 │ > works with the `for` loop to access collections. [^1]
+ 21 │ 
+ 22 │ ## Getting started
+ 23 │ 
+ 24 │ `mdbook-rustdoc-link` is an mdBook [preprocessor]. First, install it:
+    ·                                    ───────┬──────
+    ·                                           ╰── https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
+ 25 │ 
+ 26 │ ```
+ 27 │ cargo install mdbook-rustdoc-link
+ 28 │ ```
+ 29 │ 
+ 30 │ You will also need [rust-analyzer]:
+    ·                    ───────┬───────
+    ·                           ╰── https://rust-analyzer.github.io/
+ 31 │ 
+ 32 │ - If you already use the [VS Code extension][ra-extension], `rustdoc-link` will
+    ·                          ────────────────┬────────────────
+    ·                                          ╰── https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer
+ 33 │   automatically use the server binary that comes with it, no extra setup is
+ 34 │   needed!
+ 35 │ - Otherwise, [install it][ra-install] (e.g. via `rustup`) and make sure it's on
+    ·              ────────────┬───────────
+    ·                          ╰── https://rust-analyzer.github.io/book/rust_analyzer_binary.html
+ 36 │   your `PATH`.
+    ╰────
+    ╭─[rustdoc-link:60:8]
+ 59 │ 
+ 60 │ > Like [`std::thread::spawn`], [`tokio::spawn`] returns a
+    ·        ───────────┬──────────  ────────┬───────
+    ·                   │                    ╰── https://docs.rs/tokio/1.44.1/tokio/task/spawn/fn.spawn.html
+    ·                   ╰── https://doc.rust-lang.org/stable/std/thread/fn.spawn.html
+ 61 │ > [`JoinHandle`][tokio::task::JoinHandle] struct.
+    ·   ───────────────────┬───────────────────
+    ·                      ╰── https://docs.rs/tokio/1.44.1/tokio/runtime/task/join/struct.JoinHandle.html
+ 62 │ 
+ 63 │ This works in both `mdbook build` and `mdbook serve`!
+ 64 │ 
+ 65 │ <img src="rustdoc-link/media/screencap.webp"
+ 66 │   alt="screen recording of mdbook-rustdoc-link during mdbook build"
+ 67 │   width="1920" height="480">
+ 68 │ 
+ 69 │ ---
+ 70 │ 
+ 71 │ [^1]: Text adapted from [<cite>A Tour of The Rust Standard Library</cite>][tour]
+    ·                         ────────────────────────────┬───────────────────────────
+    ·                                                     ╰── https://doc.rust-lang.org/stable/std/#a-tour-of-the-rust-standard-library
+ 72 │ 
     ╰────

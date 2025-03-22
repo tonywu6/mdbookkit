@@ -4,24 +4,84 @@ expression: output
 ---
 # mdbook-rustdoc-link
 
-**[rustdoc-style linking][rustdoc] for [mdBook]** (with the help of [rust-analyzer]).
+**[_rustdoc_-style linking][rustdoc] for [mdBook]** (with the help of
+[rust-analyzer]).
+
+You write:
 
 > ```md
-> The [`option`][std::option] and [`result`][std::result] modules define optional and
-> error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter]
-> module defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to
-> access collections.
+> The [`option`][std::option] and [`result`][std::result] modules define
+> optional and error-handling types, [`Option<T>`] and [`Result<T, E>`]. The
+> [`iter`][std::iter] module defines Rust's iterator trait, [`Iterator`], which
+> works with the `for` loop to access collections. [^1]
 > ```
->
-> The [`option`](https://doc.rust-lang.org/stable/core/option/index.html "std::option") and [`result`](https://doc.rust-lang.org/stable/core/result/index.html "std::result") modules define optional and
-> error-handling types, [`Option<T>`](https://doc.rust-lang.org/stable/core/option/enum.Option.html "Option<T>") and [`Result<T, E>`](https://doc.rust-lang.org/stable/core/result/enum.Result.html "Result<T, E>"). The [`iter`](https://doc.rust-lang.org/stable/core/iter/index.html "std::iter")
-> module defines Rust's iterator trait, [`Iterator`](https://doc.rust-lang.org/stable/core/iter/traits/iterator/trait.Iterator.html "Iterator"), which works with the `for` loop to
-> access collections.
->
-> — adapted from [<cite>A Tour of The Rust Standard Library</cite>][tour]
+
+You get:
+
+> The [`option`](https://doc.rust-lang.org/stable/core/option/index.html "std::option") and [`result`](https://doc.rust-lang.org/stable/core/result/index.html "std::result") modules define
+> optional and error-handling types, [`Option<T>`](https://doc.rust-lang.org/stable/core/option/enum.Option.html "Option<T>") and [`Result<T, E>`](https://doc.rust-lang.org/stable/core/result/enum.Result.html "Result<T, E>"). The
+> [`iter`](https://doc.rust-lang.org/stable/core/iter/index.html "std::iter") module defines Rust's iterator trait, [`Iterator`](https://doc.rust-lang.org/stable/core/iter/traits/iterator/trait.Iterator.html "Iterator"), which
+> works with the `for` loop to access collections. [^1]
+
+## Getting started
+
+`mdbook-rustdoc-link` is an mdBook [preprocessor]. First, install it:
+
+```
+cargo install mdbook-rustdoc-link
+```
+
+You will also need [rust-analyzer]:
+
+- If you already use the [VS Code extension][ra-extension], `rustdoc-link` will
+  automatically use the server binary that comes with it, no extra setup is
+  needed!
+- Otherwise, [install it][ra-install] (e.g. via `rustup`) and make sure it's on
+  your `PATH`.
+
+Next, configure your `book.toml`:
+
+```toml
+[book]
+title = "My Book"
+
+[preprocessor.rustdoc-link]
+# mdBook will run `mdbook-rustdoc-link`
+after = ["links"]
+# recommended, so that it can see content from {{#include}} as well
+```
+
+Now, when you want to link to a Rust item, such as a type, a function, etc.,
+simply use its name instead of a URL, like this:
+
+> ```md
+> Like [`std::thread::spawn`], [`tokio::spawn`] returns a
+> [`JoinHandle`][tokio::task::JoinHandle] struct.
+> ```
+
+`mdbook-rustdoc-link` will then rewrite them as hyperlinks:
+
+> Like [`std::thread::spawn`](https://doc.rust-lang.org/stable/std/thread/fn.spawn.html "std::thread::spawn"), [`tokio::spawn`](https://docs.rs/tokio/1.44.1/tokio/task/spawn/fn.spawn.html "tokio::spawn") returns a
+> [`JoinHandle`](https://docs.rs/tokio/1.44.1/tokio/runtime/task/join/struct.JoinHandle.html "tokio::task::JoinHandle") struct.
+
+This works in both `mdbook build` and `mdbook serve`!
+
+<img src="rustdoc-link/media/screencap.webp"
+  alt="screen recording of mdbook-rustdoc-link during mdbook build"
+  width="1920" height="480">
+
+---
+
+[^1]: Text adapted from [<cite>A Tour of The Rust Standard Library</cite>][tour]
 
 [rustdoc]:
   https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
+[preprocessor]:
+  https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
+[ra-extension]:
+  https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer
+[ra-install]: https://rust-analyzer.github.io/book/rust_analyzer_binary.html
 [rust-analyzer]: https://rust-analyzer.github.io/
 [mdBook]: https://rust-lang.github.io/mdBook/
-[tour]: https://doc.rust-lang.org/stable/std/#a-tour-of-the-rust-standard-library
+[tour]:
+  https://doc.rust-lang.org/stable/std/#a-tour-of-the-rust-standard-library

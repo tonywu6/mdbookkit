@@ -71,7 +71,7 @@ impl Resolver for Client {
             (context, request)
         };
 
-        log::trace!("request context\n\n{}\n", context);
+        log::debug!("request context\n\n{}\n", context);
 
         let document = self
             .open(self.env().entrypoint.clone(), context)
@@ -99,7 +99,7 @@ impl Resolver for Client {
                 let resolved = doc
                     .resolve(p)
                     .await
-                    .context("error while resolving external docs")
+                    .with_context(|| format!("error resolving {p:?}"))
                     .tap_err(log_debug!())
                     .ok();
                 if let Some(resolved) = resolved {

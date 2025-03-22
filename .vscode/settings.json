@@ -1,4 +1,7 @@
 {
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "cSpell.words": ["cmark"],
   "deno.enable": true,
   "files.associations": {
