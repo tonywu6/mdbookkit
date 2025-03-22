@@ -21,21 +21,21 @@ use mdbook_rustdoc_link::{
 #[tokio::main]
 async fn main() -> Result<()> {
     ConsoleLogger::install();
-    match Command::parse().command {
-        Some(Commands::Supports { .. }) => Ok(()),
-        Some(Commands::Markdown(options)) => markdown(options).await,
+    match Program::parse().command {
+        Some(Command::Supports { .. }) => Ok(()),
+        Some(Command::Markdown(options)) => markdown(options).await,
         None => mdbook().await,
     }
 }
 
 #[derive(Parser, Debug, Clone)]
-struct Command {
+struct Program {
     #[command(subcommand)]
-    command: Option<Commands>,
+    command: Option<Command>,
 }
 
 #[derive(Subcommand, Debug, Clone)]
-enum Commands {
+enum Command {
     Supports { renderer: String },
     Markdown(Config),
 }

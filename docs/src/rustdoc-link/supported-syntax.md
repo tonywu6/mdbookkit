@@ -8,7 +8,7 @@ syntax and differences in behavior are emphasized below.
 [rustdoc-linking]:
   https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
 
-In general, specifying items should "just work" as you would when writing Rust code.
+In general, specifying items as you would when writing Rust code should "just work".
 
 <details class="toc" open>
   <summary>Sections</summary>
@@ -241,8 +241,16 @@ prelude.)
 
 ---
 
-[^1]: TODO:
+[^1]:
+    rust-analyzer's ability to generate links for enum variants like `Option::Some` was
+    improved only somewhat recently: before
+    [#19246](https://github.com/rust-lang/rust-analyzer/pull/19246), links for variants
+    and associated items may only point to the types themselves. If linking to such
+    items doesn't seem to work for you, be sure to upgrade to a newer rust-analyzer
+    first!
+
 [^2]:
-    As of `rust-analyzer 2025-03-17`, links generated for re-exported items don't always
-    work. This happens often with macros. Examples include [`std::format!`] (seen above)
-    and [`tokio::main!`]. For more info, see [Caveats](caveats.md#re-exported-items).
+    As of rust-analyzer <ra-version>(version)</ra-version>, links generated for
+    re-exported items don't always work. This happens often with macros. Examples
+    include [`std::format!`] (seen above) and [`tokio::main!`]. For more info, see
+    [Caveats](caveats.md#re-exported-items).

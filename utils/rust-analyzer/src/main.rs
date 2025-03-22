@@ -1,16 +1,42 @@
 use std::{
-    fs, io,
+    fs,
+    io::{self, Read, Write},
     os::unix::fs::PermissionsExt,
-    path::Path,
+    path::PathBuf,
     process::{Command, Stdio},
     time::Duration,
 };
 
 use anyhow::Result;
 use cargo_run_bin::metadata::get_project_root;
+use clap::Parser;
 use flate2::write::GzDecoder;
 use indicatif::{ProgressBar, ProgressStyle};
+use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
 use tap::{Pipe, Tap};
+
+#[derive(clap::Parser, Debug)]
+enum Program {
+    Download,
+    Analyzer {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true, hide = true)]
+        args: Vec<String>,
+    },
+    Version {
+        #[command(subcommand)]
+        version: Option<Version>,
+    },
+}
+
+#[derive(clap::Subcommand, Debug)]
+enum Version {
+    Supports { renderer: String },
+}
+
+struct Config {
+    release: String,
+    path: PathBuf,
+}
 
 fn main() -> Result<()> {
     let release = std::env::var("RA_VERSION")
@@ -22,17 +48,24 @@ fn main() -> Result<()> {
         .join(&release)
         .join("rust-analyzer");
 
-    if !path.exists() {
-        download(&release, &path)?;
-        #[cfg(any(target_os = "macos", target_os = "linux"))]
-        fs::metadata(&path)?
-            .permissions()
-            .tap_mut(|p| p.set_mode(0o755))
-            .pipe(|p| fs::set_permissions(&path, p))?;
-    }
+    let config = Config { release, path };
 
-    Command::new(path)
-        .args(std::env::args().skip(1))
+    match Program::parse() {
+        Program::Download => download(&config),
+        Program::Analyzer { args } => analyzer(&config, args),
+        Program::Version { version } => match version {
+            Some(Version::Supports { .. }) => Ok(()),
+            None => preprocessor(&config),
+        },
+    }
+}
+
+fn analyzer(config: &Config, args: Vec<String>) -> Result<()> {
+    if !config.path.exists() {
+        download(config)?;
+    }
+    Command::new(&config.path)
+        .args(args)
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
@@ -42,7 +75,7 @@ fn main() -> Result<()> {
         .pipe(std::process::exit);
 }
 
-fn download<P: AsRef<Path>>(release: &str, outfile: P) -> Result<()> {
+fn download(Config { release, path }: &Config) -> Result<()> {
     let platform = env!("TARGET");
 
     let url = format!("https://github.com/rust-lang/rust-analyzer/releases/download/{release}/rust-analyzer-{platform}.gz");
@@ -66,15 +99,21 @@ fn download<P: AsRef<Path>>(release: &str, outfile: P) -> Result<()> {
 
     static BAR_TEMPLATE: &str = "{spinner:.cyan} {prefix} {bar:20.green} {binary_bytes:.yellow} {binary_total_bytes:.yellow} {binary_bytes_per_sec:.yellow}";
 
-    fs::create_dir_all(outfile.as_ref().parent().unwrap())?;
+    fs::create_dir_all(path.parent().unwrap())?;
 
-    fs::File::create(outfile)?
+    fs::File::create(path)?
         .pipe(io::BufWriter::new)
         .pipe(GzDecoder::new)
         .pipe(Progress::new(bar))
         .pipe(|mut w| res.copy_to(&mut w).and(Ok(w)))?
         .0
         .finish()?;
+
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
+    fs::metadata(path)?
+        .permissions()
+        .tap_mut(|p| p.set_mode(0o755))
+        .pipe(|p| fs::set_permissions(path, p))?;
 
     Ok(())
 }
@@ -108,4 +147,26 @@ impl<W> Progress<W> {
     fn new(p: ProgressBar) -> impl FnOnce(W) -> Self {
         |w| Self(w, p)
     }
+}
+
+fn preprocessor(Config { release, .. }: &Config) -> Result<()> {
+    let (_, mut book): (PreprocessorContext, Book) = Vec::new()
+        .pipe(|mut buf| std::io::stdin().read_to_end(&mut buf).and(Ok(buf)))?
+        .pipe(String::from_utf8)?
+        .pipe_as_ref(serde_json::from_str)?;
+
+    let version = format!("`{release}`");
+
+    book.for_each_mut(|page| {
+        let BookItem::Chapter(page) = page else {
+            return;
+        };
+        page.content = page
+            .content
+            .replace("<ra-version>(version)</ra-version>", &version);
+    });
+
+    let output = serde_json::to_string(&book)?;
+    std::io::stdout().write_all(output.as_bytes())?;
+    Ok(())
 }

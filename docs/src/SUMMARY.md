@@ -5,4 +5,4 @@
   - [Name resolution](rustdoc-link/name-resolution.md)
   - [Caching]()
   - [Which rust-analyzer]()
-  - [Caveats](rustdoc-link/caveats.md)
+  - [Known issues](rustdoc-link/known-issues.md)

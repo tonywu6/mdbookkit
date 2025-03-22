@@ -1,4 +1,4 @@
-# Caveats
+# Known issues
 
 ## Re-exported items
 

@@ -194,7 +194,7 @@ enum Message {
 }
 
 fn spawn_spinner() -> Spinner {
-    // https://github.com/console-rs/indicatif/issues/TODO:
+    // https://github.com/console-rs/indicatif/issues/698
     set_colors_enabled(colors_enabled_stderr());
 
     let (tx, rx) = mpsc::channel();

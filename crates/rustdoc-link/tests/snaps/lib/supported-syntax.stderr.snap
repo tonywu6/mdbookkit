@@ -311,13 +311,22 @@ expression: report
  241 │     
  242 │     ---
  243 │     
- 244 │     [^1]: TODO:
- 245 │     [^2]:
- 246 │         As of `rust-analyzer 2025-03-17`, links generated for re-exported items don't always
- 247 │         work. This happens often with macros. Examples include [`std::format!`] (seen above)
+ 244 │     [^1]:
+ 245 │         rust-analyzer's ability to generate links for variants and associated items was
+ 246 │         improved only somewhat recently: before
+ 247 │         [#19246](https://github.com/rust-lang/rust-analyzer/pull/19246), links for enum
+     ·         ───────────────────────────────┬───────────────────────────────
+     ·                                        ╰── https://github.com/rust-lang/rust-analyzer/pull/19246
+ 248 │         variants and associated items may point only to the types themselves. If linking to
+ 249 │         such items doesn't seem to work for you, be sure to upgrade to a newer rust-analyzer
+ 250 │         first!
+ 251 │     
+ 252 │     [^2]:
+ 253 │         As of `rust-analyzer 2025-03-17`, links generated for re-exported items don't always
+ 254 │         work. This happens often with macros. Examples include [`std::format!`] (seen above)
      ·                                                                ────────┬───────
      ·                                                                        ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.format.html
- 248 │         and [`tokio::main!`]. For more info, see [Caveats](caveats.md#re-exported-items).
+ 255 │         and [`tokio::main!`]. For more info, see [Caveats](caveats.md#re-exported-items).
      ·             ────────┬───────                     ───────────────────┬───────────────────
      ·                     │                                               ╰── caveats.md#re-exported-items
      ·                     ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html

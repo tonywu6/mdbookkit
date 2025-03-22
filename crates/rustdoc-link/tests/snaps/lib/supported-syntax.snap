@@ -245,7 +245,14 @@ prelude.)
 
 ---
 
-[^1]: TODO:
+[^1]:
+    rust-analyzer's ability to generate links for variants and associated items was
+    improved only somewhat recently: before
+    [#19246](https://github.com/rust-lang/rust-analyzer/pull/19246), links for enum
+    variants and associated items may point only to the types themselves. If linking to
+    such items doesn't seem to work for you, be sure to upgrade to a newer rust-analyzer
+    first!
+
 [^2]:
     As of `rust-analyzer 2025-03-17`, links generated for re-exported items don't always
     work. This happens often with macros. Examples include [`std::format!`](https://doc.rust-lang.org/stable/alloc/macros/macro.format.html "std::format!") (seen above)

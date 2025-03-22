@@ -19,10 +19,9 @@ pub struct Link<'a> {
     inner: Vec<Event<'a>>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub enum LinkState {
-    #[default]
-    Untouched,
+    Unparsed,
     Parsed(Item),
     Resolved(ItemLinks),
 }
@@ -38,7 +37,7 @@ impl<'a> Link<'a> {
             .tap_mut(log_trace!())
             .ok()
             .map(LinkState::Parsed)
-            .unwrap_or_default();
+            .unwrap_or(LinkState::Unparsed);
 
         let inner = vec![];
 

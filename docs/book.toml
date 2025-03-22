@@ -31,10 +31,14 @@ command = "cargo run --release --package mdbook-rustdoc-link"
 
 cache-dir = "build"
 manifest-dir = "../crates/rustdoc-link"
-rust-analyzer = "cargo run --release --package util-rust-analyzer --"
+rust-analyzer = "cargo run --release --package util-rust-analyzer -- analyzer"
 
-[preprocessor.alerts]
-after = ["rustdoc-link"]
+# [preprocessor.alerts]
+# after = ["rustdoc-link"]
 
-[preprocessor.app]
-command = "deno run -A app/build/preprocessor.ts"
+# [preprocessor.ra-version]
+# after = ["rustdoc-link"]
+# command = "cargo run --release --package util-rust-analyzer -- version"
+
+# [preprocessor.app]
+# command = "deno run -A app/build/preprocessor.ts"
