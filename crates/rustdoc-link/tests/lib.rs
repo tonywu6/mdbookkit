@@ -25,7 +25,7 @@ async fn snapshot(client: Arc<Client>, TestDocument { source, name }: TestDocume
 
     let report = page
         .reporter()
-        .level(LevelFilter::Trace)
+        .level(LevelFilter::Info)
         .paths(|_| name.clone())
         .report()
         .unwrap();

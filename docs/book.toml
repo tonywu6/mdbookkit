@@ -20,7 +20,7 @@ git-repository-icon = "fa-github"
 git-repository-url = "https://github.com/tonywu6/mdbookkit"
 hash-files = true
 preferred-dark-theme = "ayu"
-site-url = "/mdbookkit/"
+site-url = "/"
 
 [output.html.playground]
 runnable = false

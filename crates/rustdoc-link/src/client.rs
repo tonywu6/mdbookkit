@@ -114,12 +114,56 @@ impl Server {
         }
         .using(rx);
 
-        let (background, mut server) = MainLoop::new_client(move |_| {
-            struct State {
-                tx: mpsc::Sender<Poll<()>>,
-                percent_indexed: u32,
+        struct State {
+            tx: mpsc::Sender<Poll<()>>,
+            percent_indexed: u32,
+        }
+
+        fn on_progress(
+            state: &mut State,
+            progress: ProgressParams,
+        ) -> ControlFlow<async_lsp::Result<()>> {
+            match indexing_progress(&progress) {
+                Some(WorkDoneProgress::Begin(begin)) => {
+                    state.percent_indexed = 0;
+
+                    let msg = begin.message.as_deref().unwrap_or_default();
+                    spinner().update(ra_spinner!(), msg);
+
+                    let tx = state.tx.clone();
+                    tokio::spawn(async move { tx.send(Poll::Pending).await.ok() });
+                }
+
+                Some(WorkDoneProgress::End(end)) => {
+                    if state.percent_indexed >= 99 {
+                        let msg = end.message.as_deref().unwrap_or("indexing done");
+                        spinner().update(ra_spinner!(), msg);
+
+                        let tx = state.tx.clone();
+                        tokio::spawn(async move { tx.send(Poll::Ready(())).await.ok() });
+                    }
+                }
+
+                Some(WorkDoneProgress::Report(report)) => {
+                    if let Some(pc) = report.percentage {
+                        if pc >= state.percent_indexed {
+                            state.percent_indexed = pc;
+                        }
+                    }
+                    if let Some(msg) = &report.message {
+                        spinner().update(ra_spinner!(), msg);
+                    }
+                }
+
+                None => {
+                    log::trace!("{progress:#?}")
+                }
             }
 
+            ControlFlow::Continue(())
+        }
+
+        let (background, mut server) = MainLoop::new_client(move |_| {
             let state = State {
                 tx,
                 percent_indexed: 0,
@@ -128,46 +172,7 @@ impl Server {
             let mut router = Router::new(state);
 
             router
-                .notification::<Progress>(|state, progress| {
-                    match indexing_progress(&progress) {
-                        Some(WorkDoneProgress::Begin(begin)) => {
-                            state.percent_indexed = 0;
-
-                            let msg = begin.message.as_deref().unwrap_or_default();
-                            spinner().update(ra_spinner!(), msg);
-
-                            let tx = state.tx.clone();
-                            tokio::spawn(async move { tx.send(Poll::Pending).await.ok() });
-                        }
-
-                        Some(WorkDoneProgress::End(end)) => {
-                            if state.percent_indexed >= 99 {
-                                let msg = end.message.as_deref().unwrap_or("indexing done");
-                                spinner().update(ra_spinner!(), msg);
-
-                                let tx = state.tx.clone();
-                                tokio::spawn(async move { tx.send(Poll::Ready(())).await.ok() });
-                            }
-                        }
-
-                        Some(WorkDoneProgress::Report(report)) => {
-                            if let Some(pc) = report.percentage {
-                                if pc >= state.percent_indexed {
-                                    state.percent_indexed = pc;
-                                }
-                            }
-                            if let Some(msg) = &report.message {
-                                spinner().update(ra_spinner!(), msg);
-                            }
-                        }
-
-                        None => {
-                            log::trace!("{progress:#?}")
-                        }
-                    }
-
-                    ControlFlow::Continue(())
-                })
+                .notification::<Progress>(on_progress)
                 .notification::<PublishDiagnostics>(|_, diagnostics| {
                     log::trace!("{diagnostics:#?}");
                     ControlFlow::Continue(())
