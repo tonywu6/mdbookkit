@@ -278,5 +278,5 @@ expression: report
      ·             ────────┬───────                  ────────┬───────
      ·                     │                                 ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
      ·                     ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.format.html
- 275 │     [Caveats](caveats.md#re-exported-items).
+ 275 │     [Known issues](known-issues.md#re-exported-items).
      ╰────

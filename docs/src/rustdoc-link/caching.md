@@ -30,6 +30,7 @@ example:
 ```toml
 [preprocessor.rustdoc-link]
 cache-dir = "cache"
+# You can also point to an arbitrary directory in target/
 ```
 
 Now, when `mdbook` rebuilds your book during `build` or `serve`, if your edit does not
@@ -37,13 +38,12 @@ involve changes in the set of Rust items to be linked, that is, no new items uns
 the previous build, then the preprocessor reuses the previous resolution and **skips
 rust-analyzer entirely**.
 
-> [!TIP]
+> [!IMPORTANT]
 >
-> Suggested names are `cache` or `temp`. You can also point to an arbitrary directory in
-> `target/`.
->
-> The specified `cache-dir` will automatically have a `.gitignore` file to exclude it
-> from your source control.
+> If you use a directory under your book root directory, **make sure to also have a
+> `.gitignore` in your book root dir to exclude the cache dir from source control**, or
+> the cache file could trigger additional reloads. See [Specify exclude
+> patterns][specify-exclude-patterns] in the mdBook documentation.
 >
 > **Do not** use your book's `build-dir` as the `cache-dir`: `mdbook` clears the output
 > directory on every build, making this setup useless.
@@ -152,5 +152,6 @@ items eventually resolving. Subsequent builds hang indefinitely before timing ou
 [ra-cache-priming]: https://rust-analyzer.github.io/book/configuration.html?highlight=cache%20priming#configuration
 [ra-persistent-cache]: https://github.com/rust-lang/rust-analyzer/issues/4712
 [`ra-multiplex`]: https://github.com/pr2502/ra-multiplex
+[specify-exclude-patterns]: https://rust-lang.github.io/mdBook/cli/serve.html#specify-exclude-patterns
 
 <!-- prettier-ignore-end -->

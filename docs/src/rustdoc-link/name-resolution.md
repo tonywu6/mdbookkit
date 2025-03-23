@@ -114,6 +114,7 @@ Docs" feature — except it's fully automated.
 <figure id="media-open-docs">
   <img src="media/open-docs.png" alt="the Open Docs option in VS Code">
 </figure>
+
 <style>
   @media screen and (min-width: 768px) {
     #media-open-docs {

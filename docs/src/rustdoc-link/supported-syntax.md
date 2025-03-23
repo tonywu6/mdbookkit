@@ -272,7 +272,7 @@ is _compatible_ with rustdoc.
     As of rust-analyzer <ra-version>(version)</ra-version>, links generated for
     re-exported items don't always work. This happens often with macros. Examples
     include [`std::format!`] (seen above) and [`tokio::main!`]. For more info, see
-    [Caveats](caveats.md#re-exported-items).
+    [Known issues](known-issues.md#re-exported-items).
 
 <!-- prettier-ignore-start -->
 

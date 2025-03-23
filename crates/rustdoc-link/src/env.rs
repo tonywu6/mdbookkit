@@ -116,8 +116,6 @@ impl Environment {
             })
             .context("failed to obtain a temporary directory")?;
 
-        std::fs::write(temp_dir.as_ref().join(".gitignore"), "/*").ok();
-
         Ok(Self {
             temp_dir,
             crate_dir,
