@@ -3,30 +3,30 @@ source: crates/rustdoc-link/tests/lib.rs
 expression: report
 ---
   info: successfully resolved all links
-    ╭─[rustdoc-link:16:7]
- 15 │ 
- 16 │ > The [`option`][std::option] and [`result`][std::result] modules define optional and
-    ·       ───────────┬───────────     ───────────┬───────────
-    ·                  │                           ╰── https://doc.rust-lang.org/stable/core/result/index.html
-    ·                  ╰── https://doc.rust-lang.org/stable/core/option/index.html
- 17 │ > error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter]
-    ·                         ──────┬──────     ────────┬───────      ─────────┬─────────
-    ·                               │                   │                      ╰── https://doc.rust-lang.org/stable/core/iter/index.html
-    ·                               │                   ╰── https://doc.rust-lang.org/stable/core/result/enum.Result.html
-    ·                               ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
- 18 │ > module defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to
-    ·                                         ──────┬─────
-    ·                                               ╰── https://doc.rust-lang.org/stable/core/iter/traits/iterator/trait.Iterator.html
- 19 │ > access collections. [^1]
+    ╭─[rustdoc-link:18:5]
+ 17 │ 
+ 18 │ The [`option`][std::option] and [`result`][std::result] modules define optional and
+    ·     ───────────┬───────────     ───────────┬───────────
+    ·                │                           ╰── https://doc.rust-lang.org/stable/core/result/index.html
+    ·                ╰── https://doc.rust-lang.org/stable/core/option/index.html
+ 19 │ error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter] module
+    ·                       ──────┬──────     ────────┬───────      ─────────┬─────────
+    ·                             │                   │                      ╰── https://doc.rust-lang.org/stable/core/iter/index.html
+    ·                             │                   ╰── https://doc.rust-lang.org/stable/core/result/enum.Result.html
+    ·                             ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
+ 20 │ defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to access
+    ·                                ──────┬─────
+    ·                                      ╰── https://doc.rust-lang.org/stable/core/iter/traits/iterator/trait.Iterator.html
+ 21 │ collections. [^1]
     ╰────
-    ╭─[rustdoc-link:58:8]
- 57 │ 
- 58 │ > Like [`std::thread::spawn`], [`tokio::spawn`] returns a
-    ·        ───────────┬──────────  ────────┬───────
-    ·                   │                    ╰── https://docs.rs/tokio/1.44.1/tokio/task/spawn/fn.spawn.html
-    ·                   ╰── https://doc.rust-lang.org/stable/std/thread/fn.spawn.html
- 59 │ > [`JoinHandle`][tokio::task::JoinHandle] struct.
-    ·   ───────────────────┬───────────────────
-    ·                      ╰── https://docs.rs/tokio/1.44.1/tokio/runtime/task/join/struct.JoinHandle.html
- 60 │ 
+    ╭─[rustdoc-link:66:6]
+ 65 │ 
+ 66 │ Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a
+    ·      ───────────┬──────────  ───────────┬──────────
+    ·                 │                       ╰── https://docs.rs/tokio/1.44.1/tokio/task/spawn/fn.spawn.html
+    ·                 ╰── https://doc.rust-lang.org/stable/std/thread/fn.spawn.html
+ 67 │ [`JoinHandle`][tokio::task::JoinHandle] struct.
+    · ───────────────────┬───────────────────
+    ·                    ╰── https://docs.rs/tokio/1.44.1/tokio/runtime/task/join/struct.JoinHandle.html
+ 68 │ 
     ╰────

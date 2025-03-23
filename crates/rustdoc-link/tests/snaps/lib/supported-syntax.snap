@@ -223,7 +223,9 @@ Linking with reusable references:
 > [option-type]: std::option::Option
 > ```
 >
-> [The Option type][option-type]
+> [The Option type](https://doc.rust-lang.org/stable/core/option/enum.Option.html)
+>
+> [option-type]: std::option::Option
 
 Reference-style links `[text][id]` without a corresponding `[id]: name` part will be
 treated the same as inline-style links `[text](id)`:

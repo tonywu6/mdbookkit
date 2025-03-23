@@ -213,66 +213,70 @@ expression: report
  220 │ > ```
  221 │ >
  222 │ > [The Option type][option-type]
- 223 │ 
- 224 │ Reference-style links `[text][id]` without a corresponding `[id]: name` part will be
- 225 │ treated the same as inline-style links `[text](id)`:
- 226 │ 
- 227 │ > ```md
- 228 │ > [The Option type][std::option::Option]
- 229 │ > ```
- 230 │ >
- 231 │ > [The Option type][std::option::Option]
+     ·   ───────────────┬──────────────
+     ·                  ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
+ 223 │ >
+ 224 │ > [option-type]: std::option::Option
+ 225 │ 
+ 226 │ Reference-style links `[text][id]` without a corresponding `[id]: name` part will be
+ 227 │ treated the same as inline-style links `[text](id)`:
+ 228 │ 
+ 229 │ > ```md
+ 230 │ > [The Option type][std::option::Option]
+ 231 │ > ```
+ 232 │ >
+ 233 │ > [The Option type][std::option::Option]
      ·   ───────────────────┬──────────────────
      ·                      ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
- 232 │ 
- 233 │ Shortcuts are supported, and can contain inline markups:
  234 │ 
- 235 │ > ```md
- 236 │ > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
- 237 │ > ```
- 238 │ >
- 239 │ > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
+ 235 │ Shortcuts are supported, and can contain inline markups:
+ 236 │ 
+ 237 │ > ```md
+ 238 │ > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
+ 239 │ > ```
+ 240 │ >
+ 241 │ > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
      ·                    ───┬───      ────────┬───────                  ─────┬────
      ·                       │                 │                              ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html
      ·                       │                 ╰── https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html#method.new
      ·                       ╰── https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html
- 240 │ 
- 241 │ (The items must still be resolvable; in this case `Vec` and `vec!` come from the
- 242 │ prelude.)
- 243 │ 
- 244 │ ## Linking to page sections
+ 242 │ 
+ 243 │ (The items must still be resolvable; in this case `Vec` and `vec!` come from the
+ 244 │ prelude.)
  245 │ 
- 246 │ To link to a known section on a page, use a URL fragment, just like a normal link. This
- 247 │ is _compatible_ with rustdoc.
- 248 │ 
- 249 │ <!-- prettier-ignore-start -->
+ 246 │ ## Linking to page sections
+ 247 │ 
+ 248 │ To link to a known section on a page, use a URL fragment, just like a normal link. This
+ 249 │ is _compatible_ with rustdoc.
  250 │ 
- 251 │ > ```md
- 252 │ > [When Should You Use Which Collection?][std::collections#when-should-you-use-which-collection]
- 253 │ > ```
- 254 │ >
- 255 │ > [When Should You Use Which Collection?][std::collections#when-should-you-use-which-collection]
+ 251 │ <!-- prettier-ignore-start -->
+ 252 │ 
+ 253 │ > ```md
+ 254 │ > [When Should You Use Which Collection?][std::collections#when-should-you-use-which-collection]
+ 255 │ > ```
+ 256 │ >
+ 257 │ > [When Should You Use Which Collection?][std::collections#when-should-you-use-which-collection]
      ·   ───────────────────────────────────────────────┬──────────────────────────────────────────────
      ·                                                  ╰── https://doc.rust-lang.org/stable/std/collections/index.html
- 256 │ 
- 257 │ <!-- prettier-ignore-end -->
  258 │ 
- 259 │ ---
+ 259 │ <!-- prettier-ignore-end -->
  260 │ 
- 261 │ [^1]:
- 262 │     rust-analyzer's ability to generate links for enum variants like `Option::Some` was
- 263 │     improved only somewhat recently: before
- 264 │     [#19246](https://github.com/rust-lang/rust-analyzer/pull/19246), links for variants
- 265 │     and associated items may only point to the types themselves. If linking to such
- 266 │     items doesn't seem to work for you, be sure to upgrade to a newer rust-analyzer
- 267 │     first!
- 268 │ 
- 269 │ [^2]:
- 270 │     As of rust-analyzer <ra-version>(version)</ra-version>, links generated for
- 271 │     re-exported items don't always work. This happens often with macros. Examples
- 272 │     include [`std::format!`] (seen above) and [`tokio::main!`]. For more info, see
+ 261 │ ---
+ 262 │ 
+ 263 │ [^1]:
+ 264 │     rust-analyzer's ability to generate links for enum variants like `Option::Some` was
+ 265 │     improved only somewhat recently: before
+ 266 │     [#19246](https://github.com/rust-lang/rust-analyzer/pull/19246), links for variants
+ 267 │     and associated items may only point to the types themselves. If linking to such
+ 268 │     items doesn't seem to work for you, be sure to upgrade to a newer rust-analyzer
+ 269 │     first!
+ 270 │ 
+ 271 │ [^2]:
+ 272 │     As of rust-analyzer <ra-version>(version)</ra-version>, links generated for
+ 273 │     re-exported items don't always work. This happens often with macros. Examples
+ 274 │     include [`std::format!`] (seen above) and [`tokio::main!`]. For more info, see
      ·             ────────┬───────                  ────────┬───────
      ·                     │                                 ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
      ·                     ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.format.html
- 273 │     [Caveats](caveats.md#re-exported-items).
+ 275 │     [Caveats](caveats.md#re-exported-items).
      ╰────

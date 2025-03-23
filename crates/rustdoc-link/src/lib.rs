@@ -23,6 +23,14 @@ use crate::{
     logger::{spinner, styled},
 };
 
+/// Type that can provide links.
+///
+/// Resolvers should modify the provided [`Pages`] in place.
+///
+/// This is currently an abstraction over two sources of links:
+///
+/// - [`Client`], which invokes rust-analyzer
+/// - [`Cache`][crate::cache::Cache] implementations
 #[allow(async_fn_in_trait)]
 pub trait Resolver {
     async fn resolve<K>(&self, pages: &mut Pages<'_, K>) -> Result2<()>
@@ -67,6 +75,8 @@ impl Resolver for Client {
                 *line += 1;
                 Some(cursors)
             }
+
+            context.push('}');
 
             (context, request)
         };

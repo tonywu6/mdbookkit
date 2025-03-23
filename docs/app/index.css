@@ -222,6 +222,29 @@ body {
   video {
     max-width: 100%;
     height: auto;
+    object-fit: contain;
+  }
+
+  figure {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    min-width: 0;
+    min-height: 0;
+    margin: 1.8rem;
+
+    @media screen and (max-width: 768px) {
+      margin: 0;
+    }
+
+    > img {
+      max-height: 100%;
+    }
+
+    > p {
+      display: contents;
+      margin: 0;
+    }
   }
 }
 
