@@ -2,16 +2,16 @@
 
 `mdbook-rustdoc-link` resolves items in the context of your crate's "entrypoint":
 
-- This is usually either your `src/lib.rs` or your `src/main.rs`.
+- This is usually `src/lib.rs` or `src/main.rs`.
 - If your crate has multiple `bin` targets, it will use the first one listed in your
   `Cargo.toml`.
 - If your crate has both library and binary targets, it will prefer `lib`.
-- If your crate has configured customized paths in `Cargo.toml` instead of the default
-  `src/lib.rs` or `src/main.rs`, it will respect that.
+- If your crate has customized paths in `Cargo.toml` instead of the default `src/lib.rs`
+  or `src/main.rs`, it will respect that.
 
 > [!TIP]
 >
-> If you use Cargo workspaces, or if your source tree has specific layouts, see
+> If you use Cargo workspaces, or if your source tree has special layouts, see
 > [Workspace layout](workspace-layout.md) for more information.
 
 This means that an item must be in scope in the entrypoint for the proprocessor to be

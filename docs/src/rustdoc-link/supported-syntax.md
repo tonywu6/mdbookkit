@@ -157,7 +157,7 @@ fields and methods — this is mostly covered by the function and macro syntax, 
 
 If you encounter items that must be disambiguated using rustdoc's disambiguator syntax,
 other than [the "special types" listed below](#special-types), please [file an
-issue][issues]!
+issue][gh-issues]!
 
 ## Special types
 
@@ -277,7 +277,7 @@ is _compatible_ with rustdoc.
 <!-- prettier-ignore-start -->
 
 [disambiguator]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html#namespaces-and-disambiguators
-[issues]: https://github.com/tonywu6/mdbookkit/issues
+[gh-issues]: https://github.com/tonywu6/mdbookkit/issues
 [namespaces]: https://doc.rust-lang.org/reference/names/namespaces.html
 [rust-types]: https://doc.rust-lang.org/reference/types.html#r-type.kinds
 

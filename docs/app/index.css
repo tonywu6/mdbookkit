@@ -89,6 +89,14 @@ body {
     margin-block-start: 2.5rem;
   }
 
+  /*
+  h1 + h2,
+  h2 + h3,
+  h3 + h4,
+  h4 + h5 {
+    margin-block-start: 1rem;
+  } */
+
   h2 code,
   h3 code,
   h4 code,
@@ -267,7 +275,8 @@ body {
   white-space: nowrap;
 }
 
-.fig-text {
+figure.fig-text {
+  display: block;
   margin: 0 0 1rem 0;
   padding: 0.6rem;
 

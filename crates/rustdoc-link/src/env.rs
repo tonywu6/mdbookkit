@@ -104,7 +104,7 @@ impl Environment {
             .pipe(Url::from_directory_path)
             .unwrap();
 
-        let cache_dir = config
+        let temp_dir = config
             .cache_dir
             .clone()
             .map(TempDir::Persistent)
@@ -116,9 +116,11 @@ impl Environment {
             })
             .context("failed to obtain a temporary directory")?;
 
+        std::fs::write(temp_dir.as_ref().join(".gitignore"), "/*").ok();
+
         Ok(Self {
+            temp_dir,
             crate_dir,
-            temp_dir: cache_dir,
             source_dir,
             entrypoint,
             config,
@@ -230,7 +232,8 @@ impl LocateProject {
                 .pipe(Ok)
         } else {
             anyhow!(String::from_utf8_lossy(&output.stderr).into_owned())
-                .context("failed to locate-project")
+                .context("help: a Cargo project is needed to run rust-analyzer in")
+                .context("failed to locate a Cargo project")
                 .pipe(Err)
         }
     }

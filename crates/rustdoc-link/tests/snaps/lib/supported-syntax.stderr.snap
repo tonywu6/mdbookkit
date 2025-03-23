@@ -174,7 +174,7 @@ expression: report
  157 │ 
  158 │ If you encounter items that must be disambiguated using rustdoc's disambiguator syntax,
  159 │ other than [the "special types" listed below](#special-types), please [file an
- 160 │ issue][issues]!
+ 160 │ issue][gh-issues]!
  161 │ 
  162 │ ## Special types
  163 │ 

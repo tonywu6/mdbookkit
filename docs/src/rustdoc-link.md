@@ -24,22 +24,22 @@ collections. [^1]
 
 ## Getting started
 
-`mdbook-rustdoc-link` is an mdBook [preprocessor].
+You will need to:
 
-1. First, install it:
+1. Have [rust-analyzer]:
+
+   - If you already use the [VS Code extension][ra-extension], the server binary that
+     comes with it will automatically be used, no extra setup is needed!
+   - Otherwise, [install][ra-install] rust-analyzer (e.g. via `rustup`) and make sure
+     it's on your `PATH`.
+
+2. Install this project:
 
    ```
    cargo install mdbook-rustdoc-link
    ```
 
-2. You will also need [rust-analyzer]:
-
-   - If you already use the [VS Code extension][ra-extension], `rustdoc-link` will
-     automatically use the server binary that comes with it, no extra setup is needed!
-   - Otherwise, [install][ra-install] rust-analyzer (e.g. via `rustup`) and make sure
-     it's on your `PATH`.
-
-3. Configure your `book.toml`:
+3. Configure your `book.toml` to use it as a [preprocessor]:
 
    ```toml
    [book]
@@ -59,7 +59,7 @@ Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a
 [`JoinHandle`][tokio::task::JoinHandle] struct.
 ```
 
-`mdbook-rustdoc-link` will turn them into hyperlinks:
+`mdbook-rustdoc-link` will then turn them into hyperlinks:
 
 <figure class="fig-text">
 
@@ -70,11 +70,18 @@ Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a
 
 This works in both `mdbook build` and `mdbook serve`!
 
-<!-- <img src="rustdoc-link/media/screencap.webp"
-  alt="screen recording of mdbook-rustdoc-link during mdbook build"
-  width="1440" height="360"> -->
-
 ![screen recording of mdbook-rustdoc-link during mdbook build](rustdoc-link/media/screencap.webp)
+
+> [!IMPORTANT]
+>
+> It is assumed that you are running `mdbook` within a Cargo project.
+>
+> If you are working on a crate, and your book directory is within your source tree,
+> such as next to `Cargo.toml`, then running `mdbook` from there will "just work".
+>
+> If your book doesn't belong to a Cargo project, refer to
+> [Workspace layout](rustdoc-link/workspace-layout.md) for more information on how you
+> can setup up the preprocessor.
 
 > [!TIP]
 >
