@@ -75,6 +75,10 @@ body {
     }
   }
 
+  sup a {
+    text-decoration: none;
+  }
+
   h2,
   h3 {
     margin-block-start: 3.5rem;
@@ -147,6 +151,7 @@ body {
 
     .mdbook-alerts-title {
       margin-block-end: 0;
+      user-select: none;
     }
 
     .mdbook-alerts-icon {
@@ -237,6 +242,67 @@ body {
 
 .nowrap {
   white-space: nowrap;
+}
+
+.fig-text {
+  margin: 0 0 1rem 0;
+  padding: 0.6rem;
+
+  > :first-child {
+    margin-block-start: 0;
+  }
+
+  > :last-child {
+    margin-block-end: 0;
+  }
+
+  @media screen and (max-width: 768px) {
+    overflow-x: auto;
+
+    > * {
+      width: max-content;
+    }
+
+    p,
+    li {
+      white-space: pre;
+    }
+  }
+
+  .hljs {
+    padding: 0;
+    background-color: unset;
+  }
+}
+
+html.light {
+  .fig-text {
+    background-color: #f6f7f680;
+  }
+}
+
+html.rust {
+  .fig-text {
+    background-color: #f6f7f680;
+  }
+}
+
+html.coal {
+  .fig-text {
+    background-color: #1d1f2180;
+  }
+}
+
+html.navy {
+  .fig-text {
+    background-color: #1d1f2180;
+  }
+}
+
+html.ayu {
+  .fig-text {
+    background-color: #191f2680;
+  }
 }
 
 html.coal,

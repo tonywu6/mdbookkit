@@ -31,11 +31,11 @@ pub trait Resolver {
 }
 
 impl Resolver for Client {
-    async fn resolve<K>(&self, content: &mut Pages<'_, K>) -> Result2<()>
+    async fn resolve<K>(&self, pages: &mut Pages<'_, K>) -> Result2<()>
     where
         K: Eq + Hash,
     {
-        let request = content.items();
+        let request = pages.items();
 
         if request.is_empty() {
             return Ok(());
@@ -71,7 +71,7 @@ impl Resolver for Client {
             (context, request)
         };
 
-        log::debug!("request context\n\n{}\n", context);
+        log::debug!("request context\n\n{context}\n");
 
         let document = self
             .open(self.env().entrypoint.clone(), context)
@@ -118,7 +118,7 @@ impl Resolver for Client {
 
         spinner().finish("resolve", styled("done").green());
 
-        content.apply(&resolved);
+        pages.apply(&resolved);
 
         Ok(())
     }

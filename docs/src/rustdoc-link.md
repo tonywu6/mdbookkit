@@ -4,65 +4,90 @@
 
 You write:
 
-> ```md
-> The [`option`][std::option] and [`result`][std::result] modules define optional and
-> error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter]
-> module defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to
-> access collections. [^1]
-> ```
+```md
+The [`option`][std::option] and [`result`][std::result] modules define optional and
+error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter] module
+defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to access
+collections. [^1]
+```
 
 You get:
 
-> The [`option`][std::option] and [`result`][std::result] modules define optional and
-> error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter]
-> module defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to
-> access collections. [^1]
+<figure class="fig-text">
+
+The [`option`][std::option] and [`result`][std::result] modules define optional and
+error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter] module
+defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to access
+collections. [^1]
+
+</figure>
 
 ## Getting started
 
-`mdbook-rustdoc-link` is an mdBook [preprocessor]. First, install it:
+`mdbook-rustdoc-link` is an mdBook [preprocessor].
 
-```
-cargo install mdbook-rustdoc-link
-```
+1. First, install it:
 
-You will also need [rust-analyzer]:
+   ```
+   cargo install mdbook-rustdoc-link
+   ```
 
-- If you already use the [VS Code extension][ra-extension], `rustdoc-link` will
-  automatically use the server binary that comes with it, no extra setup is needed!
-- Otherwise, [install it][ra-install] (e.g. via `rustup`) and make sure it's on your
-  `PATH`.
+2. You will also need [rust-analyzer]:
 
-Next, configure your `book.toml`:
+   - If you already use the [VS Code extension][ra-extension], `rustdoc-link` will
+     automatically use the server binary that comes with it, no extra setup is needed!
+   - Otherwise, [install][ra-install] rust-analyzer (e.g. via `rustup`) and make sure
+     it's on your `PATH`.
 
-```toml
-[book]
-title = "My Book"
+3. Configure your `book.toml`:
 
-[preprocessor.rustdoc-link]
-# mdBook will run `mdbook-rustdoc-link`
-after = ["links"]
-# recommended, so that it can see content from {{#include}} as well
-```
+   ```toml
+   [book]
+   title = "My Book"
+
+   [preprocessor.rustdoc-link]
+   # mdBook will run `mdbook-rustdoc-link`
+   after = ["links"]
+   # recommended, so that it can see content from {{#include}} as well
+   ```
 
 Now, when you want to link to a Rust item, such as a type, a function, etc., simply use
 its name instead of a URL, like this:
 
-> ```md
-> Like [`std::thread::spawn`], [`tokio::spawn`] returns a
-> [`JoinHandle`][tokio::task::JoinHandle] struct.
-> ```
+```md
+Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a
+[`JoinHandle`][tokio::task::JoinHandle] struct.
+```
 
-They will be turned into hyperlinks:
+`mdbook-rustdoc-link` will turn them into hyperlinks:
 
-> Like [`std::thread::spawn`], [`tokio::spawn`] returns a
-> [`JoinHandle`][tokio::task::JoinHandle] struct.
+<figure class="fig-text">
 
-Works in both `mdbook build` and `mdbook serve`!
+Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a
+[`JoinHandle`][tokio::task::JoinHandle] struct.
 
-<img src="rustdoc-link/media/screencap.webp"
+</figure>
+
+This works in both `mdbook build` and `mdbook serve`!
+
+<!-- <img src="rustdoc-link/media/screencap.webp"
   alt="screen recording of mdbook-rustdoc-link during mdbook build"
-  width="1920" height="480">
+  width="1440" height="360"> -->
+
+![screen recording of mdbook-rustdoc-link during mdbook build](rustdoc-link/media/screencap.webp)
+
+> [!TIP]
+>
+> `mdbook-rustdoc-link` makes use of rust-analyzer's ["Open Docs"][open-docs] feature,
+> which resolves links to documentation given a symbol.
+>
+> Items from `std` will generate links to <https://doc.rust-lang.org>, while items from
+> third-party crates will generate links to <https://docs.rs>.
+>
+> So really, rust-analyzer is doing the heavy-lifting here. This crate is just the glue
+> code :)
+
+## License
 
 ---
 
@@ -71,6 +96,7 @@ Works in both `mdbook build` and `mdbook serve`!
 <!-- prettier-ignore-start -->
 
 [mdBook]: https://rust-lang.github.io/mdBook/
+[open-docs]: https://rust-analyzer.github.io/book/features.html#open-docs
 [preprocessor]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
 [ra-extension]: https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer
 [ra-install]: https://rust-analyzer.github.io/book/rust_analyzer_binary.html
