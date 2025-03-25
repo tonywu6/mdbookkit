@@ -17,17 +17,32 @@
 This means that an item must be in scope in the entrypoint for the proprocessor to be
 able to generate links for it.
 
+Let's say you have the following as your `src/lib.rs`:
+
+```rs
+use anyhow::Context;
+
+/// Type that can provide links.
+pub trait Resolver {}
+
+mod env {
+    pub struct Config {}
+}
+```
+
+Then:
+
 - Items defined and/or `use`d in the entrypoint can be linked to with just their names:
 
   > ```md
   > [`Resolver`] — Type that can provide links.
   >
-  > This preprocessor also uses the [`Context`] trait from `anyhow`.
+  > This crate also uses the [`Context`] trait from [`anyhow`].
   > ```
   >
   > [`Resolver`] — Type that can provide links.
   >
-  > This preprocessor also uses the [`Context`] trait from `anyhow`.
+  > This crate also uses the [`Context`] trait from [`anyhow`].
 
   This includes items from the prelude (unless you are using `#![no_implicit_prelude]`):
 
@@ -37,19 +52,19 @@ able to generate links for it.
   >
   > [`FromIterator`] is in the prelude starting from Rust 2021.
 
-- Otherwise, provide the full paths, as if you are writing `use` declarations:
+- Otherwise, provide the full paths, as if you were writing `use` declarations:
 
   > ```md
-  > [`TokioAsyncReadCompatExt`][tokio_util::compat::TokioAsyncReadCompatExt] — Compat
-  > trait between `tokio::io` and `futures::io`.
+  > [`JoinSet`][tokio::task::JoinSet] is analogous to `asyncio.as_completed`.
   >
-  > [`Config`][crate::env::Config] — The main config type.
+  > [Configurations](configuration.md) for the preprocessor is defined in the
+  > [`Config`][crate::env::Config] type.
   > ```
   >
-  > [`TokioAsyncReadCompatExt`][tokio_util::compat::TokioAsyncReadCompatExt] — Compat
-  > trait between `tokio::io` and `futures::io`.
+  > [`JoinSet`][tokio::task::JoinSet] is analogous to `asyncio.as_completed`.
   >
-  > [`Config`][crate::env::Config] — The main config type.
+  > [Configurations](configuration.md) for the preprocessor is defined in the
+  > [`Config`][crate::env::Config] type.
 
 This is something to note especially if you are including doc comments as part of your
 Markdown docs: only rustdoc has the ability to [resolve names from where the comments
