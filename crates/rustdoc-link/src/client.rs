@@ -76,14 +76,14 @@ impl Client {
         Ok(opened)
     }
 
-    pub async fn stop(self) -> Result<()> {
+    pub async fn stop(self) -> Result<Environment> {
         if let Some(server) = self.server.into_inner() {
             server.dispose().await?;
         }
-        Ok(())
+        Ok(self.env)
     }
 
-    pub async fn drop(self: Arc<Self>) -> Result<()> {
+    pub async fn drop(self: Arc<Self>) -> Result<Environment> {
         let Some(this) = Arc::into_inner(self) else {
             bail!("attempted to shutdown a client that is still referenced")
         };

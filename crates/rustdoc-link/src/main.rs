@@ -3,7 +3,7 @@ use std::{
     io::{Read, Write},
 };
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use log::LevelFilter;
 use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
@@ -49,7 +49,8 @@ async fn mdbook() -> Result<()> {
     let config = {
         let mut config = if let Some(config) = context.config.get_preprocessor(preprocessor_name())
         {
-            Config::deserialize(toml::Value::Table(config.clone()))?
+            Config::deserialize(toml::Value::Table(config.clone()))
+                .context("failed to read preprocessor config from book.toml")?
         } else {
             Default::default()
         };
@@ -113,14 +114,18 @@ async fn mdbook() -> Result<()> {
         })
         .collect::<HashMap<_, _>>();
 
-    content
+    let env = client.stop().await?;
+
+    let status = content
         .reporter()
         .paths(|path| path.display().to_string())
         .level(LevelFilter::Warn)
-        .stderr();
+        .build()
+        .to_stderr()
+        .to_status();
 
     if content.modified() {
-        FileCache::save(client.env(), &content).await.ok();
+        FileCache::save(&env, &content).await.ok();
     }
 
     book.for_each_mut(|item| {
@@ -135,7 +140,7 @@ async fn mdbook() -> Result<()> {
 
     std::io::stdout().write_all(output.as_bytes())?;
 
-    client.stop().await?;
+    status.check(env.config.fail_on_unresolved)?;
 
     Ok(())
 }
@@ -157,21 +162,25 @@ async fn markdown(options: Config) -> Result<()> {
 
     client.resolve(&mut content).await?;
 
-    content
+    let env = client.stop().await?;
+
+    let status = content
         .reporter()
         .paths(|_| "<stdin>".into())
         .level(LevelFilter::Warn)
-        .stderr();
+        .build()
+        .to_stderr()
+        .to_status();
 
     if content.modified() {
-        FileCache::save(client.env(), &content).await.ok();
+        FileCache::save(&env, &content).await.ok();
     }
 
-    let output = content.get(&client.env().emit_config())?.to_string();
+    let output = content.get(&env.emit_config())?.to_string();
 
     std::io::stdout().write_all(output.as_bytes())?;
 
-    client.stop().await?;
+    status.check(env.config.fail_on_unresolved)?;
 
     Ok(())
 }

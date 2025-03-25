@@ -1,5 +1,6 @@
 use std::fmt;
 
+use anyhow::Result;
 use console::colors_enabled_stderr;
 use log::{Level, LevelFilter};
 use lsp_types::Position;
@@ -10,20 +11,20 @@ use miette::{
 use owo_colors::Style;
 use tap::{Pipe, Tap};
 
-use crate::{link::diagnostic::LinkLabel, logger::is_logging};
+use crate::{env::ErrorHandling, link::diagnostic::LinkLabel, logger::is_logging};
 
 use super::{Page, Pages};
 
-struct PageDiagnostic<'r, 'a, K> {
-    page: &'r Page<'a>,
+struct PageDiagnostic<'a, K> {
+    page: &'a Page<'a>,
     name: K,
     items: Vec<LinkLabel>,
     lines: LineCounter,
     status: PageStatus,
 }
 
-impl<'r, 'a, K> PageDiagnostic<'r, 'a, K> {
-    pub fn new(page: &'r Page<'a>, name: K, filter: LevelFilter) -> Self {
+impl<'a, K> PageDiagnostic<'a, K> {
+    pub fn new(page: &'a Page<'a>, name: K, filter: LevelFilter) -> Self {
         let items = page
             .links
             .iter()
@@ -51,7 +52,7 @@ impl<'r, 'a, K> PageDiagnostic<'r, 'a, K> {
     }
 }
 
-impl<K: PageName> Diagnostic for PageDiagnostic<'_, '_, K> {
+impl<K: PageName> Diagnostic for PageDiagnostic<'_, K> {
     fn severity(&self) -> Option<Severity> {
         Some(self.status.severity())
     }
@@ -74,7 +75,7 @@ impl<K: PageName> Diagnostic for PageDiagnostic<'_, '_, K> {
     }
 }
 
-impl<K: PageName> SourceCode for PageDiagnostic<'_, '_, K> {
+impl<K: PageName> SourceCode for PageDiagnostic<'_, K> {
     fn read_span<'a>(
         &'a self,
         span: &SourceSpan,
@@ -98,22 +99,22 @@ impl<K: PageName> SourceCode for PageDiagnostic<'_, '_, K> {
     }
 }
 
-impl<K> fmt::Debug for PageDiagnostic<'_, '_, K> {
+impl<K> fmt::Debug for PageDiagnostic<'_, K> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(&self.status, f)
     }
 }
 
-impl<K> fmt::Display for PageDiagnostic<'_, '_, K> {
+impl<K> fmt::Display for PageDiagnostic<'_, K> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.status, f)
     }
 }
 
-impl<K> std::error::Error for PageDiagnostic<'_, '_, K> {}
+impl<K> std::error::Error for PageDiagnostic<'_, K> {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-enum PageStatus {
+pub enum PageStatus {
     Unresolved = 1,
     Ok,
     Debug,
@@ -135,6 +136,14 @@ impl PageStatus {
             PageStatus::Debug => Level::Debug,
         }
     }
+
+    pub fn check(&self, check: ErrorHandling) -> Result<()> {
+        match self.level() {
+            Level::Error => check.error(),
+            Level::Warn => check.warn(),
+            _ => Ok(()),
+        }
+    }
 }
 
 impl fmt::Display for PageStatus {
@@ -148,8 +157,8 @@ impl fmt::Display for PageStatus {
     }
 }
 
-impl<K: PageName> PageDiagnostic<'_, '_, K> {
-    pub fn report(&self) -> String {
+impl<K: PageName> PageDiagnostic<'_, K> {
+    pub fn to_report(&self) -> String {
         let handler = if colors_enabled_stderr() {
             GraphicalTheme::unicode()
         } else {
@@ -174,13 +183,11 @@ impl<K: PageName> PageDiagnostic<'_, '_, K> {
         .pipe(GraphicalReportHandler::new_themed);
 
         let mut output = String::new();
-
         handler.render_report(&mut output, self).unwrap();
-
         output
     }
 
-    pub fn logs(&self) -> Vec<String> {
+    pub fn to_logs(&self) -> Vec<String> {
         self.items
             .iter()
             .filter(|item| item.label.label().is_some())
@@ -194,15 +201,15 @@ impl<K: PageName> PageDiagnostic<'_, '_, K> {
     }
 }
 
-pub struct Reporter<'r, 'a, K, F> {
-    pages: &'r Pages<'a, K>,
+pub struct ReportBuilder<'a, K, F> {
+    pages: &'a Pages<'a, K>,
     print_path: F,
     filter: LevelFilter,
 }
 
 impl<'a, K: fmt::Debug> Pages<'a, K> {
-    pub fn reporter<'r>(&'r self) -> Reporter<'r, 'a, K, fn(&K) -> String> {
-        Reporter {
+    pub fn reporter(&'a self) -> ReportBuilder<'a, K, fn(&K) -> String> {
+        ReportBuilder {
             pages: self,
             print_path: |path| format!("{path:?}"),
             filter: LevelFilter::Warn,
@@ -210,7 +217,7 @@ impl<'a, K: fmt::Debug> Pages<'a, K> {
     }
 }
 
-impl<'r, 'a, K, F> Reporter<'r, 'a, K, F>
+impl<'a, K, F> ReportBuilder<'a, K, F>
 where
     K: 'a,
 {
@@ -219,74 +226,79 @@ where
         self
     }
 
-    pub fn paths<G>(self, print_path: G) -> Reporter<'r, 'a, K, G>
+    pub fn paths<G>(self, print_path: G) -> ReportBuilder<'a, K, G>
     where
         G: Fn(&'a K) -> String,
     {
         let Self { pages, filter, .. } = self;
-        Reporter {
+        ReportBuilder {
             pages,
             print_path,
             filter,
         }
     }
-}
 
-impl<'r, 'a, K, F> Reporter<'r, 'a, K, F>
-where
-    F: Fn(&'a K) -> String,
-    K: 'a,
-    'r: 'a,
-{
-    pub fn report(self) -> Option<String> {
-        self.diagnostics()
-            .fold(String::new(), |mut out, diag| {
-                use fmt::Write;
-                writeln!(out, "{}", diag.report()).unwrap();
-                out
-            })
-            .pipe(|report| {
-                if report.is_empty() {
-                    None
-                } else {
-                    Some(report)
-                }
-            })
-    }
-
-    pub fn logs(self) -> Vec<String> {
-        self.diagnostics().flat_map(|diag| diag.logs()).collect()
-    }
-
-    pub fn stderr(self) {
-        if is_logging() {
-            let mut status = PageStatus::Debug;
-            let logs = self
-                .diagnostics()
-                .inspect(|diag| {
-                    if diag.status < status {
-                        status = diag.status
-                    }
-                })
-                .flat_map(|diag| diag.logs())
-                .collect::<Vec<_>>()
-                .join("\n  ");
-            log::log!(status.level(), "{status}\n  {logs}");
-        } else {
-            let Some(report) = self.report() else { return };
-            log::logger().flush();
-            eprint!("\n\n{report}");
-        }
-    }
-
-    fn diagnostics(self) -> impl Iterator<Item = PageDiagnostic<'r, 'a, String>> {
-        self.pages
+    pub fn build(self) -> Reporter<'a>
+    where
+        F: Fn(&'a K) -> String,
+    {
+        let mut status = PageStatus::Debug;
+        let pages = self
+            .pages
             .pages
             .iter()
             .map(move |(name, page)| {
                 PageDiagnostic::new(page, (self.print_path)(name), self.filter)
             })
             .filter(|diag| !diag.items.is_empty())
+            .inspect(|page| {
+                if page.status < status {
+                    status = page.status
+                }
+            })
+            .collect::<Vec<_>>();
+        Reporter { pages, status }
+    }
+}
+
+pub struct Reporter<'a> {
+    pages: Vec<PageDiagnostic<'a, String>>,
+    status: PageStatus,
+}
+
+impl Reporter<'_> {
+    pub fn to_status(&self) -> PageStatus {
+        self.status
+    }
+
+    pub fn to_stderr(&self) -> &Self {
+        if self.pages.is_empty() {
+            return self;
+        }
+
+        if is_logging() {
+            let status = self.status;
+            let logs = self.to_logs().join("\n");
+            log::log!(status.level(), "{status}\n  {logs}");
+        } else {
+            let report = self.to_report();
+            log::logger().flush();
+            eprint!("\n\n{report}");
+        };
+
+        self
+    }
+
+    pub fn to_report(&self) -> String {
+        self.pages.iter().fold(String::new(), |mut out, diag| {
+            use fmt::Write;
+            writeln!(out, "{}", diag.to_report()).unwrap();
+            out
+        })
+    }
+
+    pub fn to_logs(&self) -> Vec<String> {
+        self.pages.iter().flat_map(|diag| diag.to_logs()).collect()
     }
 }
 

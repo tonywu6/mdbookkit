@@ -27,8 +27,8 @@ async fn snapshot(client: Arc<Client>, TestDocument { source, name }: TestDocume
         .reporter()
         .level(LevelFilter::Info)
         .paths(|_| name.clone())
-        .report()
-        .unwrap();
+        .build()
+        .to_report();
     portable_snapshots!().test(|| insta::assert_snapshot!(format!("{name}.stderr"), report))?;
 
     Ok(())

@@ -15,7 +15,7 @@ use tokio::process::Command;
 use crate::markdown::{markdown_parser, MarkdownStream};
 
 #[derive(clap::Parser, Deserialize, Debug, Default, Clone)]
-#[serde(rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Config {
     #[arg(long)]
     #[serde(default)]
@@ -36,6 +36,34 @@ pub struct Config {
     #[arg(long)]
     #[serde(default)]
     pub prefer_local_links: bool,
+
+    #[arg(long, value_enum)]
+    #[serde(default)]
+    pub fail_on_unresolved: ErrorHandling,
+
+    #[allow(unused)]
+    #[serde(default)]
+    #[arg(skip)]
+    #[doc(hidden)]
+    pub after: Option<Vec<String>>,
+
+    #[allow(unused)]
+    #[serde(default)]
+    #[arg(skip)]
+    #[doc(hidden)]
+    pub before: Option<Vec<String>>,
+
+    #[allow(unused)]
+    #[serde(default)]
+    #[arg(skip)]
+    #[doc(hidden)]
+    pub renderers: Option<Vec<String>>,
+
+    #[allow(unused)]
+    #[serde(default)]
+    #[arg(skip)]
+    #[doc(hidden)]
+    pub command: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -194,6 +222,41 @@ impl AsRef<Path> for TempDir {
         match self {
             Self::Persistent(p) => p.as_ref(),
             Self::Transient(p) => p.deref().as_ref(),
+        }
+    }
+}
+
+#[derive(clap::ValueEnum, Deserialize, Debug, Default, Clone, Copy)]
+#[serde(rename_all = "lowercase")]
+pub enum ErrorHandling {
+    #[default]
+    #[serde(rename = "ci")]
+    #[clap(name = "ci")]
+    Env,
+    Always,
+}
+
+impl ErrorHandling {
+    pub fn error(self) -> Result<()> {
+        Err(anyhow!("preprocessor has errors"))
+    }
+
+    pub fn warn(self) -> Result<()> {
+        match self {
+            Self::Always => {
+                anyhow!("treating warnings as errors because fail-on-unresolved = `always`")
+                    .context("preprocessor has errors")
+                    .pipe(Err)
+            }
+            Self::Env => {
+                let ci = std::env::var("CI").unwrap_or("".into());
+                if matches!(ci.as_str(), "" | "0" | "false") {
+                    return Ok(());
+                }
+                anyhow!("treating warnings as errors because fail-on-unresolved = `ci` and CI={ci}")
+                    .context("preprocessor has errors")
+                    .pipe(Err)
+            }
         }
     }
 }
