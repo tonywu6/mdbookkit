@@ -52,6 +52,3 @@ tower = "0.5.2"
 insta = { workspace = true }
 similar = { workspace = true }
 util-testing = { workspace = true }
-
-[features]
-__unstable-clap-reflect = []

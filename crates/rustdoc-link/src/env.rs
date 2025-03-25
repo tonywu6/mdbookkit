@@ -6,6 +6,7 @@ use std::{
 
 use anyhow::{anyhow, Context, Result};
 use cargo_toml::{Manifest, Product};
+use clap::ValueHint;
 use lsp_types::Url;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use shlex::Shlex;
@@ -17,29 +18,61 @@ use crate::markdown::{markdown_parser, MarkdownStream};
 #[derive(clap::Parser, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Config {
-    #[arg(long)]
+    /// Command to use for spawning rust-analyzer.
+    ///
+    /// By default, prebuilt binary from the VS Code extension is tried. If that doesn't
+    /// exist, it is assumed that rust-analyzer is on `PATH`. Use this option to override
+    /// this behavior completely.
+    ///
+    /// The command string will be tokenized by [shlex], so you can include arguments in it.
+    #[arg(long, value_name("COMMAND"), value_hint(ValueHint::CommandString))]
     #[serde(default)]
     pub rust_analyzer: Option<String>,
 
-    #[arg(long)]
+    /// Directory from which to search for a Cargo project.
+    ///
+    /// By default, the current working directory is used. Use this option to specify a
+    /// different directory.
+    ///
+    /// The processor requires the Cargo.toml of a package to work. If you are working
+    /// on a Cargo workspace, set this to the relative path to a member crate.
+    #[arg(long, value_name("PATH"), value_hint(ValueHint::DirPath))]
     #[serde(default)]
     pub manifest_dir: Option<PathBuf>,
 
-    #[arg(long)]
+    /// Directory in which to persist build cache.
+    ///
+    /// Setting this will enable caching. Will skip rust-analyzer if cache hits.
+    #[arg(long, value_name("PATH"), value_hint(ValueHint::DirPath))]
     #[serde(default)]
     pub cache_dir: Option<PathBuf>,
 
+    /// Exit with a non-zero status when some links fail to resolve.
+    ///
+    /// - `ci` — Fail if the environment variable `CI` is set to a value other than `0`.
+    ///   Environments like GitHub Actions configure this automatically.
+    ///
+    /// - `always` — Fail as long as there are unresolved items, even in local use.
+    ///
+    /// Warnings are emitted for unresolved links regardless of this option.
+    #[arg(long, value_enum, value_name("MODE"), default_value_t = Default::default())]
+    #[serde(default)]
+    pub fail_on_unresolved: ErrorHandling,
+
+    /// Whether to enable punctuations like smart quotes `“”`.
+    ///
+    /// This is only meaningful if your links happen to have visible text that has
+    /// specific punctuation. The processor passes through the rest of your Markdown source.
+    ///
+    /// **In `book.toml`** — this option is not needed because
+    /// `output.html.smart-punctuation` is honored.
     #[arg(long)]
     #[serde(default)]
     pub smart_punctuation: bool,
 
-    #[arg(long)]
+    #[arg(long, hide = true)]
     #[serde(default)]
     pub prefer_local_links: bool,
-
-    #[arg(long, value_enum)]
-    #[serde(default)]
-    pub fail_on_unresolved: ErrorHandling,
 
     #[allow(unused)]
     #[serde(default)]

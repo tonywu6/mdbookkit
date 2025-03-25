@@ -25,6 +25,10 @@ site-url = "/"
 [output.html.playground]
 runnable = false
 
+[preprocessor.clap-reflect]
+before = ["rustdoc-link"]
+command = "cargo run --profile=dev --package util-clap-reflect -- --reflect rustdoc-link-options"
+
 [preprocessor.rustdoc-link]
 after = ["links"]
 command = "cargo run --release --package mdbook-rustdoc-link"
@@ -36,7 +40,7 @@ rust-analyzer = "cargo run --release --package util-rust-analyzer -- analyzer"
 [preprocessor.alerts]
 after = ["rustdoc-link"]
 
-[preprocessor.ra-version]
+[preprocessor.rust-analyzer-version]
 after = ["rustdoc-link"]
 command = "cargo run --release --package util-rust-analyzer -- version"
 

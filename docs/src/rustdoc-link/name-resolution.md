@@ -7,7 +7,7 @@
   `Cargo.toml`.
 - If your crate has both library and binary targets, it will prefer `lib`.
 - If your crate has customized paths in `Cargo.toml` instead of the default `src/lib.rs`
-  or `src/main.rs`, it will respect that.
+  or `src/main.rs`, it will honor that.
 
 > [!TIP]
 >

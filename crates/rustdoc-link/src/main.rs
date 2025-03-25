@@ -21,6 +21,7 @@ use mdbook_rustdoc_link::{
 #[tokio::main]
 async fn main() -> Result<()> {
     ConsoleLogger::install();
+
     match Program::parse().command {
         Some(Command::Supports { .. }) => Ok(()),
         Some(Command::Markdown(options)) => markdown(options).await,
@@ -36,8 +37,16 @@ struct Program {
 
 #[derive(Subcommand, Debug, Clone)]
 enum Command {
-    Supports { renderer: String },
+    /// Link to Rust documentation à la rustdoc.
+    ///
+    /// Markdown is read from stdin and written to stdout.
     Markdown(Config),
+
+    /// Supporting command for mdbook.
+    ///
+    /// See <https://rust-lang.github.io/mdBook/for_developers/preprocessors.html#hooking-into-mdbook>
+    #[clap(hide = true)]
+    Supports { renderer: String },
 }
 
 async fn mdbook() -> Result<()> {

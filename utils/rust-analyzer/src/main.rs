@@ -157,13 +157,13 @@ fn preprocessor(Config { release, .. }: &Config) -> Result<()> {
 
     let version = format!("`{release}`");
 
+    let tag = "<ra-version>(version)</ra-version>";
+
     book.for_each_mut(|page| {
         let BookItem::Chapter(page) = page else {
             return;
         };
-        page.content = page
-            .content
-            .replace("<ra-version>(version)</ra-version>", &version);
+        page.content = page.content.replace(tag, &version);
     });
 
     let output = serde_json::to_string(&book)?;

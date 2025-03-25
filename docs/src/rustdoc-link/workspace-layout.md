@@ -29,8 +29,9 @@ preprocessor in this case, some extra setup is needed.
 
 ## Using the `manifest-dir` option
 
-In your `book.toml`, in the `[preprocessor.rustdoc-link]` table, set the `manifest-dir`
-option to the relative path to a member crate.
+In your `book.toml`, in the `[preprocessor.rustdoc-link]` table, set the
+[`manifest-dir`](configuration.md#manifest-dir) option to the relative path to a member
+crate.
 
 For example, if you have the following workspace layout:
 
