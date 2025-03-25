@@ -1,3 +1,7 @@
+---
+source: crates/rustdoc-link/tests/lib.rs
+expression: output
+---
 # Known issues
 
 <details class="toc" open>
@@ -42,17 +46,17 @@ Macros exported with [`#[macro_export]`][macro_export] are always exported at cr
 root, and are documented as such by rustdoc, but rust-analyzer currently generates links
 to the modules they are defined in. For example:
 
-- [~~`panic!`~~], and many other `std` macros
+- [~~`panic!`~~](https://doc.rust-lang.org/stable/std/macros/macro.panic.html "panic!"), and many other `std` macros
   - The correct link is
     [https://doc.rust-lang.org/stable/std~~/macros~~/macro.panic.html][panic]
-- [~~`serde_json::json!`~~]
+- [~~`serde_json::json!`~~](https://docs.rs/serde_json/1.0.140/serde_json/macros/macro.json.html "serde_json::json!")
   - The correct link is
     [https://docs.rs/serde_json/1.0.140/serde_json~~/macros~~/macro.json.html][serde_json::json]
 
 Attribute macros generate links that use `macro.<macro_name>.html`, but rustdoc actually
 generates `attr.<macro_name>.html`. For example:
 
-- [~~`tokio::main!`~~]
+- [~~`tokio::main!`~~](https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html "tokio::main!")
   - The correct link is
     [https://docs.rs/tokio-macros/2.5.0/tokio_macros/~~macro~~attr.main.html][tokio::main]
 
@@ -67,8 +71,8 @@ HTML document. rust-analyzer does not yet have the ability to do so.
 
 For example, these are the same links:
 
-- [`<std::net::IpAddr as From<std::net::Ipv4Addr>>::from`]
-- [`<std::net::IpAddr as From<std::net::Ipv6Addr>>::from`]
+- [`<std::net::IpAddr as From<std::net::Ipv4Addr>>::from`](https://doc.rust-lang.org/stable/core/net/ip_addr/enum.IpAddr.html#method.from "<std::net::IpAddr as From<std::net::Ipv4Addr>>::from")
+- [`<std::net::IpAddr as From<std::net::Ipv6Addr>>::from`](https://doc.rust-lang.org/stable/core/net/ip_addr/enum.IpAddr.html#method.from "<std::net::IpAddr as From<std::net::Ipv6Addr>>::from")
 
 The correct link for the `From<Ipv6Addr>` implementation is actually
 <a href="https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from-1">
@@ -96,7 +100,7 @@ rust-analyzer. For example:
 
 You may wish to link to items that are only conditionally compiled.
 
-For example, [clap] is known for providing guide-level documentation through docs.rs. To
+For example, [clap](https://docs.rs/clap/4.5.32/clap/index.html "clap") is known for providing guide-level documentation through docs.rs. To
 link to the [tutorial for its Derive API][clap::_derive], theorectically you could write
 \[`clap::_derive::_tutorial`]. However, this is gated behind the `clap/unstable-doc`
 feature.

@@ -62,6 +62,7 @@ async fn test_snapshots() -> Result<()> {
 
     let tests = [
         test_document!("../../../docs/src/rustdoc-link/supported-syntax.md"),
+        test_document!("../../../docs/src/rustdoc-link/known-issues.md"),
         test_document!("../../../docs/src/rustdoc-link.md"),
         test_document!("tests/ra-known-quirks.md"),
     ];

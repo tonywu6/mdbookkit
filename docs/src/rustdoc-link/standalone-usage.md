@@ -10,8 +10,9 @@ result through stdout, for example:
 mdbook-rustdoc-link markdown < README.md
 ```
 
-It accepts all [options](configuration.md) configurable in `book.toml`. Run
-`mdbook-rustdoc-link markdown --help` to see them.
+The command accepts as arguments all [options](configuration.md) configurable in
+`book.toml`, such as `--cache-dir`. Run `mdbook-rustdoc-link markdown --help` to see
+them.
 
 Use it in any text processing pipeline!
 

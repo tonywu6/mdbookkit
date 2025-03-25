@@ -28,8 +28,8 @@ You will need to:
 
 1. Have [rust-analyzer]:
 
-   - If you already use the [VS Code extension][ra-extension], the server binary that
-     comes with it will automatically be used, no extra setup is needed!
+   - If you already use the [VS Code extension][ra-extension], this project will
+     automatically use the server binary that comes with it, no extra setup is needed!
    - Otherwise, [install][ra-install] rust-analyzer (e.g. via `rustup`) and make sure
      it's on your `PATH`.
 
@@ -52,7 +52,7 @@ You will need to:
    ```
 
 Now, when you want to link to a Rust item, such as a type, a function, etc., simply use
-its name instead of a URL, like this:
+its name in place of a URL, like this:
 
 ```md
 Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a
@@ -93,6 +93,8 @@ This works in both `mdbook build` and `mdbook serve`!
 >
 > So really, rust-analyzer is doing the heavy-lifting here. This crate is just the glue
 > code :)
+
+## Overview
 
 ## License
 

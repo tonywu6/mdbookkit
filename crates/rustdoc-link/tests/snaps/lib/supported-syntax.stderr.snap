@@ -166,117 +166,87 @@ expression: report
      ·         │               ╰── https://doc.rust-lang.org/stable/alloc/vec/index.html
      ·         ╰── https://doc.rust-lang.org/stable/alloc/vec/index.html
  151 │ > _module_.
- 152 │ 
- 153 │ Currently, duplicate names in Rust are allowed only if they correspond to items in
- 154 │ different [namespaces], for example, between macros and modules, and between struct
- 155 │ fields and methods — this is mostly covered by the function and macro syntax, described
- 156 │ [above](#functions-and-macros).
- 157 │ 
- 158 │ If you encounter items that must be disambiguated using rustdoc's disambiguator syntax,
- 159 │ other than [the "special types" listed below](#special-types), please [file an
- 160 │ issue][gh-issues]!
- 161 │ 
- 162 │ ## Special types
- 163 │ 
- 164 │ > [!WARNING]
- 165 │ 
- 166 │ There is **very limited support** on linking to many [built-in types][rust-types].
- 167 │ 
- 168 │ **Primitive types**:
- 169 │ 
- 170 │ Links to named primitive types _are_ resolved:
- 171 │ 
- 172 │ > ```md
- 173 │ > [`bool`], [`u8`], [`str`], and [`char`]
- 174 │ > ```
- 175 │ >
- 176 │ > [`bool`], [`u8`], [`str`], and [`char`].
-     ·   ────┬───  ───┬──  ───┬───      ────┬───
-     ·       │        │       │             ╰── https://doc.rust-lang.org/nightly/core/primitive.char.html
-     ·       │        │       ╰── https://doc.rust-lang.org/nightly/core/primitive.str.html
-     ·       │        ╰── https://doc.rust-lang.org/nightly/core/primitive.u8.html
-     ·       ╰── https://doc.rust-lang.org/nightly/core/primitive.bool.html
- 177 │ 
      ╰────
-     ╭─[supported-syntax:212:3]
+     ╭─[supported-syntax:191:3]
+ 190 │ >
+ 191 │ > [The Option type](std::option::Option)
+     ·   ───────────────────┬──────────────────
+     ·                      ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
+ 192 │ 
+ 193 │ Linking with reusable references:
+ 194 │ 
+ 195 │ > ```md
+ 196 │ > [The Option type][option-type]
+ 197 │ >
+ 198 │ > [option-type]: std::option::Option
+ 199 │ > ```
+ 200 │ >
+ 201 │ > [The Option type][option-type]
+     ·   ───────────────┬──────────────
+     ·                  ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
+ 202 │ >
+ 203 │ > [option-type]: std::option::Option
+ 204 │ 
+ 205 │ Reference-style links `[text][id]` without a corresponding `[id]: name` part will be
+ 206 │ treated the same as inline-style links `[text](id)`:
+ 207 │ 
+ 208 │ > ```md
+ 209 │ > [The Option type][std::option::Option]
+ 210 │ > ```
  211 │ >
- 212 │ > [The Option type](std::option::Option)
+ 212 │ > [The Option type][std::option::Option]
      ·   ───────────────────┬──────────────────
      ·                      ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
  213 │ 
- 214 │ Linking with reusable references:
+ 214 │ Shortcuts are supported, and can contain inline markups:
  215 │ 
  216 │ > ```md
- 217 │ > [The Option type][option-type]
- 218 │ >
- 219 │ > [option-type]: std::option::Option
- 220 │ > ```
- 221 │ >
- 222 │ > [The Option type][option-type]
-     ·   ───────────────┬──────────────
-     ·                  ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
- 223 │ >
- 224 │ > [option-type]: std::option::Option
- 225 │ 
- 226 │ Reference-style links `[text][id]` without a corresponding `[id]: name` part will be
- 227 │ treated the same as inline-style links `[text](id)`:
- 228 │ 
- 229 │ > ```md
- 230 │ > [The Option type][std::option::Option]
- 231 │ > ```
- 232 │ >
- 233 │ > [The Option type][std::option::Option]
-     ·   ───────────────────┬──────────────────
-     ·                      ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
- 234 │ 
- 235 │ Shortcuts are supported, and can contain inline markups:
- 236 │ 
- 237 │ > ```md
- 238 │ > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
- 239 │ > ```
- 240 │ >
- 241 │ > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
+ 217 │ > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
+ 218 │ > ```
+ 219 │ >
+ 220 │ > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
      ·                    ───┬───      ────────┬───────                  ─────┬────
      ·                       │                 │                              ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html
      ·                       │                 ╰── https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html#method.new
      ·                       ╰── https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html
- 242 │ 
- 243 │ (The items must still be resolvable; in this case `Vec` and `vec!` come from the
- 244 │ prelude.)
- 245 │ 
- 246 │ ## Linking to page sections
- 247 │ 
- 248 │ To link to a known section on a page, use a URL fragment, just like a normal link. This
- 249 │ is _compatible_ with rustdoc.
- 250 │ 
- 251 │ <!-- prettier-ignore-start -->
- 252 │ 
- 253 │ > ```md
- 254 │ > [When Should You Use Which Collection?][std::collections#when-should-you-use-which-collection]
- 255 │ > ```
- 256 │ >
- 257 │ > [When Should You Use Which Collection?][std::collections#when-should-you-use-which-collection]
+ 221 │ 
+ 222 │ (The items must still be resolvable; in this case `Vec` and `vec!` come from the
+ 223 │ prelude.)
+ 224 │ 
+ 225 │ ## Linking to page sections
+ 226 │ 
+ 227 │ To link to a known section on a page, use a URL fragment, just like a normal link. This
+ 228 │ is _compatible_ with rustdoc.
+ 229 │ 
+ 230 │ <!-- prettier-ignore-start -->
+ 231 │ 
+ 232 │ > ```md
+ 233 │ > [When Should You Use Which Collection?][std::collections#when-should-you-use-which-collection]
+ 234 │ > ```
+ 235 │ >
+ 236 │ > [When Should You Use Which Collection?][std::collections#when-should-you-use-which-collection]
      ·   ───────────────────────────────────────────────┬──────────────────────────────────────────────
      ·                                                  ╰── https://doc.rust-lang.org/stable/std/collections/index.html
- 258 │ 
- 259 │ <!-- prettier-ignore-end -->
- 260 │ 
- 261 │ ---
- 262 │ 
- 263 │ [^1]:
- 264 │     rust-analyzer's ability to generate links for enum variants like `Option::Some` was
- 265 │     improved only somewhat recently: before
- 266 │     [#19246](https://github.com/rust-lang/rust-analyzer/pull/19246), links for variants
- 267 │     and associated items may only point to the types themselves. If linking to such
- 268 │     items doesn't seem to work for you, be sure to upgrade to a newer rust-analyzer
- 269 │     first!
- 270 │ 
- 271 │ [^2]:
- 272 │     As of rust-analyzer <ra-version>(version)</ra-version>, links generated for
- 273 │     re-exported items don't always work. This happens often with macros. Examples
- 274 │     include [`std::format!`] (seen above) and [`tokio::main!`]. For more info, see
-     ·             ────────┬───────                  ────────┬───────
-     ·                     │                                 ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
-     ·                     ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.format.html
- 275 │     [Known issues](known-issues.md#re-exported-items).
+ 237 │ 
+ 238 │ <!-- prettier-ignore-end -->
+ 239 │ 
+ 240 │ ---
+ 241 │ 
+ 242 │ [^1]:
+ 243 │     rust-analyzer's ability to generate links for enum variants like `Option::Some` was
+ 244 │     improved only somewhat recently: before
+ 245 │     [#19246](https://github.com/rust-lang/rust-analyzer/pull/19246), links for variants
+ 246 │     and associated items may only point to the types themselves. If linking to such
+ 247 │     items doesn't seem to work for you, be sure to upgrade to a newer rust-analyzer
+ 248 │     first!
+ 249 │ 
+ 250 │ [^2]:
+ 251 │     As of rust-analyzer <ra-version>(version)</ra-version>, links generated for macros
+ 252 │     don't always work. Examples include [`std::format!`] (seen above) and
+     ·                                         ────────┬───────
+     ·                                                 ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.format.html
+ 253 │     [`tokio::main!`]. For more info, see [Known issues](known-issues.md#macros).
+     ·     ────────┬───────
+     ·             ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
+ 254 │ 
      ╰────

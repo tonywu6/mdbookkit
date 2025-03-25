@@ -167,27 +167,6 @@ issue][gh-issues]!
 
 > [!WARNING]
 
-There is **very limited support** on linking to many [built-in types][rust-types].
-
-**Primitive types**:
-
-Links to named primitive types _are_ resolved:
-
-> ```md
-> [`bool`], [`u8`], [`str`], and [`char`]
-> ```
->
-> [`bool`](https://doc.rust-lang.org/nightly/core/primitive.bool.html "bool"), [`u8`](https://doc.rust-lang.org/nightly/core/primitive.u8.html "u8"), [`str`](https://doc.rust-lang.org/nightly/core/primitive.str.html "str"), and [`char`](https://doc.rust-lang.org/nightly/core/primitive.char.html "char").
-
-Links to associated methods and items on primitive types are **not resolved** by
-rust-analyzer as of version <ra-version>(version)</ra-version>:
-
-> ```md
-> [`str::parse`], [`f64::MIN_POSITIVE`]
-> ```
->
-> \[`str::parse`], \[`f64::MIN_POSITIVE`]
-
 There is **no support** on types whose syntax is not a path; they are currently not
 parsed at all:
 
@@ -273,10 +252,9 @@ is _compatible_ with rustdoc.
     first!
 
 [^2]:
-    As of rust-analyzer <ra-version>(version)</ra-version>, links generated for
-    re-exported items don't always work. This happens often with macros. Examples
-    include [`std::format!`](https://doc.rust-lang.org/stable/alloc/macros/macro.format.html "std::format!") (seen above) and [`tokio::main!`](https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html "tokio::main!"). For more info, see
-    [Known issues](known-issues.md#re-exported-items).
+    As of rust-analyzer <ra-version>(version)</ra-version>, links generated for macros
+    don't always work. Examples include [`std::format!`](https://doc.rust-lang.org/stable/alloc/macros/macro.format.html "std::format!") (seen above) and
+    [`tokio::main!`](https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html "tokio::main!"). For more info, see [Known issues](known-issues.md#macros).
 
 <!-- prettier-ignore-start -->
 

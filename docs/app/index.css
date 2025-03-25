@@ -68,6 +68,10 @@ body {
       }
     }
 
+    &:has(del:only-child) {
+      text-decoration: none;
+    }
+
     strong,
     em,
     code {

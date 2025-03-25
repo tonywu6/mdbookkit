@@ -3,21 +3,21 @@
 `mdbook-rustdoc-link` spawns a fresh `rust-analyzer` server every time it is run, by
 default. `rust-analyzer` then reindexes your entire project before resolving links.
 
-This severely impacts the responsiveness of `mdbook serve` — it is as if for every live
-reload, you have to reopen your editor.
+This significantly impacts the responsiveness of `mdbook serve` — it is as if for every
+live reload, you had to reopen your editor, and it gets even worse the more dependencies
+your project has.
 
-To mitigate this, the preprocessor has an experimental caching feature (disabled by
-default).
+To mitigate this, there is an experimental caching feature, disabled by default.
 
 <details class="toc" open>
   <summary>Sections</summary>
 
 - [Enabling caching](#enabling-caching)
 - [How it works](#how-it-works)
-- [Studying notes](#studying-notes)
 - [Help wanted 🙌](#help-wanted-)
   - [Cache priming and progress tracking](#cache-priming-and-progress-tracking)
   - [Using `ra-multiplex`](#using-ra-multiplex)
+  - [Thoughts](#thoughts)
 
 </details>
 
@@ -41,8 +41,8 @@ rust-analyzer entirely**.
 > [!IMPORTANT]
 >
 > If you use a directory under your book root directory, **make sure to also have a
-> `.gitignore` in your book root dir to exclude the cache dir from source control**, or
-> the cache file could trigger additional reloads. See [Specify exclude
+> `.gitignore` in your book root dir to exclude it from source control**, or the cache
+> file could trigger additional reloads. See [Specify exclude
 > patterns][specify-exclude-patterns] in the mdBook documentation.
 >
 > **Do not** use your book's `build-dir` as the `cache-dir`: `mdbook` clears the output
@@ -50,7 +50,7 @@ rust-analyzer entirely**.
 
 ## How it works
 
-The caching feature bases its effectiveness on the following assumptions:
+The effectiveness of this mechanism is based on the following assumptions:
 
 - Most of the changes made during authoring don't actually involve item links.
 - Assuming the environment is unchanged, the same set of items should resolve to the
@@ -76,29 +76,6 @@ results.
 >
 > If you keep such broken links in your Markdown source, the cache will permanently
 > miss, and rust-analyzer will run on every edit.
-
-## Studying notes
-
-`mdbook` encourages a stateless architecture for preprocessors. Preprocessors are
-expected to work like pure functions over the entire book, even for `mdbook serve`.
-Preprocessors are not informed on whether they are invoked as part of `mdbook build`
-(prefer fresh starts) or `mdbook serve` (maintain states between run).
-
-`rust-analyzer`, meanwhile, has a stateful architecture that also doesn't yet have
-[persistent caching][ra-persistent-cache]. It is [designed][ra-architecture] to take in
-a ground state (your project initially) and then evolve the state (your project edited)
-entirely in memory.
-
-So `rust-analyzer` has an extremely incremental architecture, perfect for complex
-languages like Rust, and `mdbook` has an explicitly non-incremental architecture,
-perfect for rendering Markdown. This makes them somewhat challenging to work well
-together in a live-reload scenario.
-
-> [!NOTE]
->
-> The above is entirely my understanding of how the two projects work, which may have
-> gross misconceptions or misuse of words. [Feedback of any kind is very welcome
-> :)][gh-issues]
 
 ## Help wanted 🙌
 
@@ -144,6 +121,36 @@ items eventually resolving. Subsequent builds hang indefinitely before timing ou
 
 - Is it possible to use `ra-multiplex` here?
 
+### Thoughts
+
+`mdbook` encourages a stateless architecture for preprocessors. Preprocessors are
+expected to work like pure functions over the entire book, even for `mdbook serve`.
+Preprocessors are not informed on whether they are invoked as part of `mdbook build`
+(prefer fresh starts) or `mdbook serve` (maintain states between run).
+
+`rust-analyzer`, meanwhile, has a stateful architecture that also doesn't yet have
+[persistent caching][ra-persistent-cache][^1]. It is [designed][ra-architecture] to take
+in a ground state (your project initially) and then evolve the state (your project
+edited) entirely in memory.
+
+So `rust-analyzer` has an extremely incremental architecture, perfect for complex
+languages like Rust, and `mdbook` has an explicitly non-incremental architecture,
+perfect for rendering Markdown. This makes them somewhat challenging to work well
+together in a live-reload scenario.
+
+> [!NOTE]
+>
+> The above is entirely my understanding of how the two projects work, which may have
+> gross misconceptions or misuse of words. [Feedback of any kind is very welcome
+> :)][gh-issues]
+
+---
+
+[^1]:
+    It was mentioned that the [recently updated, salsa-ified rust-analyzer][salsa]
+    (version `2025-03-17`) will unblock work on persistent caching, among many other
+    things, so hopefully bigger changes are coming!
+
 <!-- prettier-ignore-start -->
 
 [gh-issues]: https://github.com/tonywu6/mdbookkit/issues
@@ -152,6 +159,7 @@ items eventually resolving. Subsequent builds hang indefinitely before timing ou
 [ra-cache-priming]: https://rust-analyzer.github.io/book/configuration.html?highlight=cache%20priming#configuration
 [ra-persistent-cache]: https://github.com/rust-lang/rust-analyzer/issues/4712
 [`ra-multiplex`]: https://github.com/pr2502/ra-multiplex
+[salsa]: https://rust-analyzer.github.io/thisweek/2025/03/17/changelog-277.html
 [specify-exclude-patterns]: https://rust-lang.github.io/mdBook/cli/serve.html#specify-exclude-patterns
 
 <!-- prettier-ignore-end -->
