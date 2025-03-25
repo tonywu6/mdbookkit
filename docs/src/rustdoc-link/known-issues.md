@@ -140,6 +140,6 @@ ever be solved.
 [tokio::main]: https://docs.rs/tokio-macros/2.5.0/tokio_macros/attr.main.html
 [IpV6Addr]: https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from-1
 [clap::_derive]: https://docs.rs/clap/4.5.32/clap/_derive/_tutorial/index.html
-[sourcemap]: https://web.dev/articles/source-maps
+[sourcemap]: https://developer.mozilla.org/en-US/docs/Glossary/Source_map
 
 <!-- prettier-ignore-end -->
