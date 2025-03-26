@@ -1,7 +1,7 @@
 # Caching
 
-`mdbook-rustdoc-link` spawns a fresh `rust-analyzer` server every time it is run, by
-default. `rust-analyzer` then reindexes your entire project before resolving links.
+By default, `mdbook-rustdoc-link` spawns a fresh `rust-analyzer` process every time it
+is run. `rust-analyzer` then reindexes your entire project before resolving links.
 
 This significantly impacts the responsiveness of `mdbook serve` — it is as if for every
 live reload, you had to reopen your editor, and it gets even worse the more dependencies
@@ -33,10 +33,10 @@ cache-dir = "cache"
 # You can also point to an arbitrary directory in target/
 ```
 
-Now, when `mdbook` rebuilds your book during `build` or `serve`, if your edit does not
+Now, when `mdbook` rebuilds your book during `build` or `serve`, the preprocessor reuses
+the previous resolution and **skips rust-analyzer entirely if** your edit does not
 involve changes in the set of Rust items to be linked, that is, no new items unseen in
-the previous build, then the preprocessor reuses the previous resolution and **skips
-rust-analyzer entirely**.
+the previous build.
 
 > [!IMPORTANT]
 >

@@ -70,5 +70,5 @@ expression: report
  97 │ For example, [clap] is known for providing guide-level documentation through docs.rs. To
     ·              ───┬──
     ·                 ╰── https://docs.rs/clap/4.5.32/clap/index.html
- 98 │ link to the [tutorial for its Derive API][clap::_derive], theorectically you could write
+ 98 │ link to the [tutorial for its Derive API][clap::_derive], theoretically you could write
     ╰────

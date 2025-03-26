@@ -47,7 +47,7 @@ pub struct Config {
     #[serde(default)]
     pub cache_dir: Option<PathBuf>,
 
-    /// Exit with a non-zero status when some links fail to resolve.
+    /// Whether to exit with failure when some links fail to resolve.
     ///
     /// Warnings are always emitted for unresolved links regardless of this option.
     #[arg(long, value_enum, value_name("MODE"), default_value_t = Default::default())]
@@ -57,7 +57,8 @@ pub struct Config {
     /// Whether to enable punctuations like smart quotes `“”`.
     ///
     /// This is only meaningful if your links happen to have visible text that has
-    /// specific punctuation. The processor passes through the rest of your Markdown source.
+    /// specific punctuation. The processor otherwise passes through the rest of your
+    /// Markdown source.
     ///
     /// **In `book.toml`** — this option is not needed because
     /// `output.html.smart-punctuation` is honored.

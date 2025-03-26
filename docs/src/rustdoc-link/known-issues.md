@@ -95,8 +95,8 @@ rust-analyzer. For example:
 You may wish to link to items that are only conditionally compiled.
 
 For example, [clap] is known for providing guide-level documentation through docs.rs. To
-link to the [tutorial for its Derive API][clap::_derive], theorectically you could write
-\[`clap::_derive::_tutorial`]. However, this is gated behind the `clap/unstable-doc`
+link to the [tutorial for its Derive API][clap::_derive], theoretically you could write
+`[clap::_derive::_tutorial]`. However, this is gated behind the `clap/unstable-doc`
 feature.
 
 rust-analyzer supports configuring features to activate, but `mdbook-rustdoc-link` does

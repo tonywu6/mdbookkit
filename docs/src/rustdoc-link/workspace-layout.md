@@ -1,7 +1,9 @@
 # Workspace layout
 
 As mentioned in [Name resolution](name-resolution.md), the preprocessor must know where
-your crate's entrypoint is. To do that, it tries to find a `Cargo.toml` by running
+your crate's entrypoint is.
+
+To do that, it tries to find a `Cargo.toml` by running
 [`cargo locate-project`][locate-project], by default from the current working directory.
 
 If you have a single-crate setup, this should "just work", regardless of where your book

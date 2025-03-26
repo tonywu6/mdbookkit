@@ -1,6 +1,7 @@
 # Summary
 
 - [rustdoc-link](rustdoc-link.md)
+  - [Getting started](rustdoc-link/getting-started.md)
   - [Motivation](rustdoc-link/motivation.md)
   - [Name resolution](rustdoc-link/name-resolution.md)
   - [Supported syntax](rustdoc-link/supported-syntax.md)

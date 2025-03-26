@@ -272,6 +272,20 @@ body {
       display: contents;
       margin: 0;
     }
+
+    > figcaption {
+      font-size: 0.8em;
+      font-weight: 600;
+      margin-block-start: 0.8em;
+
+      > p:last-child {
+        margin-block-end: 0;
+      }
+    }
+
+    &:has(> figcaption:last-child) {
+      margin-block-end: 1.2rem;
+    }
   }
 }
 

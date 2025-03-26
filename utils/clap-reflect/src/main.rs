@@ -90,7 +90,7 @@ fn describe_options<C: CommandFactory>() -> Result<String> {
 <thead>
 <tr>
 <td>Option</td>
-<td>Description</td>
+<td>Summary</td>
 </tr>
 </thead>
 

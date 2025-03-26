@@ -12,14 +12,14 @@ manually sourcing links from docs.rs. Then one of two things could happen:
 - APIs are mentioned without linking to reference docs.
 
   This is probably fine for tutorials and examples, but it does mean a reduced
-  connection between guide-level text and technical details. Readers won't be able to
+  connection between guide-level text and usage details. Readers won't be able to
   navigate from one to the other as easily.
 
 - You do want at least some cross-references, but it is cumbersome to find and copy the
   correct links, and even more so to maintain them.
 
-  Links to docs.rs often use `latest` as the version, which could become out-of-sync,
-  especially if they point to third-party crates or unstable APIs.
+  Links to docs.rs often use `latest` as the version, which could become out-of-sync
+  with your code, especially if they point to third-party or unstable APIs.
 
 `mdbook-rustdoc-link` is the tooling answer to these problems. _Effortless, correct, and
 good practice — choose all three!_
