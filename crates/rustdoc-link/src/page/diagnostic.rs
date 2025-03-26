@@ -11,7 +11,7 @@ use miette::{
 use owo_colors::Style;
 use tap::{Pipe, Tap};
 
-use crate::{env::ErrorHandling, link::diagnostic::LinkLabel, logger::is_logging};
+use crate::{link::diagnostic::LinkLabel, logger::is_logging};
 
 use super::{Page, Pages};
 
@@ -129,19 +129,11 @@ impl PageStatus {
         }
     }
 
-    fn level(&self) -> Level {
+    pub fn level(&self) -> Level {
         match self {
             PageStatus::Unresolved => Level::Warn,
             PageStatus::Ok => Level::Info,
             PageStatus::Debug => Level::Debug,
-        }
-    }
-
-    pub fn check(&self, check: ErrorHandling) -> Result<()> {
-        match self.level() {
-            Level::Error => check.error(),
-            Level::Warn => check.warn(),
-            _ => Ok(()),
         }
     }
 }

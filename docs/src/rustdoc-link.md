@@ -96,6 +96,8 @@ This works in both `mdbook build` and `mdbook serve`!
 
 ## Overview
 
+This project strives to be intuitive and work with minimal configuration.
+
 ## License
 
 ---

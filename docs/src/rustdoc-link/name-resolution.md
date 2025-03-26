@@ -14,25 +14,22 @@
 > If you use Cargo workspaces, or if your source tree has special layouts, see
 > [Workspace layout](workspace-layout.md) for more information.
 
-This means that an item must be in scope in the entrypoint for the proprocessor to be
-able to generate links for it.
+This means that an item must be **in scope** in the entrypoint for the proprocessor to
+be able to generate links for it.
 
 Let's say you have the following as your `src/lib.rs`:
 
 ```rs
 use anyhow::Context;
-
 /// Type that can provide links.
 pub trait Resolver {}
-
 mod env {
+    /// Options for the preprocessor.
     pub struct Config {}
 }
 ```
 
-Then:
-
-- Items defined and/or `use`d in the entrypoint can be linked to with just their names:
+- Items in the entrypoint can be linked to with just their names:
 
   > ```md
   > [`Resolver`] — Type that can provide links.
@@ -121,7 +118,7 @@ request][externalDocs].
 }
 ```
 
-Hence item names in your book must be resolvable from the crate entrypoint!
+Hence item names in your book must be resolvable from your crate entrypoint!
 
 This process is as if you had typed a name into your source file and used the "Open
 Docs" feature — except it's fully automated.

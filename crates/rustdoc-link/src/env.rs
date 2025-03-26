@@ -49,12 +49,7 @@ pub struct Config {
 
     /// Exit with a non-zero status when some links fail to resolve.
     ///
-    /// - `ci` — Fail if the environment variable `CI` is set to a value other than `0`.
-    ///   Environments like GitHub Actions configure this automatically.
-    ///
-    /// - `always` — Fail as long as there are unresolved items, even in local use.
-    ///
-    /// Warnings are emitted for unresolved links regardless of this option.
+    /// Warnings are always emitted for unresolved links regardless of this option.
     #[arg(long, value_enum, value_name("MODE"), default_value_t = Default::default())]
     #[serde(default)]
     pub fail_on_unresolved: ErrorHandling,
@@ -262,34 +257,40 @@ impl AsRef<Path> for TempDir {
 #[derive(clap::ValueEnum, Deserialize, Debug, Default, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum ErrorHandling {
+    /// Fail if the environment variable `CI` is set to a value other than `0`.
+    /// Environments like GitHub Actions configure this automatically.
     #[default]
     #[serde(rename = "ci")]
     #[clap(name = "ci")]
     Env,
+
+    /// Fail as long as there are unresolved items, even in local use.
     Always,
 }
 
 impl ErrorHandling {
-    pub fn error(self) -> Result<()> {
-        Err(anyhow!("preprocessor has errors"))
-    }
-
-    pub fn warn(self) -> Result<()> {
-        match self {
-            Self::Always => {
-                anyhow!("treating warnings as errors because fail-on-unresolved = `always`")
-                    .context("preprocessor has errors")
-                    .pipe(Err)
-            }
-            Self::Env => {
-                let ci = std::env::var("CI").unwrap_or("".into());
-                if matches!(ci.as_str(), "" | "0" | "false") {
-                    return Ok(());
+    pub fn check(&self, level: log::Level) -> Result<()> {
+        match level {
+            log::Level::Error => Err(anyhow!("preprocessor has errors")),
+            log::Level::Warn => {
+                match self {
+                    Self::Always => {
+                        anyhow!("treating warnings as errors because fail-on-unresolved = `always`")
+                            .context("preprocessor has errors")
+                            .pipe(Err)
+                    }
+                    Self::Env => {
+                        let ci = std::env::var("CI").unwrap_or("".into());
+                        if matches!(ci.as_str(), "" | "0" | "false") {
+                            return Ok(());
+                        }
+                        anyhow!("treating warnings as errors because fail-on-unresolved = `ci` and CI={ci}")
+                            .context("preprocessor has errors")
+                            .pipe(Err)
+                    }
                 }
-                anyhow!("treating warnings as errors because fail-on-unresolved = `ci` and CI={ci}")
-                    .context("preprocessor has errors")
-                    .pipe(Err)
             }
+            _ => Ok(()),
         }
     }
 }

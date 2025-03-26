@@ -27,22 +27,37 @@ runnable = false
 
 [preprocessor.clap-reflect]
 before = ["rustdoc-link"]
-command = "cargo run --profile=dev --package util-clap-reflect -- --reflect rustdoc-link-options"
+command = """
+  cargo run --package util-clap-reflect
+    --profile=dev --
+    --reflect rustdoc-link-options
+"""
 
 [preprocessor.rustdoc-link]
 after = ["links"]
-command = "cargo run --release --package mdbook-rustdoc-link"
+command = """
+  cargo run --package mdbook-rustdoc-link
+    --release
+"""
 
 cache-dir = "build"
 manifest-dir = "../crates/rustdoc-link"
-rust-analyzer = "cargo run --release --package util-rust-analyzer -- analyzer"
+rust-analyzer = """
+  cargo run --package util-rust-analyzer
+    --release --
+    analyzer
+"""
 
 [preprocessor.alerts]
 after = ["rustdoc-link"]
 
 [preprocessor.rust-analyzer-version]
 after = ["rustdoc-link"]
-command = "cargo run --release --package util-rust-analyzer -- version"
+command = """
+  cargo run --package util-rust-analyzer
+    --release --
+    version
+"""
 
 [preprocessor.app]
 command = "deno run -A app/build/preprocessor.ts"

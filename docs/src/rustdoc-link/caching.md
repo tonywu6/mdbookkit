@@ -23,9 +23,9 @@ To mitigate this, there is an experimental caching feature, disabled by default.
 
 ## Enabling caching
 
-In your `book.toml`, in the `[preprocessor.rustdoc-link]` table, set `cache-dir` to the
-relative path of a directory of your choice (_other than_ your book's `build-dir`), for
-example:
+In your `book.toml`, in the `[preprocessor.rustdoc-link]` table, set
+[`cache-dir`](configuration.md#cache-dir) to the relative path of a directory of your
+choice (_other than_ your book's `build-dir`), for example:
 
 ```toml
 [preprocessor.rustdoc-link]

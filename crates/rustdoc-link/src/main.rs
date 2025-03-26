@@ -149,7 +149,7 @@ async fn mdbook() -> Result<()> {
 
     std::io::stdout().write_all(output.as_bytes())?;
 
-    status.check(env.config.fail_on_unresolved)?;
+    env.config.fail_on_unresolved.check(status.level())?;
 
     Ok(())
 }
@@ -189,7 +189,7 @@ async fn markdown(options: Config) -> Result<()> {
 
     std::io::stdout().write_all(output.as_bytes())?;
 
-    status.check(env.config.fail_on_unresolved)?;
+    env.config.fail_on_unresolved.check(status.level())?;
 
     Ok(())
 }

@@ -77,8 +77,6 @@ https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from<strong>-1
 
 ## Unresolved items
 
-Some items cannot yet be resolved.
-
 ### Associated items on primitive types
 
 > [!NOTE]

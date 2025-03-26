@@ -79,6 +79,7 @@ struct OptionItem {
     description: String,
     type_id: Option<String>,
     default: Option<String>,
+    choices: Vec<(String, String)>,
 }
 
 fn describe_options<C: CommandFactory>() -> Result<String> {
@@ -98,11 +99,11 @@ fn describe_options<C: CommandFactory>() -> Result<String> {
 {% for option in options %}
 
 <tr>
-<th style="text-align: left;">
+<td style="text-align: left;">
 
 [`{{ option.key }}`](#{{ option.key }})
 
-</th>
+</td>
 <td>
 
 {{ option.help }}
@@ -113,6 +114,7 @@ fn describe_options<C: CommandFactory>() -> Result<String> {
 {% endfor %}
 
 </tbody>
+
 </table>
 </div>
 
@@ -121,6 +123,41 @@ fn describe_options<C: CommandFactory>() -> Result<String> {
 ## `{{ option.key }}`
 
 {{ option.description }}
+
+{% if option.choices %}
+<div class="table-wrapper">
+<table>
+
+<thead>
+<tr>
+<td>Choice</td>
+<td>Description</td>
+</tr>
+</thead>
+
+<tbody>
+
+{% for choice, description in option.choices %}
+<tr>
+
+<td style="text-align: left;">
+<code>{{ choice }}</code>
+</td>
+
+<td>
+
+{{ description }}
+
+</td>
+
+</tr>
+{% endfor %}
+
+</tbody>
+
+</table>
+</div>
+{% endif %}
 
 <div class="table-wrapper">
 <table>
@@ -193,12 +230,26 @@ fn describe_options<C: CommandFactory>() -> Result<String> {
                 None
             };
 
+            let choices = opt
+                .get_possible_values()
+                .iter()
+                .filter_map(|v| {
+                    if v.is_hide_set() {
+                        None
+                    } else {
+                        let help = v.get_help()?;
+                        Some((format!("{:?}", v.get_name()), help.to_string()))
+                    }
+                })
+                .collect();
+
             OptionItem {
                 key,
                 help,
                 description,
                 type_id,
                 default,
+                choices,
             }
         })
         .collect::<Vec<_>>();

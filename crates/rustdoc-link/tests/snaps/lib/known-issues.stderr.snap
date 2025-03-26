@@ -3,74 +3,72 @@ source: crates/rustdoc-link/tests/lib.rs
 expression: report
 ---
   info: successfully resolved all links
-     ╭─[known-issues:45:3]
-  44 │ 
-  45 │ - [~~`panic!`~~], and many other `std` macros
-     ·   ───────┬──────
-     ·          ╰── https://doc.rust-lang.org/stable/std/macros/macro.panic.html
-  46 │   - The correct link is
-  47 │     [https://doc.rust-lang.org/stable/std~~/macros~~/macro.panic.html][panic]
-  48 │ - [~~`serde_json::json!`~~]
-     ·   ────────────┬────────────
-     ·               ╰── https://docs.rs/serde_json/1.0.140/serde_json/macros/macro.json.html
-  49 │   - The correct link is
-  50 │     [https://docs.rs/serde_json/1.0.140/serde_json~~/macros~~/macro.json.html][serde_json::json]
-  51 │ 
-  52 │ Attribute macros generate links that use `macro.<macro_name>.html`, but rustdoc actually
-  53 │ generates `attr.<macro_name>.html`. For example:
-  54 │ 
-  55 │ - [~~`tokio::main!`~~]
-     ·   ──────────┬─────────
-     ·             ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
-  56 │   - The correct link is
-  57 │     [https://docs.rs/tokio-macros/2.5.0/tokio_macros/~~macro~~attr.main.html][tokio::main]
-  58 │ 
-  59 │ ### Trait items
-  60 │ 
-  61 │ Rust allows methods to have the same name if they are from different traits, and types
-  62 │ can implement the same trait multiple times if the trait is generic. All such methods
-  63 │ will appear on the same page for the type.
-  64 │ 
-  65 │ rustdoc will number the generated URL fragments so that they remain unique within the
-  66 │ HTML document. rust-analyzer does not yet have the ability to do so.
-  67 │ 
-  68 │ For example, these are the same links:
-  69 │ 
-  70 │ - [`<std::net::IpAddr as From<std::net::Ipv4Addr>>::from`]
-     ·   ────────────────────────────┬───────────────────────────
-     ·                               ╰── https://doc.rust-lang.org/stable/core/net/ip_addr/enum.IpAddr.html#method.from
-  71 │ - [`<std::net::IpAddr as From<std::net::Ipv6Addr>>::from`]
-     ·   ────────────────────────────┬───────────────────────────
-     ·                               ╰── https://doc.rust-lang.org/stable/core/net/ip_addr/enum.IpAddr.html#method.from
-  72 │ 
-  73 │ The correct link for the `From<Ipv6Addr>` implementation is actually
-  74 │ <a href="https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from-1">
-  75 │ https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from<strong>-1</strong>
-  76 │ </a>
-  77 │ 
-  78 │ ## Unresolved items
-  79 │ 
-  80 │ Some items cannot yet be resolved.
-  81 │ 
-  82 │ ### Associated items on primitive types
-  83 │ 
-  84 │ > [!NOTE]
-  85 │ >
-  86 │ > The following observations are based on rust-analyzer
-  87 │ > <ra-version>(version)</ra-version>.
-  88 │ 
-  89 │ Links to associated methods and items on primitive types are currently not resolved by
-  90 │ rust-analyzer. For example:
-  91 │ 
-  92 │ - \[`str::parse`]
-  93 │ - \[`f64::MIN_POSITIVE`]
-  94 │ 
-  95 │ ### Conditionally compiled items
-  96 │ 
-  97 │ You may wish to link to items that are only conditionally compiled.
-  98 │ 
-  99 │ For example, [clap] is known for providing guide-level documentation through docs.rs. To
-     ·              ───┬──
-     ·                 ╰── https://docs.rs/clap/4.5.32/clap/index.html
- 100 │ link to the [tutorial for its Derive API][clap::_derive], theorectically you could write
-     ╰────
+    ╭─[known-issues:45:3]
+ 44 │ 
+ 45 │ - [~~`panic!`~~], and many other `std` macros
+    ·   ───────┬──────
+    ·          ╰── https://doc.rust-lang.org/stable/std/macros/macro.panic.html
+ 46 │   - The correct link is
+ 47 │     [https://doc.rust-lang.org/stable/std~~/macros~~/macro.panic.html][panic]
+ 48 │ - [~~`serde_json::json!`~~]
+    ·   ────────────┬────────────
+    ·               ╰── https://docs.rs/serde_json/1.0.140/serde_json/macros/macro.json.html
+ 49 │   - The correct link is
+ 50 │     [https://docs.rs/serde_json/1.0.140/serde_json~~/macros~~/macro.json.html][serde_json::json]
+ 51 │ 
+ 52 │ Attribute macros generate links that use `macro.<macro_name>.html`, but rustdoc actually
+ 53 │ generates `attr.<macro_name>.html`. For example:
+ 54 │ 
+ 55 │ - [~~`tokio::main!`~~]
+    ·   ──────────┬─────────
+    ·             ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
+ 56 │   - The correct link is
+ 57 │     [https://docs.rs/tokio-macros/2.5.0/tokio_macros/~~macro~~attr.main.html][tokio::main]
+ 58 │ 
+ 59 │ ### Trait items
+ 60 │ 
+ 61 │ Rust allows methods to have the same name if they are from different traits, and types
+ 62 │ can implement the same trait multiple times if the trait is generic. All such methods
+ 63 │ will appear on the same page for the type.
+ 64 │ 
+ 65 │ rustdoc will number the generated URL fragments so that they remain unique within the
+ 66 │ HTML document. rust-analyzer does not yet have the ability to do so.
+ 67 │ 
+ 68 │ For example, these are the same links:
+ 69 │ 
+ 70 │ - [`<std::net::IpAddr as From<std::net::Ipv4Addr>>::from`]
+    ·   ────────────────────────────┬───────────────────────────
+    ·                               ╰── https://doc.rust-lang.org/stable/core/net/ip_addr/enum.IpAddr.html#method.from
+ 71 │ - [`<std::net::IpAddr as From<std::net::Ipv6Addr>>::from`]
+    ·   ────────────────────────────┬───────────────────────────
+    ·                               ╰── https://doc.rust-lang.org/stable/core/net/ip_addr/enum.IpAddr.html#method.from
+ 72 │ 
+ 73 │ The correct link for the `From<Ipv6Addr>` implementation is actually
+ 74 │ <a href="https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from-1">
+ 75 │ https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from<strong>-1</strong>
+ 76 │ </a>
+ 77 │ 
+ 78 │ ## Unresolved items
+ 79 │ 
+ 80 │ ### Associated items on primitive types
+ 81 │ 
+ 82 │ > [!NOTE]
+ 83 │ >
+ 84 │ > The following observations are based on rust-analyzer
+ 85 │ > <ra-version>(version)</ra-version>.
+ 86 │ 
+ 87 │ Links to associated methods and items on primitive types are currently not resolved by
+ 88 │ rust-analyzer. For example:
+ 89 │ 
+ 90 │ - \[`str::parse`]
+ 91 │ - \[`f64::MIN_POSITIVE`]
+ 92 │ 
+ 93 │ ### Conditionally compiled items
+ 94 │ 
+ 95 │ You may wish to link to items that are only conditionally compiled.
+ 96 │ 
+ 97 │ For example, [clap] is known for providing guide-level documentation through docs.rs. To
+    ·              ───┬──
+    ·                 ╰── https://docs.rs/clap/4.5.32/clap/index.html
+ 98 │ link to the [tutorial for its Derive API][clap::_derive], theorectically you could write
+    ╰────

@@ -11,8 +11,8 @@ mdbook-rustdoc-link markdown < README.md
 ```
 
 The command accepts as arguments all [options](configuration.md) configurable in
-`book.toml`, such as `--cache-dir`. Run `mdbook-rustdoc-link markdown --help` to see
-them.
+`book.toml`, such as [`--cache-dir`](configuration.md#cache-dir). Run
+`mdbook-rustdoc-link markdown --help` to see them.
 
 Use it in any text processing pipeline!
 
