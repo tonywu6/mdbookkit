@@ -1,0 +1,20 @@
+[package]
+name = "mdbookkit-docs"
+version = "0.1.0"
+
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+mdbook-rustdoc-link = { path = "../crates/rustdoc-link" }
+miette = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+shlex = { workspace = true }
+tokio = { workspace = true }

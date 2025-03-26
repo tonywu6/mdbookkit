@@ -1292,6 +1292,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "mdbookkit-docs"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "mdbook-rustdoc-link",
+ "miette",
+ "serde",
+ "serde_json",
+ "shlex",
+ "tokio",
+]
+
+[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"

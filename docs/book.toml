@@ -41,7 +41,7 @@ command = """
 """
 
 cache-dir = "build"
-manifest-dir = "../crates/rustdoc-link"
+manifest-dir = "."
 rust-analyzer = """
   cargo run --package util-rust-analyzer
     --release --

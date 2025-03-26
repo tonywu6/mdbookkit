@@ -212,7 +212,6 @@ fn describe_options<C: CommandFactory>() -> Result<String> {
             let type_id = if cfg!(debug_assertions) {
                 format!("{:?}", opt.get_value_parser().type_id())
                     .replace("alloc::string::", "")
-                    .replace("mdbook_rustdoc_link::", "crate::")
                     .pipe(Some)
             } else {
                 None
