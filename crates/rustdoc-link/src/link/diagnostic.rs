@@ -1,19 +1,64 @@
+use std::fmt;
+
 use log::Level;
 use miette::LabeledSpan;
 
+use crate::diagnostics::{Problem, Status};
+
 use super::{Link, LinkState};
 
-pub struct LinkLabel {
-    pub level: Level,
+pub struct LinkDiagnostic {
+    pub status: LinkStatus,
     pub label: LabeledSpan,
 }
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum LinkStatus {
+    Unresolved = 1,
+    Ok,
+    #[default]
+    Debug,
+}
+
+impl Problem for LinkDiagnostic {
+    type Status = LinkStatus;
+
+    fn status(&self) -> Self::Status {
+        self.status
+    }
+
+    fn label(&self) -> LabeledSpan {
+        self.label.clone()
+    }
+}
+
+impl Status for LinkStatus {
+    fn level(&self) -> Level {
+        match self {
+            Self::Unresolved => Level::Warn,
+            Self::Debug => Level::Trace,
+            Self::Ok => Level::Info,
+        }
+    }
+}
+
+impl fmt::Display for LinkStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let msg = match self {
+            Self::Unresolved => "failed to resolve some links",
+            Self::Ok => "successfully resolved all links",
+            Self::Debug => "debug info",
+        };
+        fmt::Display::fmt(msg, f)
+    }
+}
+
 impl Link<'_> {
-    pub fn to_label(&self) -> LinkLabel {
-        let level = match self.state {
-            LinkState::Unparsed => Level::Trace,
-            LinkState::Parsed(_) => Level::Warn,
-            LinkState::Resolved(_) => Level::Info,
+    pub fn diagnostic(&self) -> LinkDiagnostic {
+        let status = match self.state {
+            LinkState::Unparsed => LinkStatus::Debug,
+            LinkState::Parsed(_) => LinkStatus::Unresolved,
+            LinkState::Resolved(_) => LinkStatus::Ok,
         };
         let label = match &self.state {
             LinkState::Unparsed => Some(self.url.as_ref().into()),
@@ -21,6 +66,6 @@ impl Link<'_> {
             LinkState::Resolved(links) => Some(format!("{}", links.url())),
         };
         let label = LabeledSpan::new_with_span(label, self.span.clone());
-        LinkLabel { level, label }
+        LinkDiagnostic { status, label }
     }
 }

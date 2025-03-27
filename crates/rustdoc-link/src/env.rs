@@ -13,7 +13,7 @@ use shlex::Shlex;
 use tap::Pipe;
 use tokio::process::Command;
 
-use crate::markdown::{markdown_parser, MarkdownStream};
+use crate::markdown;
 
 #[derive(clap::Parser, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
@@ -199,11 +199,11 @@ impl Environment {
         }
     }
 
-    pub fn markdown<'a>(&self, source: &'a str) -> MarkdownStream<'a> {
+    pub fn markdown<'a>(&self, source: &'a str) -> markdown::MarkdownStream<'a> {
         let Config {
             smart_punctuation, ..
         } = self.config;
-        markdown_parser(source, smart_punctuation)
+        markdown::stream(source, smart_punctuation)
     }
 
     pub fn emit_config(&self) -> EmitConfig {

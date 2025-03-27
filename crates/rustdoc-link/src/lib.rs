@@ -8,6 +8,7 @@ use tokio::task::JoinSet;
 
 pub mod cache;
 mod client;
+mod diagnostics;
 pub mod env;
 mod item;
 mod link;
@@ -16,7 +17,7 @@ mod markdown;
 mod page;
 mod sync;
 
-pub use crate::{client::Client, page::Pages};
+pub use crate::{client::Client, diagnostics::Status, page::Pages};
 use crate::{
     item::Item,
     link::ItemLinks,

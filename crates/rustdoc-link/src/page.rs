@@ -1,17 +1,24 @@
-use std::{borrow::Borrow, collections::HashMap, fmt, hash::Hash};
+use std::{
+    borrow::Borrow,
+    collections::HashMap,
+    fmt::{self, Debug},
+    hash::Hash,
+};
 
 use anyhow::{bail, Context, Result};
 use pulldown_cmark::{CowStr, Event, Tag, TagEnd};
 use tap::Pipe;
 
 use crate::{
+    diagnostics::{Diagnostics, ReportBuilder},
     env::EmitConfig,
-    link::{ItemLinks, Link, LinkState},
+    link::{
+        diagnostic::{LinkDiagnostic, LinkStatus},
+        ItemLinks, Link, LinkState,
+    },
     markdown::PatchStream,
     Item, Spanned,
 };
-
-mod diagnostic;
 
 #[derive(Debug, Default)]
 pub struct Pages<'a, K> {
@@ -77,7 +84,31 @@ impl<'a, K: Eq + Hash> Pages<'a, K> {
     pub fn modified(&self) -> bool {
         self.modified
     }
+
+    pub fn diagnostics(&self) -> Vec<PageDiagnostics<'a, K>>
+    where
+        K: Clone,
+    {
+        self.pages
+            .iter()
+            .map(|(name, page)| {
+                let issues = page.links.iter().map(|link| link.diagnostic()).collect();
+                Diagnostics::new(page.source, name.clone(), issues)
+            })
+            .collect()
+    }
+
+    pub fn reporter(&self) -> PageReporter<'a, K>
+    where
+        K: Clone + Debug,
+    {
+        ReportBuilder::new(self.diagnostics(), |name| format!("{name:?}"))
+    }
 }
+
+type PageDiagnostics<'a, K> = Diagnostics<'a, K, LinkDiagnostic, LinkStatus>;
+
+type PageReporter<'a, K> = ReportBuilder<'a, K, LinkDiagnostic, LinkStatus, fn(&K) -> String>;
 
 impl<'a> Pages<'a, ()> {
     pub fn one<S>(source: &'a str, stream: S) -> Result<Self>

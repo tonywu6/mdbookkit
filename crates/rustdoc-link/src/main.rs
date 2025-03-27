@@ -5,6 +5,7 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
+use console::colors_enabled_stderr;
 use log::LevelFilter;
 use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
 use serde::Deserialize;
@@ -14,8 +15,8 @@ use mdbook_rustdoc_link::{
     cache::{Cache, FileCache},
     env::{Config, Environment},
     log_warning,
-    logger::ConsoleLogger,
-    preprocessor_name, Client, Pages, Resolver,
+    logger::{is_logging, ConsoleLogger},
+    preprocessor_name, Client, Pages, Resolver, Status,
 };
 
 #[tokio::main]
@@ -127,8 +128,10 @@ async fn mdbook() -> Result<()> {
 
     let status = content
         .reporter()
-        .paths(|path| path.display().to_string())
+        .names(|path| path.display().to_string())
         .level(LevelFilter::Warn)
+        .logging(is_logging())
+        .colored(colors_enabled_stderr())
         .build()
         .to_stderr()
         .to_status();
@@ -175,8 +178,10 @@ async fn markdown(options: Config) -> Result<()> {
 
     let status = content
         .reporter()
-        .paths(|_| "<stdin>".into())
+        .names(|_| "<stdin>".into())
         .level(LevelFilter::Warn)
+        .logging(is_logging())
+        .colored(colors_enabled_stderr())
         .build()
         .to_stderr()
         .to_status();

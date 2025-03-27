@@ -2,22 +2,25 @@ use std::sync::Arc;
 
 use anyhow::{bail, Result};
 
-use console::set_colors_enabled_stderr;
 use log::LevelFilter;
+use similar::{ChangeTag, TextDiff};
+use tap::Pipe;
+use tokio::task::JoinSet;
+
 use mdbook_rustdoc_link::{
     env::{Config, Environment},
     logger::ConsoleLogger,
     Client, Pages, Resolver,
 };
-use similar::{ChangeTag, TextDiff};
-use tap::Pipe;
-use tokio::task::JoinSet;
 use util_testing::{portable_snapshots, test_document, TestDocument};
 
 async fn snapshot(client: Arc<Client>, TestDocument { source, name }: TestDocument) -> Result<()> {
     let stream = client.env().markdown(source).into_offset_iter();
+
     let mut page = Pages::one(source, stream)?;
+
     client.resolve(&mut page).await?;
+
     let output = page.get(&client.env().emit_config())?.to_string();
 
     portable_snapshots!().test(|| insta::assert_snapshot!(name.clone(), output))?;
@@ -26,9 +29,12 @@ async fn snapshot(client: Arc<Client>, TestDocument { source, name }: TestDocume
     let report = page
         .reporter()
         .level(LevelFilter::Info)
-        .paths(|_| name.clone())
+        .names(|_| name.clone())
+        .colored(false)
+        .logging(false)
         .build()
         .to_report();
+
     portable_snapshots!().test(|| insta::assert_snapshot!(format!("{name}.stderr"), report))?;
 
     Ok(())
@@ -93,7 +99,6 @@ async fn test_snapshots() -> Result<()> {
 }
 
 fn setup() -> Result<Arc<Client>> {
-    set_colors_enabled_stderr(false);
     ConsoleLogger::install();
     Config {
         rust_analyzer: Some("cargo run --release --package util-rust-analyzer -- analyzer".into()),

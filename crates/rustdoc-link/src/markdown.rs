@@ -39,8 +39,12 @@ impl fmt::Display for PatchStream<'_> {
     }
 }
 
-pub fn markdown_parser(text: &str, smart_punctuation: bool) -> MarkdownStream<'_> {
-    Parser::new_with_broken_link_callback(text, options(smart_punctuation), Some(BrokenLinks))
+pub fn stream(text: &str, smart_punctuation: bool) -> MarkdownStream<'_> {
+    Parser::new_with_broken_link_callback(
+        text,
+        markdown_options(smart_punctuation),
+        Some(BrokenLinks),
+    )
 }
 
 pub type MarkdownStream<'a> = Parser<'a, BrokenLinks>;
@@ -53,7 +57,7 @@ impl<'input> BrokenLinkCallback<'input> for BrokenLinks {
         link: BrokenLink<'input>,
     ) -> Option<(CowStr<'input>, CowStr<'input>)> {
         let inner = if let CowStr::Borrowed(inner) = link.reference {
-            let parse = markdown_parser(inner, false);
+            let parse = stream(inner, false);
 
             let inner = parse
                 .filter_map(|event| match event {
@@ -85,7 +89,7 @@ impl<'input> BrokenLinkCallback<'input> for BrokenLinks {
 }
 
 /// <https://github.com/rust-lang/mdBook/blob/v0.4.47/src/utils/mod.rs#L197-L208>
-fn options(smart_punctuation: bool) -> Options {
+fn markdown_options(smart_punctuation: bool) -> Options {
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
