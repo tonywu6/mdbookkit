@@ -12,7 +12,7 @@
   "markdown.extension.toc.levels": "2..6",
   "markdown.extension.toc.updateOnSave": true,
   "rust-analyzer.check.command": "clippy",
-  "rust-analyzer.cargo.features": ["mdbookkit/rustdoc-link"],
+  "rust-analyzer.cargo.features": ["mdbookkit/link-forever"],
   "typescript.tsserver.experimental.enableProjectDiagnostics": false,
   "typescript.validate.enable": false
 }

@@ -26,6 +26,12 @@ collections. [^1]
 names, module paths, etc. into links to online crate docs. No more finding and pasting
 URLs by hand.
 
+<figure>
+
+![screen recording of mdbook-rustdoc-link during mdbook build](rustdoc-link/media/screencap.webp)
+
+</figure>
+
 ## Overview
 
 To get started, simply follow the [quickstart guide](rustdoc-link/getting-started.md).

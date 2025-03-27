@@ -1,5 +1,5 @@
 ---
-source: crates/rustdoc-link/tests/lib.rs
+source: crates/mdbookkit/tests/rustdoc_link.rs
 expression: output
 ---
 # mdbook-rustdoc-link
@@ -29,6 +29,12 @@ collections. [^1]
 `mdbook-rustdoc-link` is an mdBook [preprocessor]. Using rust-analyzer, it converts type
 names, module paths, etc. into links to online crate docs. No more finding and pasting
 URLs by hand.
+
+<figure>
+
+![screen recording of mdbook-rustdoc-link during mdbook build](rustdoc-link/media/screencap.webp)
+
+</figure>
 
 ## Overview
 

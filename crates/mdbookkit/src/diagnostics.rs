@@ -314,7 +314,7 @@ where
         if self.logging {
             let status = self.status.clone();
             let logs = self.to_logs();
-            log::log!(status.level(), "{status}\n  {logs}");
+            log::log!(status.level(), "{logs}");
         } else {
             let report = self.to_report();
             log::logger().flush();
@@ -372,12 +372,12 @@ impl LoggingReportHandler {
                 .read_span(label.inner(), 0, 0)
                 .map_err(|_| fmt::Error)?;
             let path = source.name().unwrap_or("<anonymous>");
-            let line = source.line();
-            let column = source.column();
+            let line = source.line() + 1;
+            let column = source.column() + 1;
             if let Some(message) = label.label() {
-                write!(f, "\n  at {path}:{line}:{column}: {message}")?;
+                write!(f, "\n  {path}:{line}:{column}: {message}")?;
             } else {
-                write!(f, "\n  at {path}:{line}:{column}")?;
+                write!(f, "\n  {path}:{line}:{column}")?;
             }
         }
 

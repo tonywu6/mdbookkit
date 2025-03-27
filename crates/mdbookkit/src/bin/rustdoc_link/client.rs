@@ -32,7 +32,7 @@ use tokio::{
 use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 use tower::ServiceBuilder;
 
-use crate::{log::spinner, log_debug, log_warning};
+use crate::{log_debug, log_warning, logging::spinner};
 
 use super::{
     env::Environment,

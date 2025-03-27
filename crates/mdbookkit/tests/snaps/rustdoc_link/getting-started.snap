@@ -1,5 +1,5 @@
 ---
-source: crates/rustdoc-link/tests/lib.rs
+source: crates/mdbookkit/tests/rustdoc_link.rs
 expression: output
 ---
 # Getting started
@@ -20,7 +20,7 @@ You will need:
 2. This crate:
 
    ```
-   cargo install mdbook-rustdoc-link
+   cargo install mdbookkit --features rustdoc-link
    ```
 
 ## Configure

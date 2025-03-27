@@ -14,8 +14,8 @@ autotests = false
 
 [features]
 rustdoc-link = [
-  "common-logger",
   "dep:toml",
+  "common-logger",
   "lib-rustdoc-link",
   "tokio/fs",
   "tokio/rt-multi-thread",
@@ -42,6 +42,10 @@ lib-rustdoc-link = [
   "tokio/time",
 ]
 
+link-forever = ["common-logger", "lib-link-forever"]
+
+lib-link-forever = []
+
 common-logger = [
   "dep:chrono",
   "dep:console",
@@ -57,11 +61,6 @@ default = []
 name = "mdbook-rustdoc-link"
 path = "src/bin/rustdoc_link/main.rs"
 required-features = ["rustdoc-link"]
-
-[[bin]]
-name = "mdbook-link-forever"
-path = "src/bin/link_forever/main.rs"
-required-features = []
 
 [[test]]
 name = "rustdoc-link"

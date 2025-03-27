@@ -16,7 +16,7 @@ You will need:
 2. This crate:
 
    ```
-   cargo install mdbook-rustdoc-link
+   cargo install mdbookkit --features rustdoc-link
    ```
 
 ## Configure

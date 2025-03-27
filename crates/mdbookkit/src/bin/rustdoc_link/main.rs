@@ -18,8 +18,8 @@ use mdbookkit::{
         Client, Pages, Resolver,
     },
     diagnostics::Issue,
-    log::{is_logging, ConsoleLogger},
     log_warning,
+    logging::{is_logging, ConsoleLogger},
 };
 
 #[tokio::main]

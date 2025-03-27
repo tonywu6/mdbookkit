@@ -12,7 +12,7 @@ use mdbookkit::{
         env::{Config, Environment},
         Client, Pages, Resolver,
     },
-    log::ConsoleLogger,
+    logging::ConsoleLogger,
 };
 use util_testing::{portable_snapshots, test_document, TestDocument};
 

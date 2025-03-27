@@ -159,10 +159,10 @@ pub fn styled<D>(val: D) -> console::StyledObject<D> {
 
 #[macro_export]
 macro_rules! styled {
-    ( ( $($display:tt)+ ). $($style:tt)+ ) => {{
+    ( ( $($display:tt)+ ) . $($style:tt)+ ) => {{
         #[cfg(feature = "common-logger")]
         {
-            $crate::log::styled( $($display)* ) . $($style)*
+            $crate::logging::styled( $($display)* ) . $($style)*
         }
         #[cfg(not(feature = "common-logger"))]
         {

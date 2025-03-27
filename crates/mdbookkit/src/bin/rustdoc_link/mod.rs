@@ -16,7 +16,7 @@ mod sync;
 #[cfg(feature = "rustdoc-link")]
 pub mod cache;
 
-use crate::{log::spinner, log_debug, styled};
+use crate::{log_debug, logging::spinner, styled};
 
 pub use self::{client::Client, page::Pages};
 use self::{item::Item, link::ItemLinks};

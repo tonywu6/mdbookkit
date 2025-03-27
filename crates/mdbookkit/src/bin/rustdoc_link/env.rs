@@ -286,24 +286,22 @@ impl ErrorHandling {
     pub fn check(&self, level: log::Level) -> Result<()> {
         match level {
             log::Level::Error => Err(anyhow!("preprocessor has errors")),
-            log::Level::Warn => {
-                match self {
-                    Self::Always => {
-                        anyhow!("treating warnings as errors because fail-on-unresolved = `always`")
-                            .context("preprocessor has errors")
-                            .pipe(Err)
-                    }
-                    Self::Env => {
-                        let ci = std::env::var("CI").unwrap_or("".into());
-                        if matches!(ci.as_str(), "" | "0" | "false") {
-                            return Ok(());
-                        }
-                        anyhow!("treating warnings as errors because fail-on-unresolved = `ci` and CI={ci}")
-                            .context("preprocessor has errors")
-                            .pipe(Err)
-                    }
+            log::Level::Warn => match self {
+                Self::Always => {
+                    anyhow!("treating warnings as errors because fail-on-unresolved is \"always\"")
+                        .context("preprocessor has errors")
+                        .pipe(Err)
                 }
-            }
+                Self::Env => {
+                    let ci = std::env::var("CI").unwrap_or("".into());
+                    if matches!(ci.as_str(), "" | "0" | "false") {
+                        return Ok(());
+                    }
+                    anyhow!("treating warnings as errors because fail-on-unresolved is \"ci\" and CI={ci}")
+                        .context("preprocessor has errors")
+                        .pipe(Err)
+                }
+            },
             _ => Ok(()),
         }
     }
