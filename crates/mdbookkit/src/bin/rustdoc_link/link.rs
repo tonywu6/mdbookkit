@@ -6,8 +6,11 @@ use pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
 use serde::{Deserialize, Serialize};
 use tap::{Pipe, Tap};
 
-use crate::{env::EmitConfig, log_trace, Item};
+use crate::log_trace;
 
+use super::{env::EmitConfig, item::Item};
+
+#[cfg(feature = "common-logger")]
 pub mod diagnostic;
 
 #[derive(Debug)]

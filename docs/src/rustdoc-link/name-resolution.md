@@ -90,6 +90,28 @@ your Markdown docs. Only rustdoc has the ability to [resolve names from where th
 comments are written][rustdoc-scoping], so links that work in doc comments may not work
 when using this preprocessor!
 
+## Feature-gated items
+
+To link to items that are gated behind features, use the
+[`cargo-features`](configuration.md#cargo-features) option.
+
+For example, [clap] is known for providing guide-level documentation through docs.rs.
+The tutorial for its Derive API is gated behind the `unstable-doc` feature. To link to
+such items, configure the necessary features:
+
+```toml
+[preprocessor.rustdoc-link]
+cargo-features = ["clap/unstable-doc"]
+```
+
+Then, specify the item as normal:
+
+> ```md
+> [Tutorial for clap's Derive API][clap::_derive::_tutorial]
+> ```
+>
+> [Tutorial for clap's Derive API][clap::_derive::_tutorial]
+
 ## Which entrypoint
 
 The "entrypoint" is usually `src/lib.rs` or `src/main.rs`.

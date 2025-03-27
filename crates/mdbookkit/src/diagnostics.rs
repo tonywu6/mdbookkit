@@ -9,12 +9,12 @@ use owo_colors::Style;
 use tap::{Pipe, Tap};
 
 pub trait Problem: Send + Sync {
-    type Status: Status;
-    fn status(&self) -> Self::Status;
+    type Kind: Issue;
+    fn issue(&self) -> Self::Kind;
     fn label(&self) -> LabeledSpan;
 }
 
-pub trait Status: Default + Debug + Display + Clone + Send + Sync {
+pub trait Issue: Default + Debug + Display + Clone + Send + Sync {
     fn level(&self) -> Level;
 }
 
@@ -25,7 +25,7 @@ pub struct Diagnostics<'a, K, P, S> {
     status: S,
 }
 
-impl<K, P> Diagnostics<'_, K, P, P::Status>
+impl<K, P> Diagnostics<'_, K, P, P::Kind>
 where
     K: Title,
     P: Problem,
@@ -46,7 +46,7 @@ where
             t.styles.highlights = if colored {
                 self.issues
                     .iter()
-                    .map(|item| level_style(item.status().level()))
+                    .map(|item| level_style(item.issue().level()))
                     .collect()
             } else {
                 vec![Style::new()]
@@ -68,14 +68,14 @@ where
     }
 }
 
-impl<'a, K, P> Diagnostics<'a, K, P, P::Status>
+impl<'a, K, P> Diagnostics<'a, K, P, P::Kind>
 where
     P: Problem,
 {
     pub fn new(text: &'a str, name: K, issues: Vec<P>) -> Self {
         let status = issues
             .iter()
-            .map(|p| p.status())
+            .map(|p| p.issue())
             .min_by_key(|s| s.level())
             .unwrap_or_default();
         Self {
@@ -95,7 +95,7 @@ where
         } = self;
         let issues = issues
             .into_iter()
-            .filter(|p| p.status().level() <= level)
+            .filter(|p| p.issue().level() <= level)
             .collect::<Vec<_>>();
         if issues.is_empty() {
             None
@@ -110,7 +110,7 @@ where
     }
 }
 
-impl<K, P> Diagnostic for Diagnostics<'_, K, P, P::Status>
+impl<K, P> Diagnostic for Diagnostics<'_, K, P, P::Kind>
 where
     K: Title,
     P: Problem,
@@ -168,19 +168,19 @@ where
     }
 }
 
-impl<K, P: Problem> Debug for Diagnostics<'_, K, P, P::Status> {
+impl<K, P: Problem> Debug for Diagnostics<'_, K, P, P::Kind> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(&self.status, f)
     }
 }
 
-impl<K, P: Problem> Display for Diagnostics<'_, K, P, P::Status> {
+impl<K, P: Problem> Display for Diagnostics<'_, K, P, P::Kind> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.status, f)
     }
 }
 
-impl<K, P: Problem> std::error::Error for Diagnostics<'_, K, P, P::Status> {}
+impl<K, P: Problem> std::error::Error for Diagnostics<'_, K, P, P::Kind> {}
 
 pub struct ReportBuilder<'a, K, P, S, F> {
     items: Vec<Diagnostics<'a, K, P, S>>,
@@ -237,11 +237,11 @@ impl<'a, K, P, S, F> ReportBuilder<'a, K, P, S, F> {
     }
 }
 
-impl<'a, K, P, F> ReportBuilder<'a, K, P, P::Status, F>
+impl<'a, K, P, F> ReportBuilder<'a, K, P, P::Kind, F>
 where
     P: Problem,
 {
-    pub fn build(self) -> Reporter<'a, P, P::Status>
+    pub fn build(self) -> Reporter<'a, P, P::Kind>
     where
         F: for<'b> Fn(&'b K) -> String,
     {
@@ -298,11 +298,11 @@ pub struct Reporter<'a, P, S> {
     logging: bool,
 }
 
-impl<P> Reporter<'_, P, P::Status>
+impl<P> Reporter<'_, P, P::Kind>
 where
     P: Problem,
 {
-    pub fn to_status(&self) -> P::Status {
+    pub fn to_status(&self) -> P::Kind {
         self.status.clone()
     }
 

@@ -2,15 +2,17 @@
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "cSpell.words": ["cmark"],
+  "cSpell.words": ["cmark", "mdbookkit"],
   "deno.enable": true,
   "files.associations": {
     "**/*.snap": "markdown",
     "**/*.snap.new": "markdown"
   },
   "javascript.validate.enable": false,
-  "markdown.extension.toc.updateOnSave": true,
   "markdown.extension.toc.levels": "2..6",
-  "typescript.validate.enable": false,
-  "typescript.tsserver.experimental.enableProjectDiagnostics": false
+  "markdown.extension.toc.updateOnSave": true,
+  "rust-analyzer.check.command": "clippy",
+  "rust-analyzer.cargo.features": ["mdbookkit/rustdoc-link"],
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "typescript.validate.enable": false
 }

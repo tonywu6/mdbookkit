@@ -1,6 +1,6 @@
 use std::{
     collections::BTreeSet,
-    fmt, io,
+    io,
     sync::{mpsc, OnceLock},
     thread,
     time::{Duration, Instant},
@@ -13,7 +13,7 @@ use indicatif::{HumanDuration, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{Level, LevelFilter, Log};
 use tap::Pipe;
 
-use crate::preprocessor_name;
+use super::{styled, Message};
 
 /// Either a [console::Term] or an [env_logger::Logger].
 pub enum ConsoleLogger {
@@ -36,15 +36,15 @@ impl Default for ConsoleLogger {
 }
 
 impl ConsoleLogger {
-    pub fn install() {
-        maybe_spinner();
+    pub fn install(name: &str) {
+        maybe_spinner(name);
         let logger = Box::new(Self::default());
         log::set_boxed_logger(logger).expect("logger should not have been set");
         log::set_max_level(LevelFilter::max());
     }
 }
 
-fn maybe_spinner() {
+fn maybe_spinner(name: &str) {
     fn rust_log() -> bool {
         std::env::var("RUST_LOG")
             .map(|v| !v.is_empty())
@@ -59,7 +59,7 @@ fn maybe_spinner() {
         return;
     }
 
-    SPINNER.set(spawn_spinner()).ok();
+    SPINNER.set(spawn_spinner(name)).ok();
 }
 
 impl Log for ConsoleLogger {
@@ -108,92 +108,14 @@ impl Log for ConsoleLogger {
     }
 }
 
-pub fn spinner() -> SpinnerHandle {
-    SpinnerHandle
+pub static SPINNER: OnceLock<Spinner> = OnceLock::new();
+
+pub struct Spinner {
+    pub tx: mpsc::Sender<Message>,
+    pub term: Term,
 }
 
-macro_rules! spinner_log {
-    ( $level:ident ! ( $($args:tt)* ) ) => {
-        log::$level!(target: env!("CARGO_CRATE_NAME"), $($args)*);
-    };
-}
-
-pub struct SpinnerHandle;
-
-impl SpinnerHandle {
-    pub fn create(&self, prefix: &str, total: Option<u64>) -> &Self {
-        let prefix = prefix.into();
-        let msg = Message::Create { prefix, total };
-        if let Some(Spinner { tx, .. }) = SPINNER.get() {
-            tx.send(msg).ok();
-        } else {
-            spinner_log!(info!("{msg}"));
-        }
-        self
-    }
-
-    pub fn update<D: fmt::Display>(&self, prefix: &str, update: D) -> &Self {
-        let key = prefix.into();
-        let update = update.to_string();
-        let msg = Message::Update { key, update };
-        if let Some(Spinner { tx, .. }) = SPINNER.get() {
-            tx.send(msg).ok();
-        } else {
-            spinner_log!(info!("{msg}"));
-        }
-        self
-    }
-
-    pub fn task<D: fmt::Display>(&self, prefix: &str, task: D) -> TaskHandle {
-        let key = String::from(prefix);
-        let task = task.to_string();
-
-        let open = Message::Task {
-            key: key.clone(),
-            task: task.clone(),
-        };
-        let done = Some(Message::Done { key, task });
-
-        if let Some(Spinner { tx, .. }) = SPINNER.get() {
-            tx.send(open).ok();
-            let spin = Some(tx.clone());
-            TaskHandle { spin, done }
-        } else {
-            spinner_log!(info!("{open}"));
-            let spin = None;
-            TaskHandle { spin, done }
-        }
-    }
-
-    pub fn finish<D: fmt::Display>(&self, prefix: &str, update: D) {
-        let key = prefix.into();
-        let update = update.to_string();
-        let msg = Message::Finish { key, update };
-        if let Some(Spinner { tx, .. }) = SPINNER.get() {
-            tx.send(msg).ok();
-        } else {
-            spinner_log!(info!("{msg}"));
-        }
-    }
-}
-
-static SPINNER: OnceLock<Spinner> = OnceLock::new();
-
-struct Spinner {
-    tx: mpsc::Sender<Message>,
-    term: Term,
-}
-
-#[derive(Debug)]
-enum Message {
-    Create { prefix: String, total: Option<u64> },
-    Update { key: String, update: String },
-    Task { key: String, task: String },
-    Done { key: String, task: String },
-    Finish { key: String, update: String },
-}
-
-fn spawn_spinner() -> Spinner {
+fn spawn_spinner(name: &str) -> Spinner {
     // https://github.com/console-rs/indicatif/issues/698
     set_colors_enabled(colors_enabled_stderr());
 
@@ -202,6 +124,7 @@ fn spawn_spinner() -> Spinner {
     let term = Term::buffered_stderr();
 
     let target = term.clone();
+    let template = format!("{{spinner:.cyan}} [{name}] {{prefix}} ... {{msg}}",);
 
     thread::spawn(move || {
         struct Bar {
@@ -226,12 +149,9 @@ fn spawn_spinner() -> Spinner {
                         bar.bar.abandon()
                     }
 
-                    let style = ProgressStyle::with_template(&format!(
-                        "{{spinner:.cyan}} [{}] {{prefix}} ... {{msg}}",
-                        preprocessor_name()
-                    ))
-                    .unwrap()
-                    .tick_chars("⠇⠋⠙⠸⠴⠦⠿");
+                    let style = ProgressStyle::with_template(&template)
+                        .unwrap()
+                        .tick_chars("⠇⠋⠙⠸⠴⠦⠿");
 
                     let bar = ProgressDrawTarget::term(target.clone(), 20)
                         .pipe(|target| ProgressBar::with_draw_target(total, target))
@@ -337,14 +257,14 @@ fn spawn_spinner() -> Spinner {
             {
                 let now = Instant::now();
 
-                if now - interval > Duration::from_secs(3) {
+                if now - interval > Duration::from_secs(10) {
                     interval = now;
                     if task_idx >= tasks.len() {
                         task_idx = 0
                     }
                     if let Some(task) = tasks.iter().nth(task_idx) {
                         spinner_log!(warn!(
-                            "task {prefix} - {task} has been running for {}",
+                            "task {prefix} - {task} has been running for more than {}",
                             HumanDuration(bar.elapsed())
                         ));
                         bar.set_message(styled(task).magenta().to_string());
@@ -356,69 +276,6 @@ fn spawn_spinner() -> Spinner {
     });
 
     Spinner { tx, term }
-}
-
-#[must_use]
-pub struct TaskHandle {
-    spin: Option<mpsc::Sender<Message>>,
-    done: Option<Message>,
-}
-
-impl Drop for TaskHandle {
-    fn drop(&mut self) {
-        let Some(done) = self.done.take() else { return };
-        if let Some(ref tx) = self.spin {
-            tx.send(done).ok();
-        } else {
-            spinner_log!(info!("{done}"));
-        }
-    }
-}
-
-impl fmt::Display for Message {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Create { prefix, .. } => fmt::Display::fmt(prefix, f),
-            Self::Update { key, update } => {
-                fmt::Display::fmt(key, f)?;
-                fmt::Display::fmt(" ", f)?;
-                fmt::Display::fmt(update, f)?;
-                Ok(())
-            }
-            Self::Task { key, task } => {
-                fmt::Display::fmt(key, f)?;
-                fmt::Display::fmt(" ", f)?;
-                fmt::Display::fmt(task, f)?;
-                Ok(())
-            }
-            Self::Done { key, task } => {
-                fmt::Display::fmt(key, f)?;
-                fmt::Display::fmt(" ", f)?;
-                fmt::Display::fmt(task, f)?;
-                fmt::Display::fmt(" .. done", f)?;
-                Ok(())
-            }
-            Self::Finish { key, update } => {
-                fmt::Display::fmt(key, f)?;
-                fmt::Display::fmt(" .. ", f)?;
-                fmt::Display::fmt(update, f)?;
-                Ok(())
-            }
-        }
-    }
-}
-
-pub fn styled<D>(val: D) -> StyledObject<D> {
-    if let Some(Spinner { term, .. }) = SPINNER.get() {
-        term.style()
-    } else {
-        console::Style::new().for_stderr()
-    }
-    .apply_to(val)
-}
-
-pub fn is_logging() -> bool {
-    SPINNER.get().is_none()
 }
 
 /// <https://github.com/rust-lang/mdBook/blob/07b25cdb643899aeca2307fbab7690fa7eeec36b/src/main.rs#L100-L109>
@@ -441,31 +298,4 @@ fn styled_log<D>(message: D, record: &log::Record) -> StyledObject<D> {
         Level::Info => styled(message),
         _ => styled(message).dim(),
     }
-}
-
-#[macro_export]
-macro_rules! log_debug {
-    () => {
-        |err| log::debug!("{err:?}")
-    };
-}
-
-#[macro_export]
-macro_rules! log_trace {
-    () => {
-        |err| log::trace!("{err:?}")
-    };
-}
-
-#[macro_export]
-macro_rules! log_warning {
-    () => {
-        |err| {
-            if log::log_enabled!(log::Level::Debug) {
-                log::warn!("{err:?}")
-            } else {
-                log::warn!("{err}")
-            }
-        }
-    };
 }

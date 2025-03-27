@@ -1,0 +1,113 @@
+[package]
+name = "mdbookkit"
+version = "0.1.0"
+
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+autobins = false
+autotests = false
+
+[features]
+rustdoc-link = [
+  "common-logger",
+  "dep:toml",
+  "lib-rustdoc-link",
+  "tokio/fs",
+  "tokio/rt-multi-thread",
+]
+
+lib-rustdoc-link = [
+  "dep:async-lsp",
+  "dep:cargo_toml",
+  "dep:clap",
+  "dep:dirs",
+  "dep:lsp-types",
+  "dep:mdbook",
+  "dep:proc-macro2",
+  "dep:sha2",
+  "dep:shlex",
+  "dep:syn",
+  "dep:tempfile",
+  "dep:tokio",
+  "dep:tokio",
+  "dep:tokio-util",
+  "dep:tower",
+  "tokio/process",
+  "tokio/rt",
+  "tokio/time",
+]
+
+common-logger = [
+  "dep:chrono",
+  "dep:console",
+  "dep:env_logger",
+  "dep:indicatif",
+  "dep:miette",
+  "dep:owo-colors",
+]
+
+default = []
+
+[[bin]]
+name = "mdbook-rustdoc-link"
+path = "src/bin/rustdoc_link/main.rs"
+required-features = ["rustdoc-link"]
+
+[[bin]]
+name = "mdbook-link-forever"
+path = "src/bin/link_forever/main.rs"
+required-features = []
+
+[[test]]
+name = "rustdoc-link"
+path = "tests/rustdoc_link.rs"
+required-features = ["rustdoc-link"]
+
+[dependencies]
+anyhow = { workspace = true }
+log = { workspace = true }
+pulldown-cmark = { workspace = true }
+pulldown-cmark-to-cmark = { workspace = true }
+serde = { workspace = true, features = ["rc"] }
+serde_json = { workspace = true }
+tap = { workspace = true }
+
+mdbook = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true }
+
+# common-logger
+chrono = { version = "0.4.40", features = [
+  "clock",
+], default-features = false, optional = true }
+console = { version = "0.15.11", optional = true }
+env_logger = { workspace = true, optional = true }
+indicatif = { version = "0.17.11", optional = true }
+miette = { workspace = true, optional = true }
+owo-colors = { version = "4.2.0", optional = true }
+
+# lib-rustdoc-link
+async-lsp = { version = "0.2.2", optional = true }
+cargo_toml = { version = "0.21.0", optional = true }
+clap = { workspace = true, optional = true }
+dirs = { version = "6.0.0", optional = true }
+lsp-types = { version = "0.95.0", optional = true }
+proc-macro2 = { version = "1.0.94", features = [
+  "span-locations",
+], optional = true }
+sha2 = { version = "0.10.8", optional = true }
+shlex = { workspace = true, optional = true }
+syn = { version = "2.0.99", optional = true }
+tempfile = { version = "3.18.0", optional = true }
+tokio-util = { version = "0.7.13", features = ["compat"], optional = true }
+toml = { workspace = true, optional = true }
+tower = { version = "0.5.2", optional = true }
+
+[dev-dependencies]
+insta = { workspace = true }
+similar = { workspace = true }
+util-testing = { workspace = true }

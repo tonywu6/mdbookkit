@@ -7,10 +7,12 @@ use similar::{ChangeTag, TextDiff};
 use tap::Pipe;
 use tokio::task::JoinSet;
 
-use mdbook_rustdoc_link::{
-    env::{Config, Environment},
-    logger::ConsoleLogger,
-    Client, Pages, Resolver,
+use mdbookkit::{
+    bin::rustdoc_link::{
+        env::{Config, Environment},
+        Client, Pages, Resolver,
+    },
+    log::ConsoleLogger,
 };
 use util_testing::{portable_snapshots, test_document, TestDocument};
 
@@ -24,6 +26,7 @@ async fn snapshot(client: Arc<Client>, TestDocument { source, name }: TestDocume
     let output = page.get(&client.env().emit_config())?.to_string();
 
     portable_snapshots!().test(|| insta::assert_snapshot!(name.clone(), output))?;
+
     assert_no_whitespace_change(source, &output)?;
 
     let report = page
@@ -99,9 +102,10 @@ async fn test_snapshots() -> Result<()> {
 }
 
 fn setup() -> Result<Arc<Client>> {
-    ConsoleLogger::install();
+    ConsoleLogger::install("rustdoc-link");
     Config {
         rust_analyzer: Some("cargo run --release --package util-rust-analyzer -- analyzer".into()),
+        cargo_features: vec!["rustdoc-link".into()],
         ..Default::default()
     }
     .pipe(Environment::new)?

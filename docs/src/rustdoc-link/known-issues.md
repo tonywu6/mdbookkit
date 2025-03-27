@@ -9,7 +9,6 @@
   - [Trait items](#trait-items)
 - [Unresolved items](#unresolved-items)
   - [Associated items on primitive types](#associated-items-on-primitive-types)
-  - [Conditionally compiled items](#conditionally-compiled-items)
 - [Sites other than docs.rs](#sites-other-than-docsrs)
 - [Wrong line numbers in diagnostics](#wrong-line-numbers-in-diagnostics)
 
@@ -90,18 +89,6 @@ rust-analyzer. For example:
 - \[`str::parse`]
 - \[`f64::MIN_POSITIVE`]
 
-### Conditionally compiled items
-
-You may wish to link to items that are only conditionally compiled.
-
-For example, [clap] is known for providing guide-level documentation through docs.rs. To
-link to the [tutorial for its Derive API][clap::_derive], theoretically you could write
-`[clap::_derive::_tutorial]`. However, this is gated behind the `clap/unstable-doc`
-feature.
-
-rust-analyzer supports configuring features to activate, but `mdbook-rustdoc-link` does
-not yet support configuring rust-analyzer.
-
 ## Sites other than docs.rs
 
 Currently, items from crates other than `std` always generate links that point to
@@ -137,7 +124,6 @@ ever be solved.
 [serde_json::json]: https://docs.rs/serde_json/1.0.140/serde_json/macro.json.html
 [tokio::main]: https://docs.rs/tokio-macros/2.5.0/tokio_macros/attr.main.html
 [IpV6Addr]: https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from-1
-[clap::_derive]: https://docs.rs/clap/4.5.32/clap/_derive/_tutorial/index.html
 [sourcemap]: https://developer.mozilla.org/en-US/docs/Glossary/Source_map
 
 <!-- prettier-ignore-end -->

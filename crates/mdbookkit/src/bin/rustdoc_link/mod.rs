@@ -1,28 +1,25 @@
-use std::{borrow::Borrow, collections::HashMap, hash::Hash, ops::Range, sync::Arc};
+use std::{borrow::Borrow, collections::HashMap, hash::Hash, sync::Arc};
 
-// not shadowing std::Result because rustdoc-link.md needs to link to it
-use anyhow::{Context, Result as Result2};
+use anyhow::{Context, Result};
 use lsp_types::Position;
 use tap::{Pipe, TapFallible};
 use tokio::task::JoinSet;
 
-pub mod cache;
 mod client;
-mod diagnostics;
 pub mod env;
 mod item;
 mod link;
-pub mod logger;
 mod markdown;
 mod page;
 mod sync;
 
-pub use crate::{client::Client, diagnostics::Status, page::Pages};
-use crate::{
-    item::Item,
-    link::ItemLinks,
-    logger::{spinner, styled},
-};
+#[cfg(feature = "rustdoc-link")]
+pub mod cache;
+
+use crate::{log::spinner, log_debug, styled};
+
+pub use self::{client::Client, page::Pages};
+use self::{item::Item, link::ItemLinks};
 
 /// Type that can provide links.
 ///
@@ -34,13 +31,13 @@ use crate::{
 /// - [`Cache`][crate::cache::Cache] implementations
 #[allow(async_fn_in_trait)]
 pub trait Resolver {
-    async fn resolve<K>(&self, pages: &mut Pages<'_, K>) -> Result2<()>
+    async fn resolve<K>(&self, pages: &mut Pages<'_, K>) -> Result<()>
     where
         K: Eq + Hash;
 }
 
 impl Resolver for Client {
-    async fn resolve<K>(&self, pages: &mut Pages<'_, K>) -> Result2<()>
+    async fn resolve<K>(&self, pages: &mut Pages<'_, K>) -> Result<()>
     where
         K: Eq + Hash,
     {
@@ -127,7 +124,7 @@ impl Resolver for Client {
             .flatten()
             .collect::<HashMap<_, _>>();
 
-        spinner().finish("resolve", styled("done").green());
+        spinner().finish("resolve", styled!(("done").green()));
 
         pages.apply(&resolved);
 
@@ -139,7 +136,7 @@ impl<K> Resolver for HashMap<K, ItemLinks>
 where
     K: Borrow<str> + Eq + Hash,
 {
-    async fn resolve<P>(&self, pages: &mut Pages<'_, P>) -> Result2<()>
+    async fn resolve<P>(&self, pages: &mut Pages<'_, P>) -> Result<()>
     where
         P: Eq + Hash,
     {
@@ -148,15 +145,4 @@ where
     }
 }
 
-type Spanned<T> = (T, Range<usize>);
-
 const UNIQUE_ID: &str = "__ded48f4d_0c4f_4950_b17d_55fd3b2a0c86__";
-
-pub fn preprocessor_name() -> &'static str {
-    let name = env!("CARGO_PKG_NAME");
-    if let Some(idx) = name.find('-') {
-        &name[idx + 1..]
-    } else {
-        name
-    }
-}

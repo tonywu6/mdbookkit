@@ -12,7 +12,9 @@ use sha2::{Digest, Sha256};
 use tap::{Pipe, Tap, TapFallible};
 use tokio::task::JoinSet;
 
-use crate::{env::Environment, link::ItemLinks, log_debug, page::Pages, Resolver};
+use crate::log_debug;
+
+use super::{env::Environment, link::ItemLinks, page::Pages, Resolver};
 
 #[allow(async_fn_in_trait)]
 pub trait Cache: DeserializeOwned + Serialize {

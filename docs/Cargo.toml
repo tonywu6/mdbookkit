@@ -12,9 +12,12 @@ rust-version.workspace = true
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true }
-mdbook-rustdoc-link = { path = "../crates/rustdoc-link" }
 miette = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 shlex = { workspace = true }
 tokio = { workspace = true }
+
+[dependencies.mdbookkit]
+features = ["lib-rustdoc-link"]
+path = "../crates/mdbookkit"

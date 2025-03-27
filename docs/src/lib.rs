@@ -4,8 +4,8 @@
 
 use anyhow::Context;
 
-use mdbook_rustdoc_link::Resolver;
+use mdbookkit::bin::rustdoc_link::Resolver;
 
 mod env {
-    pub use mdbook_rustdoc_link::env::Config;
+    pub use mdbookkit::bin::rustdoc_link::env::Config;
 }

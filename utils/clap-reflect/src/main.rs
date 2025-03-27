@@ -36,7 +36,9 @@ impl OptionType {
 
     fn describe(&self) -> Result<String> {
         match self {
-            Self::RustdocLinkOptions => describe_options::<mdbook_rustdoc_link::env::Config>(),
+            Self::RustdocLinkOptions => {
+                describe_options::<mdbookkit::bin::rustdoc_link::env::Config>()
+            }
         }
     }
 }
@@ -209,20 +211,28 @@ fn describe_options<C: CommandFactory>() -> Result<String> {
                 .map(|h| h.to_string())
                 .unwrap_or_default();
 
+            let action = opt.get_action();
+
             let type_id = if cfg!(debug_assertions) {
-                format!("{:?}", opt.get_value_parser().type_id())
-                    .replace("alloc::string::", "")
-                    .pipe(Some)
+                let ty = format!("{:?}", opt.get_value_parser().type_id())
+                    .replace("alloc::string::", "");
+                if matches!(action, ArgAction::Append) {
+                    Some(format!("Vec<{ty}>"))
+                } else {
+                    Some(ty)
+                }
             } else {
                 None
             };
 
             let default = if let Some(d) = opt.get_default_values().iter().next() {
                 Some(format!("{:?}", d.to_string_lossy().into_owned()))
-            } else if matches!(opt.get_action(), ArgAction::SetTrue) {
+            } else if matches!(action, ArgAction::SetTrue) {
                 Some("false".into())
-            } else if matches!(opt.get_action(), ArgAction::SetFalse) {
+            } else if matches!(action, ArgAction::SetFalse) {
                 Some("true".into())
+            } else if matches!(action, ArgAction::Append) {
+                Some("[]".into())
             } else if !opt.is_required_set() {
                 Some("None".into())
             } else {

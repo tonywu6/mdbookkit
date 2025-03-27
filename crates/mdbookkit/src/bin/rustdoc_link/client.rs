@@ -32,11 +32,11 @@ use tokio::{
 use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 use tower::ServiceBuilder;
 
-use crate::{
+use crate::{log::spinner, log_debug, log_warning};
+
+use super::{
     env::Environment,
     link::ItemLinks,
-    log_debug, log_warning,
-    logger::spinner,
     sync::{EventSampler, EventSampling},
 };
 
@@ -214,6 +214,15 @@ impl Server {
         })
         .pipe(Arc::new);
 
+        let features = {
+            let features = &env.config.cargo_features;
+            if features.len() == 1 && features[0] == "all" {
+                json!("all")
+            } else {
+                json!(features)
+            }
+        };
+
         let init = server
             .initialize(InitializeParams {
                 workspace_folders: Some(vec![WorkspaceFolder {
@@ -241,6 +250,9 @@ impl Server {
                         "enable": true,
                         "numThreads": "physical",
                     },
+                    "cargo": {
+                        "features": features,
+                    }
                 }}),
 
                 client_info: Some(ClientInfo {

@@ -13,7 +13,7 @@ use shlex::Shlex;
 use tap::Pipe;
 use tokio::process::Command;
 
-use crate::markdown;
+use super::markdown;
 
 #[derive(clap::Parser, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
@@ -28,6 +28,19 @@ pub struct Config {
     #[arg(long, value_name("COMMAND"), value_hint(ValueHint::CommandString))]
     #[serde(default)]
     pub rust_analyzer: Option<String>,
+
+    /// List of features to activate when running rust-analyzer.
+    ///
+    /// This is just the `rust-analyzer.cargo.features` config.
+    ///
+    /// **In `book.toml`** — to enable all features, use `["all"]`.
+    ///
+    /// **For CLI** — to enable multiple features, specify as
+    /// comma-separated values, or specify multiple times; to enable all features,
+    /// specify `--cargo-features all`.
+    #[arg(long, value_name("FEATURES"))]
+    #[serde(default)]
+    pub cargo_features: Vec<String>,
 
     /// Directory from which to search for a Cargo project.
     ///

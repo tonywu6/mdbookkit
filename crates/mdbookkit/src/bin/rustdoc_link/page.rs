@@ -9,16 +9,16 @@ use anyhow::{bail, Context, Result};
 use pulldown_cmark::{CowStr, Event, Tag, TagEnd};
 use tap::Pipe;
 
-use crate::{
-    diagnostics::{Diagnostics, ReportBuilder},
+use crate::markdown::{PatchStream, Spanned};
+
+use super::{
     env::EmitConfig,
-    link::{
-        diagnostic::{LinkDiagnostic, LinkStatus},
-        ItemLinks, Link, LinkState,
-    },
-    markdown::PatchStream,
-    Item, Spanned,
+    item::Item,
+    link::{ItemLinks, Link, LinkState},
 };
+
+#[cfg(feature = "common-logger")]
+mod diagnostic;
 
 #[derive(Debug, Default)]
 pub struct Pages<'a, K> {
@@ -41,7 +41,7 @@ impl<'a, K: Eq + Hash> Pages<'a, K> {
         Ok(())
     }
 
-    pub fn emit<Q>(&self, key: &Q, options: &EmitConfig) -> Result<PatchStream<'a>>
+    pub fn emit<Q>(&self, key: &Q, options: &EmitConfig) -> Result<String>
     where
         K: Borrow<Q>,
         Q: Eq + Hash + fmt::Debug + ?Sized,
@@ -84,31 +84,7 @@ impl<'a, K: Eq + Hash> Pages<'a, K> {
     pub fn modified(&self) -> bool {
         self.modified
     }
-
-    pub fn diagnostics(&self) -> Vec<PageDiagnostics<'a, K>>
-    where
-        K: Clone,
-    {
-        self.pages
-            .iter()
-            .map(|(name, page)| {
-                let issues = page.links.iter().map(|link| link.diagnostic()).collect();
-                Diagnostics::new(page.source, name.clone(), issues)
-            })
-            .collect()
-    }
-
-    pub fn reporter(&self) -> PageReporter<'a, K>
-    where
-        K: Clone + Debug,
-    {
-        ReportBuilder::new(self.diagnostics(), |name| format!("{name:?}"))
-    }
 }
-
-type PageDiagnostics<'a, K> = Diagnostics<'a, K, LinkDiagnostic, LinkStatus>;
-
-type PageReporter<'a, K> = ReportBuilder<'a, K, LinkDiagnostic, LinkStatus, fn(&K) -> String>;
 
 impl<'a> Pages<'a, ()> {
     pub fn one<S>(source: &'a str, stream: S) -> Result<Self>
@@ -120,7 +96,7 @@ impl<'a> Pages<'a, ()> {
         Ok(this)
     }
 
-    pub fn get(&self, options: &EmitConfig) -> Result<PatchStream<'a>> {
+    pub fn get(&self, options: &EmitConfig) -> Result<String> {
         self.emit(&(), options)
     }
 }
@@ -170,10 +146,12 @@ impl<'a> Page<'a> {
         Ok(Self { source, links })
     }
 
-    fn emit(&self, options: &EmitConfig) -> Result<PatchStream<'a>> {
+    fn emit(&self, options: &EmitConfig) -> Result<String> {
         self.links
             .iter()
             .filter_map(|link| link.emit(options))
-            .pipe(|stream| PatchStream::patch(self.source, stream))
+            .pipe(|stream| PatchStream::new(self.source, stream))
+            .into_string()?
+            .pipe(Ok)
     }
 }

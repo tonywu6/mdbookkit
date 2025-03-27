@@ -11,18 +11,20 @@ use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
 use serde::Deserialize;
 use tap::{Pipe, TapFallible};
 
-use mdbook_rustdoc_link::{
-    cache::{Cache, FileCache},
-    env::{Config, Environment},
+use mdbookkit::{
+    bin::rustdoc_link::{
+        cache::{Cache, FileCache},
+        env::{Config, Environment},
+        Client, Pages, Resolver,
+    },
+    diagnostics::Issue,
+    log::{is_logging, ConsoleLogger},
     log_warning,
-    logger::{is_logging, ConsoleLogger},
-    preprocessor_name, Client, Pages, Resolver, Status,
 };
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    ConsoleLogger::install();
-
+    ConsoleLogger::install("rustdoc-link");
     match Program::parse().command {
         Some(Command::Supports { .. }) => Ok(()),
         Some(Command::Markdown(options)) => markdown(options).await,
@@ -57,8 +59,7 @@ async fn mdbook() -> Result<()> {
         .pipe_as_ref(serde_json::from_str)?;
 
     let config = {
-        let mut config = if let Some(config) = context.config.get_preprocessor(preprocessor_name())
-        {
+        let mut config = if let Some(config) = context.config.get_preprocessor("rustdoc-link") {
             Config::deserialize(toml::Value::Table(config.clone()))
                 .context("failed to read preprocessor config from book.toml")?
         } else {

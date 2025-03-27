@@ -3,7 +3,7 @@ use std::fmt;
 use log::Level;
 use miette::LabeledSpan;
 
-use crate::diagnostics::{Problem, Status};
+use crate::diagnostics::{Issue, Problem};
 
 use super::{Link, LinkState};
 
@@ -21,9 +21,9 @@ pub enum LinkStatus {
 }
 
 impl Problem for LinkDiagnostic {
-    type Status = LinkStatus;
+    type Kind = LinkStatus;
 
-    fn status(&self) -> Self::Status {
+    fn issue(&self) -> Self::Kind {
         self.status
     }
 
@@ -32,7 +32,7 @@ impl Problem for LinkDiagnostic {
     }
 }
 
-impl Status for LinkStatus {
+impl Issue for LinkStatus {
     fn level(&self) -> Level {
         match self {
             Self::Unresolved => Level::Warn,

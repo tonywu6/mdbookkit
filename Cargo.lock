@@ -1254,7 +1254,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mdbook-rustdoc-link"
+name = "mdbookkit"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -1275,7 +1275,6 @@ dependencies = [
  "proc-macro2",
  "pulldown-cmark 0.13.0",
  "pulldown-cmark-to-cmark",
- "quote",
  "serde",
  "serde_json",
  "sha2",
@@ -1297,7 +1296,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
- "mdbook-rustdoc-link",
+ "mdbookkit",
  "miette",
  "serde",
  "serde_json",
@@ -2456,7 +2455,7 @@ dependencies = [
  "anyhow",
  "clap",
  "mdbook",
- "mdbook-rustdoc-link",
+ "mdbookkit",
  "minijinja",
  "serde",
  "serde_json",
