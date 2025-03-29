@@ -8,10 +8,13 @@ use anyhow::{anyhow, Context, Result};
 use cargo_toml::{Manifest, Product};
 use clap::ValueHint;
 use lsp_types::Url;
+use pulldown_cmark::Options;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use shlex::Shlex;
 use tap::Pipe;
 use tokio::process::Command;
+
+use crate::markdown::mdbook_markdown;
 
 use super::markdown;
 
@@ -213,10 +216,12 @@ impl Environment {
     }
 
     pub fn markdown<'a>(&self, source: &'a str) -> markdown::MarkdownStream<'a> {
-        let Config {
-            smart_punctuation, ..
-        } = self.config;
-        markdown::stream(source, smart_punctuation)
+        let options = if self.config.smart_punctuation {
+            Options::ENABLE_SMART_PUNCTUATION
+        } else {
+            Options::empty()
+        };
+        markdown::stream(source, options.union(mdbook_markdown()))
     }
 
     pub fn emit_config(&self) -> EmitConfig {

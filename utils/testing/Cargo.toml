@@ -11,4 +11,8 @@ repository.workspace = true
 [dependencies]
 anyhow = { workspace = true }
 insta = { workspace = true }
+once_cell = "1.21.3"
+serde = { workspace = true }
+serde_json = { workspace = true }
 tap = { workspace = true }
+url = { workspace = true }

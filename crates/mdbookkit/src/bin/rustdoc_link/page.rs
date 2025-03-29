@@ -107,7 +107,7 @@ impl<'a> Page<'a> {
         S: Iterator<Item = Spanned<Event<'a>>>,
     {
         let mut links = Vec::new();
-        let mut link: Option<Link> = None;
+        let mut link: Option<Link<'_>> = None;
 
         for (event, span) in stream {
             if matches!(event, Event::End(TagEnd::Link)) {
@@ -117,7 +117,7 @@ impl<'a> Page<'a> {
                             links.push(link);
                             continue;
                         } else {
-                            bail!("mismatching span, expected {:?} != {span:?}", link.span())
+                            bail!("mismatching span, expected {:?}, got {span:?}", link.span())
                         }
                     }
                     None => bail!("unexpected `TagEnd::Link` at {span:?}"),
@@ -137,7 +137,7 @@ impl<'a> Page<'a> {
             };
 
             if link.is_some() {
-                bail!("unexpected `Tag::Link` in `Tag::Link`")
+                bail!("unexpected `Tag::Link` in `Tag::Link` at {span:?}")
             }
 
             link = Some(Link::new(span, url, title));

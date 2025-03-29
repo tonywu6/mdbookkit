@@ -38,9 +38,11 @@ URLs by hand.
 
 ## Overview
 
-To get started, simply follow the [quickstart guide](rustdoc-link/getting-started.md).
+To get started, simply follow the [quickstart guide](rustdoc-link/getting-started.md)!
 
-For **authoring documentation** —
+If you would like to read more about this crate:
+
+For **writing documentation** —
 
 - To know more about how the preprocessor is resolving items into links, see
   [Name resolution](rustdoc-link/name-resolution.md).
@@ -53,8 +55,8 @@ For **adapting this crate to your project** —
 
 - If you use [Cargo workspaces][workspaces], see specific instructions in
   [Workspace layout](rustdoc-link/workspace-layout.md).
-- If you are working on a large project, and processing is taking a long time, see
-  discussions in [Caching](rustdoc-link/caching.md).
+- If you are working on a large project, and processing is taking a long time, see the
+  discussion in [Caching](rustdoc-link/caching.md).
 
 For **additional usage information** —
 

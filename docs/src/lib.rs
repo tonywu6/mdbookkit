@@ -1,4 +1,4 @@
-//! This crate is only for providing a context for mdbook-rustdoc-link to resolve items from
+//! This crate is only here to provide a context for mdbook-rustdoc-link to resolve items from.
 
 #![allow(unused)]
 

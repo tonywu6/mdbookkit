@@ -1,7 +1,31 @@
 use std::path::Path;
 
 use anyhow::Result;
-use tap::Tap;
+use once_cell::sync::Lazy;
+use serde::Deserialize;
+use tap::{Pipe, Tap};
+pub use url;
+use url::Url;
+
+pub static CARGO_WORKSPACE_DIR: Lazy<Url> = Lazy::new(|| {
+    #[derive(Deserialize)]
+    struct CargoManifest {
+        workspace_root: String,
+    }
+    // https://github.com/mitsuhiko/insta/blob/b113499249584cb650150d2d01ed96ee66db6b30/src/runtime.rs#L67-L88
+    std::process::Command::new(env!("CARGO"))
+        .arg("metadata")
+        .arg("--format-version=1")
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .unwrap()
+        .pipe(|output| String::from_utf8(output.stdout))
+        .unwrap()
+        .pipe(|outout| serde_json::from_str::<CargoManifest>(&outout))
+        .unwrap()
+        .pipe(|manifest| Url::from_directory_path(manifest.workspace_root))
+        .unwrap()
+});
 
 #[macro_export]
 macro_rules! portable_snapshots {
@@ -41,6 +65,7 @@ impl PortableSnapshots {
 
 pub struct TestDocument {
     pub source: &'static str,
+    pub file: Url,
     pub name: String,
 }
 
@@ -49,6 +74,11 @@ macro_rules! test_document {
     ($path:literal) => {
         $crate::TestDocument {
             source: include_str!($path),
+            file: $crate::CARGO_WORKSPACE_DIR
+                .join(file!())
+                .unwrap()
+                .join($path)
+                .unwrap(),
             name: std::path::Path::new($path)
                 .with_extension("")
                 .file_name()

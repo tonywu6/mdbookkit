@@ -1,0 +1,33 @@
+# Linking to repo files
+
+[](../../Cargo.toml)
+
+[](../../src/lib.rs)
+
+# Linking to book files
+
+[](./ra-known-quirks.md)
+
+[](../link_forever.rs)
+
+# Linking to page fragments
+
+[](./link-forever.md#linking-to-page-fragments)
+
+[](./link-forever.md#heading-sqrt3x-11x2)
+
+[](./link-forever.md#heading-httpsräksmörgåsjosefssonorg)
+
+[](./ra-known-quirks.md#macro_export)
+
+# File not found
+
+[](../../Cargo.lock)
+
+# Fragment not found
+
+[](../tests/ra-known-quirks.md#associated_items_on_primitive_types)
+
+## Heading: $\sqrt{3x-1}+(1+x)^2$
+
+## Heading: <https://räksmörgås.josefsson.org/>

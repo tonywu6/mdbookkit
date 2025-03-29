@@ -1,4 +1,4 @@
-primitive types resolved to nightly:
+# primitive types resolved to nightly
 
 - [u8]
 - [u32]
@@ -6,12 +6,12 @@ primitive types resolved to nightly:
 - [char]
 - [str]
 
-associated items on primitive types:
+# associated items on primitive types
 
 - [str::parse]
 - [f64::MIN_POSITIVE]
 
-re-exported items:
+# macro_export
 
 - [std::vec!]
 - [std::format!]

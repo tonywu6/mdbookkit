@@ -18,7 +18,7 @@ impl SpinnerHandle {
         let msg = Message::Create { prefix, total };
 
         #[cfg(feature = "common-logger")]
-        if let Some(stderr::Spinner { tx, .. }) = stderr::SPINNER.get() {
+        if let Some(terminal::Spinner { tx, .. }) = terminal::SPINNER.get() {
             tx.send(msg).ok();
         } else {
             spinner_log!(info!("{msg}"));
@@ -36,7 +36,7 @@ impl SpinnerHandle {
         let msg = Message::Update { key, update };
 
         #[cfg(feature = "common-logger")]
-        if let Some(stderr::Spinner { tx, .. }) = stderr::SPINNER.get() {
+        if let Some(terminal::Spinner { tx, .. }) = terminal::SPINNER.get() {
             tx.send(msg).ok();
         } else {
             spinner_log!(info!("{msg}"));
@@ -59,7 +59,7 @@ impl SpinnerHandle {
         let done = Some(Message::Done { key, task });
 
         #[cfg(feature = "common-logger")]
-        if let Some(stderr::Spinner { tx, .. }) = stderr::SPINNER.get() {
+        if let Some(terminal::Spinner { tx, .. }) = terminal::SPINNER.get() {
             tx.send(open).ok();
             let spin = Some(tx.clone());
             return TaskHandle { spin, done };
@@ -76,7 +76,7 @@ impl SpinnerHandle {
         let msg = Message::Finish { key, update };
 
         #[cfg(feature = "common-logger")]
-        if let Some(stderr::Spinner { tx, .. }) = stderr::SPINNER.get() {
+        if let Some(terminal::Spinner { tx, .. }) = terminal::SPINNER.get() {
             tx.send(msg).ok();
         } else {
             spinner_log!(info!("{msg}"));
@@ -149,7 +149,7 @@ impl fmt::Display for Message {
 
 #[cfg(feature = "common-logger")]
 pub fn styled<D>(val: D) -> console::StyledObject<D> {
-    if let Some(stderr::Spinner { term, .. }) = stderr::SPINNER.get() {
+    if let Some(terminal::Spinner { term, .. }) = terminal::SPINNER.get() {
         term.style()
     } else {
         console::Style::new().for_stderr()
@@ -173,7 +173,7 @@ macro_rules! styled {
 
 #[cfg(feature = "common-logger")]
 pub fn is_logging() -> bool {
-    stderr::SPINNER.get().is_none()
+    terminal::SPINNER.get().is_none()
 }
 
 #[macro_export]
@@ -204,7 +204,7 @@ macro_rules! log_warning {
 }
 
 #[cfg(feature = "common-logger")]
-mod stderr;
+mod terminal;
 
 #[cfg(feature = "common-logger")]
-pub use self::stderr::ConsoleLogger;
+pub use self::terminal::ConsoleLogger;

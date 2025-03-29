@@ -1,14 +1,10 @@
-use pulldown_cmark::{BrokenLink, BrokenLinkCallback, CowStr, Event, Parser};
+use pulldown_cmark::{BrokenLink, BrokenLinkCallback, CowStr, Event, Options, Parser};
 use tap::Pipe;
 
-use crate::markdown::markdown_options;
+use crate::markdown::mdbook_markdown;
 
-pub fn stream(text: &str, smart_punctuation: bool) -> MarkdownStream<'_> {
-    Parser::new_with_broken_link_callback(
-        text,
-        markdown_options(smart_punctuation),
-        Some(BrokenLinks),
-    )
+pub fn stream(text: &str, options: Options) -> MarkdownStream<'_> {
+    Parser::new_with_broken_link_callback(text, options, Some(BrokenLinks))
 }
 
 pub type MarkdownStream<'a> = Parser<'a, BrokenLinks>;
@@ -21,7 +17,7 @@ impl<'input> BrokenLinkCallback<'input> for BrokenLinks {
         link: BrokenLink<'input>,
     ) -> Option<(CowStr<'input>, CowStr<'input>)> {
         let inner = if let CowStr::Borrowed(inner) = link.reference {
-            let parse = stream(inner, false);
+            let parse = stream(inner, mdbook_markdown());
 
             let inner = parse
                 .filter_map(|event| match event {

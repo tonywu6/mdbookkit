@@ -79,7 +79,7 @@ The preprocessor will emit a warning if an item cannot be resolved:
 
 <figcaption>
 
-Formatting of diagnostics courtesy of [miette]
+Formatting of diagnostics powered by [miette]
 
 </figcaption>
 

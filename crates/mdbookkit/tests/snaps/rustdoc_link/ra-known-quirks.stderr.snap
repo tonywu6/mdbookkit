@@ -1,5 +1,5 @@
 ---
-source: crates/rustdoc-link/tests/lib.rs
+source: crates/mdbookkit/tests/rustdoc_link.rs
 expression: report
 ---
   warning: failed to resolve some links
@@ -21,7 +21,7 @@ expression: report
     ·   ──┬──
     ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.str.html
   8 │ 
-  9 │ associated items on primitive types:
+  9 │ # associated items on primitive types
  10 │ 
  11 │ - [str::parse]
     ·   ──────┬─────
@@ -30,7 +30,7 @@ expression: report
     ·   ─────────┬─────────
     ·            ╰── failed to resolve links for "f64::MIN_POSITIVE"
  13 │ 
- 14 │ re-exported items:
+ 14 │ # macro_export
  15 │ 
  16 │ - [std::vec!]
     ·   ─────┬─────

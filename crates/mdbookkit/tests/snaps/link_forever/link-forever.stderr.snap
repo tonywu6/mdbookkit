@@ -1,0 +1,66 @@
+---
+source: crates/mdbookkit/tests/link_forever.rs
+expression: report
+---
+  info: urls ignored
+    ╭─[tests/tests/link-forever.md:33:13]
+ 32 │ 
+ 33 │ ## Heading: <https://räksmörgås.josefsson.org/>
+    ·             ───────────────────────────────────
+    ╰────
+
+  info: paths under src/
+    ╭─[tests/tests/link-forever.md:9:1]
+  8 │ 
+  9 │ [](./ra-known-quirks.md)
+    · ────────────────────────
+ 10 │ 
+ 11 │ [](../link_forever.rs)
+    · ──────────────────────
+ 12 │ 
+ 13 │ # Linking to page fragments
+ 14 │ 
+ 15 │ [](./link-forever.md#linking-to-page-fragments)
+    · ───────────────────────────────────────────────
+ 16 │ 
+ 17 │ [](./link-forever.md#heading-sqrt3x-11x2)
+    · ─────────────────────────────────────────
+ 18 │ 
+ 19 │ [](./link-forever.md#heading-httpsräksmörgåsjosefssonorg)
+    · ─────────────────────────────────────────────────────────
+ 20 │ 
+ 21 │ [](./ra-known-quirks.md#macro_export)
+    · ─────────────────────────────────────
+ 22 │ 
+    ╰────
+
+  info: links converted to permalinks
+   ╭─[tests/tests/link-forever.md:3:1]
+ 2 │ 
+ 3 │ [](../../Cargo.toml)
+   · ──────────┬─────────
+   ·           ╰── https://github.com/lorem/ipsum/tree/dolor/Cargo.toml
+ 4 │ 
+ 5 │ [](../../src/lib.rs)
+   · ──────────┬─────────
+   ·           ╰── https://github.com/lorem/ipsum/tree/dolor/src/lib.rs
+ 6 │ 
+   ╰────
+
+  warning: paths not found
+    ╭─[tests/tests/link-forever.md:25:1]
+ 24 │ 
+ 25 │ [](../../Cargo.lock)
+    · ──────────┬─────────
+    ·           ╰── file Cargo.lock does not exist
+ 26 │ 
+    ╰────
+
+  warning: no such fragments
+    ╭─[tests/tests/link-forever.md:29:1]
+ 28 │ 
+ 29 │ [](../tests/ra-known-quirks.md#associated_items_on_primitive_types)
+    · ─────────────────────────────────┬─────────────────────────────────
+    ·                                  ╰── fragment not found in file tests/tests/ra-known-quirks.md
+ 30 │ 
+    ╰────

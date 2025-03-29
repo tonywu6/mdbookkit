@@ -12,6 +12,47 @@ rust-version.workspace = true
 autobins = false
 autotests = false
 
+[dependencies]
+anyhow = { workspace = true }
+async-lsp = { version = "0.2.2", optional = true }
+cargo_toml = { version = "0.21.0", optional = true }
+chrono = { version = "0.4.40", features = [
+  "clock",
+], default-features = false, optional = true }
+clap = { workspace = true, optional = true }
+console = { version = "0.15.11", optional = true }
+dirs = { version = "6.0.0", optional = true }
+env_logger = { workspace = true, optional = true }
+indicatif = { version = "0.17.11", optional = true }
+log = { workspace = true }
+lsp-types = { version = "0.95.0", optional = true }
+mdbook = { workspace = true }
+miette = { workspace = true, optional = true }
+owo-colors = { version = "4.2.0", optional = true }
+percent-encoding = { version = "2.3.1", optional = true }
+proc-macro2 = { version = "1.0.94", features = [
+  "span-locations",
+], optional = true }
+pulldown-cmark = { workspace = true }
+pulldown-cmark-to-cmark = { workspace = true }
+serde = { workspace = true, features = ["rc"] }
+serde_json = { workspace = true }
+sha2 = { version = "0.10.8", optional = true }
+shlex = { workspace = true, optional = true }
+syn = { version = "2.0.99", optional = true }
+tap = { workspace = true }
+tempfile = { version = "3.18.0", optional = true }
+tokio = { workspace = true, optional = true }
+tokio-util = { version = "0.7.13", features = ["compat"], optional = true }
+toml = { workspace = true, optional = true }
+tower = { version = "0.5.2", optional = true }
+url = { workspace = true, optional = true }
+
+[dev-dependencies]
+insta = { workspace = true }
+similar = { workspace = true }
+util-testing = { workspace = true }
+
 [features]
 rustdoc-link = [
   "dep:toml",
@@ -27,7 +68,6 @@ lib-rustdoc-link = [
   "dep:clap",
   "dep:dirs",
   "dep:lsp-types",
-  "dep:mdbook",
   "dep:proc-macro2",
   "dep:sha2",
   "dep:shlex",
@@ -44,7 +84,7 @@ lib-rustdoc-link = [
 
 link-forever = ["common-logger", "lib-link-forever"]
 
-lib-link-forever = []
+lib-link-forever = ["dep:percent-encoding", "dep:url"]
 
 common-logger = [
   "dep:chrono",
@@ -67,46 +107,7 @@ name = "rustdoc-link"
 path = "tests/rustdoc_link.rs"
 required-features = ["rustdoc-link"]
 
-[dependencies]
-anyhow = { workspace = true }
-log = { workspace = true }
-pulldown-cmark = { workspace = true }
-pulldown-cmark-to-cmark = { workspace = true }
-serde = { workspace = true, features = ["rc"] }
-serde_json = { workspace = true }
-tap = { workspace = true }
-
-mdbook = { workspace = true, optional = true }
-tokio = { workspace = true, optional = true }
-
-# common-logger
-chrono = { version = "0.4.40", features = [
-  "clock",
-], default-features = false, optional = true }
-console = { version = "0.15.11", optional = true }
-env_logger = { workspace = true, optional = true }
-indicatif = { version = "0.17.11", optional = true }
-miette = { workspace = true, optional = true }
-owo-colors = { version = "4.2.0", optional = true }
-
-# lib-rustdoc-link
-async-lsp = { version = "0.2.2", optional = true }
-cargo_toml = { version = "0.21.0", optional = true }
-clap = { workspace = true, optional = true }
-dirs = { version = "6.0.0", optional = true }
-lsp-types = { version = "0.95.0", optional = true }
-proc-macro2 = { version = "1.0.94", features = [
-  "span-locations",
-], optional = true }
-sha2 = { version = "0.10.8", optional = true }
-shlex = { workspace = true, optional = true }
-syn = { version = "2.0.99", optional = true }
-tempfile = { version = "3.18.0", optional = true }
-tokio-util = { version = "0.7.13", features = ["compat"], optional = true }
-toml = { workspace = true, optional = true }
-tower = { version = "0.5.2", optional = true }
-
-[dev-dependencies]
-insta = { workspace = true }
-similar = { workspace = true }
-util-testing = { workspace = true }
+[[test]]
+name = "link-forever"
+path = "tests/link_forever.rs"
+required-features = ["link-forever"]

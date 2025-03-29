@@ -17,7 +17,7 @@ To mitigate this, there is an experimental caching feature, disabled by default.
 - [Help wanted 🙌](#help-wanted-)
   - [Cache priming and progress tracking](#cache-priming-and-progress-tracking)
   - [Using `ra-multiplex`](#using-ra-multiplex)
-  - [Thoughts](#thoughts)
+  - [Postscript](#postscript)
 
 </details>
 
@@ -121,7 +121,7 @@ items eventually resolving. Subsequent builds hang indefinitely before timing ou
 
 - Is it possible to use `ra-multiplex` here?
 
-### Thoughts
+### Postscript
 
 `mdbook` encourages a stateless architecture for preprocessors. Preprocessors are
 expected to work like pure functions over the entire book, even for `mdbook serve`.

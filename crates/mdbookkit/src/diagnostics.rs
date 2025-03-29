@@ -39,7 +39,7 @@ where
         .tap_mut(|t| t.characters.error = "error:".into())
         .tap_mut(|t| t.characters.warning = "warning:".into())
         .tap_mut(|t| t.characters.advice = "info:".into())
-        .tap_mut(|t| t.styles.advice = Style::new().magenta().toggle(colored))
+        .tap_mut(|t| t.styles.advice = Style::new().green().toggle(colored))
         .tap_mut(|t| t.styles.warning = Style::new().yellow().toggle(colored))
         .tap_mut(|t| t.styles.error = Style::new().red().toggle(colored))
         .tap_mut(|t| {

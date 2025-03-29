@@ -35,6 +35,7 @@ similar = { version = "2.7.0" }
 tap = "1.0.1"
 tokio = { version = "1", features = ["macros"] }
 toml = "0.5"
+url = "2.5.4"
 util-testing = { path = "utils/testing" }
 
 [workspace.metadata.bin]

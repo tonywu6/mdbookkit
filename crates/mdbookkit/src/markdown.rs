@@ -67,16 +67,13 @@ impl<'a, S> PatchStream<'a, S> {
 }
 
 /// <https://github.com/rust-lang/mdBook/blob/v0.4.47/src/utils/mod.rs#L197-L208>
-pub fn markdown_options(smart_punctuation: bool) -> Options {
+pub fn mdbook_markdown() -> Options {
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_TABLES);
     opts.insert(Options::ENABLE_FOOTNOTES);
     opts.insert(Options::ENABLE_STRIKETHROUGH);
     opts.insert(Options::ENABLE_TASKLISTS);
     opts.insert(Options::ENABLE_HEADING_ATTRIBUTES);
-    if smart_punctuation {
-        opts.insert(Options::ENABLE_SMART_PUNCTUATION);
-    }
     opts
 }
 

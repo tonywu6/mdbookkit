@@ -1,8 +1,8 @@
 ---
-source: crates/rustdoc-link/tests/lib.rs
+source: crates/mdbookkit/tests/rustdoc_link.rs
 expression: output
 ---
-primitive types resolved to nightly:
+# primitive types resolved to nightly
 
 - [u8](https://doc.rust-lang.org/nightly/core/primitive.u8.html "u8")
 - [u32](https://doc.rust-lang.org/nightly/core/primitive.u32.html "u32")
@@ -10,12 +10,12 @@ primitive types resolved to nightly:
 - [char](https://doc.rust-lang.org/nightly/core/primitive.char.html "char")
 - [str](https://doc.rust-lang.org/nightly/core/primitive.str.html "str")
 
-associated items on primitive types:
+# associated items on primitive types
 
 - [str::parse]
 - [f64::MIN_POSITIVE]
 
-re-exported items:
+# macro_export
 
 - [std::vec!](https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html "std::vec!")
 - [std::format!](https://doc.rust-lang.org/stable/alloc/macros/macro.format.html "std::format!")

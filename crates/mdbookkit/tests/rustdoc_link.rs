@@ -16,7 +16,10 @@ use mdbookkit::{
 };
 use util_testing::{portable_snapshots, test_document, TestDocument};
 
-async fn snapshot(client: Arc<Client>, TestDocument { source, name }: TestDocument) -> Result<()> {
+async fn snapshot(
+    client: Arc<Client>,
+    TestDocument { source, name, .. }: TestDocument,
+) -> Result<()> {
     let stream = client.env().markdown(source).into_offset_iter();
 
     let mut page = Pages::one(source, stream)?;
