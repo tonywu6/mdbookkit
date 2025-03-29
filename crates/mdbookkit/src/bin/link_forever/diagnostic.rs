@@ -82,7 +82,12 @@ impl Problem for LinkDiagnostic<'_> {
                 format!("file {} does not exist", self.format_link()).pipe(Some)
             }
             LinkStatus::NoSuchFragment => {
-                format!("fragment not found in file {}", self.format_link()).pipe(Some)
+                let (_, fragment) = self
+                    .link
+                    .link
+                    .split_once('#')
+                    .expect("should have a fragment");
+                format!("#{fragment} not found in file {}", self.format_link()).pipe(Some)
             }
             LinkStatus::ParseError(err) => {
                 format!("error converting to permalink:\n{err}").pipe(Some)

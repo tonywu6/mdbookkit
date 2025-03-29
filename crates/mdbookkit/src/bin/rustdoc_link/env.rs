@@ -6,6 +6,7 @@ use std::{
 
 use anyhow::{anyhow, Context, Result};
 use cargo_toml::{Manifest, Product};
+#[cfg(feature = "common-cli")]
 use clap::ValueHint;
 use lsp_types::Url;
 use pulldown_cmark::Options;
@@ -14,11 +15,12 @@ use shlex::Shlex;
 use tap::Pipe;
 use tokio::process::Command;
 
-use crate::markdown::mdbook_markdown;
+use crate::{env::ErrorHandling, markdown::mdbook_markdown};
 
 use super::markdown;
 
-#[derive(clap::Parser, Deserialize, Debug, Default, Clone)]
+#[derive(Deserialize, Debug, Default, Clone)]
+#[cfg_attr(feature = "common-cli", derive(clap::Parser))]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Config {
     /// Command to use for spawning rust-analyzer.
@@ -28,8 +30,11 @@ pub struct Config {
     /// this behavior completely.
     ///
     /// The command string will be tokenized by [shlex], so you can include arguments in it.
-    #[arg(long, value_name("COMMAND"), value_hint(ValueHint::CommandString))]
     #[serde(default)]
+    #[cfg_attr(
+        feature = "common-cli",
+        arg(long, value_name("COMMAND"), value_hint(ValueHint::CommandString))
+    )]
     pub rust_analyzer: Option<String>,
 
     /// List of features to activate when running rust-analyzer.
@@ -41,7 +46,7 @@ pub struct Config {
     /// **For CLI** — to enable multiple features, specify as
     /// comma-separated values, or specify multiple times; to enable all features,
     /// specify `--cargo-features all`.
-    #[arg(long, value_name("FEATURES"))]
+    #[cfg_attr(feature = "common-cli", arg(long, value_name("FEATURES")))]
     #[serde(default)]
     pub cargo_features: Vec<String>,
 
@@ -52,22 +57,28 @@ pub struct Config {
     ///
     /// The processor requires the Cargo.toml of a package to work. If you are working
     /// on a Cargo workspace, set this to the relative path to a member crate.
-    #[arg(long, value_name("PATH"), value_hint(ValueHint::DirPath))]
+    #[cfg_attr(
+        feature = "common-cli",
+        arg(long, value_name("PATH"), value_hint(ValueHint::DirPath))
+    )]
     #[serde(default)]
     pub manifest_dir: Option<PathBuf>,
 
     /// Directory in which to persist build cache.
     ///
     /// Setting this will enable caching. Will skip rust-analyzer if cache hits.
-    #[arg(long, value_name("PATH"), value_hint(ValueHint::DirPath))]
+    #[cfg_attr(
+        feature = "common-cli",
+        arg(long, value_name("PATH"), value_hint(ValueHint::DirPath))
+    )]
     #[serde(default)]
     pub cache_dir: Option<PathBuf>,
 
     /// Whether to exit with failure when some links fail to resolve.
     ///
     /// Warnings are always emitted for unresolved links regardless of this option.
-    #[arg(long, value_enum, value_name("MODE"), default_value_t = Default::default())]
     #[serde(default)]
+    #[cfg_attr(feature = "common-cli", arg(long, value_enum, value_name("MODE"), default_value_t = Default::default()))]
     pub fail_on_unresolved: ErrorHandling,
 
     /// Whether to enable punctuations like smart quotes `“”`.
@@ -78,36 +89,36 @@ pub struct Config {
     ///
     /// **In `book.toml`** — this option is not needed because
     /// `output.html.smart-punctuation` is honored.
-    #[arg(long)]
     #[serde(default)]
+    #[cfg_attr(feature = "common-cli", arg(long))]
     pub smart_punctuation: bool,
 
-    #[arg(long, hide = true)]
     #[serde(default)]
+    #[cfg_attr(feature = "common-cli", arg(long, hide = true))]
     pub prefer_local_links: bool,
 
     #[allow(unused)]
     #[serde(default)]
-    #[arg(skip)]
     #[doc(hidden)]
+    #[cfg_attr(feature = "common-cli", arg(skip))]
     pub after: Option<Vec<String>>,
 
     #[allow(unused)]
     #[serde(default)]
-    #[arg(skip)]
     #[doc(hidden)]
+    #[cfg_attr(feature = "common-cli", arg(skip))]
     pub before: Option<Vec<String>>,
 
     #[allow(unused)]
     #[serde(default)]
-    #[arg(skip)]
     #[doc(hidden)]
+    #[cfg_attr(feature = "common-cli", arg(skip))]
     pub renderers: Option<Vec<String>>,
 
     #[allow(unused)]
     #[serde(default)]
-    #[arg(skip)]
     #[doc(hidden)]
+    #[cfg_attr(feature = "common-cli", arg(skip))]
     pub command: Option<String>,
 }
 
@@ -269,45 +280,6 @@ impl AsRef<Path> for TempDir {
         match self {
             Self::Persistent(p) => p.as_ref(),
             Self::Transient(p) => p.deref().as_ref(),
-        }
-    }
-}
-
-#[derive(clap::ValueEnum, Deserialize, Debug, Default, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
-pub enum ErrorHandling {
-    /// Fail if the environment variable `CI` is set to a value other than `0`.
-    /// Environments like GitHub Actions configure this automatically.
-    #[default]
-    #[serde(rename = "ci")]
-    #[clap(name = "ci")]
-    Env,
-
-    /// Fail as long as there are unresolved items, even in local use.
-    Always,
-}
-
-impl ErrorHandling {
-    pub fn check(&self, level: log::Level) -> Result<()> {
-        match level {
-            log::Level::Error => Err(anyhow!("preprocessor has errors")),
-            log::Level::Warn => match self {
-                Self::Always => {
-                    anyhow!("treating warnings as errors because fail-on-unresolved is \"always\"")
-                        .context("preprocessor has errors")
-                        .pipe(Err)
-                }
-                Self::Env => {
-                    let ci = std::env::var("CI").unwrap_or("".into());
-                    if matches!(ci.as_str(), "" | "0" | "false") {
-                        return Ok(());
-                    }
-                    anyhow!("treating warnings as errors because fail-on-unresolved is \"ci\" and CI={ci}")
-                        .context("preprocessor has errors")
-                        .pipe(Err)
-                }
-            },
-            _ => Ok(()),
         }
     }
 }

@@ -41,6 +41,11 @@ command = "cargo run --package mdbookkit --bin mdbook-rustdoc-link --features=ru
 manifest-dir = "."
 rust-analyzer = "cargo run --package util-rust-analyzer --release -- analyzer"
 
+[preprocessor.link-forever]
+after = ["rustdoc-link"]
+always-link = [".rs"]
+command = "cargo run --package mdbookkit --bin mdbook-link-forever --features=link-forever --release"
+
 [preprocessor.alerts]
 after = ["rustdoc-link"]
 

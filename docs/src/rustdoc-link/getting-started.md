@@ -67,8 +67,8 @@ To read more about this project, feel free to return to
 > such as next to `Cargo.toml`, then running `mdbook` from there will "just work".
 >
 > If your book doesn't belong to a Cargo project, refer to
-> [Workspace layout](rustdoc-link/workspace-layout.md) for more information on how you
-> can setup up the preprocessor.
+> [Workspace layout](workspace-layout.md) for more information on how you can setup up
+> the preprocessor.
 
 > [!TIP]
 >

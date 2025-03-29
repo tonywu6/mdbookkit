@@ -11,23 +11,22 @@ use anyhow::{bail, Context, Result};
 use mdbook::utils::unique_id_from_content;
 use percent_encoding::percent_decode_str;
 use pulldown_cmark::{CowStr, Event, LinkType, Options, Parser, Tag, TagEnd};
-use tap::{Pipe, Tap};
+use tap::{Pipe, Tap, TapFallible};
 use url::Url;
 
-use crate::markdown::{PatchStream, Spanned};
+use crate::{
+    log_debug,
+    markdown::{PatchStream, Spanned},
+};
 
 #[cfg(feature = "common-logger")]
 mod diagnostic;
-pub mod git;
+pub mod env;
 
-pub trait PermalinkScheme {
+use self::env::Environment;
+
+pub trait PermalinkFormat {
     fn link_to(&self, relpath: &str) -> Result<Url, url::ParseError>;
-}
-
-pub struct Environment {
-    pub book_src: Url,
-    pub vcs_root: Url,
-    pub get_link: Box<dyn PermalinkScheme>,
 }
 
 impl Environment {
@@ -41,7 +40,11 @@ impl Environment {
             .iter_mut()
             .flat_map(|(base, page)| page.rel_links.iter_mut().map(move |link| (base, link)))
         {
-            let Ok(mut url) = base.join(&link.link) else {
+            let Ok(mut url) = base
+                .join(&link.link)
+                .context("couldn't derive url")
+                .tap_err(log_debug!())
+            else {
                 link.status = LinkStatus::Ignored;
                 continue;
             };
@@ -56,16 +59,32 @@ impl Environment {
                 continue;
             };
 
-            if !matches!(path.try_exists(), Ok(true)) {
+            if !matches!(
+                path.try_exists()
+                    .context("could not access path")
+                    .tap_err(log_debug!()),
+                Ok(true)
+            ) {
                 link.status = LinkStatus::NoSuchPath;
                 continue;
             }
 
-            let Some(rel) = self.book_src.make_relative(&url) else {
+            let Ok(rel) = self
+                .book_src
+                .make_relative(&url)
+                .context("url is from a different origin")
+                .tap_err(log_debug!())
+            else {
                 continue;
             };
 
-            if !rel.starts_with("../") {
+            if !rel.starts_with("../")
+                && !self
+                    .config
+                    .always_link
+                    .iter()
+                    .any(|suffix| url.path().ends_with(suffix))
+            {
                 link.status = LinkStatus::Published;
 
                 let Some(fragment) = url
@@ -93,7 +112,12 @@ impl Environment {
                 continue;
             }
 
-            let Some(rel) = self.vcs_root.make_relative(&url) else {
+            let Ok(rel) = self
+                .vcs_root
+                .make_relative(&url)
+                .context("url is from a different origin")
+                .tap_err(log_debug!())
+            else {
                 continue;
             };
 
@@ -102,7 +126,7 @@ impl Environment {
                 continue;
             }
 
-            match self.get_link.link_to(&rel) {
+            match self.fmt_link.link_to(&rel) {
                 Ok(href) => {
                     link.status = LinkStatus::Permalink;
                     link.link = href.as_str().to_owned().into();

@@ -23,10 +23,12 @@ clap = { workspace = true, optional = true }
 console = { version = "0.15.11", optional = true }
 dirs = { version = "6.0.0", optional = true }
 env_logger = { workspace = true, optional = true }
+git2 = { version = "0.20.1", optional = true }
+gix-url = { version = "0.29.0", optional = true }
 indicatif = { version = "0.17.11", optional = true }
 log = { workspace = true }
 lsp-types = { version = "0.95.0", optional = true }
-mdbook = { workspace = true }
+mdbook = { workspace = true, optional = true }
 miette = { workspace = true, optional = true }
 owo-colors = { version = "4.2.0", optional = true }
 percent-encoding = { version = "2.3.1", optional = true }
@@ -54,18 +56,9 @@ similar = { workspace = true }
 util-testing = { workspace = true }
 
 [features]
-rustdoc-link = [
-  "dep:toml",
-  "common-logger",
-  "lib-rustdoc-link",
-  "tokio/fs",
-  "tokio/rt-multi-thread",
-]
-
 lib-rustdoc-link = [
   "dep:async-lsp",
   "dep:cargo_toml",
-  "dep:clap",
   "dep:dirs",
   "dep:lsp-types",
   "dep:proc-macro2",
@@ -81,10 +74,23 @@ lib-rustdoc-link = [
   "tokio/rt",
   "tokio/time",
 ]
+rustdoc-link = [
+  "lib-rustdoc-link",
+  "dep:toml",
+  "tokio/fs",
+  "tokio/rt-multi-thread",
+  "common-cli",
+  "common-logger",
+]
 
-link-forever = ["common-logger", "lib-link-forever"]
-
-lib-link-forever = ["dep:percent-encoding", "dep:url"]
+lib-link-forever = ["dep:mdbook", "dep:percent-encoding", "dep:url"]
+link-forever = [
+  "lib-link-forever",
+  "dep:git2",
+  "dep:gix-url",
+  "common-cli",
+  "common-logger",
+]
 
 common-logger = [
   "dep:chrono",
@@ -94,6 +100,8 @@ common-logger = [
   "dep:miette",
   "dep:owo-colors",
 ]
+
+common-cli = ["dep:clap", "dep:mdbook", "dep:toml"]
 
 default = []
 
@@ -106,6 +114,11 @@ required-features = ["rustdoc-link"]
 name = "rustdoc-link"
 path = "tests/rustdoc_link.rs"
 required-features = ["rustdoc-link"]
+
+[[bin]]
+name = "mdbook-link-forever"
+path = "src/bin/link_forever/main.rs"
+required-features = ["link-forever"]
 
 [[test]]
 name = "link-forever"

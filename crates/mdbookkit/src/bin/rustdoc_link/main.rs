@@ -3,12 +3,10 @@ use std::{
     io::{Read, Write},
 };
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::{Parser, Subcommand};
 use console::colors_enabled_stderr;
 use log::LevelFilter;
-use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
-use serde::Deserialize;
 use tap::{Pipe, TapFallible};
 
 use mdbookkit::{
@@ -18,6 +16,9 @@ use mdbookkit::{
         Client, Pages, Resolver,
     },
     diagnostics::Issue,
+    env::{
+        book_from_stdin, config_from_book, for_each_chapter_mut, iter_chapters, smart_punctuation,
+    },
     log_warning,
     logging::{is_logging, ConsoleLogger},
 };
@@ -53,18 +54,10 @@ enum Command {
 }
 
 async fn mdbook() -> Result<()> {
-    let (context, mut book): (PreprocessorContext, Book) = Vec::new()
-        .pipe(|mut buf| std::io::stdin().read_to_end(&mut buf).and(Ok(buf)))?
-        .pipe(String::from_utf8)?
-        .pipe_as_ref(serde_json::from_str)?;
+    let (context, mut book) = book_from_stdin()?;
 
     let config = {
-        let mut config = if let Some(config) = context.config.get_preprocessor("rustdoc-link") {
-            Config::deserialize(toml::Value::Table(config.clone()))
-                .context("failed to read preprocessor config from book.toml")?
-        } else {
-            Default::default()
-        };
+        let mut config = config_from_book::<Config>(&context.config, "rustdoc-link")?;
 
         if let Some(path) = config.manifest_dir {
             config.manifest_dir = Some(context.root.join(path))
@@ -76,11 +69,7 @@ async fn mdbook() -> Result<()> {
             config.cache_dir = Some(context.root.join(path))
         }
 
-        config.smart_punctuation = context
-            .config
-            .get_deserialized_opt::<bool, _>("output.html.smart-punctuation")
-            .unwrap_or_default()
-            .unwrap_or(true);
+        config.smart_punctuation = smart_punctuation(&context.config);
 
         config
     };
@@ -91,15 +80,9 @@ async fn mdbook() -> Result<()> {
 
     let mut content = Pages::default();
 
-    for item in book.iter() {
-        let BookItem::Chapter(ch) = item else {
-            continue;
-        };
-        let Some(key) = &ch.source_path else {
-            continue;
-        };
+    for (path, ch) in iter_chapters(&book) {
         let stream = client.env().markdown(&ch.content).into_offset_iter();
-        content.read(key.clone(), &ch.content, stream)?;
+        content.read(path.clone(), &ch.content, stream)?;
     }
 
     if let Some(cached) = cached {
@@ -108,20 +91,13 @@ async fn mdbook() -> Result<()> {
 
     client.resolve(&mut content).await?;
 
-    let mut result = book
-        .iter()
-        .filter_map(|item| {
-            let BookItem::Chapter(ch) = item else {
-                return None;
-            };
-            let Some(key) = &ch.source_path else {
-                return None;
-            };
+    let mut result = iter_chapters(&book)
+        .filter_map(|(path, _)| {
             content
-                .emit(key, &client.env().emit_config())
+                .emit(path, &client.env().emit_config())
                 .tap_err(log_warning!())
                 .ok()
-                .map(|output| (key.clone(), output.to_string()))
+                .map(|output| (path.clone(), output.to_string()))
         })
         .collect::<HashMap<_, _>>();
 
@@ -141,16 +117,13 @@ async fn mdbook() -> Result<()> {
         FileCache::save(&env, &content).await.ok();
     }
 
-    book.for_each_mut(|item| {
-        let BookItem::Chapter(ch) = item else { return };
-        let Some(key) = &ch.source_path else { return };
-        if let Some(output) = result.remove(key) {
+    for_each_chapter_mut(&mut book, |path, ch| {
+        if let Some(output) = result.remove(&path) {
             ch.content = output
         }
     });
 
     let output = serde_json::to_string(&book)?;
-
     std::io::stdout().write_all(output.as_bytes())?;
 
     env.config.fail_on_unresolved.check(status.level())?;
@@ -192,7 +165,6 @@ async fn markdown(options: Config) -> Result<()> {
     }
 
     let output = content.get(&env.emit_config())?.to_string();
-
     std::io::stdout().write_all(output.as_bytes())?;
 
     env.config.fail_on_unresolved.check(status.level())?;

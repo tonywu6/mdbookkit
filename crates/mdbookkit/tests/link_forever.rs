@@ -3,21 +3,22 @@ use log::LevelFilter;
 use tap::Pipe;
 
 use mdbookkit::{
-    bin::link_forever::{git::GitHubPermalink, Environment, Pages},
+    bin::link_forever::{
+        env::{Environment, GitHubPermalink},
+        Pages,
+    },
     markdown::mdbook_markdown,
 };
 use util_testing::{portable_snapshots, test_document, CARGO_WORKSPACE_DIR};
 
 #[test]
 fn test_links() -> Result<()> {
-    let book_src = CARGO_WORKSPACE_DIR.join("crates/mdbookkit/tests/")?;
-    let vcs_root = CARGO_WORKSPACE_DIR.join("crates/mdbookkit/")?;
-    let get_link = GitHubPermalink::new("lorem", "ipsum", "dolor")?.pipe(Box::new);
-
     let env = Environment {
-        book_src,
-        vcs_root,
-        get_link,
+        book_src: CARGO_WORKSPACE_DIR.join("crates/mdbookkit/tests/")?,
+        vcs_root: CARGO_WORKSPACE_DIR.join("crates/mdbookkit/")?,
+        fmt_link: GitHubPermalink::new("lorem/ipsum", "dolor")?.pipe(Box::new),
+        markdown: mdbook_markdown(),
+        config: Default::default(),
     };
 
     let mut pages = Pages::new(mdbook_markdown());

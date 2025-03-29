@@ -61,6 +61,6 @@ expression: report
  28 │ 
  29 │ [](../tests/ra-known-quirks.md#associated_items_on_primitive_types)
     · ─────────────────────────────────┬─────────────────────────────────
-    ·                                  ╰── fragment not found in file tests/tests/ra-known-quirks.md
+    ·                                  ╰── #associated_items_on_primitive_types not found in file tests/tests/ra-known-quirks.md
  30 │ 
     ╰────
