@@ -14,7 +14,9 @@ use super::{Config, CustomPermalink, Environment, GitHubPermalink, PermalinkForm
 
 impl Environment {
     pub fn from_book(book: &PreprocessorContext) -> Result<Self> {
-        let repo = Repository::open_from_env().context("failed to find a git repository")?;
+        let repo = Repository::open_from_env()
+            .context("preprocessor requires a git repository to work")
+            .context("failed to find a git repository")?;
 
         let vcs_root = repo
             .workdir()

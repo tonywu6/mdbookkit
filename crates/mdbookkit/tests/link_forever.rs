@@ -3,10 +3,7 @@ use log::LevelFilter;
 use tap::Pipe;
 
 use mdbookkit::{
-    bin::link_forever::{
-        env::{Environment, GitHubPermalink},
-        Pages,
-    },
+    bin::link_forever::{Environment, GitHubPermalink, Pages},
     markdown::mdbook_markdown,
 };
 use util_testing::{portable_snapshots, test_document, CARGO_WORKSPACE_DIR};
@@ -15,7 +12,7 @@ use util_testing::{portable_snapshots, test_document, CARGO_WORKSPACE_DIR};
 fn test_links() -> Result<()> {
     let env = Environment {
         book_src: CARGO_WORKSPACE_DIR.join("crates/mdbookkit/tests/")?,
-        vcs_root: CARGO_WORKSPACE_DIR.join("crates/mdbookkit/")?,
+        vcs_root: CARGO_WORKSPACE_DIR.clone(),
         fmt_link: GitHubPermalink::new("lorem/ipsum", "dolor")?.pipe(Box::new),
         markdown: mdbook_markdown(),
         config: Default::default(),

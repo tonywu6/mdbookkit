@@ -1,32 +1,40 @@
-# Linking to repo files
+# Repo files
 
-[](../../Cargo.toml)
+[Cargo.toml](../../Cargo.toml)
 
-[](../../src/lib.rs)
+[src/lib.rs](../../src/lib.rs)
 
-# Linking to book files
+![error reporting](../../../../docs/src/rustdoc-link/media/error-reporting.png)
 
-[](./ra-known-quirks.md)
+# Book files
 
-[](../link_forever.rs)
+[Known quirks](./ra-known-quirks.md)
 
-# Linking to page fragments
+[link_forever.rs](../link_forever.rs)
 
-[](./link-forever.md#linking-to-page-fragments)
+![selfie](Macaca_nigra_self-portrait_large.jpg)
 
-[](./link-forever.md#heading-sqrt3x-11x2)
+<https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg>
 
-[](./link-forever.md#heading-httpsräksmörgåsjosefssonorg)
+# Fragments
 
-[](./ra-known-quirks.md#macro_export)
+[Fragments](./link-forever.md#fragments)
+
+[Heading 1](./link-forever.md#heading-sqrt3x-11x2)
+
+[Heading 2](./link-forever.md#heading-httpsräksmörgåsjosefssonorg)
+
+[macro_export](./ra-known-quirks.md#macro_export)
 
 # File not found
 
-[](../../Cargo.lock)
+[Cargo.lock](../../Cargo.lock)
+
+![shinjuku.jpg](shinjuku.jpg)
 
 # Fragment not found
 
-[](../tests/ra-known-quirks.md#associated_items_on_primitive_types)
+[associated items](../tests/ra-known-quirks.md#associated_items_on_primitive_types)
 
 ## Heading: $\sqrt{3x-1}+(1+x)^2$
 

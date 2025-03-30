@@ -5,7 +5,7 @@ use clap::{Parser, Subcommand};
 use console::colors_enabled_stderr;
 use log::LevelFilter;
 use mdbookkit::{
-    bin::link_forever::{env::Environment, Pages},
+    bin::link_forever::{Environment, Pages},
     diagnostics::Issue,
     env::{book_from_stdin, for_each_chapter_mut, iter_chapters},
     log_warning,

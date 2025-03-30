@@ -11,19 +11,28 @@ use anyhow::{bail, Context, Result};
 use mdbook::utils::unique_id_from_content;
 use percent_encoding::percent_decode_str;
 use pulldown_cmark::{CowStr, Event, LinkType, Options, Parser, Tag, TagEnd};
+use serde::Deserialize;
 use tap::{Pipe, Tap, TapFallible};
 use url::Url;
 
 use crate::{
+    env::ErrorHandling,
     log_debug,
     markdown::{PatchStream, Spanned},
 };
 
 #[cfg(feature = "common-logger")]
 mod diagnostic;
-pub mod env;
+#[cfg(feature = "link-forever")]
+mod git;
 
-use self::env::Environment;
+pub struct Environment {
+    pub book_src: Url,
+    pub vcs_root: Url,
+    pub fmt_link: Box<dyn PermalinkFormat>,
+    pub markdown: pulldown_cmark::Options,
+    pub config: Config,
+}
 
 pub trait PermalinkFormat {
     fn link_to(&self, relpath: &str) -> Result<Url, url::ParseError>;
@@ -78,13 +87,13 @@ impl Environment {
                 continue;
             };
 
-            if !rel.starts_with("../")
-                && !self
-                    .config
-                    .always_link
-                    .iter()
-                    .any(|suffix| url.path().ends_with(suffix))
-            {
+            let always_link = self
+                .config
+                .always_link
+                .iter()
+                .any(|suffix| url.path().ends_with(suffix));
+
+            if !rel.starts_with("../") && !always_link {
                 link.status = LinkStatus::Published;
 
                 let Some(fragment) = url
@@ -168,8 +177,9 @@ struct Page<'a> {
 struct RelativeLink<'a> {
     span: Range<usize>,
     link: CowStr<'a>,
-    text: Vec<Event<'a>>,
+    usage: LinkUsage,
     title: CowStr<'a>,
+    inner: Vec<Event<'a>>,
     status: LinkStatus,
 }
 
@@ -190,6 +200,12 @@ pub enum LinkStatus {
     NoSuchFragment,
     /// Link to a file under source control but URL parsing failed
     ParseError(url::ParseError),
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum LinkUsage {
+    Link,
+    Image,
 }
 
 impl<'a> Pages<'a> {
@@ -270,27 +286,43 @@ impl<'a> Page<'a> {
                     this.slugify(text.iter(), &mut counter);
                 }
 
-                Event::Start(Tag::Link {
-                    dest_url, title, ..
-                }) => {
+                Event::Start(tag @ (Tag::Link { .. } | Tag::Image { .. })) => {
+                    let (usage, dest_url, title) = match tag {
+                        Tag::Link {
+                            dest_url, title, ..
+                        } => (LinkUsage::Link, dest_url, title),
+                        Tag::Image {
+                            dest_url, title, ..
+                        } => (LinkUsage::Image, dest_url, title),
+                        _ => unreachable!(),
+                    };
                     if link.is_some() {
-                        bail!("unexpected `Tag::Link` in `Tag::Link` at {span:?}")
+                        bail!("unexpected {usage:?} in {usage:?} at {span:?}")
                     }
                     link = Some(RelativeLink {
                         span,
                         link: dest_url,
-                        text: vec![],
+                        usage,
                         title,
+                        inner: vec![],
                         status: LinkStatus::External,
                     });
                 }
 
-                Event::End(TagEnd::Link) => {
+                Event::End(end @ (TagEnd::Link | TagEnd::Image)) => {
+                    let usage = match end {
+                        TagEnd::Link => LinkUsage::Link,
+                        TagEnd::Image => LinkUsage::Image,
+                        _ => unreachable!(),
+                    };
                     let Some(link) = link.take() else {
-                        bail!("unexpected `TagEnd::Link` at {span:?}")
+                        bail!("unexpected {usage:?} at {span:?}")
                     };
                     if link.span != span {
                         bail!("mismatching span, expected {:?}, got {span:?}", link.span);
+                    }
+                    if link.usage != usage {
+                        bail!("unexpected {usage:?}, expected {:?}", link.usage)
                     }
                     this.rel_links.push(link);
                 }
@@ -298,13 +330,13 @@ impl<'a> Page<'a> {
                 event => match (heading.as_mut(), link.as_mut()) {
                     (Some(heading), Some(link)) => {
                         heading.text.push(event.clone());
-                        link.text.push(event);
+                        link.inner.push(event);
                     }
                     (Some(heading), None) => {
                         heading.text.push(event);
                     }
                     (None, Some(link)) => {
-                        link.text.push(event);
+                        link.inner.push(event);
                     }
                     (None, None) => {}
                 },
@@ -321,16 +353,28 @@ impl<'a> Page<'a> {
                 if !matches!(link.status, LinkStatus::Permalink) {
                     return None;
                 }
-                Tag::Link {
-                    link_type: LinkType::Inline,
-                    dest_url: link.link.clone(),
-                    title: link.title.clone(),
-                    id: CowStr::Borrowed(""),
-                }
-                .pipe(|tag| std::iter::once(Event::Start(tag)))
-                .chain(link.text.iter().cloned())
-                .chain(std::iter::once(Event::End(TagEnd::Link)))
-                .pipe(|events| Some((events, link.span.clone())))
+                let start = match link.usage {
+                    LinkUsage::Link => Tag::Link {
+                        link_type: LinkType::Inline,
+                        dest_url: link.link.clone(),
+                        title: link.title.clone(),
+                        id: CowStr::Borrowed(""),
+                    },
+                    LinkUsage::Image => Tag::Image {
+                        link_type: LinkType::Inline,
+                        dest_url: link.link.clone(),
+                        title: link.title.clone(),
+                        id: CowStr::Borrowed(""),
+                    },
+                };
+                let end = match link.usage {
+                    LinkUsage::Link => TagEnd::Link,
+                    LinkUsage::Image => TagEnd::Image,
+                };
+                std::iter::once(Event::Start(start))
+                    .chain(link.inner.iter().cloned())
+                    .chain(std::iter::once(Event::End(end)))
+                    .pipe(|events| Some((events, link.span.clone())))
             })
             .pipe(|stream| PatchStream::new(self.source, stream))
             .into_string()?
@@ -361,6 +405,79 @@ impl<'a> Page<'a> {
     fn insert_id(&mut self, id: &str, counter: &mut HashMap<String, usize>) {
         counter.insert(id.into(), 1);
         self.fragments.insert(id.into());
+    }
+}
+
+impl Debug for LinkUsage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Link => f.write_str("link"),
+            Self::Image => f.write_str("image"),
+        }
+    }
+}
+
+#[derive(Deserialize, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+pub struct Config {
+    #[serde(default)]
+    pub url_pattern: Option<String>,
+
+    #[serde(default)]
+    pub always_link: Vec<String>,
+
+    #[serde(default)]
+    pub fail_on_unresolved: ErrorHandling,
+
+    #[allow(unused)]
+    #[serde(default)]
+    #[doc(hidden)]
+    pub after: Option<Vec<String>>,
+
+    #[allow(unused)]
+    #[serde(default)]
+    #[doc(hidden)]
+    pub before: Option<Vec<String>>,
+
+    #[allow(unused)]
+    #[serde(default)]
+    #[doc(hidden)]
+    pub renderers: Option<Vec<String>>,
+
+    #[allow(unused)]
+    #[serde(default)]
+    #[doc(hidden)]
+    pub command: Option<String>,
+}
+
+pub struct GitHubPermalink {
+    prefix: Url,
+}
+
+impl PermalinkFormat for GitHubPermalink {
+    fn link_to(&self, relpath: &str) -> Result<Url, url::ParseError> {
+        self.prefix.join(relpath)
+    }
+}
+
+impl GitHubPermalink {
+    pub fn new(path: &str, reference: &str) -> Result<Self, url::ParseError> {
+        let prefix = format!("https://github.com/{path}/tree/{reference}/").parse()?;
+        Ok(Self { prefix })
+    }
+}
+
+pub struct CustomPermalink {
+    pub pattern: String,
+    pub reference: String,
+}
+
+impl PermalinkFormat for CustomPermalink {
+    fn link_to(&self, relpath: &str) -> Result<Url, url::ParseError> {
+        self.pattern
+            .replace("{ref}", &self.reference)
+            .replace("{path}", relpath)
+            .parse()
     }
 }
 
