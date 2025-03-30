@@ -122,18 +122,18 @@ impl Server {
         fn on_progress(state: &mut State, progress: ProgressParams) {
             match indexing_progress(&progress) {
                 Some(WorkDoneProgress::Begin(begin)) => {
-                    state.percent_indexed = Some(0);
+                    state.percent_indexed = dbg!(Some(0));
 
                     let msg = begin.message.as_deref().unwrap_or_default();
-                    spinner().update(ra_spinner!(), msg);
+                    spinner().update(ra_spinner!(), dbg!(msg));
 
                     let tx = state.tx.clone();
                     tokio::spawn(async move { tx.send(Poll::Pending).await.ok() });
                 }
 
                 Some(WorkDoneProgress::Report(report)) => {
-                    if let Some(msg) = &report.message {
-                        spinner().update(ra_spinner!(), msg);
+                    if let Some(msg) = dbg!(&report.message) {
+                        spinner().update(ra_spinner!(), dbg!(msg));
 
                         // HACK: invalidate progress reports that say "0/1 (crate name)"
                         // because RA isn't actually indexing everything at this point
@@ -148,7 +148,7 @@ impl Server {
                         return;
                     };
 
-                    if let Some(pc) = report.percentage {
+                    if let Some(pc) = dbg!(report.percentage) {
                         if pc >= *indexed {
                             *indexed = pc;
                         }
@@ -156,7 +156,7 @@ impl Server {
                 }
 
                 Some(WorkDoneProgress::End(end)) => {
-                    let Some(indexed) = state.percent_indexed else {
+                    let Some(indexed) = dbg!(state.percent_indexed) else {
                         // progress was invalidated
                         return;
                     };
@@ -166,7 +166,7 @@ impl Server {
                     }
 
                     let msg = end.message.as_deref().unwrap_or("indexing done");
-                    spinner().update(ra_spinner!(), msg);
+                    spinner().update(ra_spinner!(), dbg!(msg));
 
                     let tx = state.tx.clone();
                     tokio::spawn(async move { tx.send(Poll::Ready(())).await.ok() });

@@ -1,4 +1,4 @@
-name: cargo build and test
+name: CI
 
 on:
   push:
@@ -29,6 +29,7 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
 
       - run: echo "CARGO_VERSION=$(cargo --version)" >> "$GITHUB_OUTPUT"
+        name: get cargo version
         id: cargo-version
 
       - uses: actions/cache/restore@v4
@@ -42,7 +43,7 @@ jobs:
             ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-
 
       - run: cargo run   --package util-rust-analyzer -- download
-      - run: cargo test  --release --all-features
+      - run: cargo test  --release --all-features -- --nocapture
         env:
           RUST_LOG: info
 
@@ -62,8 +63,8 @@ jobs:
           key: |
             ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}
 
-  rustdoc_ra_versions:
-    name: rustdoc-link RA tests
+  rustdoc_link_ra_test:
+    name: rustdoc-link RA test
 
     needs:
       - build_and_test
@@ -84,6 +85,7 @@ jobs:
           toolchain: stable
 
       - run: echo "CARGO_VERSION=$(cargo --version)" >> "$GITHUB_OUTPUT"
+        name: get cargo version
         id: cargo-version
 
       - uses: actions/cache/restore@v4
