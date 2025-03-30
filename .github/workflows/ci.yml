@@ -37,8 +37,9 @@ jobs:
           path: |
             target/
           key: |
-            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}
+            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.job}}
           restore-keys: |
+            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-
             ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-
             ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-
 
@@ -61,7 +62,7 @@ jobs:
           path: |
             target/
           key: |
-            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}
+            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.job}}
 
   rustdoc_link_ra_test:
     name: rustdoc-link RA test
@@ -93,8 +94,9 @@ jobs:
           path: |
             target/
           key: |
-            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}
+            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.job}}
           restore-keys: |
+            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-
             ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-
             ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-
 
