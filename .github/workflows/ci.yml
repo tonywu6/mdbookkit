@@ -28,20 +28,39 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
 
-      - uses: Swatinem/rust-cache@v2
+      - run: echo "CARGO_VERSION=$(cargo --version)" >> "$GITHUB_OUTPUT"
+        id: cargo-version
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            target/
+          key: |
+            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}
+          restore-keys: |
+            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-
+            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-
 
       - run: cargo run   --package util-rust-analyzer -- download
       - run: cargo test  --release --all-features
         env:
           RUST_LOG: info
 
-      - run: cargo build --release --features lib-rustdoc-link
-      - run: cargo build --release --features lib-rustdoc-link,common-logger
       - run: cargo build --release --features rustdoc-link
+      - run: cargo build --release --features lib-rustdoc-link,common-logger
+      - run: cargo build --release --features lib-rustdoc-link
 
-      - run: cargo build --release --features lib-link-forever
-      - run: cargo build --release --features lib-link-forever,common-logger
       - run: cargo build --release --features link-forever
+      - run: cargo build --release --features lib-link-forever,common-logger
+      - run: cargo build --release --features lib-link-forever
+
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            target/
+          key: |
+            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}
 
   rustdoc_ra_versions:
     name: rustdoc-link RA tests
@@ -64,7 +83,18 @@ jobs:
         with:
           toolchain: stable
 
-      - uses: Swatinem/rust-cache@v2
+      - run: echo "CARGO_VERSION=$(cargo --version)" >> "$GITHUB_OUTPUT"
+        id: cargo-version
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            target/
+          key: |
+            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}
+          restore-keys: |
+            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-
+            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-
 
       - run: cargo run   --package util-rust-analyzer -- download
         env:
