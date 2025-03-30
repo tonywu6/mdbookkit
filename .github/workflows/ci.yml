@@ -12,6 +12,8 @@ env:
 
 jobs:
   build_and_test:
+    name: build and test
+
     runs-on: ubuntu-latest
 
     strategy:
@@ -22,9 +24,22 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.toolchain }}
 
-      - run: cargo build --all-features
-      - run: cargo test --all-features
+      - run: cargo run   --package util-rust-analyzer --profile=dev -- download
+      - run: cargo test  --release --all-features
+
+      - run: cargo build --release --features lib-rustdoc-link
+      - run: cargo build --release --features lib-rustdoc-link,common-logger
+      - run: cargo build --release --features rustdoc-link
+
+      - run: cargo build --release --features lib-link-forever
+      - run: cargo build --release --features lib-link-forever,common-logger
+      - run: cargo build --release --features link-forever
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: target/release/mdbook-rustdoc-link

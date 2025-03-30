@@ -107,7 +107,7 @@ async fn test_snapshots() -> Result<()> {
 fn setup() -> Result<Arc<Client>> {
     ConsoleLogger::install("rustdoc-link");
     Config {
-        rust_analyzer: Some("cargo run --release --package util-rust-analyzer -- analyzer".into()),
+        rust_analyzer: Some("cargo run --package util-rust-analyzer -- analyzer".into()),
         cargo_features: vec!["rustdoc-link".into()],
         ..Default::default()
     }
