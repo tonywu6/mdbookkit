@@ -124,3 +124,6 @@ required-features = ["link-forever"]
 name = "link-forever"
 path = "tests/link_forever.rs"
 required-features = ["link-forever"]
+
+[package.metadata.docs.rs]
+all-features = true

@@ -32,11 +32,11 @@ URL fragments are preserved:
 
 > ```md
 > This book uses [esbuild] to
-> [preprocess its style sheet](../../app/build/build.ts#L5-L11).
+> [preprocess its style sheet](../../app/build/build.ts#L7-L16).
 > ```
 >
 > This book uses [esbuild] to
-> [preprocess its style sheet](../../app/build/build.ts#L5-L11).
+> [preprocess its style sheet](../../app/build/build.ts#L7-L16).
 
 By default, links to files under your book's `src/` directory are not converted, since
 mdBook already [copies them to build output][mdbook-src-build], but this is configurable

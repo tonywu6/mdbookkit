@@ -1,10 +1,20 @@
 {
   "version": "4",
   "specifiers": {
+    "jsr:@std/encoding@*": "1.0.8",
+    "jsr:@std/path@*": "1.0.8",
     "npm:esbuild@*": "0.25.1",
     "npm:esbuild@~0.25.1": "0.25.1",
     "npm:prettier@*": "3.5.3",
     "npm:prettier@^3.5.3": "3.5.3"
+  },
+  "jsr": {
+    "@std/encoding@1.0.8": {
+      "integrity": "a6c8f3f933ab1bed66244f435d1dc0fd23a888e07195532122ddc3d5f8f0e6b4"
+    },
+    "@std/path@1.0.8": {
+      "integrity": "548fa456bb6a04d3c1a1e7477986b6cffbce95102d0bb447c67c4ee70e0364be"
+    }
   },
   "npm": {
     "@esbuild/aix-ppc64@0.25.1": {

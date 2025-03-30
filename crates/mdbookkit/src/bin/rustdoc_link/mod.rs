@@ -28,7 +28,9 @@ use self::{item::Item, link::ItemLinks};
 /// This is currently an abstraction over two sources of links:
 ///
 /// - [`Client`], which invokes rust-analyzer
-/// - [`Cache`][crate::cache::Cache] implementations
+/// - [`Cache`] implementations
+///
+/// [`Cache`]: crate::bin::rustdoc_link::cache::Cache
 #[allow(async_fn_in_trait)]
 pub trait Resolver {
     async fn resolve<K>(&self, pages: &mut Pages<'_, K>) -> Result<()>
