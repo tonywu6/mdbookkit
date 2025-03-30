@@ -14,7 +14,10 @@ cargo-run-bin = { workspace = true }
 clap = { workspace = true }
 flate2 = "1.1.0"
 indicatif = "0.17.11"
-mdbook = { workspace = true }
+mdbook = { workspace = true, optional = true }
 reqwest = { version = "0.12.14", features = ["blocking"] }
 serde_json = { workspace = true }
 tap = { workspace = true }
+
+[features]
+ra-version = ["dep:mdbook"]

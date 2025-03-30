@@ -1,6 +1,5 @@
 use std::{
-    fs,
-    io::{self, Read, Write},
+    fs, io,
     os::unix::fs::PermissionsExt,
     path::PathBuf,
     process::{Command, Stdio},
@@ -12,7 +11,6 @@ use cargo_run_bin::metadata::get_project_root;
 use clap::Parser;
 use flate2::write::GzDecoder;
 use indicatif::{ProgressBar, ProgressStyle};
-use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
 use tap::{Pipe, Tap};
 
 #[derive(clap::Parser, Debug)]
@@ -55,7 +53,16 @@ fn main() -> Result<()> {
         Program::Analyzer { args } => analyzer(&config, args),
         Program::Version { version } => match version {
             Some(Version::Supports { .. }) => Ok(()),
-            None => preprocessor(&config),
+            None => {
+                #[cfg(feature = "ra-version")]
+                {
+                    ra_version::preprocessor(&config)
+                }
+                #[cfg(not(feature = "ra-version"))]
+                {
+                    panic!("feature `ra-version` not enabled")
+                }
+            }
         },
     }
 }
@@ -149,24 +156,35 @@ impl<W> Progress<W> {
     }
 }
 
-fn preprocessor(Config { release, .. }: &Config) -> Result<()> {
-    let (_, mut book): (PreprocessorContext, Book) = Vec::new()
-        .pipe(|mut buf| std::io::stdin().read_to_end(&mut buf).and(Ok(buf)))?
-        .pipe(String::from_utf8)?
-        .pipe_as_ref(serde_json::from_str)?;
+#[cfg(feature = "ra-version")]
+mod ra_version {
+    use std::io::{Read, Write};
 
-    let version = format!("`{release}`");
+    use anyhow::Result;
+    use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
+    use tap::Pipe;
 
-    let tag = "<ra-version>(version)</ra-version>";
+    use crate::Config;
 
-    book.for_each_mut(|page| {
-        let BookItem::Chapter(page) = page else {
-            return;
-        };
-        page.content = page.content.replace(tag, &version);
-    });
+    pub fn preprocessor(Config { release, .. }: &Config) -> Result<()> {
+        let (_, mut book): (PreprocessorContext, Book) = Vec::new()
+            .pipe(|mut buf| std::io::stdin().read_to_end(&mut buf).and(Ok(buf)))?
+            .pipe(String::from_utf8)?
+            .pipe_as_ref(serde_json::from_str)?;
 
-    let output = serde_json::to_string(&book)?;
-    std::io::stdout().write_all(output.as_bytes())?;
-    Ok(())
+        let version = format!("`{release}`");
+
+        let tag = "<ra-version>(version)</ra-version>";
+
+        book.for_each_mut(|page| {
+            let BookItem::Chapter(page) = page else {
+                return;
+            };
+            page.content = page.content.replace(tag, &version);
+        });
+
+        let output = serde_json::to_string(&book)?;
+        std::io::stdout().write_all(output.as_bytes())?;
+        Ok(())
+    }
 }

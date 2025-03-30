@@ -25,17 +25,13 @@ site-url = "/"
 [output.html.playground]
 runnable = false
 
-[preprocessor.rust-analyzer-version]
-after = ["rustdoc-link"]
-command = "cargo run --package util-rust-analyzer --release -- version"
-
 [preprocessor.rustdoc-link-options]
 before = ["rustdoc-link"]
-command = "cargo run --package util-clap-reflect --profile=dev -- --reflect rustdoc-link-options"
+command = "cargo run --package util-clap-reflect -- --reflect rustdoc-link-options"
 
 [preprocessor.link-forever-options]
 before = ["rustdoc-link"]
-command = "cargo run --package util-clap-reflect --profile=dev -- --reflect link-forever-options"
+command = "cargo run --package util-clap-reflect -- --reflect link-forever-options"
 
 [preprocessor.rustdoc-link]
 after = ["links"]
@@ -43,12 +39,16 @@ cache-dir = "build"
 cargo-features = ["clap/unstable-doc"]
 command = "cargo run --package mdbookkit --bin mdbook-rustdoc-link --features=rustdoc-link --release"
 manifest-dir = "."
-rust-analyzer = "cargo run --package util-rust-analyzer --release -- analyzer"
+rust-analyzer = "cargo run --package util-rust-analyzer -- analyzer"
 
 [preprocessor.link-forever]
 after = ["rustdoc-link"]
 always-link = [".rs"]
 command = "cargo run --package mdbookkit --bin mdbook-link-forever --features=link-forever --release"
+
+[preprocessor.rust-analyzer-version]
+after = ["rustdoc-link"]
+command = "cargo run --package util-rust-analyzer --features=ra-version -- version"
 
 [preprocessor.alerts]
 after = ["rustdoc-link"]

@@ -15,7 +15,6 @@ jobs:
     name: build and test
 
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         toolchain:
@@ -29,8 +28,12 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
 
-      - run: cargo run   --package util-rust-analyzer --profile=dev -- download
+      - uses: Swatinem/rust-cache@v2
+
+      - run: cargo run   --package util-rust-analyzer -- download
       - run: cargo test  --release --all-features
+        env:
+          RUST_LOG: info
 
       - run: cargo build --release --features lib-rustdoc-link
       - run: cargo build --release --features lib-rustdoc-link,common-logger
@@ -40,6 +43,33 @@ jobs:
       - run: cargo build --release --features lib-link-forever,common-logger
       - run: cargo build --release --features link-forever
 
-      - uses: actions/upload-artifact@v4
+  rustdoc_ra_versions:
+    name: rustdoc-link RA tests
+
+    needs:
+      - build_and_test
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ra-version:
+          - "2025-03-04"
+          - "2025-03-17"
+          - "nightly"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
         with:
-          path: target/release/mdbook-rustdoc-link
+          toolchain: stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - run: cargo run   --package util-rust-analyzer -- download
+        env:
+          RA_VERSION: ${{ matrix.ra-version }}
+
+      - run: cargo test  --release --features rustdoc-link
+        env:
+          RUST_LOG: info
