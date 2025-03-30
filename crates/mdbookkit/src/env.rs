@@ -13,7 +13,7 @@ pub enum ErrorHandling {
     #[cfg_attr(feature = "common-cli", clap(name = "ci"))]
     Env,
 
-    /// Fail as long as there are unresolved items, even in local use.
+    /// Fail as long as there are warnings, even in local use.
     Always,
 }
 

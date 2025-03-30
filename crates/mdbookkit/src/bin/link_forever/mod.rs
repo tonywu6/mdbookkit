@@ -49,11 +49,13 @@ impl Environment {
             .iter_mut()
             .flat_map(|(base, page)| page.rel_links.iter_mut().map(move |link| (base, link)))
         {
-            let Ok(mut url) = base
-                .join(&link.link)
-                .context("couldn't derive url")
-                .tap_err(log_debug!())
-            else {
+            let Ok(mut url) = if link.link.starts_with('/') {
+                self.vcs_root.join(&link.link[1..])
+            } else {
+                base.join(&link.link)
+            }
+            .context("couldn't derive url")
+            .tap_err(log_debug!()) else {
                 link.status = LinkStatus::Ignored;
                 continue;
             };
@@ -419,15 +421,62 @@ impl Debug for LinkUsage {
 
 #[derive(Deserialize, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[cfg_attr(feature = "common-cli", derive(clap::Parser))]
 pub struct Config {
+    /// Use a custom URL pattern for constructing permalinks to platforms other than
+    /// GitHub.
+    ///
+    /// Should be a string that contains the following placeholders that will be
+    /// filled in at build time:
+    ///
+    /// - `{ref}` — the Git reference (tag or commit ID) resolved at build time
+    /// - `{path}` — path to the linked file relative to repo root, without a leading `/`
+    ///
+    /// For example, the following configures generated links to use GitLab's format:
+    ///
+    /// ```toml
+    /// url-pattern = "https://gitlab.haskell.org/ghc/ghc/-/tree/{ref}/{path}"
+    /// ```
+    ///
+    /// Note that information such as repo owner or name will not be filled in. If URLs to
+    /// your Git hosting service require such items, you should hard-code them in the pattern.
     #[serde(default)]
+    #[cfg_attr(
+        feature = "common-cli",
+        arg(long, value_name("PATTERN"), verbatim_doc_comment)
+    )]
     pub url_pattern: Option<String>,
 
+    /// Convert some paths to permalinks even if they are under the `src/` directory.
+    ///
+    /// By default, links to files in your book's `src/` directory will not be transformed,
+    /// since they are already copied to build output as static files. If you want such files
+    /// to always be rendered as permalinks, specify their file extensions here.
+    ///
+    /// For example, to use permalinks for Rust source files even if they are in the book's
+    /// `src/` directory:
+    ///
+    /// ```toml
+    /// always-link = [".rs"]
+    /// ```
     #[serde(default)]
+    #[cfg_attr(
+        feature = "common-cli",
+        arg(
+            long,
+            value_delimiter(','),
+            value_name("EXTENSIONS"),
+            verbatim_doc_comment
+        )
+    )]
     pub always_link: Vec<String>,
 
+    /// Exit with a non-zero status code when there are warnings.
+    ///
+    /// Warnings are always printed to the console regardless of this option.
     #[serde(default)]
-    pub fail_on_unresolved: ErrorHandling,
+    #[cfg_attr(feature = "common-cli", arg(long, value_enum, value_name("MODE"), default_value_t = Default::default()))]
+    pub fail_on_warnings: ErrorHandling,
 
     #[allow(unused)]
     #[serde(default)]

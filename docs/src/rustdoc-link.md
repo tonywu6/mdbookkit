@@ -64,6 +64,11 @@ For **additional usage information** —
 
 Happy linking!
 
+## License
+
+This project is released under the [Apache 2.0 License](/LICENSE-APACHE.md) and the
+[MIT License](/LICENSE-MIT.md).
+
 ---
 
 [^1]: Text adapted from [<cite>A Tour of The Rust Standard Library</cite>][tour]

@@ -126,7 +126,7 @@ async fn mdbook() -> Result<()> {
     let output = serde_json::to_string(&book)?;
     std::io::stdout().write_all(output.as_bytes())?;
 
-    env.config.fail_on_unresolved.check(status.level())?;
+    env.config.fail_on_warnings.check(status.level())?;
 
     Ok(())
 }
@@ -167,7 +167,7 @@ async fn markdown(options: Config) -> Result<()> {
     let output = content.get(&env.emit_config())?.to_string();
     std::io::stdout().write_all(output.as_bytes())?;
 
-    env.config.fail_on_unresolved.check(status.level())?;
+    env.config.fail_on_warnings.check(status.level())?;
 
     Ok(())
 }

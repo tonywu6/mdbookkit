@@ -3,7 +3,7 @@ authors = ["Tony Wu <tonywu6@protonmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 publish = false
-repository = "https://github.com/tonywu6/mdbook.rust"
+repository = "https://github.com/tonywu6/mdbookkit"
 rust-version = "1.81.0"
 
 [profile.dev.package]

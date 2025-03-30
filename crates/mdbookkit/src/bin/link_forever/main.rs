@@ -64,7 +64,7 @@ fn main() -> Result<()> {
     let output = serde_json::to_string(&book)?;
     std::io::stdout().write_all(output.as_bytes())?;
 
-    env.config.fail_on_unresolved.check(status.level())?;
+    env.config.fail_on_warnings.check(status.level())?;
 
     Ok(())
 }

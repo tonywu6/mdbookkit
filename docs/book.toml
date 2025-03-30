@@ -33,6 +33,10 @@ command = "cargo run --package util-rust-analyzer --release -- version"
 before = ["rustdoc-link"]
 command = "cargo run --package util-clap-reflect --profile=dev -- --reflect rustdoc-link-options"
 
+[preprocessor.link-forever-options]
+before = ["rustdoc-link"]
+command = "cargo run --package util-clap-reflect --profile=dev -- --reflect link-forever-options"
+
 [preprocessor.rustdoc-link]
 after = ["links"]
 cache-dir = "build"

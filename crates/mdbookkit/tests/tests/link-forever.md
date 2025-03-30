@@ -1,4 +1,4 @@
-# Repo files
+# relative paths
 
 [Cargo.toml](../../Cargo.toml)
 
@@ -6,7 +6,11 @@
 
 ![error reporting](../../../../docs/src/rustdoc-link/media/error-reporting.png)
 
-# Book files
+# absolute paths
+
+[LICENSE-APACHE.md](/LICENSE-APACHE.md)
+
+# book files
 
 [Known quirks](./ra-known-quirks.md)
 
@@ -16,7 +20,7 @@
 
 <https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg>
 
-# Fragments
+# fragments
 
 [Fragments](./link-forever.md#fragments)
 
@@ -26,16 +30,18 @@
 
 [macro_export](./ra-known-quirks.md#macro_export)
 
-# File not found
+# file not found
 
 [Cargo.lock](../../Cargo.lock)
 
+[`//LICENSE-MIT.md`](//LICENSE-MIT.md)
+
 ![shinjuku.jpg](shinjuku.jpg)
 
-# Fragment not found
+# fragment not found
 
 [associated items](../tests/ra-known-quirks.md#associated_items_on_primitive_types)
 
-## Heading: $\sqrt{3x-1}+(1+x)^2$
+## heading: $\sqrt{3x-1}+(1+x)^2$
 
-## Heading: <https://räksmörgås.josefsson.org/>
+## heading: <https://räksmörgås.josefsson.org/>

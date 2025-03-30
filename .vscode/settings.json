@@ -11,6 +11,7 @@
   "javascript.validate.enable": false,
   "markdown.extension.toc.levels": "2..6",
   "markdown.extension.toc.updateOnSave": true,
+  "markdown.validate.enabled": false,
   "rust-analyzer.cargo.features": "all",
   "rust-analyzer.check.command": "clippy",
   "typescript.tsserver.experimental.enableProjectDiagnostics": false,

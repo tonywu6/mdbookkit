@@ -26,6 +26,7 @@ enum Command {
 #[clap(rename_all = "kebab-case")]
 enum OptionType {
     RustdocLinkOptions,
+    LinkForeverOptions,
 }
 
 impl OptionType {
@@ -39,6 +40,7 @@ impl OptionType {
             Self::RustdocLinkOptions => {
                 describe_options::<mdbookkit::bin::rustdoc_link::env::Config>()
             }
+            Self::LinkForeverOptions => describe_options::<mdbookkit::bin::link_forever::Config>(),
         }
     }
 }
@@ -101,7 +103,7 @@ fn describe_options<C: CommandFactory>() -> Result<String> {
 {% for option in options %}
 
 <tr>
-<td style="text-align: left;">
+<td style="text-align: left; white-space: nowrap;">
 
 [`{{ option.key }}`](#{{ option.key }})
 

@@ -76,10 +76,10 @@ impl Problem for LinkDiagnostic<'_> {
             LinkStatus::Published => None,
             LinkStatus::Permalink => self.format_link().into_owned().pipe(Some),
             LinkStatus::External => {
-                format!("file {} is outside source control", self.format_link()).pipe(Some)
+                format!("file is outside source control: {}", self.format_link()).pipe(Some)
             }
             LinkStatus::NoSuchPath => {
-                format!("file {} does not exist", self.format_link()).pipe(Some)
+                format!("file does not exist at path: {}", self.format_link()).pipe(Some)
             }
             LinkStatus::NoSuchFragment => {
                 let (_, fragment) = self
@@ -87,7 +87,7 @@ impl Problem for LinkDiagnostic<'_> {
                     .link
                     .split_once('#')
                     .expect("should have a fragment");
-                format!("#{fragment} not found in file {}", self.format_link()).pipe(Some)
+                format!("#{fragment} not found in {}", self.format_link()).pipe(Some)
             }
             LinkStatus::ParseError(err) => {
                 format!("error converting to permalink:\n{err}").pipe(Some)
@@ -134,13 +134,13 @@ impl Issue for LinkStatus {
 impl Display for LinkStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let message = match self {
-            LinkStatus::Ignored => "urls ignored",
-            LinkStatus::Published => "paths under src/",
-            LinkStatus::Permalink => "links converted to permalinks",
-            LinkStatus::External => "paths outside source control",
-            LinkStatus::NoSuchPath => "paths not found",
-            LinkStatus::NoSuchFragment => "no such fragments",
-            LinkStatus::ParseError(..) => "failed to convert links to permalinks",
+            LinkStatus::Ignored => "url ignored",
+            LinkStatus::Published => "file under src/",
+            LinkStatus::Permalink => "path converted to permalink",
+            LinkStatus::External => "file outside source control",
+            LinkStatus::NoSuchPath => "file not found",
+            LinkStatus::NoSuchFragment => "no such fragment",
+            LinkStatus::ParseError(..) => "failed link conversion",
         };
         f.write_str(message)
     }

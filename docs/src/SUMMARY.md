@@ -10,3 +10,9 @@
   - [Standalone usage](rustdoc-link/standalone-usage.md)
   - [Configuration](rustdoc-link/configuration.md)
   - [Known issues](rustdoc-link/known-issues.md)
+
+---
+
+- [link-forever](link-forever.md)
+  - [Feature sheet](link-forever/features.md)
+  - [Configuration](link-forever/configuration.md)

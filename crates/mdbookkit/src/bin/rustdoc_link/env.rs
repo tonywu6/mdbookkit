@@ -46,8 +46,11 @@ pub struct Config {
     /// **For CLI** — to enable multiple features, specify as
     /// comma-separated values, or specify multiple times; to enable all features,
     /// specify `--cargo-features all`.
-    #[cfg_attr(feature = "common-cli", arg(long, value_name("FEATURES")))]
     #[serde(default)]
+    #[cfg_attr(
+        feature = "common-cli",
+        arg(long, value_delimiter(','), value_name("FEATURES"))
+    )]
     pub cargo_features: Vec<String>,
 
     /// Directory from which to search for a Cargo project.
@@ -57,29 +60,29 @@ pub struct Config {
     ///
     /// The processor requires the Cargo.toml of a package to work. If you are working
     /// on a Cargo workspace, set this to the relative path to a member crate.
+    #[serde(default)]
     #[cfg_attr(
         feature = "common-cli",
         arg(long, value_name("PATH"), value_hint(ValueHint::DirPath))
     )]
-    #[serde(default)]
     pub manifest_dir: Option<PathBuf>,
 
     /// Directory in which to persist build cache.
     ///
     /// Setting this will enable caching. Will skip rust-analyzer if cache hits.
+    #[serde(default)]
     #[cfg_attr(
         feature = "common-cli",
         arg(long, value_name("PATH"), value_hint(ValueHint::DirPath))
     )]
-    #[serde(default)]
     pub cache_dir: Option<PathBuf>,
 
-    /// Whether to exit with failure when some links fail to resolve.
+    /// Exit with a non-zero status code when some links fail to resolve.
     ///
-    /// Warnings are always emitted for unresolved links regardless of this option.
+    /// Warnings are always printed to the console regardless of this option.
     #[serde(default)]
     #[cfg_attr(feature = "common-cli", arg(long, value_enum, value_name("MODE"), default_value_t = Default::default()))]
-    pub fail_on_unresolved: ErrorHandling,
+    pub fail_on_warnings: ErrorHandling,
 
     /// Whether to enable punctuations like smart quotes `“”`.
     ///

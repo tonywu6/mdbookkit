@@ -121,7 +121,7 @@ fn spawn_spinner(name: &str) -> Spinner {
 
     let (tx, rx) = mpsc::channel();
 
-    let term = Term::buffered_stderr();
+    let term = Term::stderr();
 
     let target = term.clone();
     let template = format!("{{spinner:.cyan}} [{name}] {{prefix}} ... {{msg}}",);
