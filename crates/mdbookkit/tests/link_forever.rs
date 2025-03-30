@@ -13,7 +13,7 @@ fn test_links() -> Result<()> {
     let env = Environment {
         book_src: CARGO_WORKSPACE_DIR.join("crates/mdbookkit/tests/")?,
         vcs_root: CARGO_WORKSPACE_DIR.clone(),
-        fmt_link: GitHubPermalink::new("lorem/ipsum", "dolor")?.pipe(Box::new),
+        fmt_link: GitHubPermalink::new("lorem", "ipsum", "dolor")?.pipe(Box::new),
         markdown: mdbook_markdown(),
         config: Default::default(),
     };

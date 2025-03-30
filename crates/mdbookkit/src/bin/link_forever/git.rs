@@ -6,7 +6,7 @@ use url::Url;
 
 use crate::{
     env::{config_from_book, smart_punctuation},
-    log_debug,
+    log_debug, log_warning,
     markdown::mdbook_markdown,
 };
 
@@ -41,13 +41,10 @@ impl Environment {
         let Some(reference) =
             get_head(&repo).context("failed to get a tag or commit id to HEAD")?
         else {
-            let fmt_link = Box::new(LocalFallbackLink {
-                root: vcs_root.clone(),
-            });
             return Ok(Self {
                 book_src,
                 vcs_root,
-                fmt_link,
+                fmt_link: Box::new(GitNotConfigured::NoCommit),
                 markdown,
                 config,
             });
@@ -60,13 +57,18 @@ impl Environment {
                     reference,
                 }
                 .pipe(Box::new)
+            } else if let Ok(github) = find_github_repo(&repo, &book.config)
+                .and_then(|(owner, repo)| Ok(GitHubPermalink::new(&owner, &repo, &reference)?))
+                .context("failed to determine GitHub url for permalinks")
+                .tap_err(log_warning!(detailed))
+                .tap_err(|_| {
+                    log::warn!("help: set `output.html.git-repository-url` to a GitHub url");
+                    log::warn!("or set `preprocessor.link-forever.url-format` to a custom format")
+                })
+            {
+                Box::new(github)
             } else {
-                find_github_repo(&repo, &book.config)
-                    .context("help: use option `url-pattern` to provide a custom url format")
-                    .context("help: set `output.html.git-repository-url` to a GitHub url")
-                    .and_then(|repo| Ok(GitHubPermalink::new(&repo, &reference)?))
-                    .context("failed to determine GitHub url")?
-                    .pipe(Box::new)
+                Box::new(GitNotConfigured::NoRemote)
             }
         };
 
@@ -107,7 +109,7 @@ fn get_head(repo: &Repository) -> Result<Option<String>> {
     }
 }
 
-fn find_github_repo(repo: &Repository, config: &mdbook::Config) -> Result<String> {
+fn find_github_repo(repo: &Repository, config: &mdbook::Config) -> Result<(String, String)> {
     let url = if let Some(url) = config
         .get_deserialized_opt::<String, _>("output.html.git-repository-url")
         .context("failed to get `output.html.git-repository-url`")?
@@ -130,29 +132,34 @@ fn find_github_repo(repo: &Repository, config: &mdbook::Config) -> Result<String
         bail!("unsupported remote {host:?}")
     }
 
-    let path = url
-        .path
-        .to_string()
-        .split('/')
-        .skip_while(|c| c.is_empty())
-        .take(2)
-        .collect::<Vec<_>>()
-        .join("/");
+    let path = url.path.to_string();
 
-    match path.strip_suffix(".git") {
-        Some(path) => path.to_owned(),
-        None => path,
-    }
-    .pipe(Ok)
+    let mut iter = path.split('/').skip_while(|c| c.is_empty()).take(2);
+
+    let owner = iter
+        .next()
+        .with_context(|| format!("malformed path {path:?}, expected `/<owner>/<repo>`"))?;
+
+    let repo = iter
+        .next()
+        .with_context(|| format!("malformed path {path:?}, expected `/<owner>/<repo>`"))?;
+
+    let repo = repo.strip_suffix(".git").unwrap_or(repo);
+
+    Ok((owner.to_owned(), repo.to_owned()))
 }
 
-struct LocalFallbackLink {
-    root: Url,
+enum GitNotConfigured {
+    NoCommit,
+    NoRemote,
 }
 
-impl PermalinkFormat for LocalFallbackLink {
-    fn link_to(&self, relpath: &str) -> Result<Url, url::ParseError> {
-        self.root.join(relpath)
+impl PermalinkFormat for GitNotConfigured {
+    fn link_to(&self, _: &str) -> Result<Url> {
+        match self {
+            Self::NoCommit => bail!("no commit found in this repo"),
+            Self::NoRemote => bail!("remote git url not configured"),
+        }
     }
 }
 
@@ -171,8 +178,9 @@ mod tests {
         "#
         .parse::<mdbook::Config>()?;
         let repo = Repository::open_from_env()?;
-        let url = find_github_repo(&repo, &config)?;
-        assert_eq!(url, "lorem/ipsum");
+        let (owner, repo) = find_github_repo(&repo, &config)?;
+        assert_eq!(owner, "lorem");
+        assert_eq!(repo, "ipsum");
         Ok(())
     }
 
@@ -180,9 +188,8 @@ mod tests {
     fn test_github_url_from_repo() -> Result<()> {
         let config = "".parse::<mdbook::Config>()?;
         let repo = Repository::open_from_env()?;
-        let url = find_github_repo(&repo, &config)?;
-        let (_, name) = url.split_once('/').unwrap();
-        assert_eq!(name, env!("CARGO_PKG_NAME"));
+        let (_, repo) = find_github_repo(&repo, &config)?;
+        assert_eq!(repo, env!("CARGO_PKG_NAME"));
         Ok(())
     }
 
@@ -194,8 +201,9 @@ mod tests {
         "#
         .parse::<mdbook::Config>()?;
         let repo = Repository::open_from_env()?;
-        let url = find_github_repo(&repo, &config)?;
-        assert_eq!(url, "lorem/ipsum");
+        let (owner, repo) = find_github_repo(&repo, &config)?;
+        assert_eq!(owner, "lorem");
+        assert_eq!(repo, "ipsum");
         Ok(())
     }
 

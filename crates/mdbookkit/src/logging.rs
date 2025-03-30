@@ -201,6 +201,9 @@ macro_rules! log_warning {
             }
         }
     };
+    (detailed) => {
+        |err| log::warn!("{err:?}")
+    };
 }
 
 #[cfg(feature = "common-logger")]

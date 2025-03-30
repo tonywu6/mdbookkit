@@ -28,7 +28,7 @@ impl Environment {
             sorted
                 .entry(base)
                 .or_default()
-                .entry(link.status)
+                .entry(link.status.clone())
                 .or_default()
                 .push(diagnostic);
         }
@@ -67,11 +67,11 @@ impl Problem for LinkDiagnostic<'_> {
     type Kind = LinkStatus;
 
     fn issue(&self) -> Self::Kind {
-        self.link.status
+        self.link.status.clone()
     }
 
     fn label(&self) -> LabeledSpan {
-        let label = match self.link.status {
+        let label = match &self.link.status {
             LinkStatus::Ignored => None,
             LinkStatus::Published => None,
             LinkStatus::Permalink => self.format_link().into_owned().pipe(Some),
@@ -89,9 +89,7 @@ impl Problem for LinkDiagnostic<'_> {
                     .expect("should have a fragment");
                 format!("#{fragment} not found in {}", self.format_link()).pipe(Some)
             }
-            LinkStatus::ParseError(err) => {
-                format!("error converting to permalink:\n{err}").pipe(Some)
-            }
+            LinkStatus::Error(err) => format!("error converting to permalink:\n{err}").pipe(Some),
         };
         LabeledSpan::new_with_span(label, self.link.span.clone())
     }
@@ -126,7 +124,7 @@ impl Issue for LinkStatus {
             Self::External => log::Level::Warn,
             Self::NoSuchPath => log::Level::Warn,
             Self::NoSuchFragment => log::Level::Warn,
-            Self::ParseError(..) => log::Level::Warn,
+            Self::Error(..) => log::Level::Warn,
         }
     }
 }
@@ -140,7 +138,7 @@ impl Display for LinkStatus {
             LinkStatus::External => "file outside source control",
             LinkStatus::NoSuchPath => "file not found",
             LinkStatus::NoSuchFragment => "no such fragment",
-            LinkStatus::ParseError(..) => "failed link conversion",
+            LinkStatus::Error(..) => "failed link conversion",
         };
         f.write_str(message)
     }
@@ -175,7 +173,7 @@ impl LinkStatus {
             Self::External => 3,
             Self::NoSuchPath => 4,
             Self::NoSuchFragment => 5,
-            Self::ParseError(..) => 6,
+            Self::Error(..) => 6,
         }
     }
 }

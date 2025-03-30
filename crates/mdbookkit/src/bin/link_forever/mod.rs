@@ -35,7 +35,7 @@ pub struct Environment {
 }
 
 pub trait PermalinkFormat {
-    fn link_to(&self, relpath: &str) -> Result<Url, url::ParseError>;
+    fn link_to(&self, relpath: &str) -> Result<Url>;
 }
 
 impl Environment {
@@ -142,7 +142,7 @@ impl Environment {
                     link.status = LinkStatus::Permalink;
                     link.link = href.as_str().to_owned().into();
                 }
-                Err(err) => link.status = LinkStatus::ParseError(err),
+                Err(err) => link.status = LinkStatus::Error(format!("{err}")),
             }
         }
 
@@ -185,7 +185,7 @@ struct RelativeLink<'a> {
     status: LinkStatus,
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone)]
 pub enum LinkStatus {
     /// Not a file: URL
     #[default]
@@ -200,8 +200,8 @@ pub enum LinkStatus {
     NoSuchPath,
     /// Link to a fragment that does not exist in a page
     NoSuchFragment,
-    /// Link to a file under source control but URL parsing failed
-    ParseError(url::ParseError),
+    /// Link to a file under source control but link generation failed
+    Error(String),
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -504,14 +504,14 @@ pub struct GitHubPermalink {
 }
 
 impl PermalinkFormat for GitHubPermalink {
-    fn link_to(&self, relpath: &str) -> Result<Url, url::ParseError> {
-        self.prefix.join(relpath)
+    fn link_to(&self, relpath: &str) -> Result<Url> {
+        Ok(self.prefix.join(relpath)?)
     }
 }
 
 impl GitHubPermalink {
-    pub fn new(path: &str, reference: &str) -> Result<Self, url::ParseError> {
-        let prefix = format!("https://github.com/{path}/tree/{reference}/").parse()?;
+    pub fn new(owner: &str, repo: &str, reference: &str) -> Result<Self, url::ParseError> {
+        let prefix = format!("https://github.com/{owner}/{repo}/tree/{reference}/").parse()?;
         Ok(Self { prefix })
     }
 }
@@ -522,11 +522,12 @@ pub struct CustomPermalink {
 }
 
 impl PermalinkFormat for CustomPermalink {
-    fn link_to(&self, relpath: &str) -> Result<Url, url::ParseError> {
-        self.pattern
+    fn link_to(&self, relpath: &str) -> Result<Url> {
+        Ok(self
+            .pattern
             .replace("{ref}", &self.reference)
             .replace("{path}", relpath)
-            .parse()
+            .parse()?)
     }
 }
 
