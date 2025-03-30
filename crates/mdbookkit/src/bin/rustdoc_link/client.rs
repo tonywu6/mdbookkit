@@ -116,16 +116,13 @@ impl Server {
 
         struct State {
             tx: mpsc::Sender<Poll<()>>,
-            percent_indexed: u32,
+            percent_indexed: Option<u32>,
         }
 
-        fn on_progress(
-            state: &mut State,
-            progress: ProgressParams,
-        ) -> ControlFlow<async_lsp::Result<()>> {
+        fn on_progress(state: &mut State, progress: ProgressParams) {
             match indexing_progress(&progress) {
                 Some(WorkDoneProgress::Begin(begin)) => {
-                    state.percent_indexed = 0;
+                    state.percent_indexed = Some(0);
 
                     let msg = begin.message.as_deref().unwrap_or_default();
                     spinner().update(ra_spinner!(), msg);
@@ -134,45 +131,66 @@ impl Server {
                     tokio::spawn(async move { tx.send(Poll::Pending).await.ok() });
                 }
 
-                Some(WorkDoneProgress::End(end)) => {
-                    if state.percent_indexed >= 99 {
-                        let msg = end.message.as_deref().unwrap_or("indexing done");
+                Some(WorkDoneProgress::Report(report)) => {
+                    if let Some(msg) = &report.message {
                         spinner().update(ra_spinner!(), msg);
 
-                        let tx = state.tx.clone();
-                        tokio::spawn(async move { tx.send(Poll::Ready(())).await.ok() });
+                        // HACK: invalidate progress reports that say "0/1 (crate name)"
+                        // because RA isn't actually indexing everything at this point
+                        if msg.contains("0/1") {
+                            state.percent_indexed = None;
+                            return;
+                        }
+                    }
+
+                    let Some(indexed) = state.percent_indexed.as_mut() else {
+                        // progress was invalidated
+                        return;
+                    };
+
+                    if let Some(pc) = report.percentage {
+                        if pc >= *indexed {
+                            *indexed = pc;
+                        }
                     }
                 }
 
-                Some(WorkDoneProgress::Report(report)) => {
-                    if let Some(pc) = report.percentage {
-                        if pc >= state.percent_indexed {
-                            state.percent_indexed = pc;
-                        }
+                Some(WorkDoneProgress::End(end)) => {
+                    let Some(indexed) = state.percent_indexed else {
+                        // progress was invalidated
+                        return;
+                    };
+
+                    if indexed < 99 {
+                        return;
                     }
-                    if let Some(msg) = &report.message {
-                        spinner().update(ra_spinner!(), msg);
-                    }
+
+                    let msg = end.message.as_deref().unwrap_or("indexing done");
+                    spinner().update(ra_spinner!(), msg);
+
+                    let tx = state.tx.clone();
+                    tokio::spawn(async move { tx.send(Poll::Ready(())).await.ok() });
                 }
 
                 None => {
                     log::trace!("{progress:#?}")
                 }
             }
-
-            ControlFlow::Continue(())
         }
 
         let (background, mut server) = MainLoop::new_client(move |_| {
             let state = State {
                 tx,
-                percent_indexed: 0,
+                percent_indexed: Some(0),
             };
 
             let mut router = Router::new(state);
 
             router
-                .notification::<Progress>(on_progress)
+                .notification::<Progress>(|state, progress| {
+                    on_progress(state, progress);
+                    ControlFlow::Continue(())
+                })
                 .notification::<PublishDiagnostics>(|_, diagnostics| {
                     log::trace!("{diagnostics:#?}");
                     ControlFlow::Continue(())
