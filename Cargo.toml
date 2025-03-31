@@ -26,6 +26,7 @@ mdbook = { version = "0.4.47", default-features = false }
 miette = { version = "7.5.0", features = [
   "fancy-no-backtrace",
 ], default-features = false }
+minijinja = "2.9.0"
 pulldown-cmark = "0.13.0"
 pulldown-cmark-to-cmark = "21.0.0"
 serde = { version = "1", features = ["derive"] }

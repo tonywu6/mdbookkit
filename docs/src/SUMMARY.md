@@ -1,5 +1,9 @@
 # Summary
 
+[mdbookkit](index.md)
+
+---
+
 - [rustdoc-link](rustdoc-link.md)
   - [Getting started](rustdoc-link/getting-started.md)
   - [Motivation](rustdoc-link/motivation.md)

@@ -37,12 +37,7 @@ function remoteCSS(): esbuild.Plugin {
           namespace: "file",
         },
         ({ path, kind }) =>
-          kind === "import-rule"
-            ? {
-                path,
-                namespace: "remote-css",
-              }
-            : undefined,
+          kind === "import-rule" ? { path, namespace: "remote-css" } : undefined,
       );
 
       build.onResolve(
@@ -51,12 +46,7 @@ function remoteCSS(): esbuild.Plugin {
           namespace: "remote-css",
         },
         ({ path, kind }) =>
-          kind === "url-token"
-            ? {
-                path,
-                namespace: "remote-url",
-              }
-            : undefined,
+          kind === "url-token" ? { path, namespace: "remote-url" } : undefined,
       );
 
       build.onLoad(

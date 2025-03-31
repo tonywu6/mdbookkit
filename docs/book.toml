@@ -55,3 +55,19 @@ after = ["rustdoc-link"]
 
 [preprocessor.app]
 command = "deno run -A app/build/preprocessor.ts"
+
+[_metadata]
+base-url = "https://tonywu6.github.io/mdbookkit/"
+default-theme-color = "#0f1419"
+
+[_metadata.socials."/"]
+image = "src/media/social.png"
+title = "mdbookkit"
+
+[_metadata.socials."/rustdoc-link"]
+image = "src/rustdoc-link/media/social.png"
+title = "mdbook-rustdoc-link"
+
+[_metadata.socials."/link-forever"]
+image = "src/link-forever/media/social.png"
+title = "mdbook-link-forever"
