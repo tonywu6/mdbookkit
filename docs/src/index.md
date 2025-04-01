@@ -1,1 +1,1 @@
-# mdbookkit
+{{#include ../../crates/mdbookkit/README.md}}

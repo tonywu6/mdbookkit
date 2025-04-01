@@ -4,6 +4,7 @@ use std::{
     fmt::Debug,
     hash::Hash,
     ops::Range,
+    str::FromStr,
     sync::Arc,
 };
 
@@ -49,101 +50,29 @@ impl Environment {
             .iter_mut()
             .flat_map(|(base, page)| page.rel_links.iter_mut().map(move |link| (base, link)))
         {
-            let Ok(mut url) = if link.link.starts_with('/') {
+            let url = if link.link.starts_with('/') {
                 self.vcs_root.join(&link.link[1..])
             } else {
                 base.join(&link.link)
             }
             .context("couldn't derive url")
-            .tap_err(log_debug!()) else {
+            .tap_err(log_debug!());
+
+            let Ok(url) = url else {
                 link.status = LinkStatus::Ignored;
                 continue;
             };
 
-            if url.scheme() != "file" {
-                link.status = LinkStatus::Ignored;
-                continue;
-            };
+            let env = self;
+            let fragments = &fragments;
 
-            let Ok(path) = url.to_file_path() else {
-                link.status = LinkStatus::Ignored;
-                continue;
-            };
-
-            if !matches!(
-                path.try_exists()
-                    .context("could not access path")
-                    .tap_err(log_debug!()),
-                Ok(true)
-            ) {
-                link.status = LinkStatus::NoSuchPath;
-                continue;
+            Resolver {
+                link,
+                url,
+                env,
+                fragments,
             }
-
-            let Ok(rel) = self
-                .book_src
-                .make_relative(&url)
-                .context("url is from a different origin")
-                .tap_err(log_debug!())
-            else {
-                continue;
-            };
-
-            let always_link = self
-                .config
-                .always_link
-                .iter()
-                .any(|suffix| url.path().ends_with(suffix));
-
-            if !rel.starts_with("../") && !always_link {
-                link.status = LinkStatus::Published;
-
-                let Some(fragment) = url
-                    .fragment()
-                    .and_then(|f| percent_decode_str(f).decode_utf8().ok().or(Some(f.into())))
-                    .map(|f| f.into_owned())
-                else {
-                    continue;
-                };
-
-                url.set_fragment(None);
-
-                let found = fragments
-                    .0
-                    .get(&url)
-                    .map(|f| f.contains(&fragment))
-                    .unwrap_or(false);
-
-                url.set_fragment(Some(&fragment));
-
-                if !found {
-                    link.status = LinkStatus::NoSuchFragment;
-                }
-
-                continue;
-            }
-
-            let Ok(rel) = self
-                .vcs_root
-                .make_relative(&url)
-                .context("url is from a different origin")
-                .tap_err(log_debug!())
-            else {
-                continue;
-            };
-
-            if rel.starts_with("../") {
-                link.status = LinkStatus::External;
-                continue;
-            }
-
-            match self.fmt_link.link_to(&rel) {
-                Ok(href) => {
-                    link.status = LinkStatus::Permalink;
-                    link.link = href.as_str().to_owned().into();
-                }
-                Err(err) => link.status = LinkStatus::Error(format!("{err}")),
-            }
+            .resolve();
         }
 
         fragments.tap_mut(|f| f.restore(content));
@@ -156,12 +85,214 @@ impl Environment {
             "book_src should have a trailing slash, got {}",
             self.book_src
         );
-
         debug_assert!(
             self.vcs_root.as_str().ends_with('/'),
             "vcs_root should have a trailing slash, got {}",
             self.vcs_root
         );
+    }
+}
+
+#[must_use]
+struct Resolver<'a, 'r> {
+    url: Url,
+    link: &'a mut RelativeLink<'r>,
+    env: &'a Environment,
+    fragments: &'a Fragments,
+}
+
+impl Resolver<'_, '_> {
+    fn resolve(self) {
+        if self.url.scheme() == "file" {
+            self.resolve_file()
+        } else if let Some(book) = &self.env.config.book_url {
+            if let Some(page) = book.0.make_relative(&self.url) {
+                self.resolve_page(page);
+            } else {
+                self.link.status = LinkStatus::Ignored;
+            }
+        } else {
+            self.link.status = LinkStatus::Ignored
+        }
+    }
+
+    fn resolve_file(self) {
+        let Self {
+            link,
+            url,
+            env,
+            fragments,
+        } = self;
+
+        let Ok(path) = url.to_file_path() else {
+            link.status = LinkStatus::Ignored;
+            return;
+        };
+
+        let exists = path
+            .try_exists()
+            .context("could not access path")
+            .tap_err(log_debug!());
+
+        if !matches!(exists, Ok(true)) {
+            link.status = LinkStatus::NoSuchPath;
+            return;
+        }
+
+        let Ok(rel) = env
+            .book_src
+            .make_relative(&url)
+            .context("url is from a different origin")
+            .tap_err(log_debug!())
+        else {
+            return;
+        };
+
+        let always_link = env
+            .config
+            .always_link
+            .iter()
+            .any(|suffix| url.path().ends_with(suffix));
+
+        if !rel.starts_with("../") && !always_link {
+            link.status = LinkStatus::Published;
+            Self {
+                link,
+                url,
+                env,
+                fragments,
+            }
+            .resolve_fragment();
+            return;
+        }
+
+        let Ok(rel) = env
+            .vcs_root
+            .make_relative(&url)
+            .context("url is from a different origin")
+            .tap_err(log_debug!())
+        else {
+            return;
+        };
+
+        if rel.starts_with("../") {
+            link.status = LinkStatus::External;
+            return;
+        }
+
+        match env.fmt_link.link_to(&rel) {
+            Ok(href) => {
+                link.status = LinkStatus::Permalink;
+                link.link = href.as_str().to_owned().into();
+            }
+            Err(err) => link.status = LinkStatus::Error(format!("{err}")),
+        }
+    }
+
+    fn resolve_page(self, page: String) {
+        let Self {
+            url,
+            link,
+            env,
+            fragments,
+        } = self;
+
+        let path = {
+            let mut path = page;
+            if let Some(idx) = path.find('#') {
+                path.truncate(idx)
+            };
+            if let Some(idx) = path.find('?') {
+                path.truncate(idx)
+            };
+            path.strip_suffix(".html")
+                .map(ToOwned::to_owned)
+                .unwrap_or(path)
+        };
+
+        if path.starts_with("../") {
+            link.status = LinkStatus::Ignored;
+            return;
+        }
+
+        let mut not_found = vec![];
+
+        for file in [
+            format!("{path}.md"),
+            format!("{path}/index.md"),
+            format!("{path}/README.md"),
+        ] {
+            let Ok(file) = self.env.book_src.join(&file).tap_err(log_debug!()) else {
+                continue;
+            };
+
+            let Ok(path) = file.to_file_path() else {
+                continue;
+            };
+
+            let exists = path
+                .try_exists()
+                .context("could not access path")
+                .tap_err(log_debug!());
+
+            if matches!(exists, Ok(true)) {
+                let url = {
+                    let mut file = file;
+                    file.set_query(url.query());
+                    file.set_fragment(url.fragment());
+                    file
+                };
+
+                link.link = url.to_string().into();
+                link.status = LinkStatus::Published;
+
+                Self {
+                    link,
+                    url,
+                    env,
+                    fragments,
+                }
+                .resolve_fragment();
+
+                return;
+            }
+
+            not_found.push(file);
+        }
+
+        link.link = not_found[0].to_string().into();
+        link.status = LinkStatus::NoSuchPath;
+    }
+
+    fn resolve_fragment(self) {
+        let Self {
+            link,
+            mut url,
+            fragments,
+            ..
+        } = self;
+
+        let Some(fragment) = url
+            .fragment()
+            .and_then(|f| percent_decode_str(f).decode_utf8().ok().or(Some(f.into())))
+            .map(|f| f.into_owned())
+        else {
+            return;
+        };
+
+        url.set_fragment(None);
+
+        let found = fragments
+            .0
+            .get(&url)
+            .map(|f| f.contains(&fragment))
+            .unwrap_or(false);
+
+        url.set_fragment(Some(&fragment));
+
+        if !found {
+            link.status = LinkStatus::NoSuchFragment;
+        }
     }
 }
 
@@ -423,8 +554,7 @@ impl Debug for LinkUsage {
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[cfg_attr(feature = "common-cli", derive(clap::Parser))]
 pub struct Config {
-    /// Use a custom URL pattern for constructing permalinks to platforms other than
-    /// GitHub.
+    /// Use a custom link format for platforms other than GitHub.
     ///
     /// Should be a string that contains the following placeholders that will be
     /// filled in at build time:
@@ -435,7 +565,7 @@ pub struct Config {
     /// For example, the following configures generated links to use GitLab's format:
     ///
     /// ```toml
-    /// url-pattern = "https://gitlab.haskell.org/ghc/ghc/-/tree/{ref}/{path}"
+    /// repo-url-template = "https://gitlab.haskell.org/ghc/ghc/-/tree/{ref}/{path}"
     /// ```
     ///
     /// Note that information such as repo owner or name will not be filled in. If URLs to
@@ -443,11 +573,31 @@ pub struct Config {
     #[serde(default)]
     #[cfg_attr(
         feature = "common-cli",
-        arg(long, value_name("PATTERN"), verbatim_doc_comment)
+        arg(long, value_name("FORMAT"), verbatim_doc_comment)
     )]
-    pub url_pattern: Option<String>,
+    pub repo_url_template: Option<String>,
 
-    /// Convert some paths to permalinks even if they are under the `src/` directory.
+    /// Specify the canonical URL at which you deploy your book.
+    ///
+    /// Should be a qualified URL. For example:
+    ///
+    /// ```toml
+    /// book-url = "https://me.github.io/my-awesome-crate/"
+    /// ```
+    ///
+    /// Enables validation of hard-coded links to book pages. The preprocessor will
+    /// warn you about links that are no longer valid (file not found) at build time.
+    ///
+    /// This is mainly used with mdBook's `{{#include}}` feature, where sometimes you
+    /// have to specify full URLs because path-based links are not supported.
+    #[serde(default)]
+    #[cfg_attr(
+        feature = "common-cli",
+        arg(long, value_name("URL"), verbatim_doc_comment)
+    )]
+    pub book_url: Option<UrlPrefix>,
+
+    /// Convert some paths to permalinks even if they are under `src/`.
     ///
     /// By default, links to files in your book's `src/` directory will not be transformed,
     /// since they are already copied to build output as static files. If you want such files
@@ -500,24 +650,32 @@ pub struct Config {
 }
 
 pub struct GitHubPermalink {
-    prefix: Url,
+    owner: String,
+    repo: String,
+    reference: String,
 }
 
 impl PermalinkFormat for GitHubPermalink {
     fn link_to(&self, relpath: &str) -> Result<Url> {
-        Ok(self.prefix.join(relpath)?)
+        let owner = &self.owner;
+        let repo = &self.repo;
+        let reference = &self.reference;
+        Ok(format!("https://github.com/{owner}/{repo}/tree/{reference}/{relpath}").parse()?)
     }
 }
 
 impl GitHubPermalink {
-    pub fn new(owner: &str, repo: &str, reference: &str) -> Result<Self, url::ParseError> {
-        let prefix = format!("https://github.com/{owner}/{repo}/tree/{reference}/").parse()?;
-        Ok(Self { prefix })
+    pub fn new(owner: &str, repo: &str, reference: &str) -> Self {
+        Self {
+            owner: owner.into(),
+            repo: repo.into(),
+            reference: reference.into(),
+        }
     }
 }
 
 pub struct CustomPermalink {
-    pub pattern: String,
+    pub pattern: Url,
     pub reference: String,
 }
 
@@ -525,9 +683,41 @@ impl PermalinkFormat for CustomPermalink {
     fn link_to(&self, relpath: &str) -> Result<Url> {
         Ok(self
             .pattern
+            .as_str()
             .replace("{ref}", &self.reference)
             .replace("{path}", relpath)
             .parse()?)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct UrlPrefix(Url);
+
+impl From<Url> for UrlPrefix {
+    fn from(mut url: Url) -> Self {
+        if !url.path().ends_with('/') {
+            let path = format!("{}/", url.path());
+            url.set_path(&path);
+        }
+        Self(url)
+    }
+}
+
+impl FromStr for UrlPrefix {
+    type Err = url::ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self::from(s.parse::<Url>()?))
+    }
+}
+
+impl<'de> Deserialize<'de> for UrlPrefix {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let url = Url::deserialize(deserializer)?;
+        Ok(Self::from(url))
     }
 }
 

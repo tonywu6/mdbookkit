@@ -51,19 +51,21 @@ impl Environment {
         };
 
         let fmt_link: Box<dyn PermalinkFormat> = {
-            if let Some(pat) = &config.url_pattern {
+            if let Some(pat) = &config.repo_url_template {
                 CustomPermalink {
-                    pattern: pat.clone(),
+                    pattern: pat
+                        .parse()
+                        .context("failed to parse `repo-url-template` as a valid url")?,
                     reference,
                 }
                 .pipe(Box::new)
             } else if let Ok(github) = find_github_repo(&repo, &book.config)
-                .and_then(|(owner, repo)| Ok(GitHubPermalink::new(&owner, &repo, &reference)?))
+                .map(|(owner, repo)| GitHubPermalink::new(&owner, &repo, &reference))
                 .context("failed to determine GitHub url for permalinks")
                 .tap_err(log_warning!(detailed))
                 .tap_err(|_| {
                     log::warn!("help: set `output.html.git-repository-url` to a GitHub url");
-                    log::warn!("or set `preprocessor.link-forever.url-format` to a custom format")
+                    log::warn!("or use `preprocessor.link-forever.repo-url-template`")
                 })
             {
                 Box::new(github)

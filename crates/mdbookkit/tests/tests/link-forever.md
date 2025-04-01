@@ -45,3 +45,13 @@
 ## heading: $\sqrt{3x-1}+(1+x)^2$
 
 ## heading: <https://räksmörgås.josefsson.org/>
+
+# canonical urls
+
+found: <https://example.org/book/tests/ra-known-quirks>
+
+found: <https://example.org/book/tests/ra-known-quirks.html>
+
+missing: <https://example.org/book/404>
+
+ignored: <https://example.com/book/ra-known-quirks>

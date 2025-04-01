@@ -13,6 +13,17 @@ expression: report
  46 │ 
  47 │ ## heading: <https://räksmörgås.josefsson.org/>
     ·             ───────────────────────────────────
+ 48 │ 
+ 49 │ # canonical urls
+ 50 │ 
+ 51 │ found: <https://example.org/book/tests/ra-known-quirks>
+ 52 │ 
+ 53 │ found: <https://example.org/book/tests/ra-known-quirks.html>
+ 54 │ 
+ 55 │ missing: <https://example.org/book/404>
+ 56 │ 
+ 57 │ ignored: <https://example.com/book/ra-known-quirks>
+    ·          ──────────────────────────────────────────
     ╰────
 
   info: file under src/
@@ -43,6 +54,15 @@ expression: report
  31 │ [macro_export](./ra-known-quirks.md#macro_export)
     · ─────────────────────────────────────────────────
  32 │ 
+    ╰────
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:51:8]
+ 50 │ 
+ 51 │ found: <https://example.org/book/tests/ra-known-quirks>
+    ·        ────────────────────────────────────────────────
+ 52 │ 
+ 53 │ found: <https://example.org/book/tests/ra-known-quirks.html>
+    ·        ─────────────────────────────────────────────────────
+ 54 │ 
     ╰────
 
   info: path converted to permalink
@@ -83,6 +103,24 @@ expression: report
     · ──────────────┬──────────────
     ·               ╰── file does not exist at path: crates/mdbookkit/tests/tests/shinjuku.jpg
  40 │ 
+ 41 │ # fragment not found
+ 42 │ 
+ 43 │ [associated items](../tests/ra-known-quirks.md#associated_items_on_primitive_types)
+ 44 │ 
+ 45 │ ## heading: $\sqrt{3x-1}+(1+x)^2$
+ 46 │ 
+ 47 │ ## heading: <https://räksmörgås.josefsson.org/>
+ 48 │ 
+ 49 │ # canonical urls
+ 50 │ 
+ 51 │ found: <https://example.org/book/tests/ra-known-quirks>
+ 52 │ 
+ 53 │ found: <https://example.org/book/tests/ra-known-quirks.html>
+ 54 │ 
+ 55 │ missing: <https://example.org/book/404>
+    ·          ───────────────┬──────────────
+    ·                         ╰── file does not exist at path: crates/mdbookkit/tests/404.md
+ 56 │ 
     ╰────
 
   warning: no such fragment

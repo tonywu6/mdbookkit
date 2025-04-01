@@ -40,7 +40,8 @@ If you would like to read more about this crate:
 
 For **writing documentation** —
 
-- To know more about how the preprocessor is resolving items into links, see
+- To know more about how the preprocessor is resolving items into links, including
+  [feature-gated items](rustdoc-link/name-resolution.md#feature-gated-items), see
   [Name resolution](rustdoc-link/name-resolution.md).
 - To know how to link to other types of items like
   [functions, macros](rustdoc-link/supported-syntax.md#functions-and-macros), and

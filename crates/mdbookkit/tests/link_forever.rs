@@ -3,9 +3,10 @@ use log::LevelFilter;
 use tap::Pipe;
 
 use mdbookkit::{
-    bin::link_forever::{Environment, GitHubPermalink, Pages},
+    bin::link_forever::{Config, Environment, GitHubPermalink, Pages},
     markdown::mdbook_markdown,
 };
+use url::Url;
 use util_testing::{portable_snapshots, test_document, CARGO_WORKSPACE_DIR};
 
 #[test]
@@ -13,9 +14,12 @@ fn test_links() -> Result<()> {
     let env = Environment {
         book_src: CARGO_WORKSPACE_DIR.join("crates/mdbookkit/tests/")?,
         vcs_root: CARGO_WORKSPACE_DIR.clone(),
-        fmt_link: GitHubPermalink::new("lorem", "ipsum", "dolor")?.pipe(Box::new),
+        fmt_link: GitHubPermalink::new("lorem", "ipsum", "dolor").pipe(Box::new),
         markdown: mdbook_markdown(),
-        config: Default::default(),
+        config: Config {
+            book_url: Some("https://example.org/book".parse::<Url>()?.into()),
+            ..Default::default()
+        },
     };
 
     let mut pages = Pages::new(mdbook_markdown());
@@ -28,11 +32,9 @@ fn test_links() -> Result<()> {
 
     env.resolve(&mut pages);
 
-    let output = pages.emit(&main_page.file)?;
-
     let name = main_page.name.clone();
 
-    portable_snapshots!().test(|| insta::assert_snapshot!(format!("{name}"), output))?;
+    let output = pages.emit(&main_page.file)?;
 
     let report = env
         .report(&pages)
@@ -44,6 +46,8 @@ fn test_links() -> Result<()> {
         .to_report();
 
     portable_snapshots!().test(|| insta::assert_snapshot!(format!("{name}.stderr"), report))?;
+
+    portable_snapshots!().test(|| insta::assert_snapshot!(format!("{name}"), output))?;
 
     Ok(())
 }

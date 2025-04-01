@@ -1,3 +1,7 @@
+//! Download a copy of rust-analyzer to /.bin to use in testing.
+//!
+//! Version can be controlled with the `RA_VERSION` environment variable.
+
 use std::{
     fs, io,
     os::unix::fs::PermissionsExt,
@@ -156,6 +160,8 @@ impl<W> Progress<W> {
     }
 }
 
+/// Preprocessor to replace `<ra-version>(version)</ra-version>` with the currently
+/// used RA version. Used in docs.
 #[cfg(feature = "ra-version")]
 mod ra_version {
     use std::io::{Read, Write};

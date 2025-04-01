@@ -126,7 +126,8 @@ The "entrypoint" is usually `src/lib.rs` or `src/main.rs`.
 
 > [!NOTE]
 >
-> The following are implementation details.
+> The following are implementation details. See
+> [rustdoc_link/mod.rs](/crates/mdbookkit/src/bin/rustdoc_link/mod.rs).
 
 `mdbook-rustdoc-link` parses your book and collects every link that looks like a Rust
 item. Then it synthesizes a Rust function that spells out all the items, which looks

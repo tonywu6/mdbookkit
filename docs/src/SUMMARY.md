@@ -19,4 +19,6 @@
 
 - [link-forever](link-forever.md)
   - [Feature sheet](link-forever/features.md)
+  - [`{{#include}}` workarounds](link-forever/working-with-include.md)
   - [Configuration](link-forever/configuration.md)
+  - [Known issues](link-forever/known-issues.md)

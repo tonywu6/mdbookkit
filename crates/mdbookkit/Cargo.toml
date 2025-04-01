@@ -1,12 +1,15 @@
 [package]
 name = "mdbookkit"
+publish = true
 version = "0.1.0"
 
 authors.workspace = true
-edition.workspace = true
+description = "Toolkit for mdBook."
 license.workspace = true
-publish.workspace = true
+readme = "README.md"
 repository.workspace = true
+
+edition.workspace = true
 rust-version.workspace = true
 
 autobins = false
@@ -48,7 +51,7 @@ tokio = { workspace = true, optional = true }
 tokio-util = { version = "0.7.13", features = ["compat"], optional = true }
 toml = { workspace = true, optional = true }
 tower = { version = "0.5.2", optional = true }
-url = { workspace = true, optional = true }
+url = { workspace = true, features = ["serde"], optional = true }
 
 [dev-dependencies]
 insta = { workspace = true }
@@ -104,6 +107,11 @@ common-logger = [
 common-cli = ["dep:clap", "dep:mdbook", "dep:toml"]
 
 default = []
+
+# aliases
+
+mdbook-link-forever = ["link-forever"]
+mdbook-rustdoc-link = ["rustdoc-link"]
 
 [[bin]]
 name = "mdbook-rustdoc-link"

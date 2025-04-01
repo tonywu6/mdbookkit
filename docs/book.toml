@@ -8,7 +8,7 @@ title = "mdbookkit"
 [build]
 build-dir = "dist"
 create-missing = false
-extra-watch-dirs = ["app"]
+extra-watch-dirs = ["app", "../crates/mdbookkit"]
 
 [rust]
 edition = "2021"
@@ -27,31 +27,33 @@ runnable = false
 
 [preprocessor.rustdoc-link-options]
 before = ["rustdoc-link"]
-command = "cargo run --package util-clap-reflect -- --reflect rustdoc-link-options"
+command = "cargo run --quiet --package util-clap-reflect -- --reflect rustdoc-link-options"
 
 [preprocessor.link-forever-options]
 before = ["rustdoc-link"]
-command = "cargo run --package util-clap-reflect -- --reflect link-forever-options"
+command = "cargo run --quiet --package util-clap-reflect -- --reflect link-forever-options"
 
 [preprocessor.rustdoc-link]
 after = ["links"]
 cache-dir = "build"
 cargo-features = ["clap/unstable-doc"]
-command = "cargo run --package mdbookkit --bin mdbook-rustdoc-link --features=rustdoc-link --release"
+command = "cargo run --quiet --package mdbookkit --bin mdbook-rustdoc-link --all-features --release"
 manifest-dir = "."
-rust-analyzer = "cargo run --package util-rust-analyzer -- analyzer"
+rust-analyzer = "cargo run --quiet --package util-rust-analyzer --all-features -- analyzer"
 
 [preprocessor.link-forever]
 after = ["rustdoc-link"]
 always-link = [".rs"]
-command = "cargo run --package mdbookkit --bin mdbook-link-forever --features=link-forever --release"
+book-url = "https://tonywu6.github.io/mdbookkit/"
+command = "cargo run --quiet --package mdbookkit --bin mdbook-link-forever --all-features --release"
 
 [preprocessor.rust-analyzer-version]
 after = ["rustdoc-link"]
-command = "cargo run --package util-rust-analyzer --features=ra-version -- version"
+command = "cargo run --quiet --package util-rust-analyzer --all-features -- version"
 
 [preprocessor.alerts]
 after = ["rustdoc-link"]
+command = "cargo bin mdbook-alerts"
 
 [preprocessor.app]
 command = "deno run -A app/build/preprocessor.ts"

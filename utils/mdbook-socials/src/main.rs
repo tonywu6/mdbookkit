@@ -1,3 +1,7 @@
+//! Postprocess mdBook HTML output to add OpenGraph metadata, for social images, etc.
+//!
+//! mdBook doesn't support frontmatters yet, so this cannot be a preprocessor.
+
 use std::{collections::HashMap, path::PathBuf};
 
 use anyhow::{Context, Result};
@@ -87,7 +91,7 @@ fn main() -> Result<()> {
 
             Settings {
                 element_content_handlers: vec![
-                    text!("main > h1", |text| {
+                    text!("main > h1:first-of-type", |text| {
                         title.push_str(text.as_str());
                         Ok(())
                     }),

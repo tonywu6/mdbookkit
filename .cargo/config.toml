@@ -1,2 +1,2 @@
 [alias]
-bin = ["run", "--release", "--package", "cargo-bin", "--"]
+bin = ["run", "--quiet", "--release", "--package", "cargo-bin", "--"]

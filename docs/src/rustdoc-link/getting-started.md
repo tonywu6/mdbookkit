@@ -19,6 +19,8 @@ You will need:
    cargo install mdbookkit --features rustdoc-link
    ```
 
+   Or you can grab precompiled binaries from [GitHub releases][gh-releases].
+
 ## Configure
 
 Configure your `book.toml` to use it as a [preprocessor]:
@@ -88,5 +90,6 @@ To read more about this project, feel free to return to
 [ra-install]: https://rust-analyzer.github.io/book/rust_analyzer_binary.html
 [open-docs]: https://rust-analyzer.github.io/book/features.html#open-docs
 [ra-extension]: https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer
+[gh-releases]: https://github.com/tonywu6/mdbookkit/releases
 
 <!-- prettier-ignore-end -->

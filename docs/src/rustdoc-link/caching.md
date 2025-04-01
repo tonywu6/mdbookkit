@@ -50,6 +50,11 @@ the previous build.
 
 ## How it works
 
+> [!NOTE]
+>
+> The following are implementation details. See
+> [rustdoc_link/cache.rs](/crates/mdbookkit/src/bin/rustdoc_link/cache.rs).
+
 The effectiveness of this mechanism is based on the following assumptions:
 
 - Most of the changes made during authoring don't actually involve item links.

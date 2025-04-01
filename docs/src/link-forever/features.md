@@ -24,9 +24,9 @@ rendered book with intra-repo links that are always _correct_ for that point in 
 
 > [!TIP]
 >
-> Linking by path is cool! Not only is it well-supported by GitHub, but editors like VS
-> Code also provide smart features like [path completions][path-completions] and [link
-> validation][link-validation].
+> Linking by path is cool! Not only is it [well-supported by
+> GitHub][github-relative-links], but editors like VS Code also provide smart features
+> like [path completions][path-completions] and [link validation][link-validation].
 
 URL fragments are preserved:
 
@@ -56,11 +56,11 @@ places, in order:
 > are supported, thanks to the [`gix_url`] crate.
 
 If you use Git but not GitHub, you can configure a custom URL pattern using the
-[`url-pattern`](configuration.md#url-pattern) option. For example:
+[`repo-url-template`](configuration.md#repo-url-template) option. For example:
 
 ```toml
 [preprocessor.link-forever]
-url-pattern = "https://gitlab.haskell.org/ghc/ghc/-/tree/{ref}/{path}"
+repo-url-template = "https://gitlab.haskell.org/ghc/ghc/-/tree/{ref}/{path}"
 ```
 
 ## Link validation
@@ -86,7 +86,8 @@ Formatting of diagnostics powered by [miette]
 
 <!-- prettier-ignore-start -->
 
-[path-completions]: https://code.visualstudio.com/docs/languages/markdown#_path-completions
+[vscode-path-completions]: https://code.visualstudio.com/docs/languages/markdown#_path-completions
+[github-relative-links]: https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#relative-links
 [link-validation]: https://code.visualstudio.com/docs/languages/markdown#_link-validation
 [mdbook-src-build]: https://rust-lang.github.io/mdBook/guide/creating.html#source-files
 [`output.html.git-repository-url`]: https://rust-lang.github.io/mdBook/format/configuration/renderers.html#html-renderer-options

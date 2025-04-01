@@ -7,6 +7,9 @@ on:
 
   pull_request:
 
+  schedule:
+    - cron: "27 0 * * *"
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -19,7 +22,6 @@ jobs:
       matrix:
         toolchain:
           - "stable"
-          - "1.81.0"
 
     steps:
       - uses: actions/checkout@v4
@@ -76,7 +78,6 @@ jobs:
         ra-version:
           - "2025-03-17"
           - "2025-03-04"
-          - "2025-02-17" # 1.85.0
           - "nightly"
 
     steps:

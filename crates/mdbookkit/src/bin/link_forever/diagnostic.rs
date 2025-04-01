@@ -22,7 +22,7 @@ impl Environment {
         for (base, link) in content
             .pages
             .iter()
-            .flat_map(|(base, page)| page.rel_links.iter().map(|link| (base.as_ref(), link)))
+            .flat_map(|(base, page)| page.rel_links.iter().map(move |link| (base, link)))
         {
             let diagnostic = LinkDiagnostic { link, base, root };
             sorted
