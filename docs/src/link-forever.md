@@ -44,12 +44,12 @@ Here's a link to the crate's [Cargo manifest](../../crates/mdbookkit/Cargo.toml)
 3. Link to files using paths, like this:
 
    ```md
-   See [`book.toml`](../book.toml#L48-L51) for an example config.
+   See [`book.toml`](../book.toml#L44-L48) for an example config.
    ```
 
    <figure class="fig-text">
 
-   See [`book.toml`](../book.toml#L48-L51) for an example config.
+   See [`book.toml`](../book.toml#L44-L48) for an example config.
 
    </figure>
 

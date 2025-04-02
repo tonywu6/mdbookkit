@@ -26,7 +26,8 @@ rendered book with intra-repo links that are always _correct_ for that point in 
 >
 > Linking by path is cool! Not only is it [well-supported by
 > GitHub][github-relative-links], but editors like VS Code also provide smart features
-> like [path completions][path-completions] and [link validation][link-validation].
+> like [path completions][vscode-path-completions] and [link
+> validation][link-validation].
 
 URL fragments are preserved:
 

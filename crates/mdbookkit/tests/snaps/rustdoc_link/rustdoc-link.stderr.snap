@@ -1,21 +1,21 @@
 ---
-source: crates/rustdoc-link/tests/lib.rs
+source: crates/mdbookkit/tests/rustdoc_link.rs
 expression: report
 ---
   info: successfully resolved all links
-    ╭─[rustdoc-link:18:5]
- 17 │ 
- 18 │ The [`option`][std::option] and [`result`][std::result] modules define optional and
+    ╭─[rustdoc-link:25:5]
+ 24 │ 
+ 25 │ The [`option`][std::option] and [`result`][std::result] modules define optional and
     ·     ───────────┬───────────     ───────────┬───────────
     ·                │                           ╰── https://doc.rust-lang.org/stable/core/result/index.html
     ·                ╰── https://doc.rust-lang.org/stable/core/option/index.html
- 19 │ error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter] module
+ 26 │ error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter] module
     ·                       ──────┬──────     ────────┬───────      ─────────┬─────────
     ·                             │                   │                      ╰── https://doc.rust-lang.org/stable/core/iter/index.html
     ·                             │                   ╰── https://doc.rust-lang.org/stable/core/result/enum.Result.html
     ·                             ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
- 20 │ defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to access
+ 27 │ defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to access
     ·                                ──────┬─────
     ·                                      ╰── https://doc.rust-lang.org/stable/core/iter/traits/iterator/trait.Iterator.html
- 21 │ collections. [^1]
+ 28 │ collections. [^1]
     ╰────

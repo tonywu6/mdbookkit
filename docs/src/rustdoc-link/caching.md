@@ -30,7 +30,7 @@ choice (_other than_ your book's `build-dir`), for example:
 ```toml
 [preprocessor.rustdoc-link]
 cache-dir = "cache"
-# You can also point to an arbitrary directory in target/
+# You could also point to an arbitrary directory in target/
 ```
 
 Now, when `mdbook` rebuilds your book during `build` or `serve`, the preprocessor reuses

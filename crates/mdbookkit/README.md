@@ -1,9 +1,8 @@
 # mdbookkit
 
-![mdbookkit hero image](/docs/src/media/social.webp)
+![mdbookkit hero image](/docs/src/media/banner.webp)
 
-[`mdbookkit`] provides quality-of-life plugins that you can use in your [mdBook]
-project.
+Quality-of-life plugins for your [mdBook] project.
 
 Right now, there are two mdBook [preprocessors], both for generating **correct and
 versioned** external links from **easy-to-write** markup.
@@ -11,7 +10,7 @@ versioned** external links from **easy-to-write** markup.
 - [**`mdbook-rustdoc-link`**](https://tonywu6.github.io/mdbookkit/rustdoc-link)
 
   _rustdoc_-style linking for Rust APIs: write types and function names, get links to
-  docs.rs
+  _docs.rs_
 
 - [**`mdbook-link-forever`**](https://tonywu6.github.io/mdbookkit/link-forever)
 

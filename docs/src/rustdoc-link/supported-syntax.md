@@ -1,12 +1,16 @@
 # Supported syntax
 
+<div class="hidden">
+
+**For best results, view this page at
+<https://tonywu6.github.io/mdbookkit/rustdoc-link/supported-syntax>.**
+
+</div>
+
 This page showcases all the syntax supported by `mdbook-rustdoc-link`.
 
 Most of the formats [supported by rustdoc][rustdoc-linking] are supported. Unsupported
 syntax and differences in behavior are emphasized below.
-
-[rustdoc-linking]:
-  https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
 
 In general, specifying items as you would when writing Rust code should "just work".
 
@@ -24,6 +28,14 @@ In general, specifying items as you would when writing Rust code should "just wo
 - [Linking to page sections](#linking-to-page-sections)
 
 </details>
+
+> [!TIP]
+>
+> This page is also used for snapshot testing! To see how all the links would look like
+> in Markdown after they have been processed, see
+> [supported-syntax.snap](/crates/mdbookkit/tests/snaps/rustdoc_link/supported-syntax.snap)
+> and
+> [supported-syntax.stderr.snap](/crates/mdbookkit/tests/snaps/rustdoc_link/supported-syntax.stderr.snap).
 
 ## Types, modules, and associated items
 
@@ -258,5 +270,6 @@ is _compatible_ with rustdoc.
 [gh-issues]: https://github.com/tonywu6/mdbookkit/issues
 [namespaces]: https://doc.rust-lang.org/reference/names/namespaces.html
 [rust-types]: https://doc.rust-lang.org/reference/types.html#r-type.kinds
+[rustdoc-linking]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
 
 <!-- prettier-ignore-end -->

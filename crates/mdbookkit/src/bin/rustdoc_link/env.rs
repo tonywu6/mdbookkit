@@ -88,7 +88,7 @@ pub struct Config {
     ///
     /// This is only meaningful if your links happen to have visible text that has
     /// specific punctuation. The processor otherwise passes through the rest of your
-    /// Markdown source.
+    /// Markdown source untouched.
     ///
     /// **In `book.toml`** — this option is not needed because
     /// `output.html.smart-punctuation` is honored.

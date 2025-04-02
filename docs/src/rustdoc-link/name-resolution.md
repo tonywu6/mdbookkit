@@ -6,7 +6,7 @@ mentioned below).
 
 > [!TIP]
 >
-> If you use Cargo workspaces, or if your source tree has special layouts, see
+> If you use Cargo workspaces, or if your source tree has special layout, see
 > [Workspace layout](workspace-layout.md) for more information.
 
 An item must be **in scope in the entrypoint** for the proprocessor to generate a link
@@ -93,7 +93,7 @@ when using this preprocessor!
 ## Feature-gated items
 
 To link to items that are gated behind features, use the
-[`cargo-features`](configuration.md#cargo-features) option.
+[`cargo-features`](configuration.md#cargo-features) option in `book.toml`.
 
 For example, [clap] is known for providing guide-level documentation through docs.rs.
 The tutorial for its Derive API is gated behind the `unstable-doc` feature. To link to
@@ -114,7 +114,7 @@ Then, specify the item as normal:
 
 ## Which entrypoint
 
-The "entrypoint" is usually `src/lib.rs` or `src/main.rs`.
+For this preprocessor, the "entrypoint" is usually `src/lib.rs` or `src/main.rs`.
 
 - If your crate has multiple `bin` targets, it will use the first one listed in your
   `Cargo.toml`.
@@ -174,7 +174,6 @@ Docs" feature — except it's fully automated.
 <figure id="media-open-docs">
   <img src="media/open-docs.png" alt="the Open Docs option in VS Code">
 </figure>
-
 <style>
   @media screen and (min-width: 768px) {
     #media-open-docs {

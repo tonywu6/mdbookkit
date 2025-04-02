@@ -4,16 +4,16 @@ Follow these steps to start using `mdbook-rustdoc-link` in your book project!
 
 ## Install
 
-You will need:
+You will need to:
 
-1. [rust-analyzer]:
+1. Have [rust-analyzer]:
 
-   - If you already use the [VS Code extension][ra-extension], this project will
-     automatically use the server binary that comes with it, no extra setup is needed!
+   - If you already use the [VS Code extension][ra-extension]: this crate automatically
+     uses the server binary that comes with it, no extra setup is needed!
    - Otherwise, [install][ra-install] rust-analyzer (e.g. via `rustup`) and make sure
      it's on your `PATH`.
 
-2. This crate:
+2. Install this crate:
 
    ```
    cargo install mdbookkit --features rustdoc-link

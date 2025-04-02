@@ -11,9 +11,8 @@ manually sourcing links from docs.rs. Then one of two things could happen:
 
 - APIs are mentioned without linking to reference docs.
 
-  This is probably fine for tutorials and examples, but it does mean a reduced
-  connection between guide-level text and usage details. Readers won't be able to
-  navigate from one to the other as easily.
+  This is probably fine for tutorials and examples, but it does mean readers of your
+  docs won't be able to move from guides to references as easily.
 
 - You do want at least some cross-references, but it is cumbersome to find and copy the
   correct links, and even more so to maintain them.

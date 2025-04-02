@@ -14,10 +14,9 @@ The command accepts as arguments all [options](configuration.md) configurable in
 `book.toml`, such as [`--cache-dir`](configuration.md#cache-dir). Run
 `mdbook-rustdoc-link markdown --help` to see them.
 
-Use it in any text processing pipeline!
-
 <figure id="media-open-docs">
   <img src="media/standalone-usage.png" alt="example using mdbook-rustdoc-link as a command line tool">
+  <figcaption>Use it in any text processing pipeline!</figcaption>
 </figure>
 
 <style>
