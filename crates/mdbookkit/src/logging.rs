@@ -1,3 +1,5 @@
+//! Progress reporting and logging for preprocessors.
+
 use std::{fmt, sync::mpsc};
 
 pub fn spinner() -> SpinnerHandle {

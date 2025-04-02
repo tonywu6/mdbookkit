@@ -2,10 +2,7 @@ use std::{fmt::Debug, hash::Hash};
 
 use crate::diagnostics::{Diagnostics, ReportBuilder};
 
-use super::{
-    super::link::diagnostic::{LinkDiagnostic, LinkStatus},
-    Pages,
-};
+use super::{super::link::diagnostic::LinkDiagnostic, Pages};
 
 impl<'a, K: Eq + Hash> Pages<'a, K> {
     pub fn diagnostics(&self) -> Vec<PageDiagnostics<'a, K>>
@@ -29,6 +26,6 @@ impl<'a, K: Eq + Hash> Pages<'a, K> {
     }
 }
 
-type PageDiagnostics<'a, K> = Diagnostics<'a, K, LinkDiagnostic, LinkStatus>;
+type PageDiagnostics<'a, K> = Diagnostics<'a, K, LinkDiagnostic>;
 
-type PageReporter<'a, K> = ReportBuilder<'a, K, LinkDiagnostic, LinkStatus, fn(&K) -> String>;
+type PageReporter<'a, K> = ReportBuilder<'a, K, LinkDiagnostic, fn(&K) -> String>;

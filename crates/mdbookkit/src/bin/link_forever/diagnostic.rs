@@ -55,7 +55,7 @@ impl Environment {
 }
 
 type Reporter<'a> =
-    ReportBuilder<'a, &'a Url, LinkDiagnostic<'a>, LinkStatus, Box<dyn Fn(&'a Url) -> String + 'a>>;
+    ReportBuilder<'a, &'a Url, LinkDiagnostic<'a>, Box<dyn Fn(&'a Url) -> String + 'a>>;
 
 pub struct LinkDiagnostic<'a> {
     link: &'a RelativeLink<'a>,

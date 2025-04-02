@@ -1,9 +1,23 @@
+//! Markdown-related utilities.
+
 use std::{borrow::Cow, fmt::Write, ops::Range};
 
 use pulldown_cmark::{Event, Options};
 use pulldown_cmark_to_cmark::{cmark, Error};
 use tap::Pipe;
 
+/// _Patch_ a Markdown string, instead of regenerating it entirely.
+///
+/// Currently, whitespace is NOT preserved when using [`pulldown_cmark_to_cmark`] to
+/// generate Markdown from a [`pulldown_cmark::Event`] stream.
+///
+/// This is problematic for mdBook preprocessors, because preprocessors downstream
+/// may need to work on syntax that is whitespace-sensitive. Normalizing all whitespace
+/// could cause such usage to no longer be recognized. An example is [`mdbook-alerts`][alerts]
+/// which works on GitHub's ["alerts"][gh-alerts] syntax.
+///
+/// [alerts]: https://crates.io/crates/mdbook-alerts
+/// [gh-alerts]: https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts
 pub struct PatchStream<'a, S> {
     source: &'a str,
     stream: S,
@@ -42,20 +56,16 @@ where
     }
 }
 
-impl<'a, S> PatchStream<'a, S>
-where
-    Self: Iterator<Item = Result<Cow<'a, str>, Error>>,
-{
-    pub fn into_string(self) -> Result<String, Error> {
-        let mut out = String::new();
-        for chunk in self {
-            write!(out, "{}", chunk?).unwrap();
-        }
-        Ok(out)
-    }
-}
-
 impl<'a, S> PatchStream<'a, S> {
+    /// Create a new patch stream.
+    ///
+    /// `stream` should be an [`Iterator`] yielding (`E`, [`Range<usize>`]), where `E` is an
+    /// [`Iterator`] yielding [`Event`]s.
+    ///
+    /// [`Range<usize>`] is the byte span in `source` that should be patched.
+    ///
+    /// `E` is the replacement event stream to be rendered into `source`
+    /// using [`pulldown_cmark_to_cmark`].
     pub fn new(source: &'a str, stream: S) -> Self {
         Self {
             source,
@@ -63,6 +73,20 @@ impl<'a, S> PatchStream<'a, S> {
             start: Some(0),
             patch: None,
         }
+    }
+}
+
+impl<'a, S> PatchStream<'a, S>
+where
+    Self: Iterator<Item = Result<Cow<'a, str>, Error>>,
+{
+    /// Render the patched Markdown source.
+    pub fn into_string(self) -> Result<String, Error> {
+        let mut out = String::new();
+        for chunk in self {
+            write!(out, "{}", chunk?).unwrap();
+        }
+        Ok(out)
     }
 }
 

@@ -15,14 +15,34 @@ use tap::Pipe;
 
 use super::{styled, Message};
 
-/// Either a [console::Term] or an [env_logger::Logger].
+/// Either a [`console::Term`] or an [`env_logger::Logger`].
+///
+/// This is automatically detected upon installing as the global logger. The logic is:
+///
+/// - If the `RUST_LOG` env var is set, this will use [`env_logger`].
+/// - If stderr is not "user-attended", as determined by [`console::user_attended_stderr()`],
+///   like if stderr is piped to a file, this will use [`env_logger`].
+/// - Otherwise, this will use [`console`].
+///
+/// When this is a [`console::Term`], logs are handled by the global [`indicatif`] spinner.
+///
+/// When this is an [`env_logger::Logger`], there will not be a spinner, and progress
+/// reports are printed as logs instead.
 pub enum ConsoleLogger {
     Console(Term),
     Logger(Logger),
 }
 
-impl Default for ConsoleLogger {
-    fn default() -> Self {
+impl ConsoleLogger {
+    /// Install a [`ConsoleLogger`] as the global [`log`] logger.
+    pub fn install(name: &str) {
+        maybe_spinner(name);
+        let logger = Box::new(Self::new());
+        log::set_boxed_logger(logger).expect("logger should not have been set");
+        log::set_max_level(LevelFilter::max());
+    }
+
+    fn new() -> Self {
         if let Some(spinner) = SPINNER.get() {
             Self::Console(spinner.term.clone())
         } else {
@@ -32,15 +52,6 @@ impl Default for ConsoleLogger {
                 .build()
                 .pipe(Self::Logger)
         }
-    }
-}
-
-impl ConsoleLogger {
-    pub fn install(name: &str) {
-        maybe_spinner(name);
-        let logger = Box::new(Self::default());
-        log::set_boxed_logger(logger).expect("logger should not have been set");
-        log::set_max_level(LevelFilter::max());
     }
 }
 

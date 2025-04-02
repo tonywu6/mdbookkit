@@ -1,3 +1,5 @@
+//! Error reporting for preprocessors.
+
 use std::fmt::{self, Debug, Display, Write};
 
 use log::{Level, LevelFilter};
@@ -8,28 +10,35 @@ use miette::{
 use owo_colors::Style;
 use tap::{Pipe, Tap};
 
+/// Trait for Markdown diagnostics. This will eventually be printed to stderr.
+///
+/// Each [`Problem`] represents a specific message, such as a warning, associated with
+/// an [`Issue`] (the type and severity of the issue) and a location in the Markdown
+/// source, represented by [`LabeledSpan`].
 pub trait Problem: Send + Sync {
     type Kind: Issue;
     fn issue(&self) -> Self::Kind;
     fn label(&self) -> LabeledSpan;
 }
 
+/// Trait for diagnostics classes. This is like a specific error code.
 pub trait Issue: Default + Debug + Display + Clone + Send + Sync {
     fn level(&self) -> Level;
 }
 
-pub struct Diagnostics<'a, K, P, S> {
+/// A collection of [`Problem`]s associated with a Markdown file.
+pub struct Diagnostics<'a, K, P> {
     text: &'a str,
     name: K,
     issues: Vec<P>,
-    status: S,
 }
 
-impl<K, P> Diagnostics<'_, K, P, P::Kind>
+impl<K, P> Diagnostics<'_, K, P>
 where
     K: Title,
     P: Problem,
 {
+    /// Render a report of the diagnostics using [miette]'s graphical reporting
     pub fn to_report(&self, colored: bool) -> String {
         let handler = if colored {
             GraphicalTheme::unicode()
@@ -43,6 +52,8 @@ where
         .tap_mut(|t| t.styles.warning = Style::new().yellow().toggle(colored))
         .tap_mut(|t| t.styles.error = Style::new().red().toggle(colored))
         .tap_mut(|t| {
+            // pre-emptively specify colors for all diagnostics, just for this collection
+            // doing this because miette doesn't support associating colors with labels yet
             t.styles.highlights = if colored {
                 self.issues
                     .iter()
@@ -59,6 +70,7 @@ where
         output
     }
 
+    /// Render the diagnostics as a list of log messages suitable for [`log`].
     pub fn to_logs(&self) -> String {
         let mut output = String::new();
         LoggingReportHandler
@@ -68,31 +80,16 @@ where
     }
 }
 
-impl<'a, K, P> Diagnostics<'a, K, P, P::Kind>
+impl<'a, K, P> Diagnostics<'a, K, P>
 where
     P: Problem,
 {
     pub fn new(text: &'a str, name: K, issues: Vec<P>) -> Self {
-        let status = issues
-            .iter()
-            .map(|p| p.issue())
-            .min_by_key(|s| s.level())
-            .unwrap_or_default();
-        Self {
-            text,
-            name,
-            issues,
-            status,
-        }
+        Self { text, name, issues }
     }
 
     pub fn filtered(self, level: LevelFilter) -> Option<Self> {
-        let Self {
-            text,
-            name,
-            issues,
-            status,
-        } = self;
+        let Self { text, name, issues } = self;
         let issues = issues
             .into_iter()
             .filter(|p| p.issue().level() <= level)
@@ -100,23 +97,26 @@ where
         if issues.is_empty() {
             None
         } else {
-            Some(Self {
-                text,
-                name,
-                issues,
-                status,
-            })
+            Some(Self { text, name, issues })
         }
+    }
+
+    fn status(&self) -> P::Kind {
+        self.issues
+            .iter()
+            .map(|p| p.issue())
+            .min_by_key(|s| s.level())
+            .unwrap_or_default()
     }
 }
 
-impl<K, P> Diagnostic for Diagnostics<'_, K, P, P::Kind>
+impl<K, P> Diagnostic for Diagnostics<'_, K, P>
 where
     K: Title,
     P: Problem,
 {
     fn severity(&self) -> Option<Severity> {
-        match self.status.level() {
+        match self.status().level() {
             Level::Error => Some(Severity::Error),
             Level::Warn => Some(Severity::Warning),
             _ => Some(Severity::Advice),
@@ -132,6 +132,8 @@ where
     }
 
     fn help<'a>(&'a self) -> Option<Box<dyn Display + 'a>> {
+        // miette doesn't print the file name if there are no labels to report
+        // so we print it here
         if self.issues.is_empty() {
             Some(Box::new(format!("in {}", self.name)))
         } else {
@@ -140,11 +142,10 @@ where
     }
 }
 
-impl<K, P, S> SourceCode for Diagnostics<'_, K, P, S>
+impl<K, P> SourceCode for Diagnostics<'_, K, P>
 where
     K: Title,
     P: Send + Sync,
-    S: Send + Sync,
 {
     fn read_span<'a>(
         &'a self,
@@ -168,30 +169,31 @@ where
     }
 }
 
-impl<K, P: Problem> Debug for Diagnostics<'_, K, P, P::Kind> {
+impl<K, P: Problem> Debug for Diagnostics<'_, K, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(&self.status, f)
+        fmt::Debug::fmt(&self.status(), f)
     }
 }
 
-impl<K, P: Problem> Display for Diagnostics<'_, K, P, P::Kind> {
+impl<K, P: Problem> Display for Diagnostics<'_, K, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&self.status, f)
+        fmt::Display::fmt(&self.status(), f)
     }
 }
 
-impl<K, P: Problem> std::error::Error for Diagnostics<'_, K, P, P::Kind> {}
+impl<K, P: Problem> std::error::Error for Diagnostics<'_, K, P> {}
 
-pub struct ReportBuilder<'a, K, P, S, F> {
-    items: Vec<Diagnostics<'a, K, P, S>>,
+/// Builder for printing diagnostics over multiple files.
+pub struct ReportBuilder<'a, K, P, F> {
+    items: Vec<Diagnostics<'a, K, P>>,
     print_name: F,
     log_filter: LevelFilter,
     colored: bool,
     logging: bool,
 }
 
-impl<'a, K, P, S, F> ReportBuilder<'a, K, P, S, F> {
-    pub fn new(items: Vec<Diagnostics<'a, K, P, S>>, print_name: F) -> Self {
+impl<'a, K, P, F> ReportBuilder<'a, K, P, F> {
+    pub fn new(items: Vec<Diagnostics<'a, K, P>>, print_name: F) -> Self {
         Self {
             items,
             print_name,
@@ -201,7 +203,8 @@ impl<'a, K, P, S, F> ReportBuilder<'a, K, P, S, F> {
         }
     }
 
-    pub fn names<G>(self, print_name: G) -> ReportBuilder<'a, K, P, S, G>
+    /// Specify how file names should be printed.
+    pub fn names<G>(self, print_name: G) -> ReportBuilder<'a, K, P, G>
     where
         G: for<'b> Fn(&'b K) -> String,
     {
@@ -237,11 +240,11 @@ impl<'a, K, P, S, F> ReportBuilder<'a, K, P, S, F> {
     }
 }
 
-impl<'a, K, P, F> ReportBuilder<'a, K, P, P::Kind, F>
+impl<'a, K, P, F> ReportBuilder<'a, K, P, F>
 where
     P: Problem,
 {
-    pub fn build(self) -> Reporter<'a, P, P::Kind>
+    pub fn build(self) -> Reporter<'a, P>
     where
         F: for<'b> Fn(&'b K) -> String,
     {
@@ -256,54 +259,44 @@ where
         let items = items
             .into_iter()
             .filter_map(|p| {
-                if p.status.level() > log_filter {
+                if p.status().level() > log_filter {
                     return None;
                 }
 
-                let Diagnostics {
-                    text,
-                    name,
-                    issues,
-                    status,
-                } = p.filtered(log_filter)?;
+                let Diagnostics { text, name, issues } = p.filtered(log_filter)?;
 
                 Some(Diagnostics {
                     text,
                     name: print_name(&name),
                     issues,
-                    status,
                 })
             })
             .collect::<Vec<_>>();
 
-        let status = items
-            .iter()
-            .map(|p| p.status.clone())
-            .min_by_key(|s| s.level())
-            .unwrap_or_default();
-
         Reporter {
             items,
-            status,
             colored,
             logging,
         }
     }
 }
 
-pub struct Reporter<'a, P, S> {
-    items: Vec<Diagnostics<'a, String, P, S>>,
-    status: S,
+pub struct Reporter<'a, P> {
+    items: Vec<Diagnostics<'a, String, P>>,
     colored: bool,
     logging: bool,
 }
 
-impl<P> Reporter<'_, P, P::Kind>
+impl<P> Reporter<'_, P>
 where
     P: Problem,
 {
     pub fn to_status(&self) -> P::Kind {
-        self.status.clone()
+        self.items
+            .iter()
+            .map(|p| p.status())
+            .min_by_key(|s| s.level())
+            .unwrap_or_default()
     }
 
     pub fn to_stderr(&self) -> &Self {
@@ -312,7 +305,7 @@ where
         }
 
         if self.logging {
-            let status = self.status.clone();
+            let status = self.to_status();
             let logs = self.to_logs();
             log::log!(status.level(), "{logs}");
         } else {

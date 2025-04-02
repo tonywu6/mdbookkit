@@ -40,6 +40,7 @@ use super::{
     sync::{EventSampler, EventSampling},
 };
 
+/// LSP client to talk to rust-analyzer.
 #[derive(Debug)]
 pub struct Client {
     env: Environment,
