@@ -111,7 +111,7 @@ fn describe_options<C: CommandFactory>() -> Result<String> {
 {% for option in options %}
 
 <tr>
-<td style="text-align: left; white-space: nowrap;">
+<td style="text-align: left;">
 
 [`{{ option.key }}`](#{{ option.key }})
 

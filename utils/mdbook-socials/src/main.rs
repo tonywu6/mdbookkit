@@ -162,6 +162,14 @@ fn main() -> Result<()> {
                     elem.remove();
                     Ok(())
                 }),
+                element!(r#"img[src]"#, |elem| {
+                    let src = elem.get_attribute("src").unwrap();
+                    let src = url.join(&src)?;
+                    let img = image::open(src.to_file_path().unwrap())?;
+                    elem.set_attribute("width", &img.width().to_string())?;
+                    elem.set_attribute("height", &img.height().to_string())?;
+                    Ok(())
+                }),
                 element!(r#"meta[name="description"]"#, |elem| {
                     let meta = jinja.get_template("index.html").unwrap().render(&ctx)?;
                     elem.set_attribute("content", &og_description)?;

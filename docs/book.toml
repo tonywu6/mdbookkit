@@ -63,13 +63,13 @@ base-url = "https://tonywu6.github.io/mdbookkit/"
 default-theme-color = "#0f1419"
 
 [_metadata.socials."/"]
-image = "src/media/social.png"
+image = "src/media/social.webp"
 title = "mdbookkit"
 
 [_metadata.socials."/rustdoc-link"]
-image = "src/rustdoc-link/media/social.png"
+image = "src/rustdoc-link/media/social.webp"
 title = "mdbook-rustdoc-link"
 
 [_metadata.socials."/link-forever"]
-image = "src/link-forever/media/social.png"
+image = "src/link-forever/media/social.webp"
 title = "mdbook-link-forever"

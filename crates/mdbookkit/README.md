@@ -1,6 +1,9 @@
-# mdbookkit — _toolkit for 📖 [mdBook]!_
+# mdbookkit
 
-[`mdbookkit`] provides quality-of-life plugins that you can use in your mdBook project.
+![mdbookkit hero image](/docs/src/media/social.webp)
+
+[`mdbookkit`] provides quality-of-life plugins that you can use in your [mdBook]
+project.
 
 Right now, there are two mdBook [preprocessors], both for generating **correct and
 versioned** external links from **easy-to-write** markup.
