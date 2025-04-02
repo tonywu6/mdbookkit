@@ -74,6 +74,7 @@ impl Problem for LinkDiagnostic<'_> {
         let label = match &self.link.status {
             LinkStatus::Ignored => None,
             LinkStatus::Published => None,
+            LinkStatus::Rewritten => self.format_link().into_owned().pipe(Some),
             LinkStatus::Permalink => self.format_link().into_owned().pipe(Some),
             LinkStatus::External => {
                 format!("file is outside source control: {}", self.format_link()).pipe(Some)
@@ -120,6 +121,7 @@ impl Issue for LinkStatus {
         match self {
             Self::Ignored => log::Level::Debug,
             Self::Published => log::Level::Debug,
+            Self::Rewritten => log::Level::Info,
             Self::Permalink => log::Level::Info,
             Self::External => log::Level::Warn,
             Self::NoSuchPath => log::Level::Warn,
@@ -134,6 +136,7 @@ impl Display for LinkStatus {
         let message = match self {
             LinkStatus::Ignored => "url ignored",
             LinkStatus::Published => "file under src/",
+            LinkStatus::Rewritten => "path converted to relative path",
             LinkStatus::Permalink => "path converted to permalink",
             LinkStatus::External => "file outside source control",
             LinkStatus::NoSuchPath => "file not found",
@@ -167,13 +170,14 @@ impl Ord for LinkStatus {
 impl LinkStatus {
     fn order(&self) -> usize {
         match self {
-            Self::Ignored => 0,
+            Self::Error(..) => 7,
+            Self::NoSuchFragment => 6,
+            Self::NoSuchPath => 5,
+            Self::External => 4,
+            Self::Permalink => 3,
+            Self::Rewritten => 2,
             Self::Published => 1,
-            Self::Permalink => 2,
-            Self::External => 3,
-            Self::NoSuchPath => 4,
-            Self::NoSuchFragment => 5,
-            Self::Error(..) => 6,
+            Self::Ignored => 0,
         }
     }
 }

@@ -75,6 +75,10 @@ directory, the preprocessor will warn you:
 
 </figure>
 
+> [!NOTE]
+>
+> `book-url` only enables validation, and is only for links to your book, not to GitHub.
+
 <!-- prettier-ignore-start -->
 
 [mdbook-include]: https://rust-lang.github.io/mdBook/format/mdbook.html#including-files

@@ -50,7 +50,7 @@ impl Environment {
             .iter_mut()
             .flat_map(|(base, page)| page.rel_links.iter_mut().map(move |link| (base, link)))
         {
-            let url = if link.link.starts_with('/') {
+            let file = if link.link.starts_with('/') {
                 self.vcs_root.join(&link.link[1..])
             } else {
                 base.join(&link.link)
@@ -58,17 +58,19 @@ impl Environment {
             .context("couldn't derive url")
             .tap_err(log_debug!());
 
-            let Ok(url) = url else {
+            let Ok(file_url) = file else {
                 link.status = LinkStatus::Ignored;
                 continue;
             };
 
             let env = self;
+            let page_url = base.as_ref();
             let fragments = &fragments;
 
             Resolver {
                 link,
-                url,
+                page_url,
+                file_url,
                 env,
                 fragments,
             }
@@ -95,7 +97,8 @@ impl Environment {
 
 #[must_use]
 struct Resolver<'a, 'r> {
-    url: Url,
+    file_url: Url,
+    page_url: &'a Url,
     link: &'a mut RelativeLink<'r>,
     env: &'a Environment,
     fragments: &'a Fragments,
@@ -103,10 +106,10 @@ struct Resolver<'a, 'r> {
 
 impl Resolver<'_, '_> {
     fn resolve(self) {
-        if self.url.scheme() == "file" {
+        if self.file_url.scheme() == "file" {
             self.resolve_file()
         } else if let Some(book) = &self.env.config.book_url {
-            if let Some(page) = book.0.make_relative(&self.url) {
+            if let Some(page) = book.0.make_relative(&self.file_url) {
                 self.resolve_page(page);
             } else {
                 self.link.status = LinkStatus::Ignored;
@@ -119,12 +122,13 @@ impl Resolver<'_, '_> {
     fn resolve_file(self) {
         let Self {
             link,
-            url,
+            page_url,
+            file_url,
             env,
             fragments,
         } = self;
 
-        let Ok(path) = url.to_file_path() else {
+        let Ok(path) = file_url.to_file_path() else {
             link.status = LinkStatus::Ignored;
             return;
         };
@@ -141,7 +145,7 @@ impl Resolver<'_, '_> {
 
         let Ok(rel) = env
             .book_src
-            .make_relative(&url)
+            .make_relative(&file_url)
             .context("url is from a different origin")
             .tap_err(log_debug!())
         else {
@@ -152,13 +156,20 @@ impl Resolver<'_, '_> {
             .config
             .always_link
             .iter()
-            .any(|suffix| url.path().ends_with(suffix));
+            .any(|suffix| file_url.path().ends_with(suffix));
 
-        if !rel.starts_with("../") && !always_link {
-            link.status = LinkStatus::Published;
+        if !always_link && !rel.starts_with("../") {
+            if link.link.starts_with('/') {
+                // mdbook doesn't support absolute paths like VS Code does
+                link.link = page_url.make_relative(&file_url).unwrap().into();
+                link.status = LinkStatus::Rewritten
+            } else {
+                link.status = LinkStatus::Published;
+            }
             Self {
                 link,
-                url,
+                page_url,
+                file_url,
                 env,
                 fragments,
             }
@@ -168,7 +179,7 @@ impl Resolver<'_, '_> {
 
         let Ok(rel) = env
             .vcs_root
-            .make_relative(&url)
+            .make_relative(&file_url)
             .context("url is from a different origin")
             .tap_err(log_debug!())
         else {
@@ -191,7 +202,8 @@ impl Resolver<'_, '_> {
 
     fn resolve_page(self, page: String) {
         let Self {
-            url,
+            file_url,
+            page_url,
             link,
             env,
             fragments,
@@ -236,19 +248,20 @@ impl Resolver<'_, '_> {
                 .tap_err(log_debug!());
 
             if matches!(exists, Ok(true)) {
-                let url = {
+                let file_url = {
                     let mut file = file;
-                    file.set_query(url.query());
-                    file.set_fragment(url.fragment());
+                    file.set_query(file_url.query());
+                    file.set_fragment(file_url.fragment());
                     file
                 };
 
-                link.link = url.to_string().into();
+                link.link = file_url.to_string().into();
                 link.status = LinkStatus::Published;
 
                 Self {
                     link,
-                    url,
+                    page_url,
+                    file_url,
                     env,
                     fragments,
                 }
@@ -266,13 +279,13 @@ impl Resolver<'_, '_> {
 
     fn resolve_fragment(self) {
         let Self {
+            mut file_url,
             link,
-            mut url,
             fragments,
             ..
         } = self;
 
-        let Some(fragment) = url
+        let Some(fragment) = file_url
             .fragment()
             .and_then(|f| percent_decode_str(f).decode_utf8().ok().or(Some(f.into())))
             .map(|f| f.into_owned())
@@ -280,15 +293,15 @@ impl Resolver<'_, '_> {
             return;
         };
 
-        url.set_fragment(None);
+        file_url.set_fragment(None);
 
         let found = fragments
             .0
-            .get(&url)
+            .get(&file_url)
             .map(|f| f.contains(&fragment))
             .unwrap_or(false);
 
-        url.set_fragment(Some(&fragment));
+        file_url.set_fragment(Some(&fragment));
 
         if !found {
             link.status = LinkStatus::NoSuchFragment;
@@ -323,6 +336,8 @@ pub enum LinkStatus {
     Ignored,
     /// Link to a file under src/
     Published,
+    /// Link to a file under src/ but was rewritten
+    Rewritten,
     /// Link to a file under source control
     Permalink,
     /// Link to a file outside source control
@@ -483,7 +498,7 @@ impl<'a> Page<'a> {
         self.rel_links
             .iter()
             .filter_map(|link| {
-                if !matches!(link.status, LinkStatus::Permalink) {
+                if !matches!(link.status, LinkStatus::Permalink | LinkStatus::Rewritten) {
                     return None;
                 }
                 let start = match link.usage {

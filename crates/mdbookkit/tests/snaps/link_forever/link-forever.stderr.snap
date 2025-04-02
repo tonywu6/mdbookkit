@@ -3,66 +3,75 @@ source: crates/mdbookkit/tests/link_forever.rs
 expression: report
 ---
   info: url ignored
-    ╭─[crates/mdbookkit/tests/tests/link-forever.md:21:1]
- 20 │ 
- 21 │ <https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg>
-    · ──────────────────────────────────────────────────────────────────────────────
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:23:1]
  22 │ 
+ 23 │ <https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg>
+    · ──────────────────────────────────────────────────────────────────────────────
+ 24 │ 
     ╰────
-    ╭─[crates/mdbookkit/tests/tests/link-forever.md:47:13]
- 46 │ 
- 47 │ ## heading: <https://räksmörgås.josefsson.org/>
-    ·             ───────────────────────────────────
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:49:13]
  48 │ 
- 49 │ # canonical urls
+ 49 │ ## heading: <https://räksmörgås.josefsson.org/>
+    ·             ───────────────────────────────────
  50 │ 
- 51 │ found: <https://example.org/book/tests/ra-known-quirks>
+ 51 │ # canonical urls
  52 │ 
- 53 │ found: <https://example.org/book/tests/ra-known-quirks.html>
+ 53 │ found: <https://example.org/book/tests/ra-known-quirks>
  54 │ 
- 55 │ missing: <https://example.org/book/404>
+ 55 │ found: <https://example.org/book/tests/ra-known-quirks.html>
  56 │ 
- 57 │ ignored: <https://example.com/book/ra-known-quirks>
+ 57 │ missing: <https://example.org/book/404>
+ 58 │ 
+ 59 │ ignored: <https://example.com/book/ra-known-quirks>
     ·          ──────────────────────────────────────────
     ╰────
 
   info: file under src/
-    ╭─[crates/mdbookkit/tests/tests/link-forever.md:15:1]
- 14 │ 
- 15 │ [Known quirks](./ra-known-quirks.md)
-    · ────────────────────────────────────
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:17:1]
  16 │ 
- 17 │ [link_forever.rs](../link_forever.rs)
-    · ─────────────────────────────────────
+ 17 │ [Known quirks](./ra-known-quirks.md)
+    · ────────────────────────────────────
  18 │ 
- 19 │ ![selfie](Macaca_nigra_self-portrait_large.jpg)
-    · ───────────────────────────────────────────────
+ 19 │ [link_forever.rs](../link_forever.rs)
+    · ─────────────────────────────────────
  20 │ 
- 21 │ <https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg>
+ 21 │ ![selfie](Macaca_nigra_self-portrait_large.jpg)
+    · ───────────────────────────────────────────────
  22 │ 
- 23 │ # fragments
+ 23 │ <https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg>
  24 │ 
- 25 │ [Fragments](./link-forever.md#fragments)
-    · ────────────────────────────────────────
+ 25 │ # fragments
  26 │ 
- 27 │ [Heading 1](./link-forever.md#heading-sqrt3x-11x2)
-    · ──────────────────────────────────────────────────
+ 27 │ [Fragments](./link-forever.md#fragments)
+    · ────────────────────────────────────────
  28 │ 
- 29 │ [Heading 2](./link-forever.md#heading-httpsräksmörgåsjosefssonorg)
-    · ──────────────────────────────────────────────────────────────────
+ 29 │ [Heading 1](./link-forever.md#heading-sqrt3x-11x2)
+    · ──────────────────────────────────────────────────
  30 │ 
- 31 │ [macro_export](./ra-known-quirks.md#macro_export)
-    · ─────────────────────────────────────────────────
+ 31 │ [Heading 2](./link-forever.md#heading-httpsräksmörgåsjosefssonorg)
+    · ──────────────────────────────────────────────────────────────────
  32 │ 
+ 33 │ [macro_export](./ra-known-quirks.md#macro_export)
+    · ─────────────────────────────────────────────────
+ 34 │ 
     ╰────
-    ╭─[crates/mdbookkit/tests/tests/link-forever.md:51:8]
- 50 │ 
- 51 │ found: <https://example.org/book/tests/ra-known-quirks>
-    ·        ────────────────────────────────────────────────
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:53:8]
  52 │ 
- 53 │ found: <https://example.org/book/tests/ra-known-quirks.html>
-    ·        ─────────────────────────────────────────────────────
+ 53 │ found: <https://example.org/book/tests/ra-known-quirks>
+    ·        ────────────────────────────────────────────────
  54 │ 
+ 55 │ found: <https://example.org/book/tests/ra-known-quirks.html>
+    ·        ─────────────────────────────────────────────────────
+ 56 │ 
+    ╰────
+
+  info: path converted to relative path
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:13:1]
+ 12 │ 
+ 13 │ [link-forever.md](/crates/mdbookkit/tests/tests/link-forever.md#absolute-paths)
+    · ───────────────────────────────────────┬───────────────────────────────────────
+    ·                                        ╰── crates/mdbookkit/tests/tests/link-forever.md
+ 14 │ 
     ╰────
 
   info: path converted to permalink
@@ -89,45 +98,45 @@ expression: report
     ╰────
 
   warning: file not found
-    ╭─[crates/mdbookkit/tests/tests/link-forever.md:35:1]
- 34 │ 
- 35 │ [Cargo.lock](../../Cargo.lock)
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:37:1]
+ 36 │ 
+ 37 │ [Cargo.lock](../../Cargo.lock)
     · ───────────────┬──────────────
     ·                ╰── file does not exist at path: crates/mdbookkit/Cargo.lock
- 36 │ 
- 37 │ [`//LICENSE-MIT.md`](//LICENSE-MIT.md)
+ 38 │ 
+ 39 │ [`//LICENSE-MIT.md`](//LICENSE-MIT.md)
     · ───────────────────┬──────────────────
     ·                    ╰── file does not exist at path: //LICENSE-MIT.md
- 38 │ 
- 39 │ ![shinjuku.jpg](shinjuku.jpg)
+ 40 │ 
+ 41 │ ![shinjuku.jpg](shinjuku.jpg)
     · ──────────────┬──────────────
     ·               ╰── file does not exist at path: crates/mdbookkit/tests/tests/shinjuku.jpg
- 40 │ 
- 41 │ # fragment not found
  42 │ 
- 43 │ [associated items](../tests/ra-known-quirks.md#associated_items_on_primitive_types)
+ 43 │ # fragment not found
  44 │ 
- 45 │ ## heading: $\sqrt{3x-1}+(1+x)^2$
+ 45 │ [associated items](../tests/ra-known-quirks.md#associated_items_on_primitive_types)
  46 │ 
- 47 │ ## heading: <https://räksmörgås.josefsson.org/>
+ 47 │ ## heading: $\sqrt{3x-1}+(1+x)^2$
  48 │ 
- 49 │ # canonical urls
+ 49 │ ## heading: <https://räksmörgås.josefsson.org/>
  50 │ 
- 51 │ found: <https://example.org/book/tests/ra-known-quirks>
+ 51 │ # canonical urls
  52 │ 
- 53 │ found: <https://example.org/book/tests/ra-known-quirks.html>
+ 53 │ found: <https://example.org/book/tests/ra-known-quirks>
  54 │ 
- 55 │ missing: <https://example.org/book/404>
+ 55 │ found: <https://example.org/book/tests/ra-known-quirks.html>
+ 56 │ 
+ 57 │ missing: <https://example.org/book/404>
     ·          ───────────────┬──────────────
     ·                         ╰── file does not exist at path: crates/mdbookkit/tests/404.md
- 56 │ 
+ 58 │ 
     ╰────
 
   warning: no such fragment
-    ╭─[crates/mdbookkit/tests/tests/link-forever.md:43:1]
- 42 │ 
- 43 │ [associated items](../tests/ra-known-quirks.md#associated_items_on_primitive_types)
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:45:1]
+ 44 │ 
+ 45 │ [associated items](../tests/ra-known-quirks.md#associated_items_on_primitive_types)
     · ─────────────────────────────────────────┬─────────────────────────────────────────
     ·                                          ╰── #associated_items_on_primitive_types not found in crates/mdbookkit/tests/tests/ra-known-quirks.md
- 44 │ 
+ 46 │ 
     ╰────

@@ -10,6 +10,8 @@
 
 [LICENSE-APACHE.md](/LICENSE-APACHE.md)
 
+[link-forever.md](/crates/mdbookkit/tests/tests/link-forever.md#absolute-paths)
+
 # book files
 
 [Known quirks](./ra-known-quirks.md)

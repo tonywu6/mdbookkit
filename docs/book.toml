@@ -8,7 +8,7 @@ title = "mdbookkit"
 [build]
 build-dir = "dist"
 create-missing = false
-extra-watch-dirs = ["app", "../crates/mdbookkit"]
+extra-watch-dirs = ["app"]
 
 [rust]
 edition = "2021"
