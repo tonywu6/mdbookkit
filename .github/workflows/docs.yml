@@ -2,10 +2,15 @@ name: Publish docs
 
 on:
   push:
-    tags:
-      - "*"
     branches:
       - main
+
+  release:
+    types:
+      - published
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   build:
@@ -26,12 +31,12 @@ jobs:
       - name: Get cache key
         run: |
           CARGO_VERSION=$(cargo --version)
-          echo "CACHE_KEY=${{runner.os}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}" >> "$GITHUB_OUTPUT"
+          echo "CACHE_KEY=${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}" >> "$GITHUB_OUTPUT"
           {
             echo "CACHE_KEY_RESTORE<<EOF"
-            echo "${{runner.os}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-"
-            echo "${{runner.os}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-"
-            echo "${{runner.os}}-$CARGO_VERSION-"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
         id: cache-key
@@ -65,8 +70,7 @@ jobs:
 
     needs: build
 
-    if: |
-      ${{ github.repository_owner == 'tonywu6' && github.event_name == 'push' && github.ref_type == 'tag' }}
+    if: ${{ github.event_name == 'release' && !github.event.release.prerelease && github.repository_owner == 'tonywu6' }}
 
     permissions:
       pages: write

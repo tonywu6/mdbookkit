@@ -9,6 +9,9 @@ on:
     branches:
       - main
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   pr:
     name: Pull request
@@ -28,12 +31,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # token is required to not commit as github-actions[bot]
+          # otherwise CI will not run
           token: ${{ secrets.RELEASE_PLZ_GITHUB_TOKEN }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: release-plz/action@7419a2cb1535b9c0e852b4dec626967baf65c022
         with:
           command: release-pr
         env:
+          # token is required to not commit as github-actions[bot]
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_GITHUB_TOKEN }}
 
   # release:
