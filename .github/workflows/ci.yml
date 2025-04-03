@@ -69,6 +69,7 @@ jobs:
       - name: Evict cache
         run: gh cache delete '${{ steps.cache-key.outputs.CACHE_KEY }}'
         if: ${{ steps.cache-restore.outputs.cache-hit }}
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
