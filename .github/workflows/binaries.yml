@@ -65,6 +65,27 @@ jobs:
       - run: echo "RUSTFLAGS=${RUSTFLAGS} -C target-feature=+crt-static" >> "${GITHUB_ENV}"
         if: endsWith(matrix.target, 'windows-msvc')
 
+      - name: Get cache key
+        run: |
+          CARGO_VERSION=$(cargo --version)
+          echo "CACHE_KEY=${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}" >> "$GITHUB_OUTPUT"
+          {
+            echo "CACHE_KEY_RESTORE<<EOF"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+        id: cache-key
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            target/
+          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
+          restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
+        id: cache-restore
+
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: ${{ matrix.bin }}
@@ -74,3 +95,10 @@ jobs:
           zip: windows
           token: ${{ secrets.GITHUB_TOKEN }}
           dry-run: ${{ github.event_name != 'release' }}
+
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            target/
+          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
