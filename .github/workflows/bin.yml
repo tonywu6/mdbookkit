@@ -1,0 +1,125 @@
+name: Build binaries
+
+permissions:
+  contents: write
+
+on:
+  release:
+    types:
+      - published
+
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+env:
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
+  CARGO_NET_RETRY: 10
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  RUSTFLAGS: -D warnings
+  RUSTUP_MAX_RETRIES: 10
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.target }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-pc-windows-msvc
+            os: windows-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+
+    runs-on: ${{ matrix.os }}
+
+    if: ${{ github.repository_owner == 'tonywu6' }}
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: taiki-e/setup-cross-toolchain-action@v1
+        with:
+          target: ${{ matrix.target }}
+        if: startsWith(matrix.os, 'ubuntu')
+
+      - name: Get cache key
+        run: |
+          CARGO_VERSION=$(cargo --version)
+          echo "CACHE_KEY=${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}" >> "$GITHUB_OUTPUT"
+          {
+            echo "CACHE_KEY_RESTORE<<EOF"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+        id: cache-key
+        shell: bash
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            target/
+          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
+          restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
+        id: cache-restore
+
+      - name: Build rustdoc-link
+        uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          target: ${{ matrix.target }}
+          bin: mdbook-rustdoc-link
+          features: rustdoc-link
+          tar: unix
+          zip: windows
+          codesign: "-" # https://developer.apple.com/documentation/security/seccodesignatureflags/adhoc
+          token: ${{ secrets.GITHUB_TOKEN }}
+          dry-run: ${{ github.event_name != 'release' }}
+
+      - name: Build link-forever
+        uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          target: ${{ matrix.target }}
+          bin: mdbook-link-forever
+          features: link-forever
+          tar: unix
+          zip: windows
+          codesign: "-"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          dry-run: ${{ github.event_name != 'release' }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: |
+            target/${{ matrix.target }}/release/mdbook-rustdoc-link
+            target/${{ matrix.target }}/release/mdbook-link-forever
+          name: ${{ matrix.target }}
+          retention-days: 1
+        if: github.event_name != 'release'
+
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            target
+          key: ${{ steps.cache-key.outputs.CACHE_KEY }}

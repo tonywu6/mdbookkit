@@ -1,16 +1,20 @@
 [package]
 name = "mdbookkit"
 publish = true
-version = "0.1.0"
-
-authors.workspace = true
-description = "Toolkit for mdBook."
-license.workspace = true
-readme = "README.md"
-repository.workspace = true
+version = "1.0.0"
 
 edition.workspace = true
 rust-version.workspace = true
+
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+categories = ["command-line-utilities"]
+description = "toolkit for mdBook 📖"
+documentation = "https://tonywu6.github.io/mdbookkit/"
+keywords = ["mdbook", "documentation", "rust-analyzer", "lsp", "permalink"]
+readme = "README.md"
 
 autobins = false
 autotests = false
@@ -26,7 +30,7 @@ clap = { workspace = true, optional = true }
 console = { version = "0.15.11", optional = true }
 dirs = { version = "6.0.0", optional = true }
 env_logger = { workspace = true, optional = true }
-git2 = { version = "0.20.1", optional = true }
+git2 = { version = "0.20.1", default-features = false, optional = true }
 gix-url = { version = "0.29.0", optional = true }
 indicatif = { version = "0.17.11", optional = true }
 log = { workspace = true }
@@ -109,7 +113,6 @@ common-cli = ["dep:clap", "dep:mdbook", "dep:toml"]
 default = []
 
 # aliases
-
 mdbook-link-forever = ["link-forever"]
 mdbook-rustdoc-link = ["rustdoc-link"]
 

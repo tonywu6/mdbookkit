@@ -30,8 +30,8 @@ collections. [^1]
 </figure>
 
 `mdbook-rustdoc-link` is an mdBook [preprocessor]. Using rust-analyzer, it converts type
-names, module paths, etc. into links to online crate docs. No more finding and pasting
-URLs by hand.
+names, module paths, and so on, into links to online crate docs. No more finding and
+pasting URLs by hand.
 
 <figure>
 
