@@ -3,6 +3,61 @@ source: crates/mdbookkit/tests/link_forever.rs
 expression: report
 ---
   info: url ignored
+    ╭─[crates/mdbookkit/README.md:5:1]
+  4 │ 
+  5 │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
+    · ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  6 │ [![documentation](https://img.shields.io/docsrs/mdbookkit?style=flat-square&label=docs.rs)](https://docs.rs/mdbookkit)
+    · ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  7 │ [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
+    ·  ───────────────────────────────────────────────────────────────────────────────────────
+  8 │ 
+  9 │ Quality-of-life plugins for your [mdBook] project.
+    ·                                  ────────
+ 10 │ 
+ 11 │ - [**`mdbook-rustdoc-link`**](https://tonywu6.github.io/mdbookkit/rustdoc-link)
+    ·   ─────────────────────────────────────────────────────────────────────────────
+ 12 │ 
+ 13 │   _rustdoc_-style linking for Rust APIs: write types and function names, get links to
+ 14 │   _docs.rs_
+ 15 │ 
+ 16 │ - [**`mdbook-link-forever`**](https://tonywu6.github.io/mdbookkit/link-forever)
+    ·   ─────────────────────────────────────────────────────────────────────────────
+ 17 │ 
+    ╰────
+    ╭─[crates/mdbookkit/README.md:31:46]
+ 30 │ 
+ 31 │ Precompiled binaries are also available from [GitHub releases][gh-releases].
+    ·                                              ──────────────────────────────
+ 32 │ 
+    ╰────
+
+  info: path converted to permalink
+   ╭─[crates/mdbookkit/README.md:3:1]
+ 2 │ 
+ 3 │ ![mdbookkit hero image](/docs/src/media/banner.webp)
+   · ──────────────────────────┬─────────────────────────
+   ·                           ╰── https://github.com/lorem/ipsum/tree/dolor/docs/src/media/banner.webp
+ 4 │ 
+ 5 │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
+ 6 │ [![documentation](https://img.shields.io/docsrs/mdbookkit?style=flat-square&label=docs.rs)](https://docs.rs/mdbookkit)
+ 7 │ [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
+   · ──────────────────────────────────────────────────────┬──────────────────────────────────────────────────────
+   ·                                                       ╰── https://github.com/lorem/ipsum/tree/dolor/LICENSE-APACHE.md
+ 8 │ 
+   ╰────
+    ╭─[crates/mdbookkit/README.md:35:36]
+ 34 │ 
+ 35 │ This project is released under the [Apache 2.0 License](/LICENSE-APACHE.md) and the
+    ·                                    ────────────────────┬───────────────────
+    ·                                                        ╰── https://github.com/lorem/ipsum/tree/dolor/LICENSE-APACHE.md
+ 36 │ [MIT License](/LICENSE-MIT.md).
+    · ───────────────┬──────────────
+    ·                ╰── https://github.com/lorem/ipsum/tree/dolor/LICENSE-MIT.md
+ 37 │ 
+    ╰────
+
+  info: url ignored
     ╭─[crates/mdbookkit/tests/tests/link-forever.md:45:13]
  44 │ 
  45 │ ## heading: <https://räksmörgås.josefsson.org/>
@@ -142,74 +197,4 @@ expression: report
     · ─────────────────────────────────────────┬─────────────────────────────────────────
     ·                                          ╰── #associated_items_on_primitive_types not found in crates/mdbookkit/tests/tests/ra-known-quirks.md
  42 │ 
-    ╰────
-
-  info: url ignored
-    ╭─[crates/mdbookkit/README.md:5:34]
-  4 │ 
-  5 │ Quality-of-life plugins for your [mdBook] project.
-    ·                                  ────────
-  6 │ 
-  7 │ - [**`mdbook-rustdoc-link`**](https://tonywu6.github.io/mdbookkit/rustdoc-link)
-    ·   ─────────────────────────────────────────────────────────────────────────────
-  8 │ 
-  9 │   _rustdoc_-style linking for Rust APIs: write types and function names, get links to
- 10 │   _docs.rs_
- 11 │ 
- 12 │ - [**`mdbook-link-forever`**](https://tonywu6.github.io/mdbookkit/link-forever)
-    ·   ─────────────────────────────────────────────────────────────────────────────
- 13 │ 
- 14 │   _Permalinks_ for your source tree: write relative paths, get links to GitHub.
- 15 │ 
- 16 │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
-    · ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
- 17 │ [![documentation](https://img.shields.io/docsrs/mdbookkit?style=flat-square&label=docs.rs)](https://docs.rs/mdbookkit)
-    · ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
- 18 │ [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
-    ·  ───────────────────────────────────────────────────────────────────────────────────────
- 19 │ 
-    ╰────
-    ╭─[crates/mdbookkit/README.md:31:46]
- 30 │ 
- 31 │ Precompiled binaries are also available from [GitHub releases][gh-releases].
-    ·                                              ──────────────────────────────
- 32 │ 
-    ╰────
-
-  info: path converted to permalink
-   ╭─[crates/mdbookkit/README.md:3:1]
- 2 │ 
- 3 │ ![mdbookkit hero image](/docs/src/media/banner.webp)
-   · ──────────────────────────┬─────────────────────────
-   ·                           ╰── https://github.com/lorem/ipsum/tree/dolor/docs/src/media/banner.webp
- 4 │ 
-   ╰────
-    ╭─[crates/mdbookkit/README.md:18:1]
- 17 │ [![documentation](https://img.shields.io/docsrs/mdbookkit?style=flat-square&label=docs.rs)](https://docs.rs/mdbookkit)
- 18 │ [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
-    · ──────────────────────────────────────────────────────┬──────────────────────────────────────────────────────
-    ·                                                       ╰── https://github.com/lorem/ipsum/tree/dolor/LICENSE-APACHE.md
- 19 │ 
- 20 │ ## Installation
- 21 │ 
- 22 │ If you are interested in any of these plugins, visit their respective pages for usage
- 23 │ instructions, linked above.
- 24 │ 
- 25 │ If you want to install all of them:
- 26 │ 
- 27 │ ```bash
- 28 │ cargo install mdbookkit --all-features
- 29 │ ```
- 30 │ 
- 31 │ Precompiled binaries are also available from [GitHub releases][gh-releases].
- 32 │ 
- 33 │ ## License
- 34 │ 
- 35 │ This project is released under the [Apache 2.0 License](/LICENSE-APACHE.md) and the
-    ·                                    ────────────────────┬───────────────────
-    ·                                                        ╰── https://github.com/lorem/ipsum/tree/dolor/LICENSE-APACHE.md
- 36 │ [MIT License](/LICENSE-MIT.md).
-    · ───────────────┬──────────────
-    ·                ╰── https://github.com/lorem/ipsum/tree/dolor/LICENSE-MIT.md
- 37 │ 
     ╰────

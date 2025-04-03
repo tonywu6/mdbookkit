@@ -2,6 +2,10 @@
 
 ![mdbookkit hero image](/docs/src/media/banner.webp)
 
+[![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
+[![documentation](https://img.shields.io/docsrs/mdbookkit?style=flat-square&label=docs.rs)](https://docs.rs/mdbookkit)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
+
 Quality-of-life plugins for your [mdBook] project.
 
 - [**`mdbook-rustdoc-link`**](https://tonywu6.github.io/mdbookkit/rustdoc-link)
@@ -12,10 +16,6 @@ Quality-of-life plugins for your [mdBook] project.
 - [**`mdbook-link-forever`**](https://tonywu6.github.io/mdbookkit/link-forever)
 
   _Permalinks_ for your source tree: write relative paths, get links to GitHub.
-
-[![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
-[![documentation](https://img.shields.io/docsrs/mdbookkit?style=flat-square&label=docs.rs)](https://docs.rs/mdbookkit)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
 
 ## Installation
 
