@@ -17,7 +17,7 @@ env:
 
 jobs:
   test:
-    name: test
+    name: Test
 
     runs-on: ubuntu-latest
     strategy:
@@ -61,7 +61,7 @@ jobs:
           RUST_LOG: info
 
       - name: Evict cache
-        run: gh cache delete --confirm '${{steps.cache-key.outputs.CACHE_KEY}}' || true
+        run: gh cache delete '${{steps.cache-key.outputs.CACHE_KEY}}'
         if: ${{steps.cache-restore.outputs.cache-hit}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -78,7 +78,7 @@ jobs:
       CACHE_KEY_RESTORE: ${{steps.cache-key.outputs.CACHE_KEY_RESTORE}}
 
   build_features:
-    name: build
+    name: Build
     runs-on: ubuntu-latest
 
     needs:

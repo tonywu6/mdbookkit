@@ -1,4 +1,4 @@
-name: publish docs
+name: Publish docs
 
 on:
   push:
@@ -9,14 +9,19 @@ on:
 
 jobs:
   build:
-    name: build
+    name: Build
     runs-on: ubuntu-latest
 
     if: ${{ github.repository_owner == 'tonywu6' }}
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: dtolnay/rust-toolchain@stable
+      - uses: cargo-bins/cargo-binstall@b9bf4400702f721d469eec4d280125f650c85638
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
 
       - name: Get cache key
         run: |
@@ -42,8 +47,10 @@ jobs:
       - name: Build docs
         run: cargo bin mdbook build
         working-directory: docs
-        env:
-          CARGO_TERM_COLOR: always
+
+      - name: Fix socials
+        run: cargo run --package util-mdbook-socials -- .
+        working-directory: docs
 
       - uses: actions/upload-pages-artifact@v3
         with:

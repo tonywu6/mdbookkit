@@ -11,7 +11,7 @@ on:
 
 jobs:
   pr:
-    name: pull request
+    name: Pull request
     runs-on: ubuntu-latest
 
     if: ${{ github.repository_owner == 'tonywu6' }}
@@ -33,10 +33,10 @@ jobs:
         with:
           command: release-pr
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_GITHUB_TOKEN }}
 
   # release:
-  #   name: release
+  #   name: Release
   #   runs-on: ubuntu-latest
 
   #   if: ${{ github.repository_owner == 'tonywu6' }}
