@@ -24,12 +24,13 @@ jobs:
     name: Build
 
     strategy:
+      fail-fast: false
       matrix:
         bin:
-          - name: mdbook-rustdoc-link
+          - bin: mdbook-rustdoc-link
             features: rustdoc-link
 
-          - name: mdbook-link-forever
+          - bin: mdbook-link-forever
             features: link-forever
 
         include:
@@ -85,9 +86,9 @@ jobs:
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           target: ${{ matrix.target }}
-          bin: ${{ matrix.bin.name }}
+          bin: ${{ matrix.bin.bin }}
           features: ${{ matrix.bin.features }}
-          archive: ${{ matrix.bin.name }}-$target
+          archive: ${{ matrix.bin.bin }}-$target
           tar: unix
           zip: windows
           token: ${{ secrets.GITHUB_TOKEN }}
