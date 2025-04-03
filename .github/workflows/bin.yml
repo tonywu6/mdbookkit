@@ -62,9 +62,6 @@ jobs:
           tool: cross
         if: contains(matrix.target, '-musl')
 
-      - run: echo "RUSTFLAGS=${RUSTFLAGS} -C target-feature=+crt-static" >> "${GITHUB_ENV}"
-        if: endsWith(matrix.target, 'windows-msvc')
-
       - name: Get cache key
         run: |
           CARGO_VERSION=$(cargo --version)
@@ -77,6 +74,7 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
         id: cache-key
+        shell: bash
 
       - uses: actions/cache/restore@v4
         with:
