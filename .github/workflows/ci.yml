@@ -6,10 +6,6 @@ on:
       - main
 
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
     branches:
       - main
 
@@ -65,7 +61,7 @@ jobs:
           RUST_LOG: info
 
       - name: Evict cache
-        run: gh cache delete --confirm ${{steps.cache-key.outputs.CACHE_KEY}} || true
+        run: gh cache delete --confirm '${{steps.cache-key.outputs.CACHE_KEY}}' || true
         if: ${{steps.cache-restore.outputs.cache-hit}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
