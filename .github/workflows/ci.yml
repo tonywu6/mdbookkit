@@ -6,6 +6,10 @@ on:
       - main
 
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
     branches:
       - main
 
@@ -53,11 +57,18 @@ jobs:
             target/
           key: ${{steps.cache-key.outputs.CACHE_KEY}}
           restore-keys: ${{steps.cache-key.outputs.CACHE_KEY_RESTORE}}
+        id: cache-restore
 
       - run: cargo run   --package util-rust-analyzer -- download
       - run: cargo test  --release --all-features
         env:
           RUST_LOG: info
+
+      - name: Evict cache
+        run: gh cache delete --confirm ${{steps.cache-key.outputs.CACHE_KEY}} || true
+        if: ${{steps.cache-restore.outputs.cache-hit}}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/cache/save@v4
         if: always()
