@@ -12,10 +12,10 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
 
-    if: ${{ github.repository_owner == 'tonywu6' }}
-
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
 
       - uses: dtolnay/rust-toolchain@stable
       - uses: cargo-bins/cargo-binstall@b9bf4400702f721d469eec4d280125f650c85638
@@ -42,19 +42,16 @@ jobs:
             target/
           key: ${{ steps.cache-key.outputs.CACHE_KEY }}
           restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
-        id: cache-restore
 
-      - name: Install deps
-        run: cargo bin --install
+      - run: cargo bin --install
+      - run: cargo run --package util-rust-analyzer -- download
 
-      - name: Build docs
-        run: cargo bin mdbook build
+      - run: cargo bin mdbook build
         working-directory: docs
         env:
           RUST_LOG: info
 
-      - name: Fix socials
-        run: cargo run --package util-mdbook-socials -- .
+      - run: cargo run --package util-mdbook-socials -- .
         working-directory: docs
         env:
           RUST_LOG: info
@@ -63,20 +60,23 @@ jobs:
         with:
           path: docs/dist
 
-  # deploy:
-  #   runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
-  #   needs: build
+    needs: build
 
-  #   permissions:
-  #     pages: write
-  #     id-token: write
+    if: |
+      ${{ github.repository_owner == 'tonywu6' && github.event_name == 'push' && github.ref_type == 'tag' }}
 
-  #   environment:
-  #     name: github-pages
-  #     url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
 
-  #   steps:
-  #     - name: Deploy to GitHub Pages
-  #       id: deployment
-  #       uses: actions/deploy-pages@v4
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
