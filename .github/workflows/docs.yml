@@ -9,6 +9,8 @@ on:
     types:
       - published
 
+  workflow_dispatch:
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -74,7 +76,7 @@ jobs:
 
     needs: build
 
-    if: ${{ github.event_name == 'release' && !github.event.release.prerelease && github.repository_owner == 'tonywu6' }}
+    if: (github.event_name == 'workflow_dispatch' || github.event_name == 'release' && !github.event.release.prerelease) && github.repository_owner == 'tonywu6'
 
     permissions:
       pages: write

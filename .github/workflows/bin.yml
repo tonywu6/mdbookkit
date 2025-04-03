@@ -8,6 +8,14 @@ on:
     types:
       - published
 
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
   workflow_dispatch:
 
 env:
@@ -21,18 +29,12 @@ env:
 
 jobs:
   build:
-    name: Build
+    name: ${{ matrix.target }}
 
     strategy:
       fail-fast: false
       matrix:
-        build:
-          - bin: mdbook-rustdoc-link
-            features: rustdoc-link
-          - bin: mdbook-link-forever
-            features: link-forever
-
-        platform:
+        include:
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
           - target: x86_64-unknown-linux-gnu
@@ -46,7 +48,7 @@ jobs:
           - target: x86_64-pc-windows-msvc
             os: windows-latest
 
-    runs-on: ${{ matrix.platform.os }}
+    runs-on: ${{ matrix.os }}
 
     if: ${{ github.repository_owner == 'tonywu6' }}
     timeout-minutes: 60
@@ -57,8 +59,8 @@ jobs:
 
       - uses: taiki-e/setup-cross-toolchain-action@v1
         with:
-          target: ${{ matrix.platform.target }}
-        if: startsWith(matrix.platform.os, 'ubuntu')
+          target: ${{ matrix.target }}
+        if: startsWith(matrix.os, 'ubuntu')
 
       - name: Get cache key
         run: |
@@ -82,16 +84,36 @@ jobs:
           restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
         id: cache-restore
 
-      - uses: taiki-e/upload-rust-binary-action@v1
+      - name: Build rustdoc-link
+        uses: taiki-e/upload-rust-binary-action@v1
         with:
-          target: ${{ matrix.platform.target }}
-          features: ${{ matrix.build.features }}
-          bin: ${{ matrix.build.bin }}
-          archive: ${{ matrix.build.bin }}-$target
+          target: ${{ matrix.target }}
+          bin: mdbook-rustdoc-link
+          features: rustdoc-link
           tar: unix
           zip: windows
           token: ${{ secrets.GITHUB_TOKEN }}
           dry-run: ${{ github.event_name != 'release' }}
+
+      - name: Build link-forever
+        uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          target: ${{ matrix.target }}
+          bin: mdbook-link-forever
+          features: link-forever
+          tar: unix
+          zip: windows
+          token: ${{ secrets.GITHUB_TOKEN }}
+          dry-run: ${{ github.event_name != 'release' }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: |
+            target/${{ matrix.target }}/release/${{ matrix.target }}/mdbook-rustdoc-link
+            target/${{ matrix.target }}/release/${{ matrix.target }}/mdbook-link-forever
+          name: ${{ matrix.target }}
+          retention-days: 1
+        if: github.event_name != 'release'
 
       - uses: actions/cache/save@v4
         if: always()

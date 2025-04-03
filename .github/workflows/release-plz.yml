@@ -17,7 +17,7 @@ jobs:
     name: Pull request
     runs-on: ubuntu-latest
 
-    if: ${{ github.repository_owner == 'tonywu6' }}
+    if: github.repository_owner == 'tonywu6'
 
     permissions:
       contents: write
@@ -46,7 +46,7 @@ jobs:
   #   name: Release
   #   runs-on: ubuntu-latest
 
-  #   if: ${{ github.repository_owner == 'tonywu6' }}
+  #   if: github.repository_owner == 'tonywu6'
 
   #   permissions:
   #     contents: write
