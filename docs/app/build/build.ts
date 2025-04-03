@@ -13,6 +13,7 @@ const built = await esbuild.build({
   outdir: relpath("../../src/app"),
   entryNames: "[name]-[hash]",
   metafile: true,
+  logLevel: Deno.env.get("CI") ? "info" : undefined,
 });
 
 // generate an `app/dist.css` for mdBook that actually imports the bundle

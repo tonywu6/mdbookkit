@@ -6,73 +6,125 @@ on:
       - main
 
   pull_request:
+    branches:
+      - main
 
   schedule:
-    - cron: "27 0 * * *"
+    - cron: "27 0 * * *" # nightly test for RA
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_and_test:
-    name: build and test
+  test:
+    name: Test
 
     runs-on: ubuntu-latest
     strategy:
       matrix:
         toolchain:
-          - "stable"
+          - stable
+
+    permissions:
+      contents: read
+      actions: write # evict cache
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.toolchain }}
 
-      - run: echo "CARGO_VERSION=$(cargo --version)" >> "$GITHUB_OUTPUT"
-        name: get cargo version
-        id: cargo-version
+      - name: Get cache key
+        run: |
+          CARGO_VERSION=$(cargo --version)
+          echo "CACHE_KEY=${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}" >> "$GITHUB_OUTPUT"
+          {
+            echo "CACHE_KEY_RESTORE<<EOF"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+        id: cache-key
 
       - uses: actions/cache/restore@v4
         with:
           path: |
             target/
-          key: |
-            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}
-          restore-keys: |
-            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-
-            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-
-            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-
+          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
+          restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
+        id: cache-restore
 
-      - run: cargo run   --package util-rust-analyzer -- download
+      - name: Prepare rust-analyzer
+        run: cargo run   --package util-rust-analyzer -- download
+
       - run: cargo test  --release --all-features
         env:
           RUST_LOG: info
 
-      - run: cargo build --release --features rustdoc-link
-      - run: cargo build --release --features lib-rustdoc-link,common-logger
-      - run: cargo build --release --features lib-rustdoc-link
-
-      - run: cargo build --release --features link-forever
-      - run: cargo build --release --features lib-link-forever,common-logger
-      - run: cargo build --release --features lib-link-forever
+      - name: Evict cache
+        run: gh cache delete '${{ steps.cache-key.outputs.CACHE_KEY }}'
+        if: ${{ steps.cache-restore.outputs.cache-hit }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/cache/save@v4
         if: always()
         with:
           path: |
             target/
-          key: |
-            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}
+          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
 
-  rustdoc_link_ra_test:
-    name: rustdoc-link RA test
+    outputs:
+      CACHE_KEY: ${{ steps.cache-key.outputs.CACHE_KEY }}
+      CACHE_KEY_RESTORE: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
+
+  build_features:
+    name: Build
+    runs-on: ubuntu-latest
 
     needs:
-      - build_and_test
+      - test
 
+    strategy:
+      matrix:
+        features:
+          - rustdoc-link
+          - lib-rustdoc-link,common-logger
+          - lib-rustdoc-link
+          - link-forever
+          - lib-link-forever,common-logger
+          - lib-link-forever
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            target/
+          key: ${{ needs.test.outputs.CACHE_KEY }}
+          restore-keys: ${{ needs.test.outputs.CACHE_KEY_RESTORE }}
+
+      - run: cargo build --release --features ${{ matrix.features }}
+
+  test_rustdoc_link_ra:
+    name: rustdoc-link RA
     runs-on: ubuntu-latest
+
+    needs:
+      - test
+
     strategy:
       matrix:
         ra-version:
@@ -82,25 +134,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
 
-      - run: echo "CARGO_VERSION=$(cargo --version)" >> "$GITHUB_OUTPUT"
-        name: get cargo version
-        id: cargo-version
-
       - uses: actions/cache/restore@v4
         with:
           path: |
             target/
-          key: |
-            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}
-          restore-keys: |
-            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-
-            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-${{hashFiles('**/Cargo.toml')}}-
-            ${{runner.os}}-${{steps.cargo-version.outputs.CARGO_VERSION}}-
+          key: ${{ needs.test.outputs.CACHE_KEY }}
+          restore-keys: ${{ needs.test.outputs.CACHE_KEY_RESTORE }}
 
       - run: cargo run   --package util-rust-analyzer -- download
         env:

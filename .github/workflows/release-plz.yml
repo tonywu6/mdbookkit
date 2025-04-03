@@ -1,0 +1,64 @@
+name: release-plz
+
+permissions:
+  pull-requests: write
+  contents: write
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  pr:
+    name: Pull request
+    runs-on: ubuntu-latest
+
+    if: ${{ github.repository_owner == 'tonywu6' }}
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    concurrency:
+      group: release-plz-${{ github.ref }}
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # token is required to not commit as github-actions[bot]
+          # otherwise CI will not run
+          token: ${{ secrets.RELEASE_PLZ_GITHUB_TOKEN }}
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: release-plz/action@7419a2cb1535b9c0e852b4dec626967baf65c022
+        with:
+          command: release-pr
+        env:
+          # token is required to not commit as github-actions[bot]
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_GITHUB_TOKEN }}
+
+  # release:
+  #   name: Release
+  #   runs-on: ubuntu-latest
+
+  #   if: ${{ github.repository_owner == 'tonywu6' }}
+
+  #   permissions:
+  #     contents: write
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #     - uses: dtolnay/rust-toolchain@stable
+  #     - uses: release-plz/action@7419a2cb1535b9c0e852b4dec626967baf65c022
+  #       with:
+  #         command: release
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         CARGO_REGISTRY_TOKEN: ${{ secrets.RELEASE_PLZ_PUBLISH_TOKEN }}

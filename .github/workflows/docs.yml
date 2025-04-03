@@ -1,0 +1,86 @@
+name: Publish docs
+
+on:
+  push:
+    branches:
+      - main
+
+  release:
+    types:
+      - published
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: cargo-bins/cargo-binstall@b9bf4400702f721d469eec4d280125f650c85638
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Get cache key
+        run: |
+          CARGO_VERSION=$(cargo --version)
+          echo "CACHE_KEY=${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}" >> "$GITHUB_OUTPUT"
+          {
+            echo "CACHE_KEY_RESTORE<<EOF"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-"
+            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+        id: cache-key
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            target/
+          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
+          restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
+
+      - run: cargo bin --install
+      - run: cargo run --package util-rust-analyzer -- download
+
+      - run: cargo bin mdbook build
+        working-directory: docs
+        env:
+          RUST_LOG: info
+
+      - run: cargo run --package util-mdbook-socials -- .
+        working-directory: docs
+        env:
+          RUST_LOG: info
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/dist
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    needs: build
+
+    if: ${{ github.event_name == 'release' && !github.event.release.prerelease && github.repository_owner == 'tonywu6' }}
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
