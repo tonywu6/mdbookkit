@@ -50,10 +50,14 @@ jobs:
       - name: Build docs
         run: cargo bin mdbook build
         working-directory: docs
+        env:
+          RUST_LOG: info
 
       - name: Fix socials
         run: cargo run --package util-mdbook-socials -- .
         working-directory: docs
+        env:
+          RUST_LOG: info
 
       - uses: actions/upload-pages-artifact@v3
         with:

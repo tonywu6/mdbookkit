@@ -26,6 +26,7 @@ jobs:
           - stable
 
     permissions:
+      contents: read
       actions: write # Evict cache
 
     steps:
