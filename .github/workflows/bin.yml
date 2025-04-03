@@ -26,8 +26,11 @@ jobs:
     strategy:
       matrix:
         bin:
-          - mdbook-rustdoc-link
-          - mdbook-link-forever
+          - name: mdbook-rustdoc-link
+            features: rustdoc-link
+
+          - name: mdbook-link-forever
+            features: link-forever
 
         include:
           - target: aarch64-unknown-linux-gnu
@@ -81,9 +84,10 @@ jobs:
 
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
-          bin: ${{ matrix.bin }}
           target: ${{ matrix.target }}
-          archive: ${{ matrix.bin }}-$target
+          bin: ${{ matrix.bin.name }}
+          features: ${{ matrix.bin.features }}
+          archive: ${{ matrix.bin.name }}-$target
           tar: unix
           zip: windows
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -93,5 +97,5 @@ jobs:
         if: always()
         with:
           path: |
-            target/
+            target
           key: ${{ steps.cache-key.outputs.CACHE_KEY }}
