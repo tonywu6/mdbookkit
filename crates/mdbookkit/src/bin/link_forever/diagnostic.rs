@@ -10,7 +10,7 @@ use url::Url;
 
 use crate::diagnostics::{Diagnostics, Issue, Problem, ReportBuilder};
 
-use super::{Environment, LinkStatus, Pages, RelativeLink};
+use super::{Environment, LinkSpan, LinkStatus, LinkText, Pages, RelativeLink};
 
 impl Environment {
     pub fn report<'a>(&'a self, content: &'a Pages<'a>) -> Reporter<'a> {
@@ -19,11 +19,13 @@ impl Environment {
 
         let root = &self.vcs_root;
 
-        for (base, link) in content
-            .pages
-            .iter()
-            .flat_map(|(base, page)| page.rel_links.iter().map(move |link| (base, link)))
-        {
+        let iter = content.pages.iter().flat_map(|(base, page)| {
+            page.links
+                .iter()
+                .flat_map(move |links| links.links().map(move |link| (base, link)))
+        });
+
+        for (base, link) in iter {
             let diagnostic = LinkDiagnostic { link, base, root };
             sorted
                 .entry(base)
@@ -179,5 +181,14 @@ impl LinkStatus {
             Self::Published => 1,
             Self::Ignored => 0,
         }
+    }
+}
+
+impl<'a> LinkSpan<'a> {
+    fn links(&self) -> impl Iterator<Item = &'_ RelativeLink<'a>> {
+        self.0.iter().filter_map(|item| match item {
+            LinkText::Link(link) => Some(link),
+            LinkText::Text(..) => None,
+        })
     }
 }

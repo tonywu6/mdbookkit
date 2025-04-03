@@ -1,8 +1,8 @@
 # Working with `{{#include}}`
 
-mdBook provides an [`{{#include}}` directive][mdbook-include] that you can embed files
-in book pages. If the embedded content also contains path-based links, then some extra
-care may be needed:
+mdBook provides an [`{{#include}}` directive][mdbook-include] for embedding files in
+book pages. If the embedded content also contains path-based links, then some extra care
+may be needed:
 
 - The preprocessor does not resolve links relative to the file being included (because
   it doesn't have enough information to do so). In this case, relative paths could be

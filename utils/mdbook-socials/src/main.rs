@@ -1,4 +1,9 @@
-//! Postprocess mdBook HTML output to add OpenGraph metadata, for social images, etc.
+//! Postprocess mdBook HTML output.
+//!
+//! Currently does the following:
+//!
+//! - Add OpenGraph metadata and link to images for social.
+//! - Add explicit widths and heights to images: <https://web.dev/articles/optimize-cls#images-without-dimensions>
 //!
 //! mdBook doesn't support frontmatters yet, so this cannot be a preprocessor.
 
@@ -165,7 +170,10 @@ fn main() -> Result<()> {
                 element!(r#"img[src]"#, |elem| {
                     let src = elem.get_attribute("src").unwrap();
                     let src = url.join(&src)?;
-                    let img = image::open(src.to_file_path().unwrap())?;
+                    let img = image::open(match src.to_file_path() {
+                        Ok(path) => path,
+                        Err(()) => return Ok(()),
+                    })?;
                     elem.set_attribute("width", &img.width().to_string())?;
                     elem.set_attribute("height", &img.height().to_string())?;
                     Ok(())

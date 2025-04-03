@@ -18,7 +18,7 @@ use url::Url;
 
 use crate::{
     env::ErrorHandling,
-    log_debug,
+    log_debug, log_warning,
     markdown::{PatchStream, Spanned},
 };
 
@@ -45,11 +45,13 @@ impl Environment {
 
         let fragments = content.take_fragments();
 
-        for (base, link) in content
-            .pages
-            .iter_mut()
-            .flat_map(|(base, page)| page.rel_links.iter_mut().map(move |link| (base, link)))
-        {
+        let iter = content.pages.iter_mut().flat_map(|(base, page)| {
+            page.links
+                .iter_mut()
+                .flat_map(move |links| links.links_mut().map(move |link| (base, link)))
+        });
+
+        for (base, link) in iter {
             let file = if link.link.starts_with('/') {
                 self.vcs_root.join(&link.link[1..])
             } else {
@@ -316,17 +318,29 @@ pub struct Pages<'a> {
 
 struct Page<'a> {
     source: &'a str,
-    rel_links: Vec<RelativeLink<'a>>,
+    links: Vec<LinkSpan<'a>>,
     fragments: HashSet<String>,
 }
 
+struct LinkSpan<'a>(Vec<LinkText<'a>>);
+
+enum LinkText<'a> {
+    Text(Event<'a>),
+    Link(RelativeLink<'a>),
+}
+
 struct RelativeLink<'a> {
+    status: LinkStatus,
     span: Range<usize>,
     link: CowStr<'a>,
     usage: LinkUsage,
     title: CowStr<'a>,
-    inner: Vec<Event<'a>>,
-    status: LinkStatus,
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum LinkUsage {
+    Link,
+    Image,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -348,12 +362,6 @@ pub enum LinkStatus {
     NoSuchFragment,
     /// Link to a file under source control but link generation failed
     Error(String),
-}
-
-#[derive(Clone, Copy, PartialEq)]
-enum LinkUsage {
-    Link,
-    Image,
 }
 
 impl<'a> Pages<'a> {
@@ -398,7 +406,7 @@ impl<'a> Page<'a> {
     {
         let mut this = Self {
             source,
-            rel_links: Default::default(),
+            links: Default::default(),
             fragments: Default::default(),
         };
 
@@ -410,7 +418,7 @@ impl<'a> Page<'a> {
         let mut heading: Option<Heading<'_>> = None;
         let mut counter: HashMap<String, usize> = Default::default();
 
-        let mut link: Option<RelativeLink<'_>> = None;
+        let mut opened: Option<LinkSpan<'_>> = None;
 
         for (event, span) in stream {
             match event {
@@ -435,7 +443,7 @@ impl<'a> Page<'a> {
                 }
 
                 Event::Start(tag @ (Tag::Link { .. } | Tag::Image { .. })) => {
-                    let (usage, dest_url, title) = match tag {
+                    let (usage, link, title) = match tag {
                         Tag::Link {
                             dest_url, title, ..
                         } => (LinkUsage::Link, dest_url, title),
@@ -444,47 +452,47 @@ impl<'a> Page<'a> {
                         } => (LinkUsage::Image, dest_url, title),
                         _ => unreachable!(),
                     };
-                    if link.is_some() {
-                        bail!("unexpected {usage:?} in {usage:?} at {span:?}")
-                    }
-                    link = Some(RelativeLink {
+                    let link = RelativeLink {
+                        status: LinkStatus::External,
                         span,
-                        link: dest_url,
+                        link,
                         usage,
                         title,
-                        inner: vec![],
-                        status: LinkStatus::External,
-                    });
+                    }
+                    .pipe(LinkText::Link);
+                    match opened.as_mut() {
+                        Some(opened) => opened.0.push(link),
+                        None => opened = Some(LinkSpan(vec![link])),
+                    }
                 }
 
-                Event::End(end @ (TagEnd::Link | TagEnd::Image)) => {
+                event @ Event::End(end @ (TagEnd::Link | TagEnd::Image)) => {
                     let usage = match end {
                         TagEnd::Link => LinkUsage::Link,
                         TagEnd::Image => LinkUsage::Image,
                         _ => unreachable!(),
                     };
-                    let Some(link) = link.take() else {
+                    let Some(mut items) = opened.take() else {
                         bail!("unexpected {usage:?} at {span:?}")
                     };
-                    if link.span != span {
-                        bail!("mismatching span, expected {:?}, got {span:?}", link.span);
+                    items.0.push(LinkText::Text(event));
+                    if &span == items.span() {
+                        this.links.push(items);
+                    } else {
+                        opened = Some(items)
                     }
-                    if link.usage != usage {
-                        bail!("unexpected {usage:?}, expected {:?}", link.usage)
-                    }
-                    this.rel_links.push(link);
                 }
 
-                event => match (heading.as_mut(), link.as_mut()) {
+                event => match (heading.as_mut(), opened.as_mut()) {
                     (Some(heading), Some(link)) => {
                         heading.text.push(event.clone());
-                        link.inner.push(event);
+                        link.0.push(LinkText::Text(event));
                     }
                     (Some(heading), None) => {
                         heading.text.push(event);
                     }
                     (None, Some(link)) => {
-                        link.inner.push(event);
+                        link.0.push(LinkText::Text(event));
                     }
                     (None, None) => {}
                 },
@@ -495,37 +503,12 @@ impl<'a> Page<'a> {
     }
 
     fn emit(&self) -> Result<String> {
-        self.rel_links
+        self.links
             .iter()
-            .filter_map(|link| {
-                if !matches!(link.status, LinkStatus::Permalink | LinkStatus::Rewritten) {
-                    return None;
-                }
-                let start = match link.usage {
-                    LinkUsage::Link => Tag::Link {
-                        link_type: LinkType::Inline,
-                        dest_url: link.link.clone(),
-                        title: link.title.clone(),
-                        id: CowStr::Borrowed(""),
-                    },
-                    LinkUsage::Image => Tag::Image {
-                        link_type: LinkType::Inline,
-                        dest_url: link.link.clone(),
-                        title: link.title.clone(),
-                        id: CowStr::Borrowed(""),
-                    },
-                };
-                let end = match link.usage {
-                    LinkUsage::Link => TagEnd::Link,
-                    LinkUsage::Image => TagEnd::Image,
-                };
-                std::iter::once(Event::Start(start))
-                    .chain(link.inner.iter().cloned())
-                    .chain(std::iter::once(Event::End(end)))
-                    .pipe(|events| Some((events, link.span.clone())))
-            })
+            .filter_map(EmitLinkSpan::new)
             .pipe(|stream| PatchStream::new(self.source, stream))
-            .into_string()?
+            .into_string()
+            .tap_err(log_warning!())?
             .pipe(Ok)
     }
 
@@ -553,6 +536,119 @@ impl<'a> Page<'a> {
     fn insert_id(&mut self, id: &str, counter: &mut HashMap<String, usize>) {
         counter.insert(id.into(), 1);
         self.fragments.insert(id.into());
+    }
+}
+
+impl<'a> LinkSpan<'a> {
+    fn links_mut(&mut self) -> impl Iterator<Item = &'_ mut RelativeLink<'a>> {
+        self.0.iter_mut().filter_map(|item| match item {
+            LinkText::Link(link) => Some(link),
+            LinkText::Text(..) => None,
+        })
+    }
+
+    fn span(&self) -> &Range<usize> {
+        match &self.0[0] {
+            LinkText::Link(link) => &link.span,
+            LinkText::Text(..) => unreachable!("first item in LinkSpan must be a Link"),
+        }
+    }
+}
+
+struct EmitLinkSpan<'a> {
+    iter: std::slice::Iter<'a, LinkText<'a>>,
+    opened: Vec<LinkUsage>,
+}
+
+impl<'a> Iterator for EmitLinkSpan<'a> {
+    type Item = Event<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        for next in self.iter.by_ref() {
+            match next {
+                LinkText::Text(text) => {
+                    match (text, self.opened.last()) {
+                        (Event::End(TagEnd::Link), Some(LinkUsage::Link)) => {
+                            self.opened.pop();
+                            return Some(text.clone());
+                        }
+                        (Event::End(TagEnd::Image), Some(LinkUsage::Image)) => {
+                            self.opened.pop();
+                            return Some(text.clone());
+                        }
+                        (Event::End(TagEnd::Link | TagEnd::Image), None) => {
+                            // skip this end tag because the link was skipped
+                            continue;
+                        }
+                        _ => {
+                            return Some(text.clone());
+                        }
+                    };
+                }
+                LinkText::Link(link) => {
+                    match (link.will_emit(), self.opened.is_empty()) {
+                        (Some(usage), _) => {
+                            self.opened.push(usage);
+                            return Some(Event::Start(link.emit()));
+                        }
+                        (None, false) => {
+                            return Some(Event::Start(link.emit()));
+                        }
+                        (None, true) => {
+                            continue;
+                        }
+                    };
+                }
+            };
+        }
+        None
+    }
+}
+
+impl<'a> EmitLinkSpan<'a> {
+    fn new(links: &'a LinkSpan<'a>) -> Option<(Self, Range<usize>)> {
+        let span = links.0.iter().find_map(|link| match &link {
+            LinkText::Link(link) => {
+                if link.will_emit().is_some() {
+                    Some(link.span.clone())
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        })?;
+        let iter = EmitLinkSpan {
+            iter: links.0.iter(),
+            opened: vec![],
+        };
+        Some((iter, span))
+    }
+}
+
+impl RelativeLink<'_> {
+    fn emit(&self) -> Tag<'_> {
+        match self.usage {
+            LinkUsage::Link => Tag::Link {
+                link_type: LinkType::Inline,
+                dest_url: self.link.clone(),
+                title: self.title.clone(),
+                id: CowStr::Borrowed(""),
+            },
+            LinkUsage::Image => Tag::Image {
+                link_type: LinkType::Inline,
+                dest_url: self.link.clone(),
+                title: self.title.clone(),
+                id: CowStr::Borrowed(""),
+            },
+        }
+    }
+
+    fn will_emit(&self) -> Option<LinkUsage> {
+        if matches!(self.status, LinkStatus::Permalink | LinkStatus::Rewritten) {
+            Some(self.usage)
+        } else {
+            None
+        }
     }
 }
 

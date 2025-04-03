@@ -56,7 +56,7 @@ after = ["rustdoc-link"]
 command = "cargo bin mdbook-alerts"
 
 [preprocessor.app]
-command = "deno run -A app/build/preprocessor.ts"
+command = "deno run --allow-all app/build/preprocessor.ts"
 
 [_metadata]
 base-url = "https://tonywu6.github.io/mdbookkit/"

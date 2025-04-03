@@ -1,2 +1,5 @@
 **/*.snap
 **/*.snap.new
+
+docs/app/dist.css
+docs/src/app/**/*

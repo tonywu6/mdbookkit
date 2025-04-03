@@ -1,8 +1,6 @@
 # relative paths
 
-[Cargo.toml](../../Cargo.toml)
-
-[src/lib.rs](../../src/lib.rs)
+[Cargo.toml](../../../../Cargo.toml)
 
 ![error reporting](../../../../docs/src/rustdoc-link/media/error-reporting.png)
 
@@ -19,8 +17,6 @@
 [link_forever.rs](../link_forever.rs)
 
 ![selfie](Macaca_nigra_self-portrait_large.jpg)
-
-<https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg>
 
 # fragments
 
@@ -57,3 +53,11 @@ found: <https://example.org/book/tests/ra-known-quirks.html>
 missing: <https://example.org/book/404>
 
 ignored: <https://example.com/book/ra-known-quirks>
+
+# image-in-link
+
+[![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
+
+[![selfie](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg)](https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg)
+
+[![selfie](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg) <br> Self-portrait of a female Macaca nigra in North Sulawesi (2011)](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg)

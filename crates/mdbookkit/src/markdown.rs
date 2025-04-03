@@ -44,6 +44,10 @@ where
             return Some(Ok(Cow::Borrowed(&self.source[start..])));
         };
 
+        if start > span.start {
+            panic!("span {span:?} is backwards from already yielded span ending at {start}")
+        }
+
         let patch = match String::new().pipe(|mut out| cmark(events, &mut out).and(Ok(out))) {
             Err(error) => return Some(Err(error)),
             Ok(patch) => patch,
@@ -59,13 +63,20 @@ where
 impl<'a, S> PatchStream<'a, S> {
     /// Create a new patch stream.
     ///
-    /// `stream` should be an [`Iterator`] yielding (`E`, [`Range<usize>`]), where `E` is an
-    /// [`Iterator`] yielding [`Event`]s.
+    /// `stream` should be an [`Iterator`] yielding tuples of (`events`, `range`):
     ///
-    /// [`Range<usize>`] is the byte span in `source` that should be patched.
+    /// - `events` is an [`Iterator`] yielding [`Event`]s which is the replacement
+    ///    Markdown to be rendered into `source` using [`pulldown_cmark_to_cmark`].
     ///
-    /// `E` is the replacement event stream to be rendered into `source`
-    /// using [`pulldown_cmark_to_cmark`].
+    /// - `range` is a [`Range<usize>`] representing the byte span in `source` that
+    ///   should be patched.
+    ///
+    /// **The yielded ranges must not overlap or decrease**, that is, for `span1` and
+    /// `span2`, where `span1` is yielded before `span2`, `span1.end <= span2.start`.
+    ///
+    /// ## Panics
+    ///
+    /// Panic if ranges in `stream` are not monotonically increasing.
     pub fn new(source: &'a str, stream: S) -> Self {
         Self {
             source,
