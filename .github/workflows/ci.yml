@@ -25,6 +25,9 @@ jobs:
         toolchain:
           - stable
 
+    permissions:
+      actions: write # Evict cache
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,8 +54,8 @@ jobs:
         with:
           path: |
             target/
-          key: ${{steps.cache-key.outputs.CACHE_KEY}}
-          restore-keys: ${{steps.cache-key.outputs.CACHE_KEY_RESTORE}}
+          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
+          restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
         id: cache-restore
 
       - run: cargo run   --package util-rust-analyzer -- download
@@ -61,8 +64,8 @@ jobs:
           RUST_LOG: info
 
       - name: Evict cache
-        run: gh cache delete '${{steps.cache-key.outputs.CACHE_KEY}}'
-        if: ${{steps.cache-restore.outputs.cache-hit}}
+        run: gh cache delete '${{ steps.cache-key.outputs.CACHE_KEY }}'
+        if: ${{ steps.cache-restore.outputs.cache-hit }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -71,11 +74,11 @@ jobs:
         with:
           path: |
             target/
-          key: ${{steps.cache-key.outputs.CACHE_KEY}}
+          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
 
     outputs:
-      CACHE_KEY: ${{steps.cache-key.outputs.CACHE_KEY}}
-      CACHE_KEY_RESTORE: ${{steps.cache-key.outputs.CACHE_KEY_RESTORE}}
+      CACHE_KEY: ${{ steps.cache-key.outputs.CACHE_KEY }}
+      CACHE_KEY_RESTORE: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
 
   build_features:
     name: Build
@@ -108,8 +111,8 @@ jobs:
         with:
           path: |
             target/
-          key: ${{needs.test.outputs.CACHE_KEY}}
-          restore-keys: ${{needs.test.outputs.CACHE_KEY_RESTORE}}
+          key: ${{ needs.test.outputs.CACHE_KEY }}
+          restore-keys: ${{ needs.test.outputs.CACHE_KEY_RESTORE }}
 
       - run: cargo build --release --features ${{ matrix.features }}
 
@@ -140,8 +143,8 @@ jobs:
         with:
           path: |
             target/
-          key: ${{needs.test.outputs.CACHE_KEY}}
-          restore-keys: ${{needs.test.outputs.CACHE_KEY_RESTORE}}
+          key: ${{ needs.test.outputs.CACHE_KEY }}
+          restore-keys: ${{ needs.test.outputs.CACHE_KEY_RESTORE }}
 
       - run: cargo run   --package util-rust-analyzer -- download
         env:

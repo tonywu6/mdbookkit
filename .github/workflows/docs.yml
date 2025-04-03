@@ -40,9 +40,12 @@ jobs:
         with:
           path: |
             target/
-          key: ${{steps.cache-key.outputs.CACHE_KEY}}
-          restore-keys: ${{steps.cache-key.outputs.CACHE_KEY_RESTORE}}
+          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
+          restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
         id: cache-restore
+
+      - name: Install deps
+        run: cargo bin --install
 
       - name: Build docs
         run: cargo bin mdbook build
@@ -55,3 +58,21 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/dist
+
+  # deploy:
+  #   runs-on: ubuntu-latest
+
+  #   needs: build
+
+  #   permissions:
+  #     pages: write
+  #     id-token: write
+
+  #   environment:
+  #     name: github-pages
+  #     url: ${{ steps.deployment.outputs.page_url }}
+
+  #   steps:
+  #     - name: Deploy to GitHub Pages
+  #       id: deployment
+  #       uses: actions/deploy-pages@v4
