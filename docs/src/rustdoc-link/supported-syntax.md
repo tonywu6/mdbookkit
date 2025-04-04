@@ -74,13 +74,13 @@ Types can contain generic parameters. This is _compatible_ with rustdoc.
 > ```md
 > | Phantom type                                       | variance of `T`   |
 > | :------------------------------------------------- | :---------------- |
-> | [`&'a mut T`][std::marker::PhantomData<&'a mut T>] | **inv**ariant     |
+> | [`&'a mut T`][std::marker::PhantomData<&'a mut T>] | **in**variant     |
 > | [`fn(T)`][std::marker::PhantomData<fn(T)>]         | **contra**variant |
 > ```
 >
 > | Phantom type                                       | variance of `T`   |
 > | :------------------------------------------------- | :---------------- |
-> | [`&'a mut T`][std::marker::PhantomData<&'a mut T>] | **inv**ariant     |
+> | [`&'a mut T`][std::marker::PhantomData<&'a mut T>] | **in**variant     |
 > | [`fn(T)`][std::marker::PhantomData<fn(T)>]         | **contra**variant |
 
 This includes if you use turbofish:
@@ -159,8 +159,7 @@ ignored**:
 > [`std::vec`], [`mod@std::vec`], and [`macro@std::vec`] all link to the `vec` _module_.
 > ```
 >
-> [`std::vec`], [`mod@std::vec`], and [`macro@std::vec`] all link to the `vec` >
-> _module_.
+> [`std::vec`], [`mod@std::vec`], and [`macro@std::vec`] all link to the `vec` _module_.
 
 Currently, duplicate names in Rust are allowed only if they correspond to items in
 different [namespaces], for example, between macros and modules, and between struct

@@ -7,8 +7,8 @@ expression: report
   4 │ 
   5 │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
     · ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  6 │ [![documentation](https://img.shields.io/docsrs/mdbookkit?style=flat-square&label=docs.rs)](https://docs.rs/mdbookkit)
-    · ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  6 │ [![documentation](https://img.shields.io/github/actions/workflow/status/tonywu6/mdbookkit/docs.yml?branch=main&event=release&style=flat-square&label=docs)](https://docs.rs/mdbookkit)
+    · ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   7 │ [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
     ·  ───────────────────────────────────────────────────────────────────────────────────────
   8 │ 
@@ -40,7 +40,7 @@ expression: report
    ·                           ╰── https://github.com/lorem/ipsum/tree/dolor/docs/src/media/banner.webp
  4 │ 
  5 │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
- 6 │ [![documentation](https://img.shields.io/docsrs/mdbookkit?style=flat-square&label=docs.rs)](https://docs.rs/mdbookkit)
+ 6 │ [![documentation](https://img.shields.io/github/actions/workflow/status/tonywu6/mdbookkit/docs.yml?branch=main&event=release&style=flat-square&label=docs)](https://docs.rs/mdbookkit)
  7 │ [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
    · ──────────────────────────────────────────────────────┬──────────────────────────────────────────────────────
    ·                                                       ╰── https://github.com/lorem/ipsum/tree/dolor/LICENSE-APACHE.md

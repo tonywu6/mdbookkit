@@ -47,13 +47,13 @@ expression: report
   74 │ > ```md
   75 │ > | Phantom type                                       | variance of `T`   |
   76 │ > | :------------------------------------------------- | :---------------- |
-  77 │ > | [`&'a mut T`][std::marker::PhantomData<&'a mut T>] | **inv**ariant     |
+  77 │ > | [`&'a mut T`][std::marker::PhantomData<&'a mut T>] | **in**variant     |
   78 │ > | [`fn(T)`][std::marker::PhantomData<fn(T)>]         | **contra**variant |
   79 │ > ```
   80 │ >
   81 │ > | Phantom type                                       | variance of `T`   |
   82 │ > | :------------------------------------------------- | :---------------- |
-  83 │ > | [`&'a mut T`][std::marker::PhantomData<&'a mut T>] | **inv**ariant     |
+  83 │ > | [`&'a mut T`][std::marker::PhantomData<&'a mut T>] | **in**variant     |
      ·     ─────────────────────────┬────────────────────────
      ·                              ╰── https://doc.rust-lang.org/stable/core/marker/struct.PhantomData.html
   84 │ > | [`fn(T)`][std::marker::PhantomData<fn(T)>]         | **contra**variant |
@@ -160,129 +160,128 @@ expression: report
  159 │ > [`std::vec`], [`mod@std::vec`], and [`macro@std::vec`] all link to the `vec` _module_.
  160 │ > ```
  161 │ >
- 162 │ > [`std::vec`], [`mod@std::vec`], and [`macro@std::vec`] all link to the `vec` >
+ 162 │ > [`std::vec`], [`mod@std::vec`], and [`macro@std::vec`] all link to the `vec` _module_.
      ·   ──────┬─────  ────────┬───────      ─────────┬────────
      ·         │               │                      ╰── https://doc.rust-lang.org/stable/alloc/vec/index.html
      ·         │               ╰── https://doc.rust-lang.org/stable/alloc/vec/index.html
      ·         ╰── https://doc.rust-lang.org/stable/alloc/vec/index.html
- 163 │ > _module_.
- 164 │ 
- 165 │ Currently, duplicate names in Rust are allowed only if they correspond to items in
- 166 │ different [namespaces], for example, between macros and modules, and between struct
- 167 │ fields and methods — this is mostly covered by the function and macro syntax, described
- 168 │ [above](#functions-and-macros).
- 169 │ 
- 170 │ If you encounter items that must be disambiguated using rustdoc's disambiguator syntax,
- 171 │ other than [the "special types" listed below](#special-types), please [file an
- 172 │ issue][gh-issues]!
- 173 │ 
- 174 │ ## Special types
- 175 │ 
- 176 │ > [!WARNING]
- 177 │ 
- 178 │ There is **no support** on types whose syntax is not a path; they are currently not
- 179 │ parsed at all:
- 180 │ 
- 181 │ > references `&T`, slices `[T]`, arrays `[T; N]`, tuples `(T1, T2)`, pointers like
- 182 │ > `*const T`, trait objects like `dyn Any`, and the never type `!`
- 183 │ 
- 184 │ Note that such types can still be used as generic params, just not as standalone types.
- 185 │ 
- 186 │ ## Struct fields
- 187 │ 
- 188 │ > [!WARNING]
- 189 │ 
- 190 │ Linking to struct fields is **not supported** yet. This is **incompatible** with
- 191 │ rustdoc.
- 192 │ 
- 193 │ ## Markdown link syntax
- 194 │ 
- 195 │ All Markdown link formats supported by rustdoc are supported:
- 196 │ 
- 197 │ Linking with URL inlined:
- 198 │ 
- 199 │ > ```md
- 200 │ > [The Option type](std::option::Option)
- 201 │ > ```
- 202 │ >
- 203 │ > [The Option type](std::option::Option)
+ 163 │ 
+ 164 │ Currently, duplicate names in Rust are allowed only if they correspond to items in
+ 165 │ different [namespaces], for example, between macros and modules, and between struct
+ 166 │ fields and methods — this is mostly covered by the function and macro syntax, described
+ 167 │ [above](#functions-and-macros).
+ 168 │ 
+ 169 │ If you encounter items that must be disambiguated using rustdoc's disambiguator syntax,
+ 170 │ other than [the "special types" listed below](#special-types), please [file an
+ 171 │ issue][gh-issues]!
+ 172 │ 
+ 173 │ ## Special types
+ 174 │ 
+ 175 │ > [!WARNING]
+ 176 │ 
+ 177 │ There is **no support** on types whose syntax is not a path; they are currently not
+ 178 │ parsed at all:
+ 179 │ 
+ 180 │ > references `&T`, slices `[T]`, arrays `[T; N]`, tuples `(T1, T2)`, pointers like
+ 181 │ > `*const T`, trait objects like `dyn Any`, and the never type `!`
+ 182 │ 
+ 183 │ Note that such types can still be used as generic params, just not as standalone types.
+ 184 │ 
+ 185 │ ## Struct fields
+ 186 │ 
+ 187 │ > [!WARNING]
+ 188 │ 
+ 189 │ Linking to struct fields is **not supported** yet. This is **incompatible** with
+ 190 │ rustdoc.
+ 191 │ 
+ 192 │ ## Markdown link syntax
+ 193 │ 
+ 194 │ All Markdown link formats supported by rustdoc are supported:
+ 195 │ 
+ 196 │ Linking with URL inlined:
+ 197 │ 
+ 198 │ > ```md
+ 199 │ > [The Option type](std::option::Option)
+ 200 │ > ```
+ 201 │ >
+ 202 │ > [The Option type](std::option::Option)
      ·   ───────────────────┬──────────────────
      ·                      ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
- 204 │ 
- 205 │ Linking with reusable references:
- 206 │ 
- 207 │ > ```md
- 208 │ > [The Option type][option-type]
- 209 │ >
- 210 │ > [option-type]: std::option::Option
- 211 │ > ```
- 212 │ >
- 213 │ > [The Option type][option-type]
+ 203 │ 
+ 204 │ Linking with reusable references:
+ 205 │ 
+ 206 │ > ```md
+ 207 │ > [The Option type][option-type]
+ 208 │ >
+ 209 │ > [option-type]: std::option::Option
+ 210 │ > ```
+ 211 │ >
+ 212 │ > [The Option type][option-type]
      ·   ───────────────┬──────────────
      ·                  ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
- 214 │ >
- 215 │ > [option-type]: std::option::Option
- 216 │ 
- 217 │ Reference-style links `[text][id]` without a corresponding `[id]: name` part will be
- 218 │ treated the same as inline-style links `[text](id)`:
- 219 │ 
- 220 │ > ```md
- 221 │ > [The Option type][std::option::Option]
- 222 │ > ```
- 223 │ >
- 224 │ > [The Option type][std::option::Option]
+ 213 │ >
+ 214 │ > [option-type]: std::option::Option
+ 215 │ 
+ 216 │ Reference-style links `[text][id]` without a corresponding `[id]: name` part will be
+ 217 │ treated the same as inline-style links `[text](id)`:
+ 218 │ 
+ 219 │ > ```md
+ 220 │ > [The Option type][std::option::Option]
+ 221 │ > ```
+ 222 │ >
+ 223 │ > [The Option type][std::option::Option]
      ·   ───────────────────┬──────────────────
      ·                      ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
- 225 │ 
- 226 │ Shortcuts are supported, and can contain inline markups:
- 227 │ 
- 228 │ > ```md
- 229 │ > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
- 230 │ > ```
- 231 │ >
- 232 │ > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
+ 224 │ 
+ 225 │ Shortcuts are supported, and can contain inline markups:
+ 226 │ 
+ 227 │ > ```md
+ 228 │ > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
+ 229 │ > ```
+ 230 │ >
+ 231 │ > You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
      ·                    ───┬───      ────────┬───────                  ─────┬────
      ·                       │                 │                              ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html
      ·                       │                 ╰── https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html#method.new
      ·                       ╰── https://doc.rust-lang.org/stable/alloc/vec/struct.Vec.html
- 233 │ 
- 234 │ (The items must still be resolvable; in this case `Vec` and `vec!` come from the
- 235 │ prelude.)
- 236 │ 
- 237 │ ## Linking to page sections
- 238 │ 
- 239 │ To link to a known section on a page, use a URL fragment, just like a normal link. This
- 240 │ is _compatible_ with rustdoc.
- 241 │ 
- 242 │ <!-- prettier-ignore-start -->
- 243 │ 
- 244 │ > ```md
- 245 │ > [When Should You Use Which Collection?][std::collections#when-should-you-use-which-collection]
- 246 │ > ```
- 247 │ >
- 248 │ > [When Should You Use Which Collection?][std::collections#when-should-you-use-which-collection]
+ 232 │ 
+ 233 │ (The items must still be resolvable; in this case `Vec` and `vec!` come from the
+ 234 │ prelude.)
+ 235 │ 
+ 236 │ ## Linking to page sections
+ 237 │ 
+ 238 │ To link to a known section on a page, use a URL fragment, just like a normal link. This
+ 239 │ is _compatible_ with rustdoc.
+ 240 │ 
+ 241 │ <!-- prettier-ignore-start -->
+ 242 │ 
+ 243 │ > ```md
+ 244 │ > [When Should You Use Which Collection?][std::collections#when-should-you-use-which-collection]
+ 245 │ > ```
+ 246 │ >
+ 247 │ > [When Should You Use Which Collection?][std::collections#when-should-you-use-which-collection]
      ·   ───────────────────────────────────────────────┬──────────────────────────────────────────────
      ·                                                  ╰── https://doc.rust-lang.org/stable/std/collections/index.html
- 249 │ 
- 250 │ <!-- prettier-ignore-end -->
- 251 │ 
- 252 │ ---
- 253 │ 
- 254 │ [^1]:
- 255 │     rust-analyzer's ability to generate links for enum variants like `Option::Some` was
- 256 │     improved only somewhat recently: before
- 257 │     [#19246](https://github.com/rust-lang/rust-analyzer/pull/19246), links for variants
- 258 │     and associated items may only point to the types themselves. If linking to such
- 259 │     items doesn't seem to work for you, be sure to upgrade to a newer rust-analyzer
- 260 │     first!
- 261 │ 
- 262 │ [^2]:
- 263 │     As of rust-analyzer <ra-version>(version)</ra-version>, links generated for macros
- 264 │     don't always work. Examples include [`std::format!`] (seen above) and
+ 248 │ 
+ 249 │ <!-- prettier-ignore-end -->
+ 250 │ 
+ 251 │ ---
+ 252 │ 
+ 253 │ [^1]:
+ 254 │     rust-analyzer's ability to generate links for enum variants like `Option::Some` was
+ 255 │     improved only somewhat recently: before
+ 256 │     [#19246](https://github.com/rust-lang/rust-analyzer/pull/19246), links for variants
+ 257 │     and associated items may only point to the types themselves. If linking to such
+ 258 │     items doesn't seem to work for you, be sure to upgrade to a newer rust-analyzer
+ 259 │     first!
+ 260 │ 
+ 261 │ [^2]:
+ 262 │     As of rust-analyzer <ra-version>(version)</ra-version>, links generated for macros
+ 263 │     don't always work. Examples include [`std::format!`] (seen above) and
      ·                                         ────────┬───────
      ·                                                 ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.format.html
- 265 │     [`tokio::main!`]. For more info, see [Known issues](known-issues.md#macros).
+ 264 │     [`tokio::main!`]. For more info, see [Known issues](known-issues.md#macros).
      ·     ────────┬───────
      ·             ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
- 266 │ 
+ 265 │ 
      ╰────
