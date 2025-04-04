@@ -113,7 +113,10 @@ jobs:
           path: |
             target/${{ matrix.target }}/release/mdbook-rustdoc-link
             target/${{ matrix.target }}/release/mdbook-link-forever
+            target/${{ matrix.target }}/release/mdbook-rustdoc-link.exe
+            target/${{ matrix.target }}/release/mdbook-link-forever.exe
           name: ${{ matrix.target }}
+          if-no-files-found: warn
           retention-days: 1
         if: github.event_name != 'release'
 
