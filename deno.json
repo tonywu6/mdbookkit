@@ -1,10 +1,15 @@
 {
-  "tasks": {
-    "format": "deno run -A npm:prettier --write docs/app docs/src"
+  "compilerOptions": {
+    "lib": ["esnext", "dom", "deno.ns"],
+    "strict": true
   },
+  "exclude": ["node_modules", "build", "dist", "target", "docs/app/dist.js"],
   "imports": {
     "esbuild": "npm:esbuild@^0.25.1",
     "prettier": "npm:prettier@^3.5.3"
   },
-  "nodeModulesDir": "auto"
+  "nodeModulesDir": "auto",
+  "tasks": {
+    "format": "deno run -A npm:prettier --write docs/app docs/src"
+  }
 }

@@ -24,7 +24,7 @@ clap = { version = "4.5.31", features = ["derive"] }
 env_logger = "0.11.6"
 insta = { version = "1.40.0", features = ["yaml"] }
 log = "0.4.26"
-mdbook = { version = "0.4.47", default-features = false }
+mdbook = { version = "0.4.48", default-features = false }
 miette = { version = "7.5.0", features = [
   "fancy-no-backtrace",
 ], default-features = false }
@@ -42,5 +42,5 @@ url = "2.5.4"
 util-testing = { path = "utils/testing" }
 
 [workspace.metadata.bin]
-mdbook = { version = "0.4.47" }
+mdbook = { version = "0.4.48" }
 mdbook-alerts = { version = "0.7.0" }

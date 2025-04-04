@@ -4,26 +4,51 @@ import * as esbuild from "npm:esbuild";
 
 const relpath = (path: string) => new URL(path, import.meta.url).pathname;
 
+try {
+  await Deno.remove(relpath("../../src/app"), { recursive: true });
+} catch {
+  // recursive: true is supposed to make it not throw ...
+}
+
 const built = await esbuild.build({
   bundle: true,
+  format: "esm",
   target: ["chrome93", "firefox93", "safari15", "es2020"],
   platform: "browser",
   plugins: [remoteCSS()],
-  entryPoints: [relpath("../main.css")],
+  entryPoints: [relpath("../main.js"), relpath("../main.css")],
   outdir: relpath("../../src/app"),
   entryNames: "[name]-[hash]",
   metafile: true,
   logLevel: Deno.env.get("CI") ? "info" : undefined,
 });
 
-// generate an `app/dist.css` for mdBook that actually imports the bundle
+// generate `app/dist.css` and `app/dist.js` for mdBook that actually imports the bundle
+
+const css: string[] = [];
+const esm: string[] = [];
+
+for (const [path, file] of Object.entries(built.metafile.outputs)) {
+  if (file.entryPoint) {
+    const name = JSON.stringify(`./${pathlib.basename(path)}`);
+    switch (path.split(".").pop()) {
+      case "css":
+        css.push(`@import url(${name});`);
+        break;
+      case "js":
+        esm.push(`import(${name});`);
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+await Deno.writeTextFile(relpath("../dist.css"), css.join("\n") + "\n");
 
 await Deno.writeTextFile(
-  relpath("../dist.css"),
-  Object.entries(built.metafile.outputs)
-    .filter(([, file]) => file.entryPoint)
-    .map(([path]) => `@import url(${JSON.stringify(pathlib.basename(path))});`)
-    .join("\n"),
+  relpath("../dist.js"),
+  `document.addEventListener("DOMContentLoaded", () => { ${esm.join("\n")} });`,
 );
 
 function remoteCSS(): esbuild.Plugin {

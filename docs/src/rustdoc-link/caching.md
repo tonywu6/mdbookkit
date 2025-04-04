@@ -94,12 +94,13 @@ which contributes to the majority of build time.
 
 Furthermore, the preprocessor relies on the LSP [Work Done
 Progress][lsp-work-done-progress] notifications to know when rust-analyzer has finished
-cache priming before actually sending out external docs requests. Because rust-analyzer
-seems to automatically reindex multiple times, a "cooldown" mechanism was implemented,
-to wait for a hard-coded 500ms after rust-analyzer reports indexing done, before
-continuing.
+cache priming, before actually sending out external docs requests. This requires parsing
+non-structured log messages that rust-analyzer sends out and some debouncing/throttling
+logic, which is not ideal, see
+[client.rs](/crates/mdbookkit/src/bin/rustdoc_link/client.rs#L129-L132).
 
-Not doing either of these things causes many links to fail to resolve.
+Not waiting for indexing to finish and sending out requests too early causes
+rust-analyzer to respond with empty results.
 
 **Questions**:
 
@@ -142,14 +143,6 @@ So `rust-analyzer` has an extremely incremental architecture, perfect for comple
 languages like Rust, and `mdbook` has an explicitly non-incremental architecture,
 perfect for rendering Markdown. This makes them somewhat challenging to work well
 together in a live-reload scenario.
-
-> [!NOTE]
->
-> The above is entirely my understanding of how the two projects work, which may have
-> gross misconceptions or misuse of words. [Feedback of any kind is very welcome
-> :)][gh-issues]
-
----
 
 [^1]:
     It was mentioned that the [recently updated, salsa-ified rust-analyzer][salsa]

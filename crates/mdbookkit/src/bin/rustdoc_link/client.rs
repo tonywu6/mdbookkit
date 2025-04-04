@@ -38,6 +38,7 @@ use super::{
     env::Environment,
     link::ItemLinks,
     sync::{EventSampler, EventSampling},
+    url::UrlToPath,
 };
 
 /// LSP client to talk to rust-analyzer.
@@ -77,18 +78,23 @@ impl Client {
         Ok(opened)
     }
 
-    pub async fn stop(self) -> Result<Environment> {
+    pub async fn stop(self) -> Environment {
         if let Some(server) = self.server.into_inner() {
-            server.dispose().await?;
+            server
+                .dispose()
+                .await
+                .context("failed to properly stop rust-analyzer")
+                .tap_err(log_warning!())
+                .ok();
         }
-        Ok(self.env)
+        self.env
     }
 
     pub async fn drop(self: Arc<Self>) -> Result<Environment> {
         let Some(this) = Arc::into_inner(self) else {
             bail!("attempted to shutdown a client that is still referenced")
         };
-        this.stop().await
+        Ok(this.stop().await)
     }
 }
 
@@ -120,7 +126,7 @@ impl Server {
             percent_indexed: Option<u32>,
         }
 
-        fn on_progress(state: &mut State, progress: ProgressParams) {
+        fn probe_progress(state: &mut State, progress: ProgressParams) {
             match indexing_progress(&progress) {
                 Some(WorkDoneProgress::Begin(begin)) => {
                     state.percent_indexed = Some(0);
@@ -147,13 +153,14 @@ impl Server {
                     let spurious = if let Some(msg) = &report.message {
                         // HACK: invalidate progress reports that say "0/1 (crate name)"
                         // because RA isn't actually indexing everything at this point
-                        msg.contains("0/1")
+                        msg.starts_with("0/1 (")
                     } else {
                         // also ignore indexing runs that went from 0 to a 100
                         *indexed == 0 && update == 100
                     };
 
                     if spurious {
+                        log::debug!("ignoring spurious rust-analyzer progress");
                         state.percent_indexed = None;
                         return;
                     }
@@ -196,7 +203,8 @@ impl Server {
 
             router
                 .notification::<Progress>(|state, progress| {
-                    on_progress(state, progress);
+                    log::trace!("{progress:#?}");
+                    probe_progress(state, progress);
                     ControlFlow::Continue(())
                 })
                 .notification::<PublishDiagnostics>(|_, diagnostics| {
@@ -221,7 +229,7 @@ impl Server {
 
         let proc = env
             .command()?
-            .current_dir(env.crate_dir.path())
+            .current_dir(env.crate_dir.to_path()?)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit())

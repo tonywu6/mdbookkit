@@ -15,6 +15,7 @@ edition = "2021"
 
 [output.html]
 additional-css = ["app/dist.css"]
+additional-js = ["app/dist.js"]
 default-theme = "ayu"
 git-repository-icon = "fa-github"
 git-repository-url = "https://github.com/tonywu6/mdbookkit"

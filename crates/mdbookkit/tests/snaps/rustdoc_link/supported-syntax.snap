@@ -252,8 +252,6 @@ is _compatible_ with rustdoc.
 
 <!-- prettier-ignore-end -->
 
----
-
 [^1]:
     rust-analyzer's ability to generate links for enum variants like `Option::Some` was
     improved only somewhat recently: before

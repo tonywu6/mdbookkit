@@ -1,17 +1,18 @@
-use std::{collections::HashMap, io::Write};
+use std::collections::HashMap;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use console::colors_enabled_stderr;
 use log::LevelFilter;
+use tap::TapFallible;
+
 use mdbookkit::{
     bin::link_forever::{Environment, Pages},
     diagnostics::Issue,
-    env::{book_from_stdin, for_each_chapter_mut, iter_chapters},
+    env::{book_from_stdin, book_into_stdout, for_each_chapter_mut, iter_chapters},
     log_warning,
     logging::{is_logging, ConsoleLogger},
 };
-use tap::TapFallible;
 
 fn main() -> Result<()> {
     ConsoleLogger::install("link-forever");
@@ -21,15 +22,29 @@ fn main() -> Result<()> {
         None => {}
     }
 
-    let (context, mut book) = book_from_stdin()?;
+    let (context, mut book) = book_from_stdin().context("failed to parse book content")?;
 
-    let env = Environment::from_book(&context)?;
+    let env = match Environment::try_from_env(&context)
+        .context("failed to initialize `mdbook-link-forever`")?
+    {
+        Ok(env) => env,
+        Err(err) => {
+            log::warn!("{:?}", err.context("preprocessor will be disabled"));
+            return book_into_stdout(&book);
+        }
+    };
 
     let mut content = Pages::new(env.markdown);
 
     for (path, ch) in iter_chapters(&book) {
-        let url = env.book_src.join(&path.to_string_lossy())?;
-        content.insert(url, &ch.content)?;
+        let url = env
+            .book_src
+            .join(&path.to_string_lossy())
+            .context("could not read path as a url")?;
+        content
+            .insert(url, &ch.content)
+            .with_context(|| path.display().to_string())
+            .context("failed to parse Markdown source:")?;
     }
 
     env.resolve(&mut content);
@@ -61,8 +76,7 @@ fn main() -> Result<()> {
         }
     });
 
-    let output = serde_json::to_string(&book)?;
-    std::io::stdout().write_all(output.as_bytes())?;
+    book_into_stdout(&book)?;
 
     env.config.fail_on_warnings.check(status.level())?;
 

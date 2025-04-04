@@ -1,3 +1,5 @@
+# TODO: still need cross platform E2E testing
+
 name: CI
 
 on:

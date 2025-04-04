@@ -208,26 +208,30 @@ body {
   }
 
   .footnote-definition {
-    display: grid;
-    grid-template-columns: max-content auto;
-    gap: 0.5rem;
-    margin-block: 0.5rem;
-
-    .footnote-definition-label {
-      line-height: 1.8;
-    }
-
-    > * {
-      display: block;
-      margin: 0;
-    }
-
     > p {
       line-height: 1.6;
     }
 
-    > *:not(.footnote-definition-label) {
-      grid-column-start: 2;
+    > li:target::before {
+      background-color: #ffb45420;
+      outline: 0.5rem solid #ffb45420;
+      border: none;
+      border-radius: 0;
+      top: 0;
+      bottom: 0;
+      left: -24px;
+      right: 0;
+    }
+  }
+
+  :not(h1, h2, h3, h4, h5, h6, .footnote-definition > li):target {
+    background-color: #ffb45420;
+    outline: 0.5rem solid #ffb45420;
+
+    &.footnote-reference {
+      background-color: #ffb45440;
+      outline: 0.25rem solid #ffb45440;
+      border-radius: 0;
     }
   }
 
@@ -237,11 +241,6 @@ body {
     margin: 2rem 0;
     background-color: #3d444d;
     border: 0;
-  }
-
-  :not(h1, h2, h3, h4, h5, h6):target {
-    background-color: #ffb45420;
-    outline: 0.5rem solid #ffb45420;
   }
 
   img,
@@ -407,6 +406,13 @@ figure.fig-text {
 
     > blockquote {
       padding-inline-start: calc(20px - 0.25rem);
+    }
+
+    .footnote-definition > li:target::before {
+      top: 0;
+      bottom: 0;
+      left: -40px;
+      width: 100vw;
     }
 
     > .mdbook-alerts {

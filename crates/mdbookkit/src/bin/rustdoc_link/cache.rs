@@ -14,7 +14,7 @@ use tokio::task::JoinSet;
 
 use crate::log_debug;
 
-use super::{env::Environment, link::ItemLinks, page::Pages, Resolver};
+use super::{env::Environment, link::ItemLinks, page::Pages, url::UrlToPath, Resolver};
 
 #[allow(async_fn_in_trait)]
 pub trait Cache: DeserializeOwned + Serialize {
@@ -156,7 +156,7 @@ impl FileCacheV1 {
 }
 
 async fn read_dep(url: Url) -> Result<(String, String)> {
-    let content = tokio::fs::read_to_string(&url.path()).await?;
+    let content = tokio::fs::read_to_string(&url.to_path()?).await?;
     Ok((url.to_string(), content))
 }
 

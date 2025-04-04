@@ -1,3 +1,5 @@
+use std::io::Read;
+
 use anyhow::{anyhow, Result};
 use serde::Deserialize;
 use tap::Pipe;
@@ -47,11 +49,20 @@ impl ErrorHandling {
     }
 }
 
+pub fn string_from_stdin() -> Result<String> {
+    Vec::new()
+        .pipe(|mut buf| std::io::stdin().read_to_end(&mut buf).and(Ok(buf)))?
+        .pipe(|buf| Ok(String::from_utf8(buf)?))
+}
+
 #[cfg(feature = "common-cli")]
 pub use book::*;
 #[cfg(feature = "common-cli")]
 mod book {
-    use std::{io::Read, path::PathBuf};
+    use std::{
+        io::{Read, Write},
+        path::PathBuf,
+    };
 
     use anyhow::{Context, Result};
     use mdbook::{
@@ -74,8 +85,7 @@ mod book {
         T: DeserializeOwned + Default,
     {
         if let Some(config) = config.get_preprocessor(name) {
-            T::deserialize(toml::Value::Table(config.clone()))
-                .context("failed to read preprocessor config from book.toml")?
+            T::deserialize(toml::Value::Table(config.clone()))?
         } else {
             Default::default()
         }
@@ -110,5 +120,12 @@ mod book {
             let Some(path) = &ch.source_path else { return };
             func(path.clone(), ch)
         });
+    }
+
+    pub fn book_into_stdout(book: &Book) -> Result<()> {
+        serde_json::to_string(&book)
+            .context("failed to serialize book")
+            .and_then(|output| Ok(std::io::stdout().write_all(output.as_bytes())?))
+            .context("failed to write book to stdout")
     }
 }

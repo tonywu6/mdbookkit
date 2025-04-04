@@ -57,7 +57,7 @@ impl Environment {
             } else {
                 base.join(&link.link)
             }
-            .context("couldn't derive url")
+            .context("could not derive url")
             .tap_err(log_debug!());
 
             let Ok(file_url) = file else {

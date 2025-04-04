@@ -4,7 +4,7 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use cargo_toml::{Manifest, Product};
 #[cfg(feature = "common-cli")]
 use clap::ValueHint;
@@ -140,17 +140,20 @@ impl Environment {
             .manifest_dir
             .clone()
             .map(Ok)
-            .unwrap_or_else(std::env::current_dir)?
-            .canonicalize()?;
+            .unwrap_or_else(std::env::current_dir)
+            .context("failed to get the current working directory")?
+            .canonicalize()
+            .context("failed to resolve `manifest-dir` to a path")?;
 
         let (crate_dir, entrypoint) = {
-            let manifest_path = LocateProject::package(&cwd)?.root;
+            let manifest_path = LocateProject::package(&cwd)
+                .context("preprocessor requires a Cargo project to run rust-analyzer")
+                .context("failed to determine the current Cargo project")?
+                .root;
 
-            let manifest = {
-                let mut manifest = Manifest::from_path(&manifest_path)?;
-                manifest.complete_from_path(&manifest_path)?;
-                manifest
-            };
+            let manifest = Manifest::from_path(&manifest_path)
+                .and_then(|mut m| m.complete_from_path(&manifest_path).and(Ok(m)))
+                .context("failed to read Cargo.toml")?;
 
             let crate_dir = manifest_path
                 .parent()
@@ -169,22 +172,21 @@ impl Environment {
                 let entry = crate_dir.join(bin)?;
                 Ok((crate_dir, entry))
             } else {
-                Err(anyhow!(
+                let err = Err(anyhow!(
                     "help: resolved Cargo.toml is {}",
                     manifest_path.display()
-                ))
-                .pipe(|r| {
-                    if manifest.workspace.is_some() {
-                        r.context("help: to use in a workspace, set `manifest-dir` option to root of a member crate")
-                    } else {
-                        r
-                    }
-                })
+                ));
+                if manifest.workspace.is_some() {
+                    err.context("help: to use in a workspace, set `manifest-dir` option to root of a member crate")
+                } else {
+                    err
+                }
                 .context("Cargo.toml does not have any lib or bin target")
             }
         }?;
 
-        let source_dir = LocateProject::workspace(cwd)?
+        let source_dir = LocateProject::workspace(cwd)
+            .context("failed to locate the current Cargo project")?
             .root
             .parent()
             .unwrap()
@@ -294,22 +296,24 @@ struct LocateProject {
 
 impl LocateProject {
     fn package<P: AsRef<Path>>(cwd: P) -> Result<Self> {
-        std::process::Command::new(env!("CARGO"))
+        std::process::Command::new("cargo")
             .arg("locate-project")
             .arg("--message-format=json")
             .current_dir(cwd)
-            .output()?
-            .pipe(Self::parse)
+            .output()
+            .context("failed to run `cargo locate-project`, is cargo installed?")
+            .and_then(Self::parse)
     }
 
     fn workspace<P: AsRef<Path>>(cwd: P) -> Result<Self> {
-        std::process::Command::new(env!("CARGO"))
+        std::process::Command::new("cargo")
             .arg("locate-project")
             .arg("--message-format=json")
             .arg("--workspace")
             .current_dir(cwd)
-            .output()?
-            .pipe(Self::parse)
+            .output()
+            .context("failed to run `cargo locate-project`, is cargo installed?")
+            .and_then(Self::parse)
     }
 
     fn parse(output: std::process::Output) -> Result<Self> {
@@ -318,10 +322,7 @@ impl LocateProject {
                 .pipe(|outout| serde_json::from_str::<Self>(&outout))?
                 .pipe(Ok)
         } else {
-            anyhow!(String::from_utf8_lossy(&output.stderr).into_owned())
-                .context("help: a Cargo project is needed to run rust-analyzer in")
-                .context("failed to locate a Cargo project")
-                .pipe(Err)
+            bail!(String::from_utf8_lossy(&output.stderr).into_owned());
         }
     }
 }

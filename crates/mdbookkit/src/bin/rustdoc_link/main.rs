@@ -1,12 +1,10 @@
-use std::{
-    collections::HashMap,
-    io::{Read, Write},
-};
+use std::{collections::HashMap, io::Write};
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use console::colors_enabled_stderr;
 use log::LevelFilter;
+use mdbook::preprocess::PreprocessorContext;
 use tap::{Pipe, TapFallible};
 
 use mdbookkit::{
@@ -17,7 +15,8 @@ use mdbookkit::{
     },
     diagnostics::Issue,
     env::{
-        book_from_stdin, config_from_book, for_each_chapter_mut, iter_chapters, smart_punctuation,
+        book_from_stdin, book_into_stdout, config_from_book, for_each_chapter_mut, iter_chapters,
+        smart_punctuation, string_from_stdin,
     },
     log_warning,
     logging::{is_logging, ConsoleLogger},
@@ -54,27 +53,13 @@ enum Command {
 }
 
 async fn mdbook() -> Result<()> {
-    let (context, mut book) = book_from_stdin()?;
+    let (context, mut book) = book_from_stdin().context("failed to parse book content")?;
 
-    let config = {
-        let mut config = config_from_book::<Config>(&context.config, "rustdoc-link")?;
+    let config = config(&context).context("failed to read preprocessor config from book.toml")?;
 
-        if let Some(path) = config.manifest_dir {
-            config.manifest_dir = Some(context.root.join(path))
-        } else {
-            config.manifest_dir = Some(context.root.clone())
-        }
-
-        if let Some(path) = config.cache_dir {
-            config.cache_dir = Some(context.root.join(path))
-        }
-
-        config.smart_punctuation = smart_punctuation(&context.config);
-
-        config
-    };
-
-    let client = Client::new(Environment::new(config)?);
+    let client = Environment::new(config)
+        .context("failed to initialize `mdbook-rustdoc-link`")?
+        .pipe(Client::new);
 
     let cached = FileCache::load(client.env()).await.ok();
 
@@ -82,26 +67,32 @@ async fn mdbook() -> Result<()> {
 
     for (path, ch) in iter_chapters(&book) {
         let stream = client.env().markdown(&ch.content).into_offset_iter();
-        content.read(path.clone(), &ch.content, stream)?;
+        content
+            .read(path.clone(), &ch.content, stream)
+            .with_context(|| path.display().to_string())
+            .context("failed to parse Markdown source:")?;
     }
 
     if let Some(cached) = cached {
         cached.resolve(&mut content).await.ok();
     }
 
-    client.resolve(&mut content).await?;
+    client
+        .resolve(&mut content)
+        .await
+        .context("failed to resolve some links")?;
 
     let mut result = iter_chapters(&book)
         .filter_map(|(path, _)| {
-            content
+            let output = content
                 .emit(path, &client.env().emit_config())
                 .tap_err(log_warning!())
-                .ok()
-                .map(|output| (path.clone(), output.to_string()))
+                .ok()?;
+            Some((path.clone(), output.to_string()))
         })
         .collect::<HashMap<_, _>>();
 
-    let env = client.stop().await?;
+    let env = client.stop().await;
 
     let status = content
         .reporter()
@@ -123,32 +114,34 @@ async fn mdbook() -> Result<()> {
         }
     });
 
-    let output = serde_json::to_string(&book)?;
-    std::io::stdout().write_all(output.as_bytes())?;
+    book_into_stdout(&book)?;
 
     env.config.fail_on_warnings.check(status.level())?;
 
     Ok(())
 }
 
-async fn markdown(options: Config) -> Result<()> {
-    let client = Client::new(Environment::new(options)?);
+async fn markdown(config: Config) -> Result<()> {
+    let client = Environment::new(config)
+        .context("failed to initialize")?
+        .pipe(Client::new);
 
-    let source = Vec::new()
-        .pipe(|mut buf| std::io::stdin().read_to_end(&mut buf).and(Ok(buf)))?
-        .pipe(String::from_utf8)?;
+    let source = string_from_stdin().context("failed to read Markdown source from stdin")?;
 
     let stream = client.env().markdown(&source).into_offset_iter();
 
-    let mut content = Pages::one(&source, stream)?;
+    let mut content = Pages::one(&source, stream).context("failed to parse Markdown source")?;
 
     if let Ok(cached) = FileCache::load(client.env()).await {
         cached.resolve(&mut content).await.ok();
     }
 
-    client.resolve(&mut content).await?;
+    client
+        .resolve(&mut content)
+        .await
+        .context("failed to resolve some links")?;
 
-    let env = client.stop().await?;
+    let env = client.stop().await;
 
     let status = content
         .reporter()
@@ -164,10 +157,30 @@ async fn markdown(options: Config) -> Result<()> {
         FileCache::save(&env, &content).await.ok();
     }
 
-    let output = content.get(&env.emit_config())?.to_string();
-    std::io::stdout().write_all(output.as_bytes())?;
+    content
+        .get(&env.emit_config())
+        .map(|emit| emit.to_string())
+        .and_then(|output| Ok(std::io::stdout().write_all(output.as_bytes())?))?;
 
     env.config.fail_on_warnings.check(status.level())?;
 
     Ok(())
+}
+
+fn config(context: &PreprocessorContext) -> Result<Config> {
+    let mut config = config_from_book::<Config>(&context.config, "rustdoc-link")?;
+
+    if let Some(path) = config.manifest_dir {
+        config.manifest_dir = Some(context.root.join(path))
+    } else {
+        config.manifest_dir = Some(context.root.clone())
+    }
+
+    if let Some(path) = config.cache_dir {
+        config.cache_dir = Some(context.root.join(path))
+    }
+
+    config.smart_punctuation = smart_punctuation(&context.config);
+
+    Ok(config)
 }

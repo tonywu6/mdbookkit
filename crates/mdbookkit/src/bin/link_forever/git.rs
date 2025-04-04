@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use git2::{DescribeOptions, Repository};
 use mdbook::preprocess::PreprocessorContext;
 use tap::{Pipe, Tap, TapFallible};
@@ -6,17 +6,21 @@ use url::Url;
 
 use crate::{
     env::{config_from_book, smart_punctuation},
-    log_debug, log_warning,
+    log_debug,
     markdown::mdbook_markdown,
 };
 
 use super::{Config, CustomPermalink, Environment, GitHubPermalink, PermalinkFormat};
 
 impl Environment {
-    pub fn from_book(book: &PreprocessorContext) -> Result<Self> {
-        let repo = Repository::open_from_env()
+    pub fn try_from_env(book: &PreprocessorContext) -> Result<Result<Self>> {
+        let repo = match Repository::open_from_env()
             .context("preprocessor requires a git repository to work")
-            .context("failed to find a git repository")?;
+            .context("failed to find a git repository")
+        {
+            Ok(repo) => repo,
+            Err(err) => return Ok(Err(err)),
+        };
 
         let vcs_root = repo
             .workdir()
@@ -41,13 +45,7 @@ impl Environment {
         let Some(reference) =
             get_head(&repo).context("failed to get a tag or commit id to HEAD")?
         else {
-            return Ok(Self {
-                book_src,
-                vcs_root,
-                fmt_link: Box::new(GitNotConfigured::NoCommit),
-                markdown,
-                config,
-            });
+            return Ok(Err(anyhow!("no commit found in this repo")));
         };
 
         let fmt_link: Box<dyn PermalinkFormat> = {
@@ -59,28 +57,50 @@ impl Environment {
                     reference,
                 }
                 .pipe(Box::new)
-            } else if let Ok(github) = find_github_repo(&repo, &book.config)
-                .map(|(owner, repo)| GitHubPermalink::new(&owner, &repo, &reference))
-                .context("failed to determine GitHub url for permalinks")
-                .tap_err(log_warning!(detailed))
-                .tap_err(|_| {
-                    log::warn!("help: set `output.html.git-repository-url` to a GitHub url");
-                    log::warn!("or use `preprocessor.link-forever.repo-url-template`")
-                })
-            {
-                Box::new(github)
             } else {
-                Box::new(GitNotConfigured::NoRemote)
+                let repo = match find_git_remote(&repo, &book.config)? {
+                    Ok(repo) => repo,
+                    Err(err) => {
+                        return err
+                            .context("help: or use `repo-url-template` option")
+                            .context("help: set `output.html.git-repository-url` to a GitHub url")
+                            .context("failed to determine GitHub url to use for permalinks")
+                            .pipe(Err)
+                            .pipe(Ok)
+                    }
+                };
+                let (owner, repo) = remote_as_github(repo.as_ref())
+                    .with_context(|| match repo {
+                        RepoSource::Config(..) => "in `output.html.git-repository-url`",
+                        RepoSource::Remote(..) => "from git remote \"origin\"",
+                    })
+                    .context("help: use `repo-url-template` option for a custom remote")
+                    .context("failed to parse git remote url")?;
+                GitHubPermalink::new(&owner, &repo, &reference).pipe(Box::new)
             }
         };
 
-        Ok(Self {
+        Ok(Ok(Self {
             book_src,
             vcs_root,
             fmt_link,
             markdown,
             config,
-        })
+        }))
+    }
+}
+
+enum RepoSource {
+    Config(gix_url::Url),
+    Remote(gix_url::Url),
+}
+
+impl AsRef<gix_url::Url> for RepoSource {
+    fn as_ref(&self) -> &gix_url::Url {
+        match self {
+            Self::Config(u) => u,
+            Self::Remote(u) => u,
+        }
     }
 }
 
@@ -89,7 +109,6 @@ fn get_head(repo: &Repository) -> Result<Option<String>> {
         Ok(head) => head,
         Err(err) => {
             log::debug!("{err}");
-            log::info!("no commit yet, will not generate permalinks");
             return Ok(None);
         }
     };
@@ -111,27 +130,41 @@ fn get_head(repo: &Repository) -> Result<Option<String>> {
     }
 }
 
-fn find_github_repo(repo: &Repository, config: &mdbook::Config) -> Result<(String, String)> {
-    let url = if let Some(url) = config
+fn find_git_remote(repo: &Repository, config: &mdbook::Config) -> Result<Result<RepoSource>> {
+    if let Some(url) = config
         .get_deserialized_opt::<String, _>("output.html.git-repository-url")
         .context("failed to get `output.html.git-repository-url`")?
     {
-        gix_url::parse(url.as_str().into())
+        gix_url::parse(url.as_str().into())?
+            .pipe(RepoSource::Config)
+            .pipe(Ok)
+            .pipe(Ok)
     } else {
-        repo.find_remote("origin")
-            .context("no such remote `origin`")?
-            .url()
-            .context("remote `origin` does not have a url")?
-            .pipe(|url| gix_url::parse(url.into()))
+        let repo = match repo
+            .find_remote("origin")
+            .context("no such remote `origin`")
+        {
+            Ok(repo) => repo,
+            Err(err) => return Ok(Err(err)),
+        };
+        let repo = match repo.url() {
+            Some(url) => url,
+            None => return Ok(Err(anyhow!("remote `origin` does not have a url"))),
+        };
+        gix_url::parse(repo.into())?
+            .pipe(RepoSource::Remote)
+            .pipe(Ok)
+            .pipe(Ok)
     }
-    .context("failed to parse remote url")?;
+}
 
+fn remote_as_github(url: &gix_url::Url) -> Result<(String, String)> {
     let Some(host) = url.host() else {
         bail!("remote url does not have a host")
     };
 
     if host != "github.com" && !host.ends_with(".github.com") {
-        bail!("unsupported remote {host:?}")
+        bail!("unsupported remote {host:?}, only `github.com` is supported")
     }
 
     let path = url.path.to_string();
@@ -151,26 +184,12 @@ fn find_github_repo(repo: &Repository, config: &mdbook::Config) -> Result<(Strin
     Ok((owner.to_owned(), repo.to_owned()))
 }
 
-enum GitNotConfigured {
-    NoCommit,
-    NoRemote,
-}
-
-impl PermalinkFormat for GitNotConfigured {
-    fn link_to(&self, _: &str) -> Result<Url> {
-        match self {
-            Self::NoCommit => bail!("no commit found in this repo"),
-            Self::NoRemote => bail!("remote git url not configured"),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
     use git2::Repository;
 
-    use super::find_github_repo;
+    use super::{find_git_remote, remote_as_github};
 
     #[test]
     fn test_github_url_from_book() -> Result<()> {
@@ -180,7 +199,8 @@ mod tests {
         "#
         .parse::<mdbook::Config>()?;
         let repo = Repository::open_from_env()?;
-        let (owner, repo) = find_github_repo(&repo, &config)?;
+        let repo = find_git_remote(&repo, &config)??;
+        let (owner, repo) = remote_as_github(repo.as_ref())?;
         assert_eq!(owner, "lorem");
         assert_eq!(repo, "ipsum");
         Ok(())
@@ -190,7 +210,8 @@ mod tests {
     fn test_github_url_from_repo() -> Result<()> {
         let config = "".parse::<mdbook::Config>()?;
         let repo = Repository::open_from_env()?;
-        let (_, repo) = find_github_repo(&repo, &config)?;
+        let repo = find_git_remote(&repo, &config)??;
+        let (_, repo) = remote_as_github(repo.as_ref())?;
         assert_eq!(repo, env!("CARGO_PKG_NAME"));
         Ok(())
     }
@@ -203,7 +224,8 @@ mod tests {
         "#
         .parse::<mdbook::Config>()?;
         let repo = Repository::open_from_env()?;
-        let (owner, repo) = find_github_repo(&repo, &config)?;
+        let repo = find_git_remote(&repo, &config)??;
+        let (owner, repo) = remote_as_github(repo.as_ref())?;
         assert_eq!(owner, "lorem");
         assert_eq!(repo, "ipsum");
         Ok(())
@@ -219,6 +241,7 @@ mod tests {
         .parse::<mdbook::Config>()
         .unwrap();
         let repo = Repository::open_from_env().unwrap();
-        let _url = find_github_repo(&repo, &config).unwrap();
+        let repo = find_git_remote(&repo, &config).unwrap().unwrap();
+        let _ = remote_as_github(repo.as_ref()).unwrap();
     }
 }

@@ -12,6 +12,7 @@ mod link;
 mod markdown;
 mod page;
 mod sync;
+mod url;
 
 #[cfg(feature = "rustdoc-link")]
 pub mod cache;
@@ -19,7 +20,7 @@ pub mod cache;
 use crate::{log_debug, logging::spinner, styled};
 
 pub use self::{client::Client, page::Pages};
-use self::{item::Item, link::ItemLinks};
+use self::{item::Item, link::ItemLinks, url::UrlToPath};
 
 /// Type that can provide links.
 ///
@@ -49,7 +50,7 @@ impl Resolver for Client {
             return Ok(());
         }
 
-        let main = std::fs::read_to_string(self.env().entrypoint.path())?;
+        let main = std::fs::read_to_string(self.env().entrypoint.to_path()?)?;
 
         let (context, request) = {
             let mut context = format!("{main}\nfn {UNIQUE_ID} () {{\n");
@@ -109,7 +110,8 @@ impl Resolver for Client {
                 let resolved = doc
                     .resolve(p)
                     .await
-                    .with_context(|| format!("error resolving {p:?}"))
+                    .with_context(|| format!("{p:?}"))
+                    .context("failed to resolve symbol:")
                     .tap_err(log_debug!())
                     .ok();
                 if let Some(resolved) = resolved {

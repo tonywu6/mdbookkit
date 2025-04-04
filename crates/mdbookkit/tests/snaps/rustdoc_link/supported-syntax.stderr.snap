@@ -265,23 +265,21 @@ expression: report
  248 │ 
  249 │ <!-- prettier-ignore-end -->
  250 │ 
- 251 │ ---
- 252 │ 
- 253 │ [^1]:
- 254 │     rust-analyzer's ability to generate links for enum variants like `Option::Some` was
- 255 │     improved only somewhat recently: before
- 256 │     [#19246](https://github.com/rust-lang/rust-analyzer/pull/19246), links for variants
- 257 │     and associated items may only point to the types themselves. If linking to such
- 258 │     items doesn't seem to work for you, be sure to upgrade to a newer rust-analyzer
- 259 │     first!
- 260 │ 
- 261 │ [^2]:
- 262 │     As of rust-analyzer <ra-version>(version)</ra-version>, links generated for macros
- 263 │     don't always work. Examples include [`std::format!`] (seen above) and
+ 251 │ [^1]:
+ 252 │     rust-analyzer's ability to generate links for enum variants like `Option::Some` was
+ 253 │     improved only somewhat recently: before
+ 254 │     [#19246](https://github.com/rust-lang/rust-analyzer/pull/19246), links for variants
+ 255 │     and associated items may only point to the types themselves. If linking to such
+ 256 │     items doesn't seem to work for you, be sure to upgrade to a newer rust-analyzer
+ 257 │     first!
+ 258 │ 
+ 259 │ [^2]:
+ 260 │     As of rust-analyzer <ra-version>(version)</ra-version>, links generated for macros
+ 261 │     don't always work. Examples include [`std::format!`] (seen above) and
      ·                                         ────────┬───────
      ·                                                 ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.format.html
- 264 │     [`tokio::main!`]. For more info, see [Known issues](known-issues.md#macros).
+ 262 │     [`tokio::main!`]. For more info, see [Known issues](known-issues.md#macros).
      ·     ────────┬───────
      ·             ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
- 265 │ 
+ 263 │ 
      ╰────
