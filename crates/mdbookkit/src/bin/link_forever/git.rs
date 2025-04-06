@@ -14,12 +14,15 @@ use super::{Config, CustomPermalink, Environment, GitHubPermalink, PermalinkForm
 
 impl Environment {
     pub fn try_from_env(book: &PreprocessorContext) -> Result<Result<Self>> {
+        let config = config_from_book::<Config>(&book.config, "link-forever")
+            .context("failed to read preprocessor config from book.toml")?;
+
         let repo = match Repository::open_from_env()
             .context("preprocessor requires a git repository to work")
             .context("failed to find a git repository")
         {
             Ok(repo) => repo,
-            Err(err) => return Ok(Err(err)),
+            Err(err) => return config.fail_on_warnings.adjusted(Ok(Err(err))),
         };
 
         let vcs_root = repo
@@ -44,12 +47,12 @@ impl Environment {
             }
         });
 
-        let config = config_from_book::<Config>(&book.config, "link-forever")?;
-
         let Some(reference) =
             get_head(&repo).context("failed to get a tag or commit id to HEAD")?
         else {
-            return Ok(Err(anyhow!("no commit found in this repo")));
+            return config
+                .fail_on_warnings
+                .adjusted(Ok(Err(anyhow!("no commit found in this repo"))));
         };
 
         let fmt_link: Box<dyn PermalinkFormat> = {
@@ -71,6 +74,7 @@ impl Environment {
                             .context("failed to determine GitHub url to use for permalinks")
                             .pipe(Err)
                             .pipe(Ok)
+                            .pipe(|result| config.fail_on_warnings.adjusted(result))
                     }
                 };
                 let (owner, repo) = remote_as_github(repo.as_ref())

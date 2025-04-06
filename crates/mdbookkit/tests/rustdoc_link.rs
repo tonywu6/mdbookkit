@@ -237,8 +237,9 @@ fn test_minimum_env() -> Result<()> {
             .stderr(
                 predicate::str::contains("failed to spawn rust-analyzer")
                     // https://github.com/rust-lang/rustup/issues/3846
-                    // rustup shims rust-analyzer even when it's not installed
+                    // rustup shims rust-analyzer when it's not installed
                     .or(predicate::str::contains("Unknown binary 'rust-analyzer")),
+                // ^ doesn't have a closing `'` because on windows it says 'rust-analyzer.exe'
             );
 
         log::info!("when: code extension is installed");

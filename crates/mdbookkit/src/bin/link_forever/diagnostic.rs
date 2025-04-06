@@ -14,6 +14,7 @@ use super::{Environment, LinkSpan, LinkStatus, LinkText, Pages, RelativeLink};
 
 impl Environment {
     pub fn report<'a>(&'a self, content: &'a Pages<'a>) -> Reporter<'a> {
+        // BTreeMap: sort output by paths
         let mut sorted: BTreeMap<&'_ Url, BTreeMap<LinkStatus, Vec<LinkDiagnostic<'_>>>> =
             Default::default();
 
