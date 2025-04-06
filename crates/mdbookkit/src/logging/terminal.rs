@@ -6,12 +6,12 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::Context;
+use anyhow::{Context, Result};
 use console::{colors_enabled_stderr, set_colors_enabled, StyledObject, Term};
 use env_logger::Logger;
 use indicatif::{HumanDuration, ProgressBar, ProgressDrawTarget, ProgressStyle};
 use log::{Level, LevelFilter, Log};
-use tap::Pipe;
+use tap::{Pipe, Tap};
 
 use super::{styled, Message};
 
@@ -36,41 +36,51 @@ pub enum ConsoleLogger {
 impl ConsoleLogger {
     /// Install a [`ConsoleLogger`] as the global [`log`] logger.
     pub fn install(name: &str) {
-        maybe_spinner(name);
-        let logger = Box::new(Self::new());
-        log::set_boxed_logger(logger).expect("logger should not have been set");
-        log::set_max_level(LevelFilter::max());
+        Self::try_install(name).expect("logger should not have been set");
     }
 
-    fn new() -> Self {
-        if let Some(spinner) = SPINNER.get() {
-            Self::Console(spinner.term.clone())
-        } else {
-            env_logger::Builder::new()
+    pub fn try_install(name: &str) -> Result<()> {
+        log::set_boxed_logger(Box::new(Self::new(name)))?;
+        log::set_max_level(LevelFilter::max());
+        Ok(())
+    }
+
+    fn new(name: &str) -> Self {
+        match maybe_logging() {
+            Some(LevelFilter::Off) => SPINNER
+                .get_or_init(|| spawn_spinner(name))
+                .term
+                .clone()
+                .pipe(Self::Console),
+            level => env_logger::Builder::new()
                 .format(log_format)
                 .parse_default_env()
+                .tap_mut(|builder| {
+                    if let Some(level) = level {
+                        builder.filter_level(level);
+                    }
+                })
                 .build()
-                .pipe(Self::Logger)
+                .pipe(Self::Logger),
         }
     }
 }
 
-fn maybe_spinner(name: &str) {
-    fn rust_log() -> bool {
-        std::env::var("RUST_LOG")
-            .map(|v| !v.is_empty())
-            .unwrap_or(false)
+fn maybe_logging() -> Option<LevelFilter> {
+    if std::env::var("RUST_LOG")
+        .map(|v| !v.is_empty())
+        .unwrap_or(false)
+    {
+        // RUST_LOG to be parsed by env_logger
+        None
+    } else if !console::user_attended_stderr() {
+        // RUST_LOG not set but stderr isn't a terminal
+        // log warnings and above
+        Some(LevelFilter::Warn)
+    } else {
+        // use spinner instead
+        Some(LevelFilter::Off)
     }
-
-    fn attended() -> bool {
-        console::user_attended_stderr()
-    }
-
-    if rust_log() || !attended() {
-        return;
-    }
-
-    SPINNER.set(spawn_spinner(name)).ok();
 }
 
 impl Log for ConsoleLogger {
@@ -136,6 +146,9 @@ fn spawn_spinner(name: &str) -> Spinner {
 
     let target = term.clone();
     let template = format!("{{spinner:.cyan}} [{name}] {{prefix}} ... {{msg}}",);
+
+    // this thread is detached. this is okay in usage because SPINNER.get_or_init
+    // guarantees this function is called at most once
 
     thread::spawn(move || {
         struct Bar {

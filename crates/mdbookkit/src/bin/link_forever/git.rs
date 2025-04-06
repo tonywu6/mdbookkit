@@ -25,14 +25,18 @@ impl Environment {
         let vcs_root = repo
             .workdir()
             .unwrap_or_else(|| repo.commondir())
+            .canonicalize()
+            .context("failed to locate repo root")?
             .pipe(Url::from_directory_path)
-            .expect("failed to locate repo root");
+            .map_err(|_| anyhow!("failed to locate repo root"))?;
 
         let book_src = book
             .root
+            .canonicalize()
+            .context("failed to locate book root")?
             .join(&book.config.book.src)
             .pipe(Url::from_directory_path)
-            .expect("book `src` should be a valid absolute path");
+            .map_err(|_| anyhow!("book `src` should be a valid absolute path"))?;
 
         let markdown = mdbook_markdown().tap_mut(|m| {
             if smart_punctuation(&book.config) {

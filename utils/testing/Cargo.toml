@@ -10,7 +10,9 @@ repository.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
+cargo-run-bin = { workspace = true, default-features = false }
 insta = { workspace = true }
+log = { workspace = true }
 once_cell = "1.21.3"
 serde = { workspace = true }
 serde_json = { workspace = true }
