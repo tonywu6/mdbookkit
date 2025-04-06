@@ -170,12 +170,22 @@ fn main() -> Result<()> {
                 element!(r#"img[src]"#, |elem| {
                     let src = elem.get_attribute("src").unwrap();
                     let src = url.join(&src)?;
-                    let img = image::open(match src.to_file_path() {
+                    let src = match src.scheme() {
+                        "file" => src,
+                        _ => return Ok(()),
+                    };
+                    let src = match src.to_file_path() {
                         Ok(path) => path,
                         Err(()) => return Ok(()),
-                    })?;
+                    };
+                    let img = image::open(src)?;
                     elem.set_attribute("width", &img.width().to_string())?;
                     elem.set_attribute("height", &img.height().to_string())?;
+                    Ok(())
+                }),
+                element!(r#"img[src^="https://img.shields.io/"]"#, |elem| {
+                    elem.set_attribute("height", "20")?;
+                    elem.set_attribute("fetchpriority", "low")?;
                     Ok(())
                 }),
                 element!(r#"meta[name="description"]"#, |elem| {
