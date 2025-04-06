@@ -1,20 +1,21 @@
-use std::sync::Arc;
+use std::{io::Write, sync::Arc};
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 
-use log::LevelFilter;
+use assert_cmd::{prelude::*, Command};
+use predicates::prelude::*;
 use similar::{ChangeTag, TextDiff};
 use tap::Pipe;
+use tempfile::TempDir;
 use tokio::task::JoinSet;
 
-use mdbookkit::{
-    bin::rustdoc_link::{
-        env::{Config, Environment},
-        Client, Pages, Resolver,
-    },
-    logging::ConsoleLogger,
+use mdbookkit::bin::rustdoc_link::{
+    env::{find_code_extension, Config, Environment},
+    Client, Pages, Resolver,
 };
-use util_testing::{portable_snapshots, test_document, TestDocument};
+use util_testing::{may_skip, portable_snapshots, setup_paths, test_document, TestDocument};
+
+mod util;
 
 async fn snapshot(
     client: Arc<Client>,
@@ -34,7 +35,7 @@ async fn snapshot(
 
     let report = page
         .reporter()
-        .level(LevelFilter::Info)
+        .level(log::LevelFilter::Info)
         .names(|_| name.clone())
         .colored(false)
         .logging(false)
@@ -70,7 +71,9 @@ fn assert_no_whitespace_change(source: &str, output: &str) -> Result<()> {
 
 #[tokio::test]
 async fn test_snapshots() -> Result<()> {
-    let client = setup()?;
+    util::setup_logging();
+
+    let client = client()?;
 
     let tests = [
         test_document!("../../../docs/src/rustdoc-link/supported-syntax.md"),
@@ -104,8 +107,7 @@ async fn test_snapshots() -> Result<()> {
     Ok(())
 }
 
-fn setup() -> Result<Arc<Client>> {
-    ConsoleLogger::install("rustdoc-link");
+fn client() -> Result<Arc<Client>> {
     Config {
         rust_analyzer: Some("cargo run --package util-rust-analyzer -- analyzer".into()),
         cargo_features: vec!["rustdoc-link".into()],
@@ -115,4 +117,160 @@ fn setup() -> Result<Arc<Client>> {
     .pipe(Client::new)
     .pipe(Arc::new)
     .pipe(Ok)
+}
+
+#[test]
+#[ignore = "should run in CI"]
+fn test_minimum_env() -> Result<()> {
+    util::setup_logging();
+
+    log::info!("setup: compile self");
+    Command::new("cargo")
+        .args([
+            "build",
+            "--package",
+            env!("CARGO_PKG_NAME"),
+            "--all-features",
+            "--bin",
+            "mdbook-rustdoc-link",
+        ])
+        .arg(if cfg!(debug_assertions) {
+            "--profile=dev"
+        } else {
+            "--profile=release"
+        })
+        .assert()
+        .success();
+
+    let path = setup_paths()?;
+
+    let root = TempDir::new()?;
+
+    log::debug!("{root:?}");
+
+    log::info!("given: a book");
+    Command::new("mdbook")
+        .args(["init", "--force"])
+        .env("PATH", &path)
+        .current_dir(&root)
+        .unwrap()
+        .assert()
+        .success();
+
+    log::info!("given: preprocessor is enabled");
+    std::fs::File::options()
+        .append(true)
+        .open(root.path().join("book.toml"))?
+        .pipe(|mut file| file.write_all("[preprocessor.rustdoc-link]\n".as_bytes()))?;
+
+    log::info!("when: book is not a Cargo project");
+    log::info!("then: preprocessor fails");
+    Command::new("mdbook")
+        .arg("build")
+        .env("PATH", &path)
+        .current_dir(&root)
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "failed to determine the current Cargo project",
+        ));
+
+    log::info!("given: book is a Cargo project");
+    Command::new("cargo")
+        .arg("init")
+        .args(["--name", "temp"])
+        .env("PATH", &path)
+        .current_dir(&root)
+        .assert()
+        .success();
+
+    if find_code_extension().is_some()
+        && may_skip("rust-analyzer code extension is already installed")
+    {
+        log::info!("when: book has item links");
+        std::fs::File::options()
+            .append(true)
+            .open(root.path().join("src/chapter_1.md"))?
+            .pipe(|mut file| file.write_all("\n[std::thread]\n".as_bytes()))?;
+
+        log::info!("then: book builds without errors");
+        Command::new("mdbook")
+            .arg("build")
+            .env("PATH", &path)
+            .current_dir(&root)
+            .assert()
+            .success();
+    } else if Command::new("rust-analyzer")
+        .arg("--version")
+        .assert()
+        .try_success()
+        .is_ok()
+        && may_skip("rust-analyzer is already available")
+    {
+        log::info!("skip testing mdbook build without rust-analyzer")
+    } else {
+        log::info!("when: rust-analyzer is not configured");
+
+        log::info!("when: book has no item links");
+
+        log::info!("then: book builds without errors");
+        Command::new("mdbook")
+            .arg("build")
+            .env("PATH", &path)
+            .current_dir(&root)
+            .assert()
+            .success();
+
+        log::info!("when: book has item links");
+        std::fs::File::options()
+            .append(true)
+            .open(root.path().join("src/chapter_1.md"))?
+            .pipe(|mut file| file.write_all("\n[std]\n".as_bytes()))?;
+
+        log::info!("then: preprocessor fails");
+        Command::new("mdbook")
+            .arg("build")
+            .env("PATH", &path)
+            .current_dir(&root)
+            .assert()
+            .failure()
+            .stderr(
+                predicate::str::contains("failed to spawn rust-analyzer")
+                    // https://github.com/rust-lang/rustup/issues/3846
+                    // rustup shims rust-analyzer even when it's not installed
+                    .or(predicate::str::contains("Unknown binary 'rust-analyzer")),
+            );
+
+        log::info!("when: code extension is installed");
+
+        let extension_dir = tempfile::Builder::new()
+            .prefix(".vscode")
+            .suffix("")
+            .rand_bytes(0)
+            .tempdir_in(dirs::home_dir().context("failed to get home dir")?)?;
+
+        let ra_executable = extension_dir
+            .path()
+            .join("extensions/rust-lang.rust-analyzer-lorem-ipsum")
+            .join("server/rust-analyzer");
+
+        Command::new("cargo")
+            .args(["run", "--package", "util-rust-analyzer", "--"])
+            .arg("--ra-path")
+            .arg(ra_executable)
+            .arg("download")
+            .unwrap()
+            .assert()
+            .success();
+
+        log::info!("then: book builds without errors");
+        Command::new("mdbook")
+            .arg("build")
+            .env("PATH", &path)
+            .current_dir(&root)
+            .assert()
+            .success();
+    }
+
+    Ok(())
 }

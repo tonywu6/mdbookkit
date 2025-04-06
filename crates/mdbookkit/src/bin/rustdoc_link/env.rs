@@ -327,7 +327,7 @@ impl LocateProject {
     }
 }
 
-fn find_code_extension() -> Option<PathBuf> {
+pub fn find_code_extension() -> Option<PathBuf> {
     let home = dirs::home_dir()?;
     [
         home.join(".vscode/extensions"),

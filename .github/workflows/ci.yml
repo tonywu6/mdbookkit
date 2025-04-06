@@ -1,5 +1,3 @@
-# TODO: still need cross platform E2E testing
-
 name: CI
 
 on:
@@ -15,7 +13,9 @@ on:
     - cron: "27 0 * * *" # nightly test for RA
 
 env:
-  CARGO_TERM_COLOR: always
+  CARGO_TERM_COLOR: "always"
+  RUST_LOG: "info"
+  RUST_BACKTRACE: "1"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
@@ -25,11 +25,16 @@ jobs:
   test:
     name: Test
 
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         toolchain:
           - stable
+        platform:
+          - ubuntu-latest
+          - windows-latest
+      fail-fast: false
+
+    runs-on: ${{ matrix.platform }}
 
     permissions:
       contents: read
@@ -44,18 +49,21 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
 
+      - uses: cargo-bins/cargo-binstall@b9bf4400702f721d469eec4d280125f650c85638
+
       - name: Get cache key
         run: |
           CARGO_VERSION=$(cargo --version)
-          echo "CACHE_KEY=${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}" >> "$GITHUB_OUTPUT"
+          echo "CACHE_KEY=${{ runner.os }}-${{ runner.arch }}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}" >> "$GITHUB_OUTPUT"
           {
             echo "CACHE_KEY_RESTORE<<EOF"
-            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-"
-            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-"
-            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-"
+            echo "${{ runner.os }}-${{ runner.arch }}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-"
+            echo "${{ runner.os }}-${{ runner.arch }}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-"
+            echo "${{ runner.os }}-${{ runner.arch }}-$CARGO_VERSION-"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
         id: cache-key
+        shell: bash
 
       - uses: actions/cache/restore@v4
         with:
@@ -65,12 +73,12 @@ jobs:
           restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
         id: cache-restore
 
-      - name: Prepare rust-analyzer
-        run: cargo run   --package util-rust-analyzer -- download
+      - name: Prepare binaries
+        run: |
+          cargo bin --install
+          cargo run --package util-rust-analyzer -- download
 
-      - run: cargo test  --release --all-features
-        env:
-          RUST_LOG: info
+      - run: cargo test --all-features --no-fail-fast -- --include-ignored
 
       - name: Evict cache
         run: gh cache delete '${{ steps.cache-key.outputs.CACHE_KEY }}'
@@ -86,13 +94,20 @@ jobs:
             target/
           key: ${{ steps.cache-key.outputs.CACHE_KEY }}
 
+      - name: Export cache key
+        if: matrix.platform == 'ubuntu-latest'
+        id: export-cache-key
+        run: |
+          echo "CACHE_KEY=${{ steps.cache-key.outputs.CACHE_KEY }}" >> "$GITHUB_OUTPUT"
+          echo "CACHE_KEY_RESTORE=${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}" >> "$GITHUB_OUTPUT"
+        shell: bash
+
     outputs:
-      CACHE_KEY: ${{ steps.cache-key.outputs.CACHE_KEY }}
-      CACHE_KEY_RESTORE: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
+      CACHE_KEY: ${{ steps.export-cache-key.outputs.CACHE_KEY }}
+      CACHE_KEY_RESTORE: ${{ steps.export-cache-key.outputs.CACHE_KEY_RESTORE }}
 
   build_features:
-    name: Build
-    runs-on: ubuntu-latest
+    name: Build features
 
     needs:
       - test
@@ -106,6 +121,9 @@ jobs:
           - link-forever
           - lib-link-forever,common-logger
           - lib-link-forever
+      fail-fast: false
+
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -123,11 +141,10 @@ jobs:
           key: ${{ needs.test.outputs.CACHE_KEY }}
           restore-keys: ${{ needs.test.outputs.CACHE_KEY_RESTORE }}
 
-      - run: cargo build --release --features ${{ matrix.features }}
+      - run: cargo build --features ${{ matrix.features }}
 
   test_rustdoc_link_ra:
-    name: rustdoc-link RA
-    runs-on: ubuntu-latest
+    name: (rustdoc-link) Test RA
 
     needs:
       - test
@@ -138,6 +155,9 @@ jobs:
           - "2025-03-17"
           - "2025-03-04"
           - "nightly"
+      fail-fast: false
+
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -155,10 +175,8 @@ jobs:
           key: ${{ needs.test.outputs.CACHE_KEY }}
           restore-keys: ${{ needs.test.outputs.CACHE_KEY_RESTORE }}
 
-      - run: cargo run   --package util-rust-analyzer -- download
+      - run: cargo run --package util-rust-analyzer -- download
         env:
           RA_VERSION: ${{ matrix.ra-version }}
 
-      - run: cargo test  --release --features rustdoc-link
-        env:
-          RUST_LOG: info
+      - run: cargo test --features rustdoc-link

@@ -1,12 +1,10 @@
 //! Download a copy of rust-analyzer to /.bin to use in testing.
-//!
-//! Version can be controlled with the `RA_VERSION` environment variable.
 
 use std::{
-    fs, io,
-    os::unix::fs::PermissionsExt,
+    fs,
+    io::{self, Seek, SeekFrom},
     path::PathBuf,
-    process::{Command, Stdio},
+    process::{self, Stdio},
     time::Duration,
 };
 
@@ -16,9 +14,119 @@ use clap::Parser;
 use flate2::write::GzDecoder;
 use indicatif::{ProgressBar, ProgressStyle};
 use tap::{Pipe, Tap};
+use tempfile::tempfile;
+
+struct Download {
+    release: String,
+    path: PathBuf,
+}
+
+impl Download {
+    fn download(&self) -> Result<()> {
+        #[cfg(not(target_os = "windows"))]
+        {
+            self.download_gzip()
+        }
+        #[cfg(target_os = "windows")] // ugh
+        {
+            self.download_zip()
+        }
+    }
+
+    #[cfg_attr(target_os = "windows", allow(unused))]
+    fn download_gzip(&self) -> Result<()> {
+        let Self { release, path } = self;
+
+        let platform = env!("TARGET");
+        let url = format!("https://github.com/rust-lang/rust-analyzer/releases/download/{release}/rust-analyzer-{platform}.gz");
+
+        let mut res = reqwest::blocking::get(url)?;
+
+        fs::create_dir_all(path.parent().unwrap())?;
+
+        fs::File::create(path)?
+            .pipe(io::BufWriter::new)
+            .pipe(GzDecoder::new)
+            .pipe(Progress::new(Self::progress_bar(&res)))
+            .pipe(|mut w| res.copy_to(&mut w).and(Ok(w)))?
+            .0
+            .finish()?;
+
+        #[cfg(any(target_os = "macos", target_os = "linux"))]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            fs::metadata(path)?
+                .permissions()
+                .tap_mut(|p| p.set_mode(0o755))
+                .pipe(|p| fs::set_permissions(path, p))?;
+        }
+
+        Ok(())
+    }
+
+    #[cfg_attr(not(target_os = "windows"), allow(unused))]
+    fn download_zip(&self) -> Result<()> {
+        let Self { release, path } = self;
+
+        let temp = tempfile()?;
+
+        let platform = env!("TARGET");
+        let url = format!("https://github.com/rust-lang/rust-analyzer/releases/download/{release}/rust-analyzer-{platform}.zip");
+
+        let mut res = reqwest::blocking::get(url)?;
+
+        let temp = temp
+            .pipe(io::BufWriter::new)
+            .pipe(Progress::new(Self::progress_bar(&res)))
+            .pipe(|mut w| res.copy_to(&mut w).and(Ok(w)))?
+            .0
+            .into_inner()
+            .unwrap()
+            .tap_mut(|file| file.seek(SeekFrom::Start(0)).map(|_| ()).unwrap());
+
+        let mut archive = zip::ZipArchive::new(temp)?;
+
+        fs::create_dir_all(path.parent().unwrap())?;
+
+        let mut bin = archive.by_name("rust-analyzer.exe")?;
+        let mut out = fs::File::create(path)?;
+
+        std::io::copy(&mut bin, &mut out)?;
+
+        Ok(())
+    }
+
+    fn progress_bar(res: &reqwest::blocking::Response) -> ProgressBar {
+        static BAR_TEMPLATE: &str = "{spinner:.cyan} {prefix} {bar:20.green} {binary_bytes:.yellow} {binary_total_bytes:.yellow} {binary_bytes_per_sec:.yellow}";
+
+        if let Some(len) = res.content_length() {
+            ProgressBar::new(len)
+        } else {
+            ProgressBar::new_spinner()
+        }
+        .with_prefix("downloading rust-analyzer")
+        .with_style(
+            ProgressStyle::with_template(BAR_TEMPLATE)
+                .unwrap()
+                .tick_chars("⠇⠋⠙⠸⠴⠦⠿")
+                .progress_chars("⠿⠦⠴⠸⠙⠋⠇ "),
+        )
+        .tap(|b| b.enable_steady_tick(Duration::from_millis(100)))
+    }
+}
 
 #[derive(clap::Parser, Debug)]
-enum Program {
+struct Program {
+    #[arg(long)]
+    ra_version: Option<String>,
+    #[arg(long)]
+    ra_path: Option<PathBuf>,
+    #[clap(subcommand)]
+    command: Command,
+}
+
+#[derive(clap::Subcommand, Debug)]
+enum Command {
     Download,
     Analyzer {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true, hide = true)]
@@ -35,32 +143,30 @@ enum Version {
     Supports { renderer: String },
 }
 
-struct Config {
-    release: String,
-    path: PathBuf,
-}
-
 fn main() -> Result<()> {
-    let release = std::env::var("RA_VERSION")
-        .ok()
-        .unwrap_or("2025-03-17".into());
+    let program = Program::parse();
 
-    let path = get_project_root()?
-        .join(".bin/rust-analyzer")
-        .join(&release)
-        .join("rust-analyzer");
+    let release = program.ra_version.unwrap_or("2025-03-17".into());
 
-    let config = Config { release, path };
+    let path = match program.ra_path {
+        Some(path) => path,
+        None => get_project_root()?
+            .join(".bin/rust-analyzer")
+            .join(&release)
+            .join("rust-analyzer"),
+    };
 
-    match Program::parse() {
-        Program::Download => download(&config),
-        Program::Analyzer { args } => analyzer(&config, args),
-        Program::Version { version } => match version {
+    let download = Download { release, path };
+
+    match program.command {
+        Command::Download => download.download(),
+        Command::Analyzer { args } => analyzer(&download, args),
+        Command::Version { version } => match version {
             Some(Version::Supports { .. }) => Ok(()),
             None => {
                 #[cfg(feature = "ra-version")]
                 {
-                    ra_version::preprocessor(&config)
+                    ra_version::preprocessor(&download)
                 }
                 #[cfg(not(feature = "ra-version"))]
                 {
@@ -71,11 +177,11 @@ fn main() -> Result<()> {
     }
 }
 
-fn analyzer(config: &Config, args: Vec<String>) -> Result<()> {
-    if !config.path.exists() {
-        download(config)?;
+fn analyzer(download: &Download, args: Vec<String>) -> Result<()> {
+    if !download.path.exists() {
+        download.download()?;
     }
-    Command::new(&config.path)
+    process::Command::new(&download.path)
         .args(args)
         .stdin(Stdio::inherit())
         .stdout(Stdio::inherit())
@@ -84,49 +190,6 @@ fn analyzer(config: &Config, args: Vec<String>) -> Result<()> {
         .code()
         .unwrap_or_default()
         .pipe(std::process::exit);
-}
-
-fn download(Config { release, path }: &Config) -> Result<()> {
-    let platform = env!("TARGET");
-
-    let url = format!("https://github.com/rust-lang/rust-analyzer/releases/download/{release}/rust-analyzer-{platform}.gz");
-    // rust-analyzer uses zip files for windows so this won't work on windows
-
-    let mut res = reqwest::blocking::get(url)?;
-
-    let bar = if let Some(len) = res.content_length() {
-        ProgressBar::new(len)
-    } else {
-        ProgressBar::new_spinner()
-    }
-    .with_prefix("downloading rust-analyzer")
-    .with_style(
-        ProgressStyle::with_template(BAR_TEMPLATE)
-            .unwrap()
-            .tick_chars("⠇⠋⠙⠸⠴⠦⠿")
-            .progress_chars("⠿⠦⠴⠸⠙⠋⠇ "),
-    )
-    .tap(|b| b.enable_steady_tick(Duration::from_millis(100)));
-
-    static BAR_TEMPLATE: &str = "{spinner:.cyan} {prefix} {bar:20.green} {binary_bytes:.yellow} {binary_total_bytes:.yellow} {binary_bytes_per_sec:.yellow}";
-
-    fs::create_dir_all(path.parent().unwrap())?;
-
-    fs::File::create(path)?
-        .pipe(io::BufWriter::new)
-        .pipe(GzDecoder::new)
-        .pipe(Progress::new(bar))
-        .pipe(|mut w| res.copy_to(&mut w).and(Ok(w)))?
-        .0
-        .finish()?;
-
-    #[cfg(any(target_os = "macos", target_os = "linux"))]
-    fs::metadata(path)?
-        .permissions()
-        .tap_mut(|p| p.set_mode(0o755))
-        .pipe(|p| fs::set_permissions(path, p))?;
-
-    Ok(())
 }
 
 struct Progress<W>(W, ProgressBar);
@@ -170,9 +233,9 @@ mod ra_version {
     use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
     use tap::Pipe;
 
-    use crate::Config;
+    use crate::Download;
 
-    pub fn preprocessor(Config { release, .. }: &Config) -> Result<()> {
+    pub fn preprocessor(Download { release, .. }: &Download) -> Result<()> {
         let (_, mut book): (PreprocessorContext, Book) = Vec::new()
             .pipe(|mut buf| std::io::stdin().read_to_end(&mut buf).and(Ok(buf)))?
             .pipe(String::from_utf8)?

@@ -1,6 +1,6 @@
 //! Test helpers.
 
-use std::path::Path;
+use std::{ffi::OsString, path::Path};
 
 use anyhow::Result;
 use once_cell::sync::Lazy;
@@ -89,4 +89,50 @@ macro_rules! test_document {
                 .into_owned(),
         }
     };
+}
+
+pub fn may_skip<D: std::fmt::Display>(because: D) -> bool {
+    let ci = std::env::var("CI").unwrap_or("".into());
+    if matches!(ci.as_str(), "" | "0" | "false") {
+        log::info!("{because}");
+        true
+    } else {
+        panic!("{because} but CI=true")
+    }
+}
+
+pub fn setup_paths() -> Result<OsString> {
+    let mut path = if let Some(path) = std::env::var_os("PATH") {
+        std::env::split_paths(&path)
+            .collect::<Vec<_>>()
+            .into_iter()
+            .rev()
+            .collect()
+    } else {
+        vec![]
+    };
+
+    path.push(Path::new(env!("CARGO_HOME")).join("bin"));
+
+    path.extend(
+        cargo_run_bin::metadata::get_binary_packages()?
+            .into_iter()
+            .map(cargo_run_bin::binary::install)
+            .map(|path| Ok(Path::new(&path?).parent().unwrap().to_owned()))
+            .collect::<Result<Vec<_>>>()?,
+    );
+
+    path.push(
+        CARGO_WORKSPACE_DIR
+            .join("target")?
+            .to_file_path()
+            .unwrap()
+            .join(if cfg!(debug_assertions) {
+                "debug"
+            } else {
+                "release"
+            }),
+    );
+
+    Ok(std::env::join_paths(path.into_iter().rev())?)
 }
