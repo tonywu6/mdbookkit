@@ -112,6 +112,7 @@ impl Resolver<'_, '_> {
             self.resolve_file()
         } else if let Some(book) = &self.env.config.book_url {
             if let Some(page) = book.0.make_relative(&self.file_url) {
+                // hard-coded URLs to book pages
                 self.resolve_page(page);
             } else {
                 self.link.status = LinkStatus::Ignored;
@@ -164,7 +165,7 @@ impl Resolver<'_, '_> {
             if link.link.starts_with('/') {
                 // mdbook doesn't support absolute paths like VS Code does
                 link.link = page_url.make_relative(&file_url).unwrap().into();
-                link.status = LinkStatus::Rewritten
+                link.status = LinkStatus::Rewritten;
             } else {
                 link.status = LinkStatus::Published;
             }
@@ -189,6 +190,8 @@ impl Resolver<'_, '_> {
         };
 
         if rel.starts_with("../") {
+            // `path` could also be a symlink to a file outside source control somehow
+            // in which case it would NOT be marked as LinkStatus::External;
             link.status = LinkStatus::External;
             return;
         }
@@ -202,6 +205,7 @@ impl Resolver<'_, '_> {
         }
     }
 
+    /// Check hard-coded URLs to book pages
     fn resolve_page(self, page: String) {
         let Self {
             file_url,
@@ -661,6 +665,11 @@ impl Debug for LinkUsage {
     }
 }
 
+/// Configuration for the preprocessor.
+///
+/// This is deserialized from book.toml.
+///
+/// Doc comments for attributes populate the `configuration.md` page in the docs.
 #[derive(Deserialize, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[cfg_attr(feature = "common-cli", derive(clap::Parser))]

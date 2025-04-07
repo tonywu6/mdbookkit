@@ -17,7 +17,7 @@ use super::{styled, Message};
 
 /// Either a [`console::Term`] or an [`env_logger::Logger`].
 ///
-/// This is automatically detected upon installing as the global logger. The logic is:
+/// This is automatically detected upon installation as the global logger. The logic is:
 ///
 /// - If the `RUST_LOG` env var is set, this will use [`env_logger`].
 /// - If stderr is not "user-attended", as determined by [`console::user_attended_stderr()`],
@@ -75,8 +75,8 @@ fn maybe_logging() -> Option<LevelFilter> {
         None
     } else if !console::user_attended_stderr() {
         // RUST_LOG not set but stderr isn't a terminal
-        // log warnings and above
-        Some(LevelFilter::Warn)
+        // log info and above
+        Some(LevelFilter::Info)
     } else {
         // use spinner instead
         Some(LevelFilter::Off)

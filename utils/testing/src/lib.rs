@@ -97,7 +97,7 @@ pub fn may_skip<D: std::fmt::Display>(because: D) -> bool {
         log::info!("{because}");
         true
     } else {
-        panic!("{because} but CI=true")
+        panic!("{because} but CI={ci}")
     }
 }
 

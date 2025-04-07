@@ -22,3 +22,7 @@
   - [`{{#include}}` workarounds](link-forever/working-with-include.md)
   - [Configuration](link-forever/configuration.md)
   - [Known issues](link-forever/known-issues.md)
+
+---
+
+[CHANGELOG](CHANGELOG.md)

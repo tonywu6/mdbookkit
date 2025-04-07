@@ -132,9 +132,12 @@ fn get_head(repo: &Repository) -> Result<Option<String>> {
         .and_then(|tag| tag.format(None))
         .tap_err(log_debug!())
     {
+        log::info!("using tag {tag:?}");
         Ok(Some(tag))
     } else {
-        Ok(Some(head.id().to_string()))
+        let sha = head.id().to_string();
+        log::info!("using commit {sha}");
+        Ok(Some(sha))
     }
 }
 

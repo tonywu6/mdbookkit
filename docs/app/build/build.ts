@@ -23,7 +23,7 @@ const built = await esbuild.build({
   logLevel: Deno.env.get("CI") ? "info" : undefined,
 });
 
-// generate `app/dist.css` and `app/dist.js` for mdBook that actually imports the bundle
+// generate `app/dist.css` and `app/dist.js` for mdBook that actually import the bundle
 
 const css: string[] = [];
 const esm: string[] = [];

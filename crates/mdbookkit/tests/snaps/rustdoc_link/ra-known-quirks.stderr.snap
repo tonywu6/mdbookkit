@@ -25,10 +25,10 @@ expression: report
  10 │ 
  11 │ - [str::parse]
     ·   ──────┬─────
-    ·         ╰── failed to resolve links for "str::parse"
+    ·         ╰── failed to resolve link for "str::parse"
  12 │ - [f64::MIN_POSITIVE]
     ·   ─────────┬─────────
-    ·            ╰── failed to resolve links for "f64::MIN_POSITIVE"
+    ·            ╰── failed to resolve link for "f64::MIN_POSITIVE"
  13 │ 
  14 │ # macro_export
  15 │ 

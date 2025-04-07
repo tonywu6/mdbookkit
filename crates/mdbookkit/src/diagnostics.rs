@@ -22,6 +22,10 @@ pub trait Problem: Send + Sync {
 }
 
 /// Trait for diagnostics classes. This is like a specific error code.
+///
+/// **For implementors:** The [`Display`] implementation, which is the title of each
+/// diagnostic message, should use plurals whenever possible, because error reporters
+/// may elect to group together multiple labels of the same [`Issue`]
 pub trait Issue: Default + Debug + Display + Clone + Send + Sync {
     fn level(&self) -> Level;
 }

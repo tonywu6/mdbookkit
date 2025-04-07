@@ -6,8 +6,6 @@ use std::{
 
 use anyhow::{anyhow, bail, Context, Result};
 use cargo_toml::{Manifest, Product};
-#[cfg(feature = "common-cli")]
-use clap::ValueHint;
 use lsp_types::Url;
 use pulldown_cmark::Options;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -19,6 +17,11 @@ use crate::{env::ErrorHandling, markdown::mdbook_markdown};
 
 use super::markdown;
 
+/// Configuration for the preprocessor.
+///
+/// This is both deserialized from book.toml and parsed from the command line.
+///
+/// Doc comments for attributes populate the `configuration.md` page in the docs.
 #[derive(Deserialize, Debug, Default, Clone)]
 #[cfg_attr(feature = "common-cli", derive(clap::Parser))]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
@@ -33,7 +36,11 @@ pub struct Config {
     #[serde(default)]
     #[cfg_attr(
         feature = "common-cli",
-        arg(long, value_name("COMMAND"), value_hint(ValueHint::CommandString))
+        arg(
+            long,
+            value_name("COMMAND"),
+            value_hint(clap::ValueHint::CommandString)
+        )
     )]
     pub rust_analyzer: Option<String>,
 
@@ -63,7 +70,7 @@ pub struct Config {
     #[serde(default)]
     #[cfg_attr(
         feature = "common-cli",
-        arg(long, value_name("PATH"), value_hint(ValueHint::DirPath))
+        arg(long, value_name("PATH"), value_hint(clap::ValueHint::DirPath))
     )]
     pub manifest_dir: Option<PathBuf>,
 
@@ -73,7 +80,7 @@ pub struct Config {
     #[serde(default)]
     #[cfg_attr(
         feature = "common-cli",
-        arg(long, value_name("PATH"), value_hint(ValueHint::DirPath))
+        arg(long, value_name("PATH"), value_hint(clap::ValueHint::DirPath))
     )]
     pub cache_dir: Option<PathBuf>,
 
@@ -193,17 +200,14 @@ impl Environment {
             .pipe(Url::from_directory_path)
             .unwrap();
 
-        let temp_dir = config
-            .cache_dir
-            .clone()
-            .map(TempDir::Persistent)
-            .or_else(|| {
-                tempfile::TempDir::new()
-                    .ok()
-                    .map(Arc::new)
-                    .map(TempDir::Transient)
-            })
-            .context("failed to obtain a temporary directory")?;
+        let temp_dir = match config.cache_dir.clone() {
+            Some(path) => Some(TempDir::Persistent(path)),
+            None => tempfile::TempDir::new()
+                .ok()
+                .map(Arc::new)
+                .map(TempDir::Transient),
+        }
+        .context("failed to obtain a temporary directory")?;
 
         Ok(Self {
             temp_dir,
@@ -327,6 +331,8 @@ impl LocateProject {
     }
 }
 
+/// Look for rust-analyzer binary from the VS Code extension based on locations
+/// described in <https://rust-analyzer.github.io/book/vs_code.html>.
 pub fn find_code_extension() -> Option<PathBuf> {
     let home = dirs::home_dir()?;
     [

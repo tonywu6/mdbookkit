@@ -120,7 +120,7 @@ fn client() -> Result<Arc<Client>> {
 }
 
 #[test]
-#[ignore = "should run in CI"]
+#[ignore = "should run in a dedicated environment"]
 fn test_minimum_env() -> Result<()> {
     util::setup_logging();
 

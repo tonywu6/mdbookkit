@@ -97,7 +97,7 @@ Progress][lsp-work-done-progress] notifications to know when rust-analyzer has f
 cache priming, before actually sending out external docs requests. This requires parsing
 non-structured log messages that rust-analyzer sends out and some debouncing/throttling
 logic, which is not ideal, see
-[client.rs](/crates/mdbookkit/src/bin/rustdoc_link/client.rs#L129-L132).
+[client.rs](/crates/mdbookkit/src/bin/rustdoc_link/client.rs#L142).
 
 Not waiting for indexing to finish and sending out requests too early causes
 rust-analyzer to respond with empty results.
