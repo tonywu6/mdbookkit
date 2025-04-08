@@ -235,12 +235,27 @@ impl Resolver<'_, '_> {
 
         let mut not_found = vec![];
 
-        for file in [
-            format!("{path}.md"),
-            format!("{path}/index.md"),
-            format!("{path}/README.md"),
-        ] {
-            let Ok(file) = self.env.book_src.join(&file).tap_err(log_debug!()) else {
+        // one does not simply avoid trailing slash issues...
+        // https://github.com/slorber/trailing-slash-guide
+        let try_files = if path.is_empty() || path.ends_with('/') {
+            &[
+                // enforce that index.html pages should consistently
+                // be addressed with a trailing slash
+                format!("{path}index.md"),
+                format!("{path}README.md"),
+            ] as &[String]
+        } else {
+            &[
+                format!("{path}.md"),
+                // all major hosting providers implicitly redirect
+                // /folder to /folder/, so these are okay
+                format!("{path}/index.md"),
+                format!("{path}/README.md"),
+            ]
+        };
+
+        for file in try_files {
+            let Ok(file) = self.env.book_src.join(file).tap_err(log_debug!()) else {
                 continue;
             };
 
