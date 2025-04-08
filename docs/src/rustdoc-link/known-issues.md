@@ -80,7 +80,7 @@ https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from<strong>-1
 rustdoc has a [`private_intra_doc_links`][private_intra_doc_links] lint that warns you
 when your public documentation tries to link to private items.
 
-The preprocessor does not yet warn you about links to private items: rust-analyzer can
+The preprocessor does not yet warn you about links to private items: rust-analyzer will
 generate links for items regardless of their crate-level visibility.
 
 ## Unresolved items
@@ -128,12 +128,12 @@ ever be solved.
 
 <!-- prettier-ignore-start -->
 
+[IpV6Addr]: https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from-1
 [macro_export]: https://doc.rust-lang.org/stable/reference/macros-by-example.html#path-based-scope
 [panic]: https://doc.rust-lang.org/stable/std/macro.panic.html
-[serde_json::json]: https://docs.rs/serde_json/1.0.140/serde_json/macro.json.html
-[tokio::main]: https://docs.rs/tokio-macros/2.5.0/tokio_macros/attr.main.html
-[IpV6Addr]: https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from-1
-[sourcemap]: https://developer.mozilla.org/en-US/docs/Glossary/Source_map
 [private_intra_doc_links]: https://doc.rust-lang.org/rustdoc/lints.html#private_intra_doc_links
+[serde_json::json]: https://docs.rs/serde_json/1.0.140/serde_json/macro.json.html
+[sourcemap]: https://developer.mozilla.org/en-US/docs/Glossary/Source_map
+[tokio::main]: https://docs.rs/tokio-macros/2.5.0/tokio_macros/attr.main.html
 
 <!-- prettier-ignore-end -->

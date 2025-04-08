@@ -1,7 +1,7 @@
 # Caching
 
 By default, `mdbook-rustdoc-link` spawns a fresh `rust-analyzer` process every time it
-is run. `rust-analyzer` then reindexes your entire project before resolving links.
+is run. rust-analyzer then reindexes your entire project before resolving links.
 
 This significantly impacts the responsiveness of `mdbook serve` — it is as if for every
 live reload, you had to reopen your editor, and it gets even worse the more dependencies
@@ -85,7 +85,7 @@ results.
 ## Help wanted 🙌
 
 The cache feature, as it currently stands, is a workaround at best. If you have insights
-on how performance could be further improved, please [open an issue!][gh-issues].
+on how performance could be further improved, please [open an issue!][gh-issues]
 
 ### Cache priming and progress tracking
 
@@ -151,12 +151,12 @@ together in a live-reload scenario.
 
 <!-- prettier-ignore-start -->
 
+[`ra-multiplex`]: https://github.com/pr2502/ra-multiplex
 [gh-issues]: https://github.com/tonywu6/mdbookkit/issues
 [lsp-work-done-progress]: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workDoneProgress
 [ra-architecture]: https://rust-analyzer.github.io/book/contributing/architecture.html#:~:text=The%20analyzer%20keeps%20all%20this%20input%20data%20in%20memory%20and%20never%20does%20any%20IO.
 [ra-cache-priming]: https://rust-analyzer.github.io/book/configuration.html?highlight=cache%20priming#configuration
 [ra-persistent-cache]: https://github.com/rust-lang/rust-analyzer/issues/4712
-[`ra-multiplex`]: https://github.com/pr2502/ra-multiplex
 [salsa]: https://rust-analyzer.github.io/thisweek/2025/03/17/changelog-277.html
 [specify-exclude-patterns]: https://rust-lang.github.io/mdBook/cli/serve.html#specify-exclude-patterns
 

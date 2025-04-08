@@ -161,10 +161,10 @@ ignored**:
 >
 > [`std::vec`], [`mod@std::vec`], and [`macro@std::vec`] all link to the `vec` _module_.
 
-Currently, duplicate names in Rust are allowed only if they correspond to items in
-different [namespaces], for example, between macros and modules, and between struct
-fields and methods — this is mostly covered by the function and macro syntax, described
-[above](#functions-and-macros).
+This is largely okay because currently, duplicate names in Rust are allowed only if they
+correspond to items in different [namespaces], for example, between macros and modules,
+and between struct fields and methods — this is mostly covered by the function and macro
+syntax, described [above](#functions-and-macros).
 
 If you encounter items that must be disambiguated using rustdoc's disambiguator syntax,
 other than [the "special types" listed below](#special-types), please [file an

@@ -8,6 +8,7 @@
   --mono-font:
     "Source Code Pro", "Consolas", "Ubuntu Mono", "Menlo", "DejaVu Sans Mono",
     ui-monospace, monospace;
+
   font-size: 16px;
 }
 
@@ -18,7 +19,6 @@ html {
     -apple-system,
     BlinkMacSystemFont,
     "Segoe UI",
-    "Noto Sans",
     "Helvetica Neue",
     ui-sans-serif,
     sans-serif,
@@ -47,15 +47,20 @@ body {
   }
 
   p {
+    margin-block: 0 1rem;
     line-height: 1.6;
-    margin-block-start: 0;
-    margin-block-end: 1rem;
   }
 
   a {
     text-decoration: underline;
     text-decoration-thickness: 0.1ex;
     text-underline-offset: 0.6ex;
+
+    strong,
+    em,
+    code {
+      color: inherit;
+    }
 
     &:hover,
     &:active {
@@ -69,16 +74,12 @@ body {
     &:has(del:only-child) {
       text-decoration: none;
     }
-
-    strong,
-    em,
-    code {
-      color: inherit;
-    }
   }
 
-  sup a {
-    text-decoration: none;
+  sup {
+    a {
+      text-decoration: none;
+    }
   }
 
   h2,
@@ -102,8 +103,8 @@ body {
 
   ul,
   ol {
-    line-height: 1.6;
     padding-inline-start: 1.8rem;
+    line-height: 1.6;
   }
 
   li {
@@ -121,8 +122,8 @@ body {
     margin: 0;
 
     th {
-      font-weight: 700;
       padding: 3px 20px;
+      font-weight: 700;
       background-color: var(--table-header-bg);
     }
 
@@ -136,7 +137,7 @@ body {
     tr > td:first-of-type {
       white-space: nowrap;
 
-      @media screen and (max-width: 420px) {
+      @media screen and (width <= 420px) {
         white-space: normal;
       }
     }
@@ -161,9 +162,9 @@ body {
 
   blockquote {
     padding: 0 0 0 1rem;
+    background-color: unset;
     border-block-start: none;
     border-block-end: none;
-    background-color: unset;
     border-inline-start: 0.25rem solid var(--quote-border);
 
     > :last-child {
@@ -213,24 +214,21 @@ body {
     }
 
     > li:target::before {
-      background-color: #ffb45420;
+      inset: 0 0 0 -24px;
       outline: 0.5rem solid #ffb45420;
+      background-color: #ffb45420;
       border: none;
       border-radius: 0;
-      top: 0;
-      bottom: 0;
-      left: -24px;
-      right: 0;
     }
   }
 
   :not(h1, h2, h3, h4, h5, h6, .footnote-definition > li):target {
-    background-color: #ffb45420;
     outline: 0.5rem solid #ffb45420;
+    background-color: #ffb45420;
 
     &.footnote-reference {
-      background-color: #ffb45440;
       outline: 0.25rem solid #ffb45440;
+      background-color: #ffb45440;
       border-radius: 0;
     }
   }
@@ -246,8 +244,8 @@ body {
   img,
   video {
     max-width: 100%;
-    max-height: 100%;
     height: auto;
+    max-height: 100%;
     object-fit: contain;
   }
 
@@ -259,7 +257,7 @@ body {
     min-height: 0;
     margin: 1.8rem;
 
-    @media screen and (max-width: 768px) {
+    @media screen and (width <= 768px) {
       margin: 0;
     }
 
@@ -276,9 +274,9 @@ body {
     }
 
     > figcaption {
+      margin-block-start: 0.8em;
       font-size: 0.8em;
       font-weight: 600;
-      margin-block-start: 0.8em;
 
       > p:last-child {
         margin-block-end: 0;
@@ -292,10 +290,10 @@ body {
 }
 
 .code-header {
-  margin: 0;
   padding: 0;
-  white-space: pre-wrap;
+  margin: 0;
   font-family: var(--mono-font);
+  white-space: pre-wrap;
 
   & h3 {
     font-size: 1.125rem;
@@ -312,8 +310,8 @@ body {
 
 figure.fig-text {
   display: block;
-  margin: 0 0 1rem 0;
   padding: 0.6rem;
+  margin: 0 0 1rem;
 
   > :first-child {
     margin-block-start: 0;
@@ -323,7 +321,7 @@ figure.fig-text {
     margin-block-end: 0;
   }
 
-  @media screen and (max-width: 620px) {
+  @media screen and (width <= 620px) {
     overflow-x: auto;
 
     > * {
@@ -343,11 +341,12 @@ figure.fig-text {
 }
 
 /* à la Google's developer docs */
-
-@media screen and (max-width: 420px) {
+@media screen and (width <= 420px) {
   :root {
     /* 15px */
     --page-padding: 0;
+    --blockquote-padding-block: 0.8rem;
+    --blockquote-padding-inline: 20px;
   }
 
   .content {
@@ -357,7 +356,7 @@ figure.fig-text {
 
   .content main {
     > * {
-      padding-inline: 20px;
+      padding-inline: var(--blockquote-padding-inline);
     }
 
     > ul,
@@ -374,15 +373,7 @@ figure.fig-text {
       margin-block-end: 1rem;
 
       > figcaption {
-        padding-inline: 20px;
-      }
-
-      &:not(.fig-text) {
-        padding-inline: 0;
-      }
-
-      &.fig-text {
-        padding: 0.8rem 20px;
+        padding-inline: var(--blockquote-padding-inline);
       }
 
       > pre {
@@ -390,7 +381,7 @@ figure.fig-text {
         margin-block-end: 1rem;
 
         > code {
-          padding: 0.8rem 20px;
+          padding: var(--blockquote-padding-block) var(--blockquote-padding-inline);
         }
       }
     }
@@ -400,12 +391,12 @@ figure.fig-text {
       margin-block-end: 1rem;
 
       > code {
-        padding: 0.8rem 20px;
+        padding: var(--blockquote-padding-block) var(--blockquote-padding-inline);
       }
     }
 
     > blockquote {
-      padding-inline-start: calc(20px - 0.25rem);
+      padding-inline-start: calc(var(--blockquote-padding-inline) - 0.25rem);
     }
 
     .footnote-definition > li:target::before {
@@ -421,7 +412,16 @@ figure.fig-text {
   }
 
   .nav-wrapper {
-    padding: 0 20px 32px 20px;
+    padding: 0 var(--blockquote-padding-inline) 32px;
+  }
+
+  figure.fig-text {
+    padding-block: var(--blockquote-padding-block);
+    padding-inline: 0;
+
+    > p {
+      padding-inline: var(--blockquote-padding-inline);
+    }
   }
 }
 
@@ -500,4 +500,9 @@ html.rust {
   .mdbook-alerts-caution {
     --mdbook-alerts-color: #d1242f;
   }
+}
+
+.sidebar li:has(a[href*="_internal/"]),
+a[href*="_internal/"] {
+  display: none;
 }

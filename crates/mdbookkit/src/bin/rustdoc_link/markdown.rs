@@ -1,8 +1,10 @@
 use pulldown_cmark::{BrokenLink, BrokenLinkCallback, CowStr, Event, Options, Parser};
 use tap::Pipe;
 
+use crate::markdown::mdbook_markdown;
+
 pub fn stream(text: &str, options: Options) -> MarkdownStream<'_> {
-    Parser::new_with_broken_link_callback(text, options, Some(ItemLinks(options)))
+    Parser::new_with_broken_link_callback(text, options, Some(ItemLinks))
 }
 
 pub type MarkdownStream<'a> = Parser<'a, ItemLinks>;
@@ -16,7 +18,14 @@ pub type MarkdownStream<'a> = Parser<'a, ItemLinks>;
 /// Links that are "broken" that aren't actually doc links won't show up in the output,
 /// because the preprocessor ignores links that cannot be parsed and is capable of
 /// emitting only changed links, see [`PatchStream`][crate::markdown::PatchStream].
-pub struct ItemLinks(Options);
+pub struct ItemLinks;
+
+impl ItemLinks {
+    // Explicitly disable smart punctuation to prevent quotes from being changed
+    // or else things like lifetimes may become invalid
+    const OPTIONS: pulldown_cmark::Options =
+        mdbook_markdown().intersection(Options::ENABLE_SMART_PUNCTUATION.complement());
+}
 
 impl<'input> BrokenLinkCallback<'input> for ItemLinks {
     fn handle_broken_link(
@@ -35,7 +44,7 @@ impl<'input> BrokenLinkCallback<'input> for ItemLinks {
             // this should be okay in usage, because this is only called by the Parser,
             // which should only provide borrowed text.
 
-            let parse = stream(inner, self.0);
+            let parse = stream(inner, Self::OPTIONS);
 
             let inner = parse
                 .filter_map(|event| match event {

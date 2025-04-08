@@ -3,10 +3,20 @@
     "lib": ["esnext", "dom", "deno.ns"],
     "strict": true
   },
-  "exclude": ["node_modules", "build", "dist", "target", "docs/app/dist.js"],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "target",
+    "docs/app/dist.js",
+    "docs/src/app"
+  ],
   "imports": {
     "esbuild": "npm:esbuild@^0.25.1",
-    "prettier": "npm:prettier@^3.5.3"
+    "prettier": "npm:prettier@^3.5.3",
+    "stylelint": "npm:stylelint@^16.18.0",
+    "stylelint-config-recess-order": "npm:stylelint-config-recess-order@^6.0.0",
+    "stylelint-config-standard": "npm:stylelint-config-standard@^38.0.0"
   },
   "nodeModulesDir": "auto",
   "tasks": {

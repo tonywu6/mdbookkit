@@ -4,6 +4,15 @@ use anyhow::{anyhow, Result};
 use serde::Deserialize;
 use tap::Pipe;
 
+pub fn is_ci() -> Option<String> {
+    let ci = std::env::var("CI").unwrap_or("".into());
+    if matches!(ci.as_str(), "" | "0" | "false") {
+        None
+    } else {
+        Some(ci)
+    }
+}
+
 /// Flag indicating how the program should proceed when there are warnings.
 ///
 /// Used in preprocessor options.
@@ -55,12 +64,7 @@ impl ErrorHandling {
     }
 
     fn warning_as_error() -> Option<String> {
-        let ci = std::env::var("CI").unwrap_or("".into());
-        if matches!(ci.as_str(), "" | "0" | "false") {
-            None
-        } else {
-            Some(ci)
-        }
+        is_ci()
     }
 }
 

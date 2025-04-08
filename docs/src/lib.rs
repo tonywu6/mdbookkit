@@ -7,5 +7,5 @@ use anyhow::Context;
 use mdbookkit::bin::rustdoc_link::Resolver;
 
 mod env {
-    pub use mdbookkit::bin::rustdoc_link::env::Config;
+    pub use mdbookkit::{bin::rustdoc_link::env::Config, env::is_ci};
 }

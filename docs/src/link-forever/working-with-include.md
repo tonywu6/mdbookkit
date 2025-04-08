@@ -16,7 +16,7 @@ may be needed:
 This page describes some workarounds for linking in included files.
 
 - [Using absolute paths](#using-absolute-paths)
-- [Using URLs to link to book pages](#using-urls-to-link-to-book-pages)
+- [Extra feature: Using URLs to link to book pages](#extra-feature-using-urls-to-link-to-book-pages)
 
 ## Using absolute paths
 
@@ -36,7 +36,7 @@ To use paths as links in included content, you can use absolute paths that start
 > This is also the behavior both in [VS Code][vscode-path-completions] and on
 > [GitHub][github-relative-links].
 
-## Using URLs to link to book pages
+## Extra feature: Using URLs to link to book pages
 
 You may be in a situation where you have to use full URLs to link to your book rather
 than relying on paths.
@@ -82,9 +82,9 @@ directory, the preprocessor will warn you:
 
 <!-- prettier-ignore-start -->
 
+[cargo-readme]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-readme-field
+[github-relative-links]: https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#relative-links
 [mdbook-include]: https://rust-lang.github.io/mdBook/format/mdbook.html#including-files
 [vscode-path-completions]: https://code.visualstudio.com/docs/languages/markdown#_path-completions
-[github-relative-links]: https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#relative-links
-[cargo-readme]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-readme-field
 
 <!-- prettier-ignore-end -->

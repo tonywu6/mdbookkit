@@ -102,14 +102,13 @@ where
 }
 
 /// <https://github.com/rust-lang/mdBook/blob/v0.4.47/src/utils/mod.rs#L197-L208>
-pub fn mdbook_markdown() -> Options {
-    let mut opts = Options::empty();
-    opts.insert(Options::ENABLE_TABLES);
-    opts.insert(Options::ENABLE_FOOTNOTES);
-    opts.insert(Options::ENABLE_STRIKETHROUGH);
-    opts.insert(Options::ENABLE_TASKLISTS);
-    opts.insert(Options::ENABLE_HEADING_ATTRIBUTES);
-    opts
+pub const fn mdbook_markdown() -> Options {
+    Options::empty()
+        .union(Options::ENABLE_TABLES)
+        .union(Options::ENABLE_FOOTNOTES)
+        .union(Options::ENABLE_STRIKETHROUGH)
+        .union(Options::ENABLE_TASKLISTS)
+        .union(Options::ENABLE_HEADING_ATTRIBUTES)
 }
 
 pub type Spanned<T> = (T, Range<usize>);

@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use lsp_types::Url;
 use pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
 use serde::{Deserialize, Serialize};
-use tap::{Pipe, Tap};
+use tap::{Pipe, Tap, TapFallible};
 
 use crate::log_trace;
 
@@ -37,7 +37,7 @@ impl<'a> Link<'a> {
         };
 
         let state = Item::parse(path)
-            .tap_mut(log_trace!())
+            .tap_err(log_trace!())
             .ok()
             .map(LinkState::Parsed)
             .unwrap_or(LinkState::Unparsed);

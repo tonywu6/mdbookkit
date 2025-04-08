@@ -16,7 +16,7 @@ message:
 Error: Cargo.toml does not have any lib or bin target
 ```
 
-This means it found your workspace `Cargo.toml` instead of a crate manifest. To use the
+This means it found your workspace `Cargo.toml` instead of a member crate's. To use the
 preprocessor in this case, some extra setup is needed.
 
 <details class="toc" open>
@@ -90,7 +90,7 @@ have the ability to work with multiple entrypoints.
 
 A possible workaround would be to turn your book folder into a private crate that
 depends on the crates you would like to document. Then you can link to them as if they
-are third-party crates.
+were third-party crates.
 
 ```
 my-workspace/

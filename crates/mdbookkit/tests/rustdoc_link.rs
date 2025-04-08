@@ -79,7 +79,7 @@ async fn test_snapshots() -> Result<()> {
         test_document!("../../../docs/src/rustdoc-link/supported-syntax.md"),
         test_document!("../../../docs/src/rustdoc-link/known-issues.md"),
         test_document!("../../../docs/src/rustdoc-link/getting-started.md"),
-        test_document!("../../../docs/src/rustdoc-link.md"),
+        test_document!("../../../docs/src/rustdoc-link/index.md"),
         test_document!("tests/ra-known-quirks.md"),
     ];
 
