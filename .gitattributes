@@ -3,3 +3,4 @@
 *.pxd binary
 
 .prettierrc.* -linguist-detectable
+.stylelintrc.* -linguist-detectable
