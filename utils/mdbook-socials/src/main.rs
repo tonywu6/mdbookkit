@@ -163,7 +163,7 @@ fn main() -> Result<()> {
                     elem.set_inner_content(&title, ContentType::Text);
                     Ok(())
                 }),
-                element!(r#"meta[property^="og"]"#, |elem| {
+                element!(r#"meta[property^="og:"]"#, |elem| {
                     elem.remove();
                     Ok(())
                 }),

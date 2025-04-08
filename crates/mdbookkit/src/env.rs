@@ -4,6 +4,15 @@ use anyhow::{anyhow, Result};
 use serde::Deserialize;
 use tap::Pipe;
 
+pub fn is_ci() -> Option<String> {
+    let ci = std::env::var("CI").unwrap_or("".into());
+    if matches!(ci.as_str(), "" | "0" | "false") {
+        None
+    } else {
+        Some(ci)
+    }
+}
+
 /// Flag indicating how the program should proceed when there are warnings.
 ///
 /// Used in preprocessor options.
@@ -13,7 +22,7 @@ use tap::Pipe;
 #[derive(Deserialize, Debug, Default, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum ErrorHandling {
-    /// Fail if the environment variable `CI` is set to a value other than `0`.
+    /// Fail if the environment variable `CI` is set to a value other than `0` or `false`.
     /// Environments like GitHub Actions configure this automatically.
     #[default]
     #[serde(rename = "ci")]
@@ -35,10 +44,9 @@ impl ErrorHandling {
                         .pipe(Err)
                 }
                 Self::Env => {
-                    let ci = std::env::var("CI").unwrap_or("".into());
-                    if matches!(ci.as_str(), "" | "0" | "false") {
+                    let Some(ci) = Self::warning_as_error() else {
                         return Ok(());
-                    }
+                    };
                     anyhow!("treating warnings as errors because fail-on-unresolved is \"ci\" and CI={ci}")
                         .context("preprocessor has errors")
                         .pipe(Err)
@@ -46,6 +54,17 @@ impl ErrorHandling {
             },
             _ => Ok(()),
         }
+    }
+
+    pub fn adjusted<T, E>(&self, result: Result<Result<T, E>, E>) -> Result<Result<T, E>, E> {
+        match result {
+            Ok(Err(error)) if Self::warning_as_error().is_some() => Err(error),
+            result => result,
+        }
+    }
+
+    fn warning_as_error() -> Option<String> {
+        is_ci()
     }
 }
 

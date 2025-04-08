@@ -166,10 +166,10 @@ expression: report
      ·         │               ╰── https://doc.rust-lang.org/stable/alloc/vec/index.html
      ·         ╰── https://doc.rust-lang.org/stable/alloc/vec/index.html
  163 │ 
- 164 │ Currently, duplicate names in Rust are allowed only if they correspond to items in
- 165 │ different [namespaces], for example, between macros and modules, and between struct
- 166 │ fields and methods — this is mostly covered by the function and macro syntax, described
- 167 │ [above](#functions-and-macros).
+ 164 │ This is largely okay because currently, duplicate names in Rust are allowed only if they
+ 165 │ correspond to items in different [namespaces], for example, between macros and modules,
+ 166 │ and between struct fields and methods — this is mostly covered by the function and macro
+ 167 │ syntax, described [above](#functions-and-macros).
  168 │ 
  169 │ If you encounter items that must be disambiguated using rustdoc's disambiguator syntax,
  170 │ other than [the "special types" listed below](#special-types), please [file an

@@ -66,7 +66,6 @@ fn test_snapshots() -> Result<()> {
 }
 
 #[test]
-#[ignore = "should run in CI"]
 fn test_minimum_env() -> Result<()> {
     util::setup_logging();
 
@@ -120,10 +119,23 @@ fn test_minimum_env() -> Result<()> {
     log::info!("then: book builds with warnings");
     Command::new("mdbook")
         .arg("build")
+        .env("CI", "false")
         .env("PATH", &path)
         .current_dir(&root)
         .assert()
         .success()
+        .stderr(predicate::str::contains("requires a git repository"));
+
+    log::info!("when: CI=true");
+
+    log::info!("then: preprocessor fails");
+    Command::new("mdbook")
+        .arg("build")
+        .env("CI", "true")
+        .env("PATH", &path)
+        .current_dir(&root)
+        .assert()
+        .failure()
         .stderr(predicate::str::contains("requires a git repository"));
 
     log::info!("when: repo has no commit");
@@ -137,6 +149,7 @@ fn test_minimum_env() -> Result<()> {
     log::info!("then: book builds with warnings");
     Command::new("mdbook")
         .arg("build")
+        .env("CI", "false")
         .env("PATH", &path)
         .current_dir(&root)
         .assert()
@@ -159,6 +172,7 @@ fn test_minimum_env() -> Result<()> {
     log::info!("then: book builds with warnings");
     Command::new("mdbook")
         .arg("build")
+        .env("CI", "false")
         .env("PATH", &path)
         .current_dir(&root)
         .assert()
@@ -178,14 +192,33 @@ fn test_minimum_env() -> Result<()> {
         .assert()
         .success();
 
-    log::info!("then: book builds without warnings");
+    log::info!("then: book builds");
     Command::new("mdbook")
         .arg("build")
         .env("PATH", &path)
         .current_dir(&root)
         .assert()
         .success()
-        .stderr(predicate::str::contains("[WARN]").not());
+        .stderr(predicate::str::contains("[WARN]").not())
+        .stderr(predicate::str::contains("using commit"));
+
+    log::info!("when: HEAD is tagged");
+    Command::new("git")
+        .args(["tag", "v0.1.0", "HEAD"])
+        .env("PATH", &path)
+        .current_dir(&root)
+        .assert()
+        .success();
+
+    log::info!("then: items are linked using tag instead of commit SHA");
+    Command::new("mdbook")
+        .arg("build")
+        .env("PATH", &path)
+        .current_dir(&root)
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("[WARN]").not())
+        .stderr(predicate::str::contains("using tag \"v0.1.0\""));
 
     Ok(())
 }

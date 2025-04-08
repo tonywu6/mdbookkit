@@ -42,23 +42,23 @@ jobs:
           # token is required to not commit as github-actions[bot]
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_GITHUB_TOKEN }}
 
-  # release:
-  #   name: Release
-  #   runs-on: ubuntu-latest
+  release:
+    name: Release
+    runs-on: ubuntu-latest
 
-  #   if: github.repository_owner == 'tonywu6'
+    if: github.repository_owner == 'tonywu6'
 
-  #   permissions:
-  #     contents: write
+    permissions:
+      contents: write
 
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #     - uses: dtolnay/rust-toolchain@stable
-  #     - uses: release-plz/action@7419a2cb1535b9c0e852b4dec626967baf65c022
-  #       with:
-  #         command: release
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_GITHUB_TOKEN }}
-  #         CARGO_REGISTRY_TOKEN: ${{ secrets.RELEASE_PLZ_PUBLISH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: release-plz/action@7419a2cb1535b9c0e852b4dec626967baf65c022
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_GITHUB_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.RELEASE_PLZ_PUBLISH_TOKEN }}

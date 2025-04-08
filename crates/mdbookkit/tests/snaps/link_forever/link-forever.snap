@@ -50,13 +50,19 @@ expression: output
 
 # canonical urls
 
-found: <https://example.org/book/tests/ra-known-quirks>
+found: <https://example.org/book/tests/tests/ra-known-quirks>
 
-found: <https://example.org/book/tests/ra-known-quirks.html>
+found: <https://example.org/book/tests/tests/ra-known-quirks.html>
 
-missing: <https://example.org/book/404>
+not found: <https://example.org/book/404>
 
 ignored: <https://example.com/book/ra-known-quirks>
+
+trailing slash, found: <https://example.org/book/tests/tests/trailing-slash/>
+
+trailing slash, found: <https://example.org/book/tests/tests/trailing-slash>
+
+trailing slash, not found: <https://example.org/book/tests/tests/ra-known-quirks/>
 
 # image-in-link
 

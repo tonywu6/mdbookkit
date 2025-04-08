@@ -49,7 +49,7 @@ This includes items from the prelude (unless you are using `#![no_implicit_prelu
 > [`FromIterator`] is in the prelude starting from Rust 2021.
 
 Though technically not required — to make items from your crate more distinguishable
-from others in the Markdown source code, you can write `crate::*`:
+from others in your Markdown source, you can write `crate::*`:
 
 > ```md
 > [Configurations](configuration.md) for the preprocessor is defined in the
@@ -184,9 +184,9 @@ Docs" feature — except it's fully automated.
 
 <!-- prettier-ignore-start -->
 
-[rustdoc-scoping]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html#valid-links
 [didOpen]: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_didOpen
-[why-lsp]: https://matklad.github.io/2022/04/25/why-lsp.html#Alternative-Theory:~:text=a%20language%20server%20must%20analyze%20any%20invalid%20program%20as%20best%20as%20it%20can.%20Working%20with%20incomplete%20and%20invalid%20programs%20is%20the%20first%20complication%20of%20a%20language%20server%20in%20comparison%20to%20a%20compiler.
 [externalDocs]: https://rust-analyzer.github.io/book/contributing/lsp-extensions.html#open-external-documentation
+[rustdoc-scoping]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html#valid-links
+[why-lsp]: https://matklad.github.io/2022/04/25/why-lsp.html#Alternative-Theory:~:text=a%20language%20server%20must%20analyze%20any%20invalid%20program%20as%20best%20as%20it%20can.%20Working%20with%20incomplete%20and%20invalid%20programs%20is%20the%20first%20complication%20of%20a%20language%20server%20in%20comparison%20to%20a%20compiler.
 
 <!-- prettier-ignore-end -->

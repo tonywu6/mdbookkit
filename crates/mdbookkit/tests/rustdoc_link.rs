@@ -79,7 +79,7 @@ async fn test_snapshots() -> Result<()> {
         test_document!("../../../docs/src/rustdoc-link/supported-syntax.md"),
         test_document!("../../../docs/src/rustdoc-link/known-issues.md"),
         test_document!("../../../docs/src/rustdoc-link/getting-started.md"),
-        test_document!("../../../docs/src/rustdoc-link.md"),
+        test_document!("../../../docs/src/rustdoc-link/index.md"),
         test_document!("tests/ra-known-quirks.md"),
     ];
 
@@ -120,7 +120,7 @@ fn client() -> Result<Arc<Client>> {
 }
 
 #[test]
-#[ignore = "should run in CI"]
+#[ignore = "should run in a dedicated environment"]
 fn test_minimum_env() -> Result<()> {
     util::setup_logging();
 
@@ -237,8 +237,9 @@ fn test_minimum_env() -> Result<()> {
             .stderr(
                 predicate::str::contains("failed to spawn rust-analyzer")
                     // https://github.com/rust-lang/rustup/issues/3846
-                    // rustup shims rust-analyzer even when it's not installed
+                    // rustup shims rust-analyzer when it's not installed
                     .or(predicate::str::contains("Unknown binary 'rust-analyzer")),
+                // ^ doesn't have a closing `'` because on windows it says 'rust-analyzer.exe'
             );
 
         log::info!("when: code extension is installed");

@@ -58,8 +58,7 @@ This works in both `mdbook build` and `mdbook serve`!
 
 ![screen recording of mdbook-rustdoc-link during mdbook build](media/screencap.webp)
 
-To read more about this project, feel free to return to
-[Overview](../rustdoc-link.md#overview).
+To read more about this project, feel free to return to [Overview](index.md#overview).
 
 > [!IMPORTANT]
 >
@@ -85,11 +84,11 @@ To read more about this project, feel free to return to
 
 <!-- prettier-ignore-start -->
 
-[preprocessor]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
-[rust-analyzer]: https://rust-analyzer.github.io/
-[ra-install]: https://rust-analyzer.github.io/book/rust_analyzer_binary.html
-[open-docs]: https://rust-analyzer.github.io/book/features.html#open-docs
-[ra-extension]: https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer
 [gh-releases]: https://github.com/tonywu6/mdbookkit/releases
+[open-docs]: https://rust-analyzer.github.io/book/features.html#open-docs
+[preprocessor]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
+[ra-extension]: https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer
+[ra-install]: https://rust-analyzer.github.io/book/rust_analyzer_binary.html
+[rust-analyzer]: https://rust-analyzer.github.io/
 
 <!-- prettier-ignore-end -->

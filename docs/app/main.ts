@@ -1,3 +1,4 @@
+// https://github.com/rust-lang/mdBook/blob/master/CHANGELOG.md#mdbook-0448
 document
   .querySelectorAll<HTMLElement>(".footnote-definition a[href^='#fr-']")
   .forEach((elem) => {

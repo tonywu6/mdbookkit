@@ -37,9 +37,9 @@ This project is released under the [Apache 2.0 License](/LICENSE-APACHE.md) and 
 
 <!-- prettier-ignore-start -->
 
-[mdBook]: https://rust-lang.github.io/mdBook/
 [`mdbookkit`]: https://crates.io/crates/mdbookkit
-[preprocessors]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
 [gh-releases]: https://github.com/tonywu6/mdbookkit/releases
+[mdBook]: https://rust-lang.github.io/mdBook/
+[preprocessors]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
 
 <!-- prettier-ignore-end -->

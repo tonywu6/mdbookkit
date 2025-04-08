@@ -33,11 +33,11 @@ URL fragments are preserved:
 
 > ```md
 > This book uses [esbuild] to
-> [preprocess its style sheet](../../app/build/build.ts#L7-L16).
+> [preprocess its style sheet](../../app/build/build.ts#L13-L24).
 > ```
 >
 > This book uses [esbuild] to
-> [preprocess its style sheet](../../app/build/build.ts#L7-L16).
+> [preprocess its style sheet](../../app/build/build.ts#L13-L24).
 
 By default, links to files under your book's `src/` directory are not converted, since
 mdBook already [copies them to build output][mdbook-src-build], but this is configurable
@@ -49,7 +49,7 @@ To know what GitHub repository to link to, the preprocessor looks at the followi
 places, in order:
 
 1. The [`output.html.git-repository-url`] option in your `book.toml`
-2. The URL of a Git remote named `origin`
+2. The URL of a Git remote named `origin`[^1]
 
 > [!TIP]
 >
@@ -87,12 +87,14 @@ Formatting of diagnostics powered by [miette]
 
 <!-- prettier-ignore-start -->
 
-[vscode-path-completions]: https://code.visualstudio.com/docs/languages/markdown#_path-completions
+[`mdbook-linkcheck`]: https://github.com/Michael-F-Bryan/mdbook-linkcheck
+[`output.html.git-repository-url`]: https://rust-lang.github.io/mdBook/format/configuration/renderers.html#html-renderer-options
+[esbuild]: https://esbuild.github.io
 [github-relative-links]: https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#relative-links
 [link-validation]: https://code.visualstudio.com/docs/languages/markdown#_link-validation
 [mdbook-src-build]: https://rust-lang.github.io/mdBook/guide/creating.html#source-files
-[`output.html.git-repository-url`]: https://rust-lang.github.io/mdBook/format/configuration/renderers.html#html-renderer-options
-[esbuild]: https://esbuild.github.io
-[`mdbook-linkcheck`]: https://github.com/Michael-F-Bryan/mdbook-linkcheck
+[vscode-path-completions]: https://code.visualstudio.com/docs/languages/markdown#_path-completions
 
 <!-- prettier-ignore-end -->
+
+[^1]: The remote must be exactly named `origin`. No other name is recognized.

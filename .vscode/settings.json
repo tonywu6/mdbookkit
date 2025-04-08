@@ -1,9 +1,15 @@
 {
+  "[css]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.stylelint": "explicit"
+    }
+  },
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "cSpell.words": ["cmark", "mdbookkit", "unmark"],
   "deno.enable": true,
+  "editor.formatOnSave": true,
   "files.associations": {
     "**/*.snap": "markdown",
     "**/*.snap.new": "markdown"

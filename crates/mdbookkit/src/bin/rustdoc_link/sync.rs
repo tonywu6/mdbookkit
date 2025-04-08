@@ -25,6 +25,14 @@ impl EventSampling {
     }
 }
 
+/// Some kind of [debouncing].
+///
+/// Listens to events over an [`mpsc::Receiver<Poll<T>>`] and [notifies][Notify]
+/// subscribers of [`Poll::Ready`], but only if they are not "immediately"
+/// followed by more [`Poll::Pending`], the timing of which is determined by a
+/// configured [buffering time][EventSampling::buffer].
+///
+/// [debouncing]: https://developer.mozilla.org/en-US/docs/Glossary/Debounce
 #[derive(Debug, Clone)]
 pub struct EventSampler<T> {
     state: Arc<RwLock<State<T>>>,

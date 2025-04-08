@@ -6,14 +6,14 @@ use pulldown_cmark::{Event, Options};
 use pulldown_cmark_to_cmark::{cmark, Error};
 use tap::Pipe;
 
-/// _Patch_ a Markdown string, instead of regenerating it entirely.
+/// _Patch_ a Markdown string, instead of regenerating it entirely, in order to preserve
+/// as much of the original Markdown source as possible, especially with regard to whitespace.
 ///
-/// Currently, whitespace is NOT preserved when using [`pulldown_cmark_to_cmark`] to
-/// generate Markdown from a [`pulldown_cmark::Event`] stream.
-///
-/// This is problematic for mdBook preprocessors, because preprocessors downstream
-/// may need to work on syntax that is whitespace-sensitive. Normalizing all whitespace
-/// could cause such usage to no longer be recognized. An example is [`mdbook-alerts`][alerts]
+/// Currently, when using [`pulldown_cmark_to_cmark`] to generate Markdown from a
+/// [`pulldown_cmark::Event`] stream, whitespace is NOT preserved. This is problematic
+/// for mdBook preprocessors, because preprocessors downstream may need to work on
+/// syntax that is whitespace-sensitive. Normalizing all whitespace could cause such
+/// usage to no longer be recognized. An example is [`mdbook-alerts`][alerts]
 /// which works on GitHub's ["alerts"][gh-alerts] syntax.
 ///
 /// [alerts]: https://crates.io/crates/mdbook-alerts
@@ -74,7 +74,7 @@ impl<'a, S> PatchStream<'a, S> {
     /// **The yielded ranges must not overlap or decrease**, that is, for `span1` and
     /// `span2`, where `span1` is yielded before `span2`, `span1.end <= span2.start`.
     ///
-    /// ## Panics
+    /// # Panics
     ///
     /// Panic if ranges in `stream` are not monotonically increasing.
     pub fn new(source: &'a str, stream: S) -> Self {
@@ -102,14 +102,13 @@ where
 }
 
 /// <https://github.com/rust-lang/mdBook/blob/v0.4.47/src/utils/mod.rs#L197-L208>
-pub fn mdbook_markdown() -> Options {
-    let mut opts = Options::empty();
-    opts.insert(Options::ENABLE_TABLES);
-    opts.insert(Options::ENABLE_FOOTNOTES);
-    opts.insert(Options::ENABLE_STRIKETHROUGH);
-    opts.insert(Options::ENABLE_TASKLISTS);
-    opts.insert(Options::ENABLE_HEADING_ATTRIBUTES);
-    opts
+pub const fn mdbook_markdown() -> Options {
+    Options::empty()
+        .union(Options::ENABLE_TABLES)
+        .union(Options::ENABLE_FOOTNOTES)
+        .union(Options::ENABLE_STRIKETHROUGH)
+        .union(Options::ENABLE_TASKLISTS)
+        .union(Options::ENABLE_HEADING_ATTRIBUTES)
 }
 
 pub type Spanned<T> = (T, Range<usize>);

@@ -1,3 +1,4 @@
+use anyhow::Result;
 use syn::{
     parenthesized,
     parse::{End, Parse, ParseStream, Parser},
@@ -6,15 +7,22 @@ use syn::{
     PathArguments, QSelf, Token, TypePath,
 };
 
+/// Texts that look like Rust items.
 #[derive(Debug)]
 pub struct Item {
+    /// The parsed item name, which may be different from the source text (e.g.
+    /// turbofish are expanded.)
     pub name: String,
+    /// The synthesized, syntactically valid statement that rust-analyzer can parse.
     pub stmt: String,
+    /// "Points of interest" in [`stmt`][Self::stmt] that can be used to construct
+    /// [`TextDocumentPositionParams`][lsp_types::TextDocumentPositionParams].
     pub cursor: Cursor,
 }
 
 impl Item {
-    pub fn parse(path: &str) -> anyhow::Result<Self> {
+    /// Try to parse a link url as a Rust item. See [`ItemName`].
+    pub fn parse(path: &str) -> Result<Self> {
         let path = match path.split_once('@') {
             None => path,
             Some((_, path)) => path,

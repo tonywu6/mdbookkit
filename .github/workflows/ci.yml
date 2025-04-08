@@ -31,7 +31,9 @@ jobs:
           - stable
         platform:
           - ubuntu-latest
+          # - macos-latest # is expensive
           - windows-latest
+
       fail-fast: false
 
     runs-on: ${{ matrix.platform }}

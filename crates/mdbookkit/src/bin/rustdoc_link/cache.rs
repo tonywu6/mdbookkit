@@ -118,40 +118,45 @@ impl FileCacheV1 {
     where
         D: Iterator<Item = Cow<'a, Url>>,
     {
-        iter::once(Cow::Owned(env.source_dir.join("Cargo.toml").unwrap()))
-            .chain(iter::once(Cow::Owned(
-                env.crate_dir.join("Cargo.toml").unwrap(),
-            )))
-            .chain(iter::once(Cow::Borrowed(&env.entrypoint)))
-            .chain(deps)
-            .collect::<BTreeSet<_>>()
-            .into_iter()
-            .filter_map(|dep| {
-                if env.source_dir.make_relative(&dep)?.starts_with("../") {
-                    None
-                } else {
-                    Some(dep.into_owned())
-                }
-            })
-            .map(read_dep)
-            .collect::<JoinSet<_>>()
-            .join_all()
-            .await
-            .into_iter()
-            .filter_map(|result| {
-                result
-                    .context("failed to read cache dependency")
-                    .tap_err(log_debug!())
-                    .ok()
-            })
-            .collect::<Vec<_>>()
-            .tap_mut(|deps| deps.sort_by(|(k1, _), (k2, _)| k1.cmp(k2)))
-            .into_iter()
-            .fold(Sha256::new(), |mut hash, (_, src)| {
-                hash.update(src);
-                hash
-            })
-            .pipe(|hash| hash.finalize().digest())
+        [
+            Cow::Owned(env.source_dir.join("Cargo.toml").unwrap()),
+            Cow::Owned(env.crate_dir.join("Cargo.toml").unwrap()),
+            Cow::Borrowed(&env.entrypoint),
+        ]
+        .into_iter()
+        .chain(iter::once(Cow::Borrowed(&env.entrypoint)))
+        .chain(deps)
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .filter_map(|dep| {
+            // exclude external sources from checksum
+            if env.source_dir.make_relative(&dep)?.starts_with("../") {
+                None
+            } else {
+                Some(dep.into_owned())
+            }
+        })
+        .map(read_dep)
+        .collect::<JoinSet<_>>()
+        .join_all()
+        .await
+        .into_iter()
+        .filter_map(|result| {
+            // should be tolerable to skip files that we somehow can't read?
+            result
+                .context("failed to read cache dependency")
+                .tap_err(log_debug!())
+                .ok()
+        })
+        .collect::<Vec<_>>()
+        .tap_mut(|deps| deps.sort_by(|(k1, _), (k2, _)| k1.cmp(k2))) // order affects hashing
+        .into_iter()
+        .fold(Sha256::new(), |mut hash, (name, src)| {
+            log::debug!("hashing {name}");
+            hash.update(src);
+            hash
+        })
+        .pipe(|hash| hash.finalize().digest())
     }
 }
 

@@ -7,6 +7,7 @@
 - [Incorrect links](#incorrect-links)
   - [Macros](#macros)
   - [Trait items](#trait-items)
+  - [Private items](#private-items)
 - [Unresolved items](#unresolved-items)
   - [Associated items on primitive types](#associated-items-on-primitive-types)
 - [Sites other than docs.rs](#sites-other-than-docsrs)
@@ -27,8 +28,8 @@ when your edit doesn't involve item links.
 
 ## Incorrect links
 
-In limited circumstances, rust-analyzer generates links that are incorrect or
-inaccessible. Unfortunately, for such items, you will still have to link by hand.
+In limited circumstances, the preprocessor generates links that are incorrect or
+inaccessible.
 
 > [!NOTE]
 >
@@ -73,6 +74,14 @@ The correct link for the `From<Ipv6Addr>` implementation is actually
 <a href="https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from-1">
 https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from<strong>-1</strong>
 </a>
+
+### Private items
+
+rustdoc has a [`private_intra_doc_links`][private_intra_doc_links] lint that warns you
+when your public documentation tries to link to private items.
+
+The preprocessor does not yet warn you about links to private items: rust-analyzer will
+generate links for items regardless of their crate-level visibility.
 
 ## Unresolved items
 
@@ -119,11 +128,12 @@ ever be solved.
 
 <!-- prettier-ignore-start -->
 
+[IpV6Addr]: https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from-1
 [macro_export]: https://doc.rust-lang.org/stable/reference/macros-by-example.html#path-based-scope
 [panic]: https://doc.rust-lang.org/stable/std/macro.panic.html
+[private_intra_doc_links]: https://doc.rust-lang.org/rustdoc/lints.html#private_intra_doc_links
 [serde_json::json]: https://docs.rs/serde_json/1.0.140/serde_json/macro.json.html
-[tokio::main]: https://docs.rs/tokio-macros/2.5.0/tokio_macros/attr.main.html
-[IpV6Addr]: https://doc.rust-lang.org/stable/core/net/enum.IpAddr.html#method.from-1
 [sourcemap]: https://developer.mozilla.org/en-US/docs/Glossary/Source_map
+[tokio::main]: https://docs.rs/tokio-macros/2.5.0/tokio_macros/attr.main.html
 
 <!-- prettier-ignore-end -->

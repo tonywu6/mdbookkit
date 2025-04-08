@@ -39,40 +39,40 @@ pasting URLs by hand.
 
 <figure>
 
-![screen recording of mdbook-rustdoc-link during mdbook build](rustdoc-link/media/screencap.webp)
+![screen recording of mdbook-rustdoc-link during mdbook build](media/screencap.webp)
 
 </figure>
 
 ## Overview
 
-To get started, simply follow the [quickstart guide](rustdoc-link/getting-started.md)!
+To get started, simply follow the [quickstart guide](getting-started.md)!
 
 If you would like to read more about this crate:
 
 For **writing documentation** —
 
 - To learn more about how it is resolving items into links, including
-  [feature-gated items](rustdoc-link/name-resolution.md#feature-gated-items), see
-  [Name resolution](rustdoc-link/name-resolution.md).
+  [feature-gated items](name-resolution.md#feature-gated-items), see
+  [Name resolution](name-resolution.md).
 - To know how to link to other types of items like
-  [functions, macros](rustdoc-link/supported-syntax.md#functions-and-macros), and
-  [implementors](rustdoc-link/supported-syntax.md#implementors-and-fully-qualified-syntax),
-  see [Supported syntax](rustdoc-link/supported-syntax.md).
+  [functions, macros](supported-syntax.md#functions-and-macros), and
+  [implementors](supported-syntax.md#implementors-and-fully-qualified-syntax), see
+  [Supported syntax](supported-syntax.md).
 
 For **adapting this crate to your project** —
 
 - If you use [Cargo workspaces][workspaces], see specific instructions in
-  [Workspace layout](rustdoc-link/workspace-layout.md).
+  [Workspace layout](workspace-layout.md).
 - If you are working on a large project, and processing is taking a long time, see the
-  discussion in [Caching](rustdoc-link/caching.md).
+  discussion in [Caching](caching.md).
 
 For **additional usage information** —
 
 - You can use this as a standalone command line tool: see
-  [Standalone usage](rustdoc-link/standalone-usage.md).
-- For all available options and how to set them, see
-  [Configuration](rustdoc-link/configuration.md).
-- Finally, review [Known issues](rustdoc-link/known-issues.md) and limitations.
+  [Standalone usage](standalone-usage.md).
+- For tips on using this in CI, see [Continuous integration](continuous-integration.md).
+- For all available options and how to set them, see [Configuration](configuration.md).
+- Finally, review [Known issues](known-issues.md) and limitations.
 
 Happy linking!
 

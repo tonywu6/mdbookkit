@@ -1640,7 +1640,9 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "env_logger",
  "gix-url",
+ "log",
  "mdbookkit",
  "miette",
  "serde",

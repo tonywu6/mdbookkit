@@ -1,7 +1,7 @@
 // @ts-check
 
 /** @type {import("prettier").Config} */
-const config = {
+export default {
   printWidth: 88,
   proseWrap: "always",
   tabWidth: 2,
@@ -15,5 +15,3 @@ const config = {
     },
   ],
 };
-
-export default config;

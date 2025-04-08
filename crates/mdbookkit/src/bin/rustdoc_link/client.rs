@@ -42,6 +42,9 @@ use super::{
 };
 
 /// LSP client to talk to rust-analyzer.
+///
+/// [`Client`] does not implement [`Clone`], because the server instance is lazily spawned
+/// and so must be unique for each client. To enable cloning, put this in an [`Arc`].
 #[derive(Debug)]
 pub struct Client {
     env: Environment,
@@ -50,6 +53,9 @@ pub struct Client {
 }
 
 impl Client {
+    /// Initialize a new LSP client.
+    ///
+    /// This does not actually spawn rust-analyzer.
     pub fn new(env: Environment) -> Self {
         let server = OnceCell::new();
         let docs = DocumentLock::default();
@@ -78,6 +84,12 @@ impl Client {
         Ok(opened)
     }
 
+    /// Shutdown the server if it was spawned.
+    ///
+    /// Returns the [`Environment`] struct for further use.
+    ///
+    /// This moves `self`. To shutdown a [`Client`] that's in an [`Arc`],
+    /// use [`client.drop`][Client::drop].
     pub async fn stop(self) -> Environment {
         if let Some(server) = self.server.into_inner() {
             server
@@ -90,6 +102,7 @@ impl Client {
         self.env
     }
 
+    /// See [`client.stop`][Client::stop].
     pub async fn drop(self: Arc<Self>) -> Result<Environment> {
         let Some(this) = Arc::into_inner(self) else {
             bail!("attempted to shutdown a client that is still referenced")
@@ -126,6 +139,42 @@ impl Server {
             percent_indexed: Option<u32>,
         }
 
+        /// Listen for [Work Done Progress][workDoneProgress] events from rust-analyzer
+        /// to determine if indexing is done.
+        ///
+        /// The `cachePriming` events look like this:
+        ///
+        /// - [`WorkDoneProgress::Begin`]
+        /// - [`WorkDoneProgress::Report`] for each crate indexed, with messages like `4/200 (core)`
+        /// - ...
+        /// - [`WorkDoneProgress::End`]
+        ///
+        /// (This is the ticker thing that shows up in the VS Code status bar).
+        ///
+        /// Notably, rust-analyzer seems to do several rounds of indexing, **not all of
+        /// which is actually indexing the entire codebase:**
+        ///
+        /// - First, a `0/1 (<crate name>)` round that only indexes the current crate.
+        ///
+        ///   - RA is **not ready** at this point: if we were to query for external docs
+        ///     immediately after this [`WorkDoneProgress::End`] event, almost all links
+        ///     will fail to resolve.
+        ///
+        /// - Then, a `0/x ...` round that seems to actually indexes everything, including
+        ///   [`std`] and all the dependencies.
+        ///
+        ///   - RA is likely ready at this point.
+        ///
+        /// - Then, one or more additional rounds of indexing that finish very quickly.
+        ///
+        /// To be able to "reliably" determine that RA is ready for querying, the
+        /// probing mechanism does essentially the following:
+        ///
+        /// 1. Ignore the first round of indexing.
+        /// 2. Be extra pessimistic and wait for events to quiet down after receiving
+        ///    the first [`WorkDoneProgress::End`] event; see [`EventSampler`].
+        ///
+        /// [workDoneProgress]: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workDoneProgress
         fn probe_progress(state: &mut State, progress: ProgressParams) {
             match indexing_progress(&progress) {
                 Some(WorkDoneProgress::Begin(begin)) => {
