@@ -3,14 +3,17 @@ source: crates/mdbookkit/tests/link_forever.rs
 expression: report
 ---
   info: url ignored
-    ╭─[crates/mdbookkit/README.md:5:1]
+    ╭─[crates/mdbookkit/README.md:3:1]
+  2 │ 
+  3 │ ![mdbookkit hero image](https://github.com/tonywu6/mdbookkit/raw/main/docs/src/media/banner.webp)
+    · ─────────────────────────────────────────────────────────────────────────────────────────────────
   4 │ 
   5 │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
     · ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  6 │ [![documentation](https://img.shields.io/github/actions/workflow/status/tonywu6/mdbookkit/docs.yml?branch=main&event=release&style=flat-square&label=docs)](https://docs.rs/mdbookkit)
-    · ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  7 │ [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
-    ·  ───────────────────────────────────────────────────────────────────────────────────────
+  6 │ [![documentation](https://img.shields.io/github/actions/workflow/status/tonywu6/mdbookkit/docs.yml?event=release&style=flat-square&label=docs)](https://docs.rs/mdbookkit)
+    · ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  7 │ [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](https://github.com/tonywu6/mdbookkit/tree/main/LICENSE-APACHE.md)
+    · ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   8 │ 
   9 │ Quality-of-life plugins for your [mdBook] project.
     ·                                  ────────
@@ -18,43 +21,36 @@ expression: report
  11 │ - [**`mdbook-rustdoc-link`**](https://tonywu6.github.io/mdbookkit/rustdoc-link)
     ·   ─────────────────────────────────────────────────────────────────────────────
  12 │ 
- 13 │   _rustdoc_-style linking for Rust APIs: write types and function names, get links to
- 14 │   _docs.rs_
+    ╰────
+    ╭─[crates/mdbookkit/README.md:16:3]
  15 │ 
  16 │ - [**`mdbook-link-forever`**](https://tonywu6.github.io/mdbookkit/link-forever)
     ·   ─────────────────────────────────────────────────────────────────────────────
  17 │ 
-    ╰────
-    ╭─[crates/mdbookkit/README.md:31:46]
+ 18 │   _Permalinks_ for your source tree: write relative paths, get links to GitHub.
+ 19 │ 
+ 20 │ ## Installation
+ 21 │ 
+ 22 │ If you are interested in any of these plugins, visit their respective pages for usage
+ 23 │ instructions, linked above.
+ 24 │ 
+ 25 │ If you want to install all of them:
+ 26 │ 
+ 27 │ ```bash
+ 28 │ cargo install mdbookkit --all-features
+ 29 │ ```
  30 │ 
  31 │ Precompiled binaries are also available from [GitHub releases][gh-releases].
     ·                                              ──────────────────────────────
  32 │ 
-    ╰────
-
-  info: path converted to permalink
-   ╭─[crates/mdbookkit/README.md:3:1]
- 2 │ 
- 3 │ ![mdbookkit hero image](/docs/src/media/banner.webp)
-   · ──────────────────────────┬─────────────────────────
-   ·                           ╰── https://github.com/lorem/ipsum/tree/dolor/docs/src/media/banner.webp
- 4 │ 
- 5 │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
- 6 │ [![documentation](https://img.shields.io/github/actions/workflow/status/tonywu6/mdbookkit/docs.yml?branch=main&event=release&style=flat-square&label=docs)](https://docs.rs/mdbookkit)
- 7 │ [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
-   · ──────────────────────────────────────────────────────┬──────────────────────────────────────────────────────
-   ·                                                       ╰── https://github.com/lorem/ipsum/tree/dolor/LICENSE-APACHE.md
- 8 │ 
-   ╰────
-    ╭─[crates/mdbookkit/README.md:35:36]
+ 33 │ ## License
  34 │ 
- 35 │ This project is released under the [Apache 2.0 License](/LICENSE-APACHE.md) and the
-    ·                                    ────────────────────┬───────────────────
-    ·                                                        ╰── https://github.com/lorem/ipsum/tree/dolor/LICENSE-APACHE.md
- 36 │ [MIT License](/LICENSE-MIT.md).
-    · ───────────────┬──────────────
-    ·                ╰── https://github.com/lorem/ipsum/tree/dolor/LICENSE-MIT.md
- 37 │ 
+ 35 │ This project is released under the
+ 36 │ [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/main/LICENSE-APACHE.md)
+    · ──────────────────────────────────────────────────────────────────────────────────────
+ 37 │ and the [MIT License](https://github.com/tonywu6/mdbookkit/tree/main/LICENSE-MIT.md).
+    ·         ────────────────────────────────────────────────────────────────────────────
+ 38 │ 
     ╰────
 
   info: url ignored

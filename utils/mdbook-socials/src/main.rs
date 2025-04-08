@@ -209,14 +209,20 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-static OPEN_GRAPH: &str = r#"
-    <meta property="og:type"        content="article">
-    <meta property="og:title"       content="{{ og_title }}">
-    <meta property="og:url"         content="{{ og_url }}">
-    <meta property="og:image"       content="{{ og_image }}">
-    <meta property="og:description" content="{{ og_description }}">
-    <meta property="og:site_name"   content="{{ og_site_name }}">
-"#;
+static OPEN_GRAPH: &str = r##"
+    <meta property="og:type"            content="article">
+    <meta property="og:title"           content="{{ og_title }}">
+    <meta property="og:url"             content="{{ og_url }}">
+    <meta property="og:image"           content="{{ og_image }}">
+    <meta property="og:description"     content="{{ og_description }}">
+    <meta property="og:site_name"       content="{{ og_site_name }}">
+    <meta name="twitter:card"           content="summary_large_image">
+    <meta name="twitter:title"          content="{{ og_title }}">
+    <meta name="twitter:image"          content="{{ og_image }}">
+    <meta name="twitter:image:alt"      content="toolkit for mdbook">
+    <meta name="twitter:description"    content="{{ og_description }}">
+    <meta name="theme-color"            content="#d2a6ff">
+"##;
 
 #[derive(Parser)]
 struct Program {

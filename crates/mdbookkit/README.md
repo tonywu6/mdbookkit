@@ -1,10 +1,10 @@
 # mdbookkit
 
-![mdbookkit hero image](/docs/src/media/banner.webp)
+![mdbookkit hero image](https://github.com/tonywu6/mdbookkit/raw/main/docs/src/media/banner.webp)
 
 [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
-[![documentation](https://img.shields.io/github/actions/workflow/status/tonywu6/mdbookkit/docs.yml?branch=main&event=release&style=flat-square&label=docs)](https://docs.rs/mdbookkit)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
+[![documentation](https://img.shields.io/github/actions/workflow/status/tonywu6/mdbookkit/docs.yml?event=release&style=flat-square&label=docs)](https://docs.rs/mdbookkit)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](https://github.com/tonywu6/mdbookkit/tree/main/LICENSE-APACHE.md)
 
 Quality-of-life plugins for your [mdBook] project.
 
@@ -32,8 +32,9 @@ Precompiled binaries are also available from [GitHub releases][gh-releases].
 
 ## License
 
-This project is released under the [Apache 2.0 License](/LICENSE-APACHE.md) and the
-[MIT License](/LICENSE-MIT.md).
+This project is released under the
+[Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/main/LICENSE-APACHE.md)
+and the [MIT License](https://github.com/tonywu6/mdbookkit/tree/main/LICENSE-MIT.md).
 
 <!-- prettier-ignore-start -->
 
