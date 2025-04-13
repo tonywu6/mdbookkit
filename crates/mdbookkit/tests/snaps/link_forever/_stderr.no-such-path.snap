@@ -10,8 +10,6 @@ expression: report
     ·                ╰── file does not exist at path: crates/mdbookkit/Cargo.lock
  34 │ 
  35 │ [`//LICENSE-MIT.md`](//LICENSE-MIT.md)
-    · ───────────────────┬──────────────────
-    ·                    ╰── file does not exist at path: /LICENSE-MIT.md
  36 │ 
  37 │ ![shinjuku.jpg](shinjuku.jpg)
     · ──────────────┬──────────────

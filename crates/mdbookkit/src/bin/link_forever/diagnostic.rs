@@ -113,7 +113,7 @@ impl LinkDiagnostic<'_> {
             return Cow::Borrowed(&self.link.link);
         };
         if rel.starts_with("../") {
-            Cow::Owned(link.path().into())
+            Cow::Owned(link.to_string())
         } else {
             Cow::Owned(rel)
         }

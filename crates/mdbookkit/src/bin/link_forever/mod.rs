@@ -174,6 +174,22 @@ impl Resolver<'_, '_> {
             return;
         };
 
+        let Ok(relative_to_repo) = env
+            .vcs_root
+            .make_relative(&file_url)
+            .context("url is from a different origin")
+            .tap_err(log_debug!())
+        else {
+            return;
+        };
+
+        if relative_to_repo.starts_with("../") {
+            // `path` could also be a symlink to a file outside source control somehow
+            // in which case it would NOT be marked as LinkStatus::External;
+            link.status = LinkStatus::PathNotCheckedIn;
+            return;
+        }
+
         let exists = path
             .try_exists()
             .context("could not access path")
@@ -184,7 +200,7 @@ impl Resolver<'_, '_> {
             return;
         }
 
-        let Ok(rel) = env
+        let Ok(relative_to_book) = env
             .book_src
             .make_relative(&file_url)
             .context("url is from a different origin")
@@ -193,7 +209,7 @@ impl Resolver<'_, '_> {
             return;
         };
 
-        let always_link = rel.starts_with("../")
+        let always_link = relative_to_book.starts_with("../")
             || env
                 .config
                 .always_link
@@ -219,23 +235,7 @@ impl Resolver<'_, '_> {
             return;
         }
 
-        let Ok(rel) = env
-            .vcs_root
-            .make_relative(&file_url)
-            .context("url is from a different origin")
-            .tap_err(log_debug!())
-        else {
-            return;
-        };
-
-        if rel.starts_with("../") {
-            // `path` could also be a symlink to a file outside source control somehow
-            // in which case it would NOT be marked as LinkStatus::External;
-            link.status = LinkStatus::PathNotCheckedIn;
-            return;
-        }
-
-        match env.fmt_link.to_link(&rel) {
+        match env.fmt_link.to_link(&relative_to_repo) {
             Ok(href) => {
                 link.status = LinkStatus::Permalink;
                 link.link = href.as_str().to_owned().into();

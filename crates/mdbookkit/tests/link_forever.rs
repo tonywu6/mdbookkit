@@ -2,6 +2,7 @@ use std::io::Write;
 
 use anyhow::Result;
 use assert_cmd::{prelude::*, Command};
+use insta::with_settings;
 use log::LevelFilter;
 use predicates::prelude::*;
 use tap::Pipe;
@@ -60,7 +61,15 @@ fn test_snapshots() -> Result<()> {
                 .logging(false)
                 .build()
                 .to_report();
-            portable_snapshots!().test(|| insta::assert_snapshot!($snap, report))?;
+            portable_snapshots!().test(|| {
+                with_settings!({
+                    filters => vec![
+                        (r"file:///[A-Z]:/", "file:///")
+                    ]
+                }, {
+                    insta::assert_snapshot!($snap, report)
+                })
+            })?;
         };
     }
 
