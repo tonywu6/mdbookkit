@@ -11,7 +11,7 @@ expression: report
  34 │ 
  35 │ [`//LICENSE-MIT.md`](//LICENSE-MIT.md)
     · ───────────────────┬──────────────────
-    ·                    ╰── file does not exist at path: //LICENSE-MIT.md
+    ·                    ╰── file does not exist at path: /LICENSE-MIT.md
  36 │ 
  37 │ ![shinjuku.jpg](shinjuku.jpg)
     · ──────────────┬──────────────
@@ -25,7 +25,7 @@ expression: report
  44 │ 
  45 │ ## heading: <https://räksmörgås.josefsson.org/>
  46 │ 
- 47 │ # canonical urls
+ 47 │ # canonical urls to book
  48 │ 
  49 │ found: <https://example.org/book/tests/tests/ra-known-quirks>
  50 │ 
@@ -45,4 +45,14 @@ expression: report
     ·                            ───────────────────────────┬───────────────────────────
     ·                                                       ╰── file does not exist at path: crates/mdbookkit/tests/tests/ra-known-quirks/index.md
  62 │ 
+ 63 │ # canonical urls to HEAD
+ 64 │ 
+ 65 │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
+ 66 │ 
+ 67 │ [published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbookkit/tests/tests/ra-known-quirks.md)
+ 68 │ 
+ 69 │ [file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbookkit/tests/tests/shinjuku.jpg)
+    · ─────────────────────────────────────────────────┬─────────────────────────────────────────────────
+    ·                                                  ╰── file does not exist at path: crates/mdbookkit/tests/tests/shinjuku.jpg
+ 70 │ 
     ╰────

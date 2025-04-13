@@ -25,13 +25,13 @@ impl Environment {
                 .flat_map(move |links| links.links().map(move |link| (base, link)))
         });
 
-        for (base, link) in iter {
+        for (page, link) in iter {
             if !statuses(&link.status) {
                 continue;
             }
-            let diagnostic = LinkDiagnostic { link, base, root };
+            let diagnostic = LinkDiagnostic { link, page, root };
             sorted
-                .entry(base)
+                .entry(page)
                 .or_default()
                 .entry(link.status.clone())
                 .or_default()
@@ -64,7 +64,7 @@ type Reporter<'a> =
 
 pub struct LinkDiagnostic<'a> {
     link: &'a RelativeLink<'a>,
-    base: &'a Url,
+    page: &'a Url,
     root: &'a Url,
 }
 
@@ -76,15 +76,13 @@ impl Problem for LinkDiagnostic<'_> {
     }
 
     fn label(&self) -> LabeledSpan {
-        let link = self.format_link();
+        let link = self.shorten();
         let status = &self.link.status;
         let label = match status {
             LinkStatus::Ignored => None,
-            LinkStatus::PublishedPath => None,
-            LinkStatus::RewrittenPath => Some(link.into_owned()),
-            LinkStatus::PermalinkPath => Some(link.into_owned()),
-            LinkStatus::PublishedHref => Some(link.into_owned()),
-            LinkStatus::PermalinkHref => Some(link.into_owned()),
+            LinkStatus::Published => Some(format!("file: {link}")),
+            LinkStatus::Permalink => Some(format!("link: {link}")),
+            LinkStatus::Rewritten => Some(format!("file: {link}\nlink: {}", self.link.link)),
             LinkStatus::PathNotCheckedIn => Some(format!("{status}: {link}")),
             LinkStatus::NoSuchPath => Some(format!("{status}: {link}")),
             LinkStatus::NoSuchFragment => {
@@ -102,12 +100,13 @@ impl Problem for LinkDiagnostic<'_> {
 }
 
 impl LinkDiagnostic<'_> {
-    fn format_link(&self) -> Cow<'_, str> {
-        let Ok(link) = self
-            .base
-            .join(&self.link.link)
-            .tap_ok_mut(|u| u.set_fragment(None))
-        else {
+    fn shorten(&self) -> Cow<'_, str> {
+        let Ok(link) = if self.link.link.starts_with('/') {
+            self.root.join(&self.link.link[1..])
+        } else {
+            self.page.join(&self.link.link)
+        }
+        .tap_ok_mut(|u| u.set_fragment(None)) else {
             return Cow::Borrowed(&self.link.link);
         };
         let Some(rel) = self.root.make_relative(&link) else {
@@ -125,11 +124,9 @@ impl Issue for LinkStatus {
     fn level(&self) -> log::Level {
         match self {
             Self::Ignored => log::Level::Debug,
-            Self::PublishedPath => log::Level::Debug,
-            Self::RewrittenPath => log::Level::Info,
-            Self::PermalinkPath => log::Level::Info,
-            Self::PublishedHref => log::Level::Info,
-            Self::PermalinkHref => log::Level::Info,
+            Self::Published => log::Level::Debug,
+            Self::Rewritten => log::Level::Info,
+            Self::Permalink => log::Level::Info,
             Self::PathNotCheckedIn => log::Level::Warn,
             Self::NoSuchPath => log::Level::Warn,
             Self::NoSuchFragment => log::Level::Warn,
@@ -161,15 +158,13 @@ impl Ord for LinkStatus {
 impl LinkStatus {
     fn order(&self) -> usize {
         match self {
-            Self::Error(..) => 9,
-            Self::NoSuchFragment => 8,
-            Self::NoSuchPath => 7,
-            Self::PathNotCheckedIn => 6,
-            Self::PermalinkHref => 5,
-            Self::PermalinkPath => 4,
-            Self::PublishedHref => 3,
-            Self::RewrittenPath => 2,
-            Self::PublishedPath => 1,
+            Self::Error(..) => 103,
+            Self::NoSuchFragment => 102,
+            Self::NoSuchPath => 101,
+            Self::PathNotCheckedIn => 100,
+            Self::Permalink => 3,
+            Self::Rewritten => 2,
+            Self::Published => 1,
             Self::Ignored => 0,
         }
     }

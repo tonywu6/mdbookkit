@@ -36,7 +36,6 @@ fn test_snapshots() -> Result<()> {
     let tests = [
         test_document!("tests/ra-known-quirks.md"), // only for providing anchors
         test_document!("tests/link-forever.md"),
-        test_document!("../README.md"),
     ];
 
     for page in tests.iter() {
@@ -66,11 +65,9 @@ fn test_snapshots() -> Result<()> {
     }
 
     assert_stderr!(LinkStatus::Ignored, "_stderr.ignored");
-    assert_stderr!(LinkStatus::PublishedPath, "_stderr.published-path");
-    assert_stderr!(LinkStatus::RewrittenPath, "_stderr.rewritten-path");
-    assert_stderr!(LinkStatus::PermalinkPath, "_stderr.permalink-path");
-    assert_stderr!(LinkStatus::PublishedHref, "_stderr.published-href");
-    assert_stderr!(LinkStatus::PermalinkHref, "_stderr.permalink-href");
+    assert_stderr!(LinkStatus::Published, "_stderr.published");
+    assert_stderr!(LinkStatus::Rewritten, "_stderr.rewritten");
+    assert_stderr!(LinkStatus::Permalink, "_stderr.permalink");
     assert_stderr!(LinkStatus::PathNotCheckedIn, "_stderr.not-checked-in");
     assert_stderr!(LinkStatus::NoSuchPath, "_stderr.no-such-path");
     assert_stderr!(LinkStatus::NoSuchFragment, "_stderr.no-such-fragment");

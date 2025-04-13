@@ -3,7 +3,7 @@ use std::{
     collections::{HashMap, HashSet},
     fmt::Debug,
     hash::Hash,
-    ops::Range,
+    ops::{ControlFlow, Range},
     str::FromStr,
     sync::Arc,
 };
@@ -14,7 +14,7 @@ use percent_encoding::percent_decode_str;
 use pulldown_cmark::{CowStr, Event, LinkType, Options, Parser, Tag, TagEnd};
 use serde::Deserialize;
 use tap::{Pipe, Tap, TapFallible};
-use url::Url;
+use url::{form_urlencoded::Serializer as SearchParams, Url};
 
 use crate::{
     env::ErrorHandling,
@@ -36,7 +36,36 @@ pub struct Environment {
 }
 
 pub trait PermalinkFormat {
-    fn link_to(&self, relpath: &str) -> Result<Url>;
+    /// Try to convert this path to a permalink
+    fn to_link(&self, path: &str) -> Result<Url>;
+    /// Try to extract a path (relative to repo root) from this link
+    fn to_path(&self, link: &Url) -> Option<String>;
+}
+
+#[derive(Debug, Default, Clone, thiserror::Error)]
+pub enum LinkStatus {
+    #[default]
+    #[error("link is ignored as it is not supported")]
+    Ignored,
+
+    // "published" as in published with the book
+    #[error("link to book page or file")]
+    Published,
+
+    #[error("link to book page or file rewritten as path")]
+    Rewritten,
+    #[error("link converted to permalink")]
+    Permalink,
+
+    #[error("path to a file outside source control")]
+    PathNotCheckedIn,
+    #[error("file does not exist at path")]
+    NoSuchPath,
+    #[error("fragment does not exist in page")]
+    NoSuchFragment,
+
+    #[error("error generating a link: {0}")]
+    Error(String),
 }
 
 impl Environment {
@@ -108,17 +137,15 @@ struct Resolver<'a, 'r> {
 
 impl Resolver<'_, '_> {
     fn resolve(self) {
-        if self.file_url.scheme() == "file" {
-            self.resolve_file()
-        } else if let Some(book) = &self.env.config.book_url {
+        if let Some(book) = &self.env.config.book_url {
             if let Some(page) = book.0.make_relative(&self.file_url) {
                 // hard-coded URLs to book pages
-                self.resolve_page(page);
+                self.resolve_page(page)
             } else {
-                self.link.status = LinkStatus::Ignored;
+                self.resolve_file()
             }
         } else {
-            self.link.status = LinkStatus::Ignored
+            self.resolve_file()
         }
     }
 
@@ -130,6 +157,17 @@ impl Resolver<'_, '_> {
             env,
             fragments,
         } = self;
+
+        let file_url = if let Some(path) = env.fmt_link.to_path(&file_url) {
+            if let Ok(file_url) = env.vcs_root.join(&path) {
+                link.link = format!("/{path}").into();
+                file_url
+            } else {
+                file_url
+            }
+        } else {
+            file_url
+        };
 
         let Ok(path) = file_url.to_file_path() else {
             link.status = LinkStatus::Ignored;
@@ -155,19 +193,20 @@ impl Resolver<'_, '_> {
             return;
         };
 
-        let always_link = env
-            .config
-            .always_link
-            .iter()
-            .any(|suffix| file_url.path().ends_with(suffix));
+        let always_link = rel.starts_with("../")
+            || env
+                .config
+                .always_link
+                .iter()
+                .any(|suffix| file_url.path().ends_with(suffix));
 
-        if !always_link && !rel.starts_with("../") {
+        if !always_link {
             if link.link.starts_with('/') {
                 // mdbook doesn't support absolute paths like VS Code does
                 link.link = page_url.make_relative(&file_url).unwrap().into();
-                link.status = LinkStatus::RewrittenPath;
+                link.status = LinkStatus::Rewritten;
             } else {
-                link.status = LinkStatus::PublishedPath;
+                link.status = LinkStatus::Published;
             }
             Self {
                 link,
@@ -196,9 +235,9 @@ impl Resolver<'_, '_> {
             return;
         }
 
-        match env.fmt_link.link_to(&rel) {
+        match env.fmt_link.to_link(&rel) {
             Ok(href) => {
-                link.status = LinkStatus::PermalinkPath;
+                link.status = LinkStatus::Permalink;
                 link.link = href.as_str().to_owned().into();
             }
             Err(err) => link.status = LinkStatus::Error(format!("{err}")),
@@ -276,8 +315,8 @@ impl Resolver<'_, '_> {
                     file
                 };
 
-                link.link = file_url.to_string().into();
-                link.status = LinkStatus::PublishedPath;
+                link.link = page_url.make_relative(&file_url).unwrap().into();
+                link.status = LinkStatus::Rewritten;
 
                 Self {
                     link,
@@ -360,36 +399,6 @@ struct RelativeLink<'a> {
 enum LinkUsage {
     Link,
     Image,
-}
-
-#[derive(Debug, Default, Clone, thiserror::Error)]
-pub enum LinkStatus {
-    #[default]
-    #[error("link is ignored as it is not supported")]
-    Ignored,
-
-    // "published" as in published with the book
-    #[error("path to a file under `src`, kept as is")]
-    PublishedPath,
-    #[error("path to a file under `src`, rewritten as a relative path")]
-    RewrittenPath,
-    #[error("link to a file under `src`, rewritten as a relative path")]
-    PublishedHref,
-
-    #[error("path to a file under source control, rewritten as a permalink")]
-    PermalinkPath,
-    #[error("link to remote at HEAD, changed to a permalink")]
-    PermalinkHref,
-
-    #[error("path to a file outside source control")]
-    PathNotCheckedIn,
-    #[error("file does not exist at path")]
-    NoSuchPath,
-    #[error("fragment does not exist in page")]
-    NoSuchFragment,
-
-    #[error("error generating a link: {0}")]
-    Error(String),
 }
 
 impl<'a> Pages<'a> {
@@ -672,13 +681,7 @@ impl RelativeLink<'_> {
     }
 
     fn will_emit(&self) -> Option<LinkUsage> {
-        if matches!(
-            self.status,
-            LinkStatus::RewrittenPath
-                | LinkStatus::PermalinkPath
-                | LinkStatus::PublishedHref
-                | LinkStatus::PermalinkHref
-        ) {
+        if matches!(self.status, LinkStatus::Permalink | LinkStatus::Rewritten) {
             Some(self.usage)
         } else {
             None
@@ -799,28 +802,26 @@ pub struct Config {
     pub command: Option<String>,
 }
 
-pub struct GitHubPermalink {
-    owner: String,
-    repo: String,
-    reference: String,
-}
+pub struct GitHubPermalink(CustomPermalink);
 
 impl PermalinkFormat for GitHubPermalink {
-    fn link_to(&self, relpath: &str) -> Result<Url> {
-        let owner = &self.owner;
-        let repo = &self.repo;
-        let reference = &self.reference;
-        Ok(format!("https://github.com/{owner}/{repo}/tree/{reference}/{relpath}").parse()?)
+    fn to_link(&self, path: &str) -> Result<Url> {
+        self.0.to_link(path)
+    }
+
+    fn to_path(&self, link: &Url) -> Option<String> {
+        self.0.to_path(link)
     }
 }
 
 impl GitHubPermalink {
+    /// c.f. <https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content--parameters>
     pub fn new(owner: &str, repo: &str, reference: &str) -> Self {
-        Self {
-            owner: owner.into(),
-            repo: repo.into(),
-            reference: reference.into(),
-        }
+        let pattern = format!("https://github.com/{owner}/{repo}/{{tree}}/{{ref}}/{{path}}")
+            .parse()
+            .expect("should be a valid url");
+        let reference = reference.into();
+        Self(CustomPermalink { pattern, reference })
     }
 }
 
@@ -829,14 +830,147 @@ pub struct CustomPermalink {
     pub reference: String,
 }
 
+/// `{` and `}` are always percent-encoded in path [^1].
+///
+/// Encoding characters are always in uppercase [^2].
+///
+/// [^1]: https://url.spec.whatwg.org/#path-percent-encode-set
+/// [^2]: https://url.spec.whatwg.org/#percent-encode
+macro_rules! encoded_param {
+    ($param:literal) => {
+        concat!("%7B", $param, "%7D")
+    };
+}
+
 impl PermalinkFormat for CustomPermalink {
-    fn link_to(&self, relpath: &str) -> Result<Url> {
-        Ok(self
+    fn to_link(&self, path: &str) -> Result<Url> {
+        let path = self
             .pattern
-            .as_str()
-            .replace("{ref}", &self.reference)
-            .replace("{path}", relpath)
-            .parse()?)
+            .path()
+            .split('/')
+            .map(|segment| match segment {
+                encoded_param!("ref") => &self.reference,
+                encoded_param!("tree") => "tree",
+                encoded_param!("path") => path,
+                _ => segment,
+            })
+            .collect::<Vec<_>>()
+            .join("/");
+
+        let query = self
+            .pattern
+            .query_pairs()
+            .fold(SearchParams::new(String::new()), |mut search, (k, v)| {
+                match v.as_ref() {
+                    "{ref}" => search.append_pair(&k, &self.reference),
+                    "{tree}" => search.append_pair(&k, "tree"),
+                    "{path}" => search.append_pair(&k, &path),
+                    _ => search.append_pair(&k, &v),
+                };
+                search
+            })
+            .finish()
+            .pipe(|query| if query.is_empty() { None } else { Some(query) });
+
+        let fragment = self.pattern.fragment();
+
+        self.pattern
+            .clone()
+            .tap_mut(|u| u.set_path(&path))
+            .tap_mut(|u| u.set_query(query.as_deref()))
+            .tap_mut(|u| u.set_fragment(fragment))
+            .pipe(Ok)
+    }
+
+    // this is kind of ugly
+    fn to_path(&self, link: &Url) -> Option<String> {
+        if self.pattern.origin() != link.origin() {
+            return None;
+        }
+
+        fn match_param(lhs: &str, rhs: Option<&str>) -> ControlFlow<()> {
+            match lhs {
+                encoded_param!("tree") => match rhs {
+                    Some("tree" | "blob" | "raw") => ControlFlow::Continue(()),
+                    _ => ControlFlow::Break(()),
+                },
+                encoded_param!("ref") => match rhs {
+                    Some("HEAD") => ControlFlow::Continue(()),
+                    _ => ControlFlow::Break(()),
+                },
+                lhs => match rhs {
+                    Some(rhs) if lhs == rhs => ControlFlow::Continue(()),
+                    _ => ControlFlow::Break(()),
+                },
+            }
+        }
+
+        let mut path = false;
+
+        let mut lhs = self.pattern.path().split('/');
+        let mut rhs = link.path().split('/');
+
+        #[allow(clippy::while_let_on_iterator, reason = "symmetry")]
+        while let Some(lhs) = lhs.next() {
+            match lhs {
+                encoded_param!("path") => {
+                    path = true;
+                    break;
+                }
+                lhs => match match_param(lhs, rhs.next()) {
+                    ControlFlow::Continue(()) => {}
+                    ControlFlow::Break(()) => return None,
+                },
+            }
+        }
+
+        while let Some(lhs) = lhs.next_back() {
+            match match_param(lhs, rhs.next_back()) {
+                ControlFlow::Continue(()) => {}
+                ControlFlow::Break(()) => return None,
+            }
+        }
+
+        let mut path = if path {
+            Some(rhs.collect::<Vec<_>>().join("/"))
+        } else {
+            None
+        };
+
+        let link_query = link.query_pairs().collect::<HashMap<_, _>>();
+
+        for (k, v) in self.pattern.query_pairs() {
+            match v.as_ref() {
+                "{path}" => match link_query.get(&k) {
+                    Some(v) => {
+                        path = if let Some(v) = v.strip_prefix('/') {
+                            Some(v.into())
+                        } else {
+                            Some(v.as_ref().into())
+                        }
+                    }
+                    None => return None,
+                },
+                "{tree}" => match link_query.get(&k).map(|v| &**v) {
+                    Some("tree" | "blob" | "raw") => {}
+                    _ => return None,
+                },
+                "{ref}" => match link_query.get(&k).map(|v| &**v) {
+                    Some("HEAD") => {}
+                    _ => return None,
+                },
+                _ => {}
+            }
+        }
+
+        if let Some(path) = path {
+            match link.fragment() {
+                Some(fragment) => Some(format!("{path}#{fragment}")),
+                None => Some(path),
+            }
+        } else {
+            None
+        }
     }
 }
 
@@ -888,5 +1022,121 @@ impl Drop for Fragments {
         if !self.0.is_empty() {
             unreachable!("page fragments were not restored")
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use anyhow::Result;
+
+    use super::{CustomPermalink, PermalinkFormat};
+
+    #[test]
+    fn test_path_to_link() -> Result<()> {
+        let scheme = CustomPermalink {
+            pattern: "https://github.com/lorem/ipsum/{tree}/{ref}/{path}".parse()?,
+            reference: "main".into(),
+        };
+
+        let link = scheme.to_link(".editorconfig")?;
+
+        assert_eq!(
+            link.as_str(),
+            "https://github.com/lorem/ipsum/tree/main/.editorconfig"
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_path_to_link_with_suffix() -> Result<()> {
+        let scheme = CustomPermalink {
+            pattern: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
+            reference: "master".into(),
+        };
+
+        let link = scheme.to_link(".editorconfig")?;
+
+        assert_eq!(link.as_str(), "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/.editorconfig?h=master");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_link_to_path() -> Result<()> {
+        let scheme = CustomPermalink {
+            pattern: "https://github.com/lorem/ipsum/{tree}/{ref}/{path}".parse()?,
+            reference: "main".into(),
+        };
+
+        let path = scheme.to_path(&"https://github.com/lorem/ipsum/raw/HEAD/path/to/file".parse()?);
+
+        assert_eq!(path.as_deref(), Some("path/to/file"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_link_to_path_with_fragments() -> Result<()> {
+        let scheme = CustomPermalink {
+            pattern: "https://github.com/lorem/ipsum/{tree}/{ref}/{path}".parse()?,
+            reference: "main".into(),
+        };
+
+        let path = scheme.to_path(
+            &"https://github.com/lorem/ipsum/blob/HEAD/path/to/file.md#section-1".parse()?,
+        );
+
+        assert_eq!(path.as_deref(), Some("path/to/file.md#section-1"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_link_to_path_repo_root() -> Result<()> {
+        let scheme = CustomPermalink {
+            pattern: "https://github.com/lorem/ipsum/{tree}/{ref}/{path}".parse()?,
+            reference: "main".into(),
+        };
+
+        let path = scheme.to_path(&"https://github.com/lorem/ipsum/raw/HEAD".parse()?);
+
+        assert_eq!(path.as_deref(), Some(""));
+
+        let path = scheme.to_path(&"https://github.com/lorem/ipsum/raw/HEAD/".parse()?);
+
+        assert_eq!(path.as_deref(), Some(""));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_link_to_path_with_suffix() -> Result<()> {
+        let scheme = CustomPermalink {
+            pattern: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
+            reference: "main".into(),
+        };
+
+        let path =
+            scheme.to_path(&"https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/.editorconfig?h=HEAD".parse()?);
+
+        assert_eq!(path.as_deref(), Some(".editorconfig"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_link_to_path_non_head() -> Result<()> {
+        let scheme = CustomPermalink {
+            pattern: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
+            reference: "main".into(),
+        };
+
+        let matched =
+            scheme.to_path(&"https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/.editorconfig?h=b676ac4".parse()?);
+
+        assert!(matched.is_none());
+
+        Ok(())
     }
 }
