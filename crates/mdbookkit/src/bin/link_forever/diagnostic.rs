@@ -1,11 +1,7 @@
-use std::{
-    borrow::Cow,
-    collections::BTreeMap,
-    fmt::{self, Display},
-};
+use std::{borrow::Cow, collections::BTreeMap};
 
 use miette::LabeledSpan;
-use tap::{Pipe, TapFallible};
+use tap::TapFallible;
 use url::Url;
 
 use crate::diagnostics::{Diagnostics, Issue, Problem, ReportBuilder};
@@ -13,7 +9,10 @@ use crate::diagnostics::{Diagnostics, Issue, Problem, ReportBuilder};
 use super::{Environment, LinkSpan, LinkStatus, LinkText, Pages, RelativeLink};
 
 impl Environment {
-    pub fn report<'a>(&'a self, content: &'a Pages<'a>) -> Reporter<'a> {
+    pub fn report<'a, F>(&'a self, content: &'a Pages<'a>, statuses: F) -> Reporter<'a>
+    where
+        F: Fn(&'a LinkStatus) -> bool,
+    {
         // BTreeMap: sort output by paths
         let mut sorted: BTreeMap<&'_ Url, BTreeMap<LinkStatus, Vec<LinkDiagnostic<'_>>>> =
             Default::default();
@@ -26,10 +25,13 @@ impl Environment {
                 .flat_map(move |links| links.links().map(move |link| (base, link)))
         });
 
-        for (base, link) in iter {
-            let diagnostic = LinkDiagnostic { link, base, root };
+        for (page, link) in iter {
+            if !statuses(&link.status) {
+                continue;
+            }
+            let diagnostic = LinkDiagnostic { link, page, root };
             sorted
-                .entry(base)
+                .entry(page)
                 .or_default()
                 .entry(link.status.clone())
                 .or_default()
@@ -62,7 +64,7 @@ type Reporter<'a> =
 
 pub struct LinkDiagnostic<'a> {
     link: &'a RelativeLink<'a>,
-    base: &'a Url,
+    page: &'a Url,
     root: &'a Url,
 }
 
@@ -74,45 +76,44 @@ impl Problem for LinkDiagnostic<'_> {
     }
 
     fn label(&self) -> LabeledSpan {
-        let label = match &self.link.status {
+        let link = self.shorten();
+        let status = &self.link.status;
+        let label = match status {
             LinkStatus::Ignored => None,
-            LinkStatus::Published => None,
-            LinkStatus::Rewritten => self.format_link().into_owned().pipe(Some),
-            LinkStatus::Permalink => self.format_link().into_owned().pipe(Some),
-            LinkStatus::External => {
-                format!("file is outside source control: {}", self.format_link()).pipe(Some)
-            }
-            LinkStatus::NoSuchPath => {
-                format!("file does not exist at path: {}", self.format_link()).pipe(Some)
-            }
+            LinkStatus::Published => Some(format!("file: {link}")),
+            LinkStatus::Permalink => Some(format!("link: {link}")),
+            LinkStatus::Rewritten => Some(format!("file: {link}\nlink: {}", self.link.link)),
+            LinkStatus::PathNotCheckedIn => Some(format!("{status}: {link}")),
+            LinkStatus::NoSuchPath => Some(format!("{status}: {link}")),
             LinkStatus::NoSuchFragment => {
                 let (_, fragment) = self
                     .link
                     .link
                     .split_once('#')
                     .expect("should have a fragment");
-                format!("#{fragment} not found in {}", self.format_link()).pipe(Some)
+                Some(format!("#{fragment} not found in {link}"))
             }
-            LinkStatus::Error(err) => format!("error converting to permalink:\n{err}").pipe(Some),
+            LinkStatus::Error(..) => Some(format!("{status}")),
         };
         LabeledSpan::new_with_span(label, self.link.span.clone())
     }
 }
 
 impl LinkDiagnostic<'_> {
-    fn format_link(&self) -> Cow<'_, str> {
-        let Ok(link) = self
-            .base
-            .join(&self.link.link)
-            .tap_ok_mut(|u| u.set_fragment(None))
-        else {
+    fn shorten(&self) -> Cow<'_, str> {
+        let Ok(link) = if self.link.link.starts_with('/') {
+            self.root.join(&self.link.link[1..])
+        } else {
+            self.page.join(&self.link.link)
+        }
+        .tap_ok_mut(|u| u.set_fragment(None)) else {
             return Cow::Borrowed(&self.link.link);
         };
         let Some(rel) = self.root.make_relative(&link) else {
             return Cow::Borrowed(&self.link.link);
         };
         if rel.starts_with("../") {
-            Cow::Owned(link.path().into())
+            Cow::Owned(link.to_string())
         } else {
             Cow::Owned(rel)
         }
@@ -126,27 +127,11 @@ impl Issue for LinkStatus {
             Self::Published => log::Level::Debug,
             Self::Rewritten => log::Level::Info,
             Self::Permalink => log::Level::Info,
-            Self::External => log::Level::Warn,
+            Self::PathNotCheckedIn => log::Level::Warn,
             Self::NoSuchPath => log::Level::Warn,
             Self::NoSuchFragment => log::Level::Warn,
             Self::Error(..) => log::Level::Warn,
         }
-    }
-}
-
-impl Display for LinkStatus {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let message = match self {
-            LinkStatus::Ignored => "url ignored",
-            LinkStatus::Published => "file under src/",
-            LinkStatus::Rewritten => "path converted to relative path",
-            LinkStatus::Permalink => "path converted to permalink",
-            LinkStatus::External => "file outside source control",
-            LinkStatus::NoSuchPath => "file not found",
-            LinkStatus::NoSuchFragment => "no such fragment",
-            LinkStatus::Error(..) => "failed link conversion",
-        };
-        f.write_str(message)
     }
 }
 
@@ -173,10 +158,10 @@ impl Ord for LinkStatus {
 impl LinkStatus {
     fn order(&self) -> usize {
         match self {
-            Self::Error(..) => 7,
-            Self::NoSuchFragment => 6,
-            Self::NoSuchPath => 5,
-            Self::External => 4,
+            Self::Error(..) => 103,
+            Self::NoSuchFragment => 102,
+            Self::NoSuchPath => 101,
+            Self::PathNotCheckedIn => 100,
             Self::Permalink => 3,
             Self::Rewritten => 2,
             Self::Published => 1,

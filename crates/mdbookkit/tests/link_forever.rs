@@ -2,6 +2,7 @@ use std::io::Write;
 
 use anyhow::Result;
 use assert_cmd::{prelude::*, Command};
+use insta::with_settings;
 use log::LevelFilter;
 use predicates::prelude::*;
 use tap::Pipe;
@@ -9,7 +10,7 @@ use tempfile::TempDir;
 use url::Url;
 
 use mdbookkit::{
-    bin::link_forever::{Config, Environment, GitHubPermalink, Pages},
+    bin::link_forever::{Config, Environment, GitHubPermalink, LinkStatus, Pages},
     markdown::mdbook_markdown,
 };
 use util_testing::{portable_snapshots, setup_paths, test_document, CARGO_WORKSPACE_DIR};
@@ -36,7 +37,6 @@ fn test_snapshots() -> Result<()> {
     let tests = [
         test_document!("tests/ra-known-quirks.md"), // only for providing anchors
         test_document!("tests/link-forever.md"),
-        test_document!("../README.md"),
     ];
 
     for page in tests.iter() {
@@ -51,16 +51,36 @@ fn test_snapshots() -> Result<()> {
         portable_snapshots!().test(|| insta::assert_snapshot!(format!("{name}"), output))?;
     }
 
-    let report = env
-        .report(&pages)
-        .level(LevelFilter::Debug)
-        .names(|url| env.rel_path(url))
-        .colored(false)
-        .logging(false)
-        .build()
-        .to_report();
+    macro_rules! assert_stderr {
+        ($status:pat, $snap:literal) => {
+            let report = env
+                .report(&pages, |status| matches!(status, $status))
+                .level(LevelFilter::Debug)
+                .names(|url| env.rel_path(url))
+                .colored(false)
+                .logging(false)
+                .build()
+                .to_report();
+            portable_snapshots!().test(|| {
+                with_settings!({
+                    filters => vec![
+                        (r"file:///[A-Z]:/", "file:///")
+                    ]
+                }, {
+                    insta::assert_snapshot!($snap, report)
+                })
+            })?;
+        };
+    }
 
-    portable_snapshots!().test(|| insta::assert_snapshot!("_stderr", report))?;
+    assert_stderr!(LinkStatus::Ignored, "_stderr.ignored");
+    assert_stderr!(LinkStatus::Published, "_stderr.published");
+    assert_stderr!(LinkStatus::Rewritten, "_stderr.rewritten");
+    assert_stderr!(LinkStatus::Permalink, "_stderr.permalink");
+    assert_stderr!(LinkStatus::PathNotCheckedIn, "_stderr.not-checked-in");
+    assert_stderr!(LinkStatus::NoSuchPath, "_stderr.no-such-path");
+    assert_stderr!(LinkStatus::NoSuchFragment, "_stderr.no-such-fragment");
+    assert_stderr!(LinkStatus::Error(..), "_stderr.link-error");
 
     Ok(())
 }

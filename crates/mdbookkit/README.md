@@ -1,6 +1,6 @@
 # mdbookkit
 
-![mdbookkit hero image](https://github.com/tonywu6/mdbookkit/raw/main/docs/src/media/banner.webp)
+![mdbookkit hero image](https://github.com/tonywu6/mdbookkit/raw/HEAD/docs/src/media/banner.webp)
 
 [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
 [![documentation](https://img.shields.io/github/actions/workflow/status/tonywu6/mdbookkit/docs.yml?event=release&style=flat-square&label=docs)](https://docs.rs/mdbookkit)

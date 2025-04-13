@@ -51,6 +51,7 @@ shlex = { workspace = true, optional = true }
 syn = { version = "2.0.99", optional = true }
 tap = { workspace = true }
 tempfile = { workspace = true, optional = true }
+thiserror = { workspace = true }
 tokio = { workspace = true, optional = true }
 tokio-util = { version = "0.7.13", features = ["compat"], optional = true }
 toml = { workspace = true, optional = true }

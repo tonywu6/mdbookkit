@@ -44,7 +44,7 @@
 
 ## heading: <https://räksmörgås.josefsson.org/>
 
-# canonical urls
+# canonical urls to book
 
 found: <https://example.org/book/tests/tests/ra-known-quirks>
 
@@ -59,6 +59,16 @@ trailing slash, found: <https://example.org/book/tests/tests/trailing-slash/>
 trailing slash, found: <https://example.org/book/tests/tests/trailing-slash>
 
 trailing slash, not found: <https://example.org/book/tests/tests/ra-known-quirks/>
+
+# canonical urls to HEAD
+
+[permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
+
+[published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbookkit/tests/tests/ra-known-quirks.md)
+
+[file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbookkit/tests/tests/shinjuku.jpg)
+
+[fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbookkit/tests/tests/ra-known-quirks.md#associated_items_on_primitive_types)
 
 # image-in-link
 

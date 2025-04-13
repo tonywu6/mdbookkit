@@ -71,8 +71,15 @@ function remoteCSS(): esbuild.Plugin {
           filter: /^https:\/\//,
           namespace: "remote-css",
         },
-        ({ path, kind }) =>
-          kind === "url-token" ? { path, namespace: "remote-url" } : undefined,
+        ({ path, kind }) => {
+          if (kind !== "url-token") {
+            return undefined;
+          }
+          if (!pathlib.extname(path)) {
+            path += "#.bin";
+          }
+          return { path, namespace: "remote-url" };
+        },
       );
 
       build.onLoad(
@@ -93,7 +100,6 @@ function remoteCSS(): esbuild.Plugin {
 
           if (result.type === "err") {
             return {
-              path,
               external: true,
               warnings: [{ text: `failed to download ${path}: ${result.err}` }],
             };
@@ -115,7 +121,6 @@ function remoteCSS(): esbuild.Plugin {
 
           if (result.type === "err") {
             return {
-              path,
               external: true,
               warnings: [{ text: `failed to download ${path}: ${result.err}` }],
             };
