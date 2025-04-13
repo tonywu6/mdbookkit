@@ -1,11 +1,7 @@
-use std::{
-    borrow::Cow,
-    collections::BTreeMap,
-    fmt::{self, Display},
-};
+use std::{borrow::Cow, collections::BTreeMap};
 
 use miette::LabeledSpan;
-use tap::{Pipe, TapFallible};
+use tap::TapFallible;
 use url::Url;
 
 use crate::diagnostics::{Diagnostics, Issue, Problem, ReportBuilder};
@@ -30,10 +26,10 @@ impl Environment {
         });
 
         for (base, link) in iter {
-            let diagnostic = LinkDiagnostic { link, base, root };
             if !statuses(&link.status) {
                 continue;
             }
+            let diagnostic = LinkDiagnostic { link, base, root };
             sorted
                 .entry(base)
                 .or_default()
@@ -80,26 +76,26 @@ impl Problem for LinkDiagnostic<'_> {
     }
 
     fn label(&self) -> LabeledSpan {
-        let label = match &self.link.status {
+        let link = self.format_link();
+        let status = &self.link.status;
+        let label = match status {
             LinkStatus::Ignored => None,
-            LinkStatus::Published => None,
-            LinkStatus::Rewritten => self.format_link().into_owned().pipe(Some),
-            LinkStatus::Permalink => self.format_link().into_owned().pipe(Some),
-            LinkStatus::External => {
-                format!("file is outside source control: {}", self.format_link()).pipe(Some)
-            }
-            LinkStatus::NoSuchPath => {
-                format!("file does not exist at path: {}", self.format_link()).pipe(Some)
-            }
+            LinkStatus::PublishedPath => None,
+            LinkStatus::RewrittenPath => Some(link.into_owned()),
+            LinkStatus::PermalinkPath => Some(link.into_owned()),
+            LinkStatus::PublishedHref => Some(link.into_owned()),
+            LinkStatus::PermalinkHref => Some(link.into_owned()),
+            LinkStatus::PathNotCheckedIn => Some(format!("{status}: {link}")),
+            LinkStatus::NoSuchPath => Some(format!("{status}: {link}")),
             LinkStatus::NoSuchFragment => {
                 let (_, fragment) = self
                     .link
                     .link
                     .split_once('#')
                     .expect("should have a fragment");
-                format!("#{fragment} not found in {}", self.format_link()).pipe(Some)
+                Some(format!("#{fragment} not found in {link}"))
             }
-            LinkStatus::Error(err) => format!("error converting to permalink:\n{err}").pipe(Some),
+            LinkStatus::Error(..) => Some(format!("{status}")),
         };
         LabeledSpan::new_with_span(label, self.link.span.clone())
     }
@@ -129,30 +125,16 @@ impl Issue for LinkStatus {
     fn level(&self) -> log::Level {
         match self {
             Self::Ignored => log::Level::Debug,
-            Self::Published => log::Level::Debug,
-            Self::Rewritten => log::Level::Info,
-            Self::Permalink => log::Level::Info,
-            Self::External => log::Level::Warn,
+            Self::PublishedPath => log::Level::Debug,
+            Self::RewrittenPath => log::Level::Info,
+            Self::PermalinkPath => log::Level::Info,
+            Self::PublishedHref => log::Level::Info,
+            Self::PermalinkHref => log::Level::Info,
+            Self::PathNotCheckedIn => log::Level::Warn,
             Self::NoSuchPath => log::Level::Warn,
             Self::NoSuchFragment => log::Level::Warn,
             Self::Error(..) => log::Level::Warn,
         }
-    }
-}
-
-impl Display for LinkStatus {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let message = match self {
-            LinkStatus::Ignored => "url ignored",
-            LinkStatus::Published => "file under src/",
-            LinkStatus::Rewritten => "path converted to relative path",
-            LinkStatus::Permalink => "path converted to permalink",
-            LinkStatus::External => "file outside source control",
-            LinkStatus::NoSuchPath => "file not found",
-            LinkStatus::NoSuchFragment => "no such fragment",
-            LinkStatus::Error(..) => "failed link conversion",
-        };
-        f.write_str(message)
     }
 }
 
@@ -179,13 +161,15 @@ impl Ord for LinkStatus {
 impl LinkStatus {
     fn order(&self) -> usize {
         match self {
-            Self::Error(..) => 7,
-            Self::NoSuchFragment => 6,
-            Self::NoSuchPath => 5,
-            Self::External => 4,
-            Self::Permalink => 3,
-            Self::Rewritten => 2,
-            Self::Published => 1,
+            Self::Error(..) => 9,
+            Self::NoSuchFragment => 8,
+            Self::NoSuchPath => 7,
+            Self::PathNotCheckedIn => 6,
+            Self::PermalinkHref => 5,
+            Self::PermalinkPath => 4,
+            Self::PublishedHref => 3,
+            Self::RewrittenPath => 2,
+            Self::PublishedPath => 1,
             Self::Ignored => 0,
         }
     }

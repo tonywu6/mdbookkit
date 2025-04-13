@@ -2,7 +2,7 @@
 source: crates/mdbookkit/tests/link_forever.rs
 expression: report
 ---
-  warning: file not found
+  warning: file does not exist at path
     ╭─[crates/mdbookkit/tests/tests/link-forever.md:33:1]
  32 │ 
  33 │ [Cargo.lock](../../Cargo.lock)

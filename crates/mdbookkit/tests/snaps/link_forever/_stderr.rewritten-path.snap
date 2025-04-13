@@ -2,7 +2,7 @@
 source: crates/mdbookkit/tests/link_forever.rs
 expression: report
 ---
-  info: path converted to relative path
+  info: path to a file under `src`, rewritten as a relative path
     ╭─[crates/mdbookkit/tests/tests/link-forever.md:11:1]
  10 │ 
  11 │ [link-forever.md](/crates/mdbookkit/tests/tests/link-forever.md#absolute-paths)

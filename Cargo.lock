@@ -1626,6 +1626,7 @@ dependencies = [
  "syn 2.0.100",
  "tap",
  "tempfile",
+ "thiserror 2.0.12",
  "tokio",
  "tokio-util",
  "toml 0.5.11",

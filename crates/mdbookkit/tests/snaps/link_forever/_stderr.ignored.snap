@@ -2,7 +2,7 @@
 source: crates/mdbookkit/tests/link_forever.rs
 expression: report
 ---
-  info: url ignored
+  info: link is ignored as it is not supported
     ╭─[crates/mdbookkit/README.md:3:1]
   2 │ 
   3 │ ![mdbookkit hero image](https://github.com/tonywu6/mdbookkit/raw/main/docs/src/media/banner.webp)
@@ -53,7 +53,7 @@ expression: report
  38 │ 
     ╰────
 
-  info: url ignored
+  info: link is ignored as it is not supported
     ╭─[crates/mdbookkit/tests/tests/link-forever.md:45:13]
  44 │ 
  45 │ ## heading: <https://räksmörgås.josefsson.org/>

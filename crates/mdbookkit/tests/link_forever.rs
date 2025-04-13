@@ -52,7 +52,7 @@ fn test_snapshots() -> Result<()> {
     }
 
     macro_rules! assert_stderr {
-        ($snap:literal, $status:pat) => {
+        ($status:pat, $snap:literal) => {
             let report = env
                 .report(&pages, |status| matches!(status, $status))
                 .level(LevelFilter::Debug)
@@ -65,13 +65,16 @@ fn test_snapshots() -> Result<()> {
         };
     }
 
-    assert_stderr!("_stderr.ignored", LinkStatus::Ignored);
-    assert_stderr!("_stderr.published", LinkStatus::Published);
-    assert_stderr!("_stderr.rewritten", LinkStatus::Rewritten);
-    assert_stderr!("_stderr.external", LinkStatus::External);
-    assert_stderr!("_stderr.no-such-path", LinkStatus::NoSuchPath);
-    assert_stderr!("_stderr.no-such-fragment", LinkStatus::NoSuchFragment);
-    assert_stderr!("_stderr.link-error", LinkStatus::Error(..));
+    assert_stderr!(LinkStatus::Ignored, "_stderr.ignored");
+    assert_stderr!(LinkStatus::PublishedPath, "_stderr.published-path");
+    assert_stderr!(LinkStatus::RewrittenPath, "_stderr.rewritten-path");
+    assert_stderr!(LinkStatus::PermalinkPath, "_stderr.permalink-path");
+    assert_stderr!(LinkStatus::PublishedHref, "_stderr.published-href");
+    assert_stderr!(LinkStatus::PermalinkHref, "_stderr.permalink-href");
+    assert_stderr!(LinkStatus::PathNotCheckedIn, "_stderr.not-checked-in");
+    assert_stderr!(LinkStatus::NoSuchPath, "_stderr.no-such-path");
+    assert_stderr!(LinkStatus::NoSuchFragment, "_stderr.no-such-fragment");
+    assert_stderr!(LinkStatus::Error(..), "_stderr.link-error");
 
     Ok(())
 }

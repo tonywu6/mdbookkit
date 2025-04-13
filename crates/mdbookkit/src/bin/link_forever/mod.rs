@@ -165,9 +165,9 @@ impl Resolver<'_, '_> {
             if link.link.starts_with('/') {
                 // mdbook doesn't support absolute paths like VS Code does
                 link.link = page_url.make_relative(&file_url).unwrap().into();
-                link.status = LinkStatus::Rewritten;
+                link.status = LinkStatus::RewrittenPath;
             } else {
-                link.status = LinkStatus::Published;
+                link.status = LinkStatus::PublishedPath;
             }
             Self {
                 link,
@@ -192,13 +192,13 @@ impl Resolver<'_, '_> {
         if rel.starts_with("../") {
             // `path` could also be a symlink to a file outside source control somehow
             // in which case it would NOT be marked as LinkStatus::External;
-            link.status = LinkStatus::External;
+            link.status = LinkStatus::PathNotCheckedIn;
             return;
         }
 
         match env.fmt_link.link_to(&rel) {
             Ok(href) => {
-                link.status = LinkStatus::Permalink;
+                link.status = LinkStatus::PermalinkPath;
                 link.link = href.as_str().to_owned().into();
             }
             Err(err) => link.status = LinkStatus::Error(format!("{err}")),
@@ -277,7 +277,7 @@ impl Resolver<'_, '_> {
                 };
 
                 link.link = file_url.to_string().into();
-                link.status = LinkStatus::Published;
+                link.status = LinkStatus::PublishedPath;
 
                 Self {
                     link,
@@ -362,24 +362,33 @@ enum LinkUsage {
     Image,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, thiserror::Error)]
 pub enum LinkStatus {
-    /// Not a file: URL
     #[default]
+    #[error("link is ignored as it is not supported")]
     Ignored,
-    /// Link to a file under src/
-    Published,
-    /// Link to a file under src/ but was rewritten
-    Rewritten,
-    /// Link to a file under source control
-    Permalink,
-    /// Link to a file outside source control
-    External,
-    /// Link to a file that cannot be accessed
+
+    // "published" as in published with the book
+    #[error("path to a file under `src`, kept as is")]
+    PublishedPath,
+    #[error("path to a file under `src`, rewritten as a relative path")]
+    RewrittenPath,
+    #[error("link to a file under `src`, rewritten as a relative path")]
+    PublishedHref,
+
+    #[error("path to a file under source control, rewritten as a permalink")]
+    PermalinkPath,
+    #[error("link to remote at HEAD, changed to a permalink")]
+    PermalinkHref,
+
+    #[error("path to a file outside source control")]
+    PathNotCheckedIn,
+    #[error("file does not exist at path")]
     NoSuchPath,
-    /// Link to a fragment that does not exist in a page
+    #[error("fragment does not exist in page")]
     NoSuchFragment,
-    /// Link to a file under source control but link generation failed
+
+    #[error("error generating a link: {0}")]
     Error(String),
 }
 
@@ -472,7 +481,7 @@ impl<'a> Page<'a> {
                         _ => unreachable!(),
                     };
                     let link = RelativeLink {
-                        status: LinkStatus::External,
+                        status: LinkStatus::PathNotCheckedIn,
                         span,
                         link,
                         usage,
@@ -663,7 +672,13 @@ impl RelativeLink<'_> {
     }
 
     fn will_emit(&self) -> Option<LinkUsage> {
-        if matches!(self.status, LinkStatus::Permalink | LinkStatus::Rewritten) {
+        if matches!(
+            self.status,
+            LinkStatus::RewrittenPath
+                | LinkStatus::PermalinkPath
+                | LinkStatus::PublishedHref
+                | LinkStatus::PermalinkHref
+        ) {
             Some(self.usage)
         } else {
             None

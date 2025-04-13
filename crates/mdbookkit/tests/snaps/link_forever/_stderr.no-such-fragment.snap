@@ -2,7 +2,7 @@
 source: crates/mdbookkit/tests/link_forever.rs
 expression: report
 ---
-  warning: no such fragment
+  warning: fragment does not exist in page
     ╭─[crates/mdbookkit/tests/tests/link-forever.md:41:1]
  40 │ 
  41 │ [associated items](../tests/ra-known-quirks.md#associated_items_on_primitive_types)

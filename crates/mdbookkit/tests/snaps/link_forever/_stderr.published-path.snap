@@ -2,7 +2,7 @@
 source: crates/mdbookkit/tests/link_forever.rs
 expression: report
 ---
-  info: file under src/
+  info: path to a file under `src`, kept as is
     ╭─[crates/mdbookkit/tests/tests/link-forever.md:15:1]
  14 │ 
  15 │ [Known quirks](./ra-known-quirks.md)
