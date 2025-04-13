@@ -9,7 +9,7 @@ use tempfile::TempDir;
 use url::Url;
 
 use mdbookkit::{
-    bin::link_forever::{Config, Environment, GitHubPermalink, Pages},
+    bin::link_forever::{Config, Environment, GitHubPermalink, LinkStatus, Pages},
     markdown::mdbook_markdown,
 };
 use util_testing::{portable_snapshots, setup_paths, test_document, CARGO_WORKSPACE_DIR};
@@ -51,16 +51,27 @@ fn test_snapshots() -> Result<()> {
         portable_snapshots!().test(|| insta::assert_snapshot!(format!("{name}"), output))?;
     }
 
-    let report = env
-        .report(&pages)
-        .level(LevelFilter::Debug)
-        .names(|url| env.rel_path(url))
-        .colored(false)
-        .logging(false)
-        .build()
-        .to_report();
+    macro_rules! assert_stderr {
+        ($snap:literal, $status:pat) => {
+            let report = env
+                .report(&pages, |status| matches!(status, $status))
+                .level(LevelFilter::Debug)
+                .names(|url| env.rel_path(url))
+                .colored(false)
+                .logging(false)
+                .build()
+                .to_report();
+            portable_snapshots!().test(|| insta::assert_snapshot!($snap, report))?;
+        };
+    }
 
-    portable_snapshots!().test(|| insta::assert_snapshot!("_stderr", report))?;
+    assert_stderr!("_stderr.ignored", LinkStatus::Ignored);
+    assert_stderr!("_stderr.published", LinkStatus::Published);
+    assert_stderr!("_stderr.rewritten", LinkStatus::Rewritten);
+    assert_stderr!("_stderr.external", LinkStatus::External);
+    assert_stderr!("_stderr.no-such-path", LinkStatus::NoSuchPath);
+    assert_stderr!("_stderr.no-such-fragment", LinkStatus::NoSuchFragment);
+    assert_stderr!("_stderr.link-error", LinkStatus::Error(..));
 
     Ok(())
 }

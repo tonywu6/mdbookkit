@@ -1,0 +1,23 @@
+---
+source: crates/mdbookkit/tests/link_forever.rs
+expression: report
+---
+  info: path converted to relative path
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:11:1]
+ 10 │ 
+ 11 │ [link-forever.md](/crates/mdbookkit/tests/tests/link-forever.md#absolute-paths)
+    · ───────────────────────────────────────┬───────────────────────────────────────
+    ·                                        ╰── crates/mdbookkit/tests/tests/link-forever.md
+ 12 │ 
+    ╰────
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:67:2]
+ 66 │ 
+ 67 │ [![selfie](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg)](https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg)
+    ·  ──────────────────────────────────────┬──────────────────────────────────────
+    ·                                        ╰── crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg
+ 68 │ 
+ 69 │ [![selfie](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg) <br> Self-portrait of a female Macaca nigra in North Sulawesi (2011)](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg)
+    · ────────────────────────────────────────────────────────────────────────────────────────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────┬
+    ·                                                                                                             │                                                                                                           ╰── crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg
+    ·                                                                                                             ╰── crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg
+    ╰────

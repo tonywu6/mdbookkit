@@ -61,7 +61,7 @@ fn main() -> Result<()> {
         .collect::<HashMap<_, _>>();
 
     let status = env
-        .report(&content)
+        .report(&content, |_| true)
         .names(|url| env.rel_path(url))
         .level(LevelFilter::Warn)
         .logging(is_logging())

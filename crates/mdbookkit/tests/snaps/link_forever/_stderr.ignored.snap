@@ -1,0 +1,87 @@
+---
+source: crates/mdbookkit/tests/link_forever.rs
+expression: report
+---
+  info: url ignored
+    ╭─[crates/mdbookkit/README.md:3:1]
+  2 │ 
+  3 │ ![mdbookkit hero image](https://github.com/tonywu6/mdbookkit/raw/main/docs/src/media/banner.webp)
+    · ─────────────────────────────────────────────────────────────────────────────────────────────────
+  4 │ 
+  5 │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
+    · ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  6 │ [![documentation](https://img.shields.io/github/actions/workflow/status/tonywu6/mdbookkit/docs.yml?event=release&style=flat-square&label=docs)](https://docs.rs/mdbookkit)
+    · ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  7 │ [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](https://github.com/tonywu6/mdbookkit/tree/main/LICENSE-APACHE.md)
+    · ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  8 │ 
+  9 │ Quality-of-life plugins for your [mdBook] project.
+    ·                                  ────────
+ 10 │ 
+ 11 │ - [**`mdbook-rustdoc-link`**](https://tonywu6.github.io/mdbookkit/rustdoc-link)
+    ·   ─────────────────────────────────────────────────────────────────────────────
+ 12 │ 
+    ╰────
+    ╭─[crates/mdbookkit/README.md:16:3]
+ 15 │ 
+ 16 │ - [**`mdbook-link-forever`**](https://tonywu6.github.io/mdbookkit/link-forever)
+    ·   ─────────────────────────────────────────────────────────────────────────────
+ 17 │ 
+ 18 │   _Permalinks_ for your source tree: write relative paths, get links to GitHub.
+ 19 │ 
+ 20 │ ## Installation
+ 21 │ 
+ 22 │ If you are interested in any of these plugins, visit their respective pages for usage
+ 23 │ instructions, linked above.
+ 24 │ 
+ 25 │ If you want to install all of them:
+ 26 │ 
+ 27 │ ```bash
+ 28 │ cargo install mdbookkit --all-features
+ 29 │ ```
+ 30 │ 
+ 31 │ Precompiled binaries are also available from [GitHub releases][gh-releases].
+    ·                                              ──────────────────────────────
+ 32 │ 
+ 33 │ ## License
+ 34 │ 
+ 35 │ This project is released under the
+ 36 │ [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/main/LICENSE-APACHE.md)
+    · ──────────────────────────────────────────────────────────────────────────────────────
+ 37 │ and the [MIT License](https://github.com/tonywu6/mdbookkit/tree/main/LICENSE-MIT.md).
+    ·         ────────────────────────────────────────────────────────────────────────────
+ 38 │ 
+    ╰────
+
+  info: url ignored
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:45:13]
+ 44 │ 
+ 45 │ ## heading: <https://räksmörgås.josefsson.org/>
+    ·             ───────────────────────────────────
+ 46 │ 
+ 47 │ # canonical urls
+ 48 │ 
+ 49 │ found: <https://example.org/book/tests/tests/ra-known-quirks>
+ 50 │ 
+ 51 │ found: <https://example.org/book/tests/tests/ra-known-quirks.html>
+ 52 │ 
+ 53 │ not found: <https://example.org/book/404>
+ 54 │ 
+ 55 │ ignored: <https://example.com/book/ra-known-quirks>
+    ·          ──────────────────────────────────────────
+ 56 │ 
+ 57 │ trailing slash, found: <https://example.org/book/tests/tests/trailing-slash/>
+ 58 │ 
+ 59 │ trailing slash, found: <https://example.org/book/tests/tests/trailing-slash>
+ 60 │ 
+ 61 │ trailing slash, not found: <https://example.org/book/tests/tests/ra-known-quirks/>
+ 62 │ 
+ 63 │ # image-in-link
+ 64 │ 
+ 65 │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
+    · ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 66 │ 
+ 67 │ [![selfie](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg)](https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg)
+    · ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ 68 │ 
+    ╰────

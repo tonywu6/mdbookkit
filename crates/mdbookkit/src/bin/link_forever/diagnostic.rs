@@ -13,7 +13,10 @@ use crate::diagnostics::{Diagnostics, Issue, Problem, ReportBuilder};
 use super::{Environment, LinkSpan, LinkStatus, LinkText, Pages, RelativeLink};
 
 impl Environment {
-    pub fn report<'a>(&'a self, content: &'a Pages<'a>) -> Reporter<'a> {
+    pub fn report<'a, F>(&'a self, content: &'a Pages<'a>, statuses: F) -> Reporter<'a>
+    where
+        F: Fn(&'a LinkStatus) -> bool,
+    {
         // BTreeMap: sort output by paths
         let mut sorted: BTreeMap<&'_ Url, BTreeMap<LinkStatus, Vec<LinkDiagnostic<'_>>>> =
             Default::default();
@@ -28,6 +31,9 @@ impl Environment {
 
         for (base, link) in iter {
             let diagnostic = LinkDiagnostic { link, base, root };
+            if !statuses(&link.status) {
+                continue;
+            }
             sorted
                 .entry(base)
                 .or_default()
