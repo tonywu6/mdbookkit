@@ -53,8 +53,8 @@ The preprocessor will then turn them into hyperlinks:
 
 <figure class="fig-text">
 
-Like [`std::thread::spawn`](https://doc.rust-lang.org/stable/std/thread/fn.spawn.html "std::thread::spawn"), [`tokio::task::spawn`](https://docs.rs/tokio/1.44.1/tokio/task/spawn/fn.spawn.html "tokio::task::spawn") returns a
-[`JoinHandle`](https://docs.rs/tokio/1.44.1/tokio/runtime/task/join/struct.JoinHandle.html "tokio::task::JoinHandle") struct.
+Like [`std::thread::spawn`](https://doc.rust-lang.org/stable/std/thread/fn.spawn.html "std::thread::spawn"), [`tokio::task::spawn`](https://docs.rs/tokio/1.44.2/tokio/task/spawn/fn.spawn.html "tokio::task::spawn") returns a
+[`JoinHandle`](https://docs.rs/tokio/1.44.2/tokio/runtime/task/join/struct.JoinHandle.html "tokio::task::JoinHandle") struct.
 
 </figure>
 
