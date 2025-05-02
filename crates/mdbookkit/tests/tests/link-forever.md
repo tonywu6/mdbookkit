@@ -26,6 +26,8 @@
 
 [Heading 2](./link-forever.md#heading-httpsräksmörgåsjosefssonorg)
 
+[foobar](#heading-pub-async-fn-foobarrt-mut-foo---barself)
+
 [macro_export](./ra-known-quirks.md#macro_export)
 
 # file not found
@@ -43,6 +45,8 @@
 ## heading: $\sqrt{3x-1}+(1+x)^2$
 
 ## heading: <https://räksmörgås.josefsson.org/>
+
+## heading: pub async fn foobar(rt: &mut [Foo]) -> [Bar]\<Self> <!-- omit from toc -->
 
 # canonical urls to book
 
@@ -77,3 +81,6 @@ trailing slash, not found: <https://example.org/book/tests/tests/ra-known-quirks
 [![selfie](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg)](https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg)
 
 [![selfie](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg) <br> Self-portrait of a female Macaca nigra in North Sulawesi (2011)](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg)
+
+[Foo]: https://example.org
+[Bar]: https://example.org

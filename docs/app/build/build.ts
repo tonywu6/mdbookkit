@@ -1,6 +1,6 @@
 import { encodeHex } from "jsr:@std/encoding/hex";
 import * as pathlib from "jsr:@std/path";
-import * as esbuild from "npm:esbuild";
+import * as esbuild from "npm:esbuild@0.25.2";
 
 const relpath = (path: string) => new URL(path, import.meta.url).pathname;
 

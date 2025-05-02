@@ -4,41 +4,41 @@ expression: report
 ---
   warning: failed to resolve some links
     ╭─[ra-known-quirks:3:3]
-  2 │ 
-  3 │ - [u8]
+    │ 
+    │ - [u8]
     ·   ──┬─
     ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.u8.html
-  4 │ - [u32]
+    │ - [u32]
     ·   ──┬──
     ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.u32.html
-  5 │ - [f64]
+    │ - [f64]
     ·   ──┬──
     ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.f64.html
-  6 │ - [char]
+    │ - [char]
     ·   ───┬──
     ·      ╰── https://doc.rust-lang.org/nightly/core/primitive.char.html
-  7 │ - [str]
+    │ - [str]
     ·   ──┬──
     ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.str.html
-  8 │ 
-  9 │ # associated items on primitive types
- 10 │ 
- 11 │ - [str::parse]
+    │ 
+    │ # associated items on primitive types
+    │ 
+    │ - [str::parse]
     ·   ──────┬─────
     ·         ╰── failed to resolve link for "str::parse"
- 12 │ - [f64::MIN_POSITIVE]
+    │ - [f64::MIN_POSITIVE]
     ·   ─────────┬─────────
     ·            ╰── failed to resolve link for "f64::MIN_POSITIVE"
- 13 │ 
- 14 │ # macro_export
- 15 │ 
- 16 │ - [std::vec!]
+    │ 
+    │ # macro_export
+    │ 
+    │ - [std::vec!]
     ·   ─────┬─────
     ·        ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html
- 17 │ - [std::format!]
+    │ - [std::format!]
     ·   ───────┬──────
     ·          ╰── https://doc.rust-lang.org/stable/alloc/macros/macro.format.html
- 18 │ - [tokio::main!]
+    │ - [tokio::main!]
     ·   ───────┬──────
     ·          ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
     ╰────
