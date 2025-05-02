@@ -3,10 +3,13 @@ source: crates/mdbookkit/tests/link_forever.rs
 expression: report
 ---
   info: link is ignored as it is not supported
-    ╭─[crates/mdbookkit/tests/tests/link-forever.md:45:13]
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:47:13]
     │ 
     │ ## heading: <https://räksmörgås.josefsson.org/>
     ·             ───────────────────────────────────
+    │ 
+    │ ## heading: pub async fn foobar(rt: &mut [Foo]) -> [Bar]\<Self> <!-- omit from toc -->
+    ·                                          ─────     ─────
     │ 
     │ # canonical urls to book
     │ 

@@ -20,7 +20,7 @@ expression: report
     ·                    ╰── link: https://github.com/lorem/ipsum/tree/dolor/LICENSE-APACHE.md
     │ 
     ╰────
-    ╭─[crates/mdbookkit/tests/tests/link-forever.md:65:1]
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:69:1]
     │ 
     │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
     · ───────────────────────────────────┬───────────────────────────────────

@@ -31,6 +31,10 @@ expression: report
     · ─────────────────────────────────┬────────────────────────────────
     ·                                  ╰── file: crates/mdbookkit/tests/tests/link-forever.md
     │ 
+    │ [foobar](#heading-pub-async-fn-foobarrt-mut-foo---barself)
+    · ─────────────────────────────┬────────────────────────────
+    ·                              ╰── file: crates/mdbookkit/tests/tests/link-forever.md
+    │ 
     │ [macro_export](./ra-known-quirks.md#macro_export)
     · ────────────────────────┬────────────────────────
     ·                         ╰── file: crates/mdbookkit/tests/tests/ra-known-quirks.md

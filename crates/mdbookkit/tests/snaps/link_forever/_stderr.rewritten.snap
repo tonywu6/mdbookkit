@@ -11,7 +11,7 @@ expression: report
     ·                                          │ link: #absolute-paths
     │ 
     ╰────
-    ╭─[crates/mdbookkit/tests/tests/link-forever.md:49:8]
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:53:8]
     │ 
     │ found: <https://example.org/book/tests/tests/ra-known-quirks>
     ·        ───────────────────────────┬──────────────────────────
@@ -67,4 +67,5 @@ expression: report
     ·                                                                                                             │                                                                                                             │ link: Macaca_nigra_self-portrait_large.jpg
     ·                                                                                                             ╰─┤ file: crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg
     ·                                                                                                               │ link: Macaca_nigra_self-portrait_large.jpg
+    │ 
     ╰────

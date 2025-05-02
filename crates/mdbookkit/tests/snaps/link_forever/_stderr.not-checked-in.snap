@@ -3,7 +3,7 @@ source: crates/mdbookkit/tests/link_forever.rs
 expression: report
 ---
   warning: path to a file outside source control
-    ╭─[crates/mdbookkit/tests/tests/link-forever.md:35:1]
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:37:1]
     │ 
     │ [`//LICENSE-MIT.md`](//LICENSE-MIT.md)
     · ───────────────────┬──────────────────

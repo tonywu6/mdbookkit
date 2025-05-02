@@ -3,7 +3,7 @@ source: crates/mdbookkit/tests/link_forever.rs
 expression: report
 ---
   warning: file does not exist at path
-    ╭─[crates/mdbookkit/tests/tests/link-forever.md:33:1]
+    ╭─[crates/mdbookkit/tests/tests/link-forever.md:35:1]
     │ 
     │ [Cargo.lock](../../Cargo.lock)
     · ───────────────┬──────────────
@@ -22,6 +22,8 @@ expression: report
     │ ## heading: $\sqrt{3x-1}+(1+x)^2$
     │ 
     │ ## heading: <https://räksmörgås.josefsson.org/>
+    │ 
+    │ ## heading: pub async fn foobar(rt: &mut [Foo]) -> [Bar]\<Self> <!-- omit from toc -->
     │ 
     │ # canonical urls to book
     │ 
