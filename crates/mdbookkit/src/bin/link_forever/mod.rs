@@ -11,7 +11,7 @@ use std::{
 use anyhow::{bail, Context, Result};
 use mdbook::utils::unique_id_from_content;
 use percent_encoding::percent_decode_str;
-use pulldown_cmark::{CowStr, Event, LinkType, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{html::push_html, CowStr, Event, LinkType, Options, Parser, Tag, TagEnd};
 use serde::Deserialize;
 use tap::{Pipe, Tap, TapFallible};
 use url::{form_urlencoded::Serializer as SearchParams, Url};
@@ -553,19 +553,7 @@ impl<'a> Page<'a> {
     where
         S: Iterator<Item = &'r Event<'r>>,
     {
-        fn unmark<'a>(event: &'a Event<'_>) -> &'a str {
-            match event {
-                Event::Text(text) => text,
-                Event::Code(text) => text,
-                Event::InlineMath(text) => text,
-                Event::DisplayMath(text) => text,
-                Event::Html(html) => html,
-                Event::InlineHtml(html) => html,
-                Event::FootnoteReference(href) => href,
-                _ => "",
-            }
-        }
-        let fragment = heading.map(unmark).collect::<String>();
+        let fragment = String::new().tap_mut(|s| push_html(s, heading.cloned()));
         let fragment = unique_id_from_content(&fragment, counter);
         self.fragments.insert(fragment);
     }

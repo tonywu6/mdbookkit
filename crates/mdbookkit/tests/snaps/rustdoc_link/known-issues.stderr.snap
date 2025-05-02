@@ -4,43 +4,43 @@ expression: report
 ---
   info: successfully resolved all links
     ╭─[known-issues:45:3]
- 44 │ 
- 45 │ - [~~`panic!`~~], and many other `std` macros
+    │ 
+    │ - [~~`panic!`~~], and many other `std` macros
     ·   ───────┬──────
     ·          ╰── https://doc.rust-lang.org/stable/std/macros/macro.panic.html
- 46 │   - The correct link is
- 47 │     [https://doc.rust-lang.org/stable/std~~/macros~~/macro.panic.html][panic]
- 48 │ - [~~`serde_json::json!`~~]
+    │   - The correct link is
+    │     [https://doc.rust-lang.org/stable/std~~/macros~~/macro.panic.html][panic]
+    │ - [~~`serde_json::json!`~~]
     ·   ────────────┬────────────
     ·               ╰── https://docs.rs/serde_json/1.0.140/serde_json/macros/macro.json.html
- 49 │   - The correct link is
- 50 │     [https://docs.rs/serde_json/1.0.140/serde_json~~/macros~~/macro.json.html][serde_json::json]
- 51 │ 
- 52 │ Attribute macros generate links that use `macro.<macro_name>.html`, but rustdoc actually
- 53 │ generates `attr.<macro_name>.html`. For example:
- 54 │ 
- 55 │ - [~~`tokio::main!`~~]
+    │   - The correct link is
+    │     [https://docs.rs/serde_json/1.0.140/serde_json~~/macros~~/macro.json.html][serde_json::json]
+    │ 
+    │ Attribute macros generate links that use `macro.<macro_name>.html`, but rustdoc actually
+    │ generates `attr.<macro_name>.html`. For example:
+    │ 
+    │ - [~~`tokio::main!`~~]
     ·   ──────────┬─────────
     ·             ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
- 56 │   - The correct link is
- 57 │     [https://docs.rs/tokio-macros/2.5.0/tokio_macros/~~macro~~attr.main.html][tokio::main]
- 58 │ 
- 59 │ ### Trait items
- 60 │ 
- 61 │ Rust allows methods to have the same name if they are from different traits, and types
- 62 │ can implement the same trait multiple times if the trait is generic. All such methods
- 63 │ will appear on the same page for the type.
- 64 │ 
- 65 │ rustdoc will number the generated URL fragments so that they remain unique within the
- 66 │ HTML document. rust-analyzer does not yet have the ability to do so.
- 67 │ 
- 68 │ For example, these are the same links:
- 69 │ 
- 70 │ - [`<std::net::IpAddr as From<std::net::Ipv4Addr>>::from`]
+    │   - The correct link is
+    │     [https://docs.rs/tokio-macros/2.5.0/tokio_macros/~~macro~~attr.main.html][tokio::main]
+    │ 
+    │ ### Trait items
+    │ 
+    │ Rust allows methods to have the same name if they are from different traits, and types
+    │ can implement the same trait multiple times if the trait is generic. All such methods
+    │ will appear on the same page for the type.
+    │ 
+    │ rustdoc will number the generated URL fragments so that they remain unique within the
+    │ HTML document. rust-analyzer does not yet have the ability to do so.
+    │ 
+    │ For example, these are the same links:
+    │ 
+    │ - [`<std::net::IpAddr as From<std::net::Ipv4Addr>>::from`]
     ·   ────────────────────────────┬───────────────────────────
     ·                               ╰── https://doc.rust-lang.org/stable/core/net/ip_addr/enum.IpAddr.html#method.from
- 71 │ - [`<std::net::IpAddr as From<std::net::Ipv6Addr>>::from`]
+    │ - [`<std::net::IpAddr as From<std::net::Ipv6Addr>>::from`]
     ·   ────────────────────────────┬───────────────────────────
     ·                               ╰── https://doc.rust-lang.org/stable/core/net/ip_addr/enum.IpAddr.html#method.from
- 72 │ 
+    │ 
     ╰────

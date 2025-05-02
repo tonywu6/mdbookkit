@@ -1,17 +1,16 @@
 ---
 source: crates/mdbookkit/tests/rustdoc_link.rs
-assertion_line: 44
 expression: report
 ---
   info: successfully resolved all links
     ╭─[getting-started:52:6]
- 51 │ 
- 52 │ Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a
+    │ 
+    │ Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a
     ·      ───────────┬──────────  ───────────┬──────────
     ·                 │                       ╰── https://docs.rs/tokio/1.44.1/tokio/task/spawn/fn.spawn.html
     ·                 ╰── https://doc.rust-lang.org/stable/std/thread/fn.spawn.html
- 53 │ [`JoinHandle`][tokio::task::JoinHandle] struct.
+    │ [`JoinHandle`][tokio::task::JoinHandle] struct.
     · ───────────────────┬───────────────────
     ·                    ╰── https://docs.rs/tokio/1.44.1/tokio/runtime/task/join/struct.JoinHandle.html
- 54 │ 
+    │ 
     ╰────

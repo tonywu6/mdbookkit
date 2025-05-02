@@ -4,35 +4,39 @@ expression: report
 ---
   info: link to book page or file
     ╭─[crates/mdbookkit/tests/tests/link-forever.md:15:1]
- 14 │ 
- 15 │ [Known quirks](./ra-known-quirks.md)
+    │ 
+    │ [Known quirks](./ra-known-quirks.md)
     · ──────────────────┬─────────────────
     ·                   ╰── file: crates/mdbookkit/tests/tests/ra-known-quirks.md
- 16 │ 
- 17 │ [link_forever.rs](../link_forever.rs)
+    │ 
+    │ [link_forever.rs](../link_forever.rs)
     · ──────────────────┬──────────────────
     ·                   ╰── file: crates/mdbookkit/tests/link_forever.rs
- 18 │ 
- 19 │ ![selfie](Macaca_nigra_self-portrait_large.jpg)
+    │ 
+    │ ![selfie](Macaca_nigra_self-portrait_large.jpg)
     · ───────────────────────┬───────────────────────
     ·                        ╰── file: crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg
- 20 │ 
- 21 │ # fragments
- 22 │ 
- 23 │ [Fragments](./link-forever.md#fragments)
+    │ 
+    │ # fragments
+    │ 
+    │ [Fragments](./link-forever.md#fragments)
     · ────────────────────┬───────────────────
     ·                     ╰── file: crates/mdbookkit/tests/tests/link-forever.md
- 24 │ 
- 25 │ [Heading 1](./link-forever.md#heading-sqrt3x-11x2)
+    │ 
+    │ [Heading 1](./link-forever.md#heading-sqrt3x-11x2)
     · ─────────────────────────┬────────────────────────
     ·                          ╰── file: crates/mdbookkit/tests/tests/link-forever.md
- 26 │ 
- 27 │ [Heading 2](./link-forever.md#heading-httpsräksmörgåsjosefssonorg)
+    │ 
+    │ [Heading 2](./link-forever.md#heading-httpsräksmörgåsjosefssonorg)
     · ─────────────────────────────────┬────────────────────────────────
     ·                                  ╰── file: crates/mdbookkit/tests/tests/link-forever.md
- 28 │ 
- 29 │ [macro_export](./ra-known-quirks.md#macro_export)
+    │ 
+    │ [foobar](#heading-pub-async-fn-foobarrt-mut-foo---barself)
+    · ─────────────────────────────┬────────────────────────────
+    ·                              ╰── file: crates/mdbookkit/tests/tests/link-forever.md
+    │ 
+    │ [macro_export](./ra-known-quirks.md#macro_export)
     · ────────────────────────┬────────────────────────
     ·                         ╰── file: crates/mdbookkit/tests/tests/ra-known-quirks.md
- 30 │ 
+    │ 
     ╰────
