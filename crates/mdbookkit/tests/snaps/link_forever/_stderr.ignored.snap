@@ -4,43 +4,43 @@ expression: report
 ---
   info: link is ignored as it is not supported
     ╭─[crates/mdbookkit/tests/tests/link-forever.md:45:13]
- 44 │ 
- 45 │ ## heading: <https://räksmörgås.josefsson.org/>
+    │ 
+    │ ## heading: <https://räksmörgås.josefsson.org/>
     ·             ───────────────────────────────────
- 46 │ 
- 47 │ # canonical urls to book
- 48 │ 
- 49 │ found: <https://example.org/book/tests/tests/ra-known-quirks>
- 50 │ 
- 51 │ found: <https://example.org/book/tests/tests/ra-known-quirks.html>
- 52 │ 
- 53 │ not found: <https://example.org/book/404>
- 54 │ 
- 55 │ ignored: <https://example.com/book/ra-known-quirks>
+    │ 
+    │ # canonical urls to book
+    │ 
+    │ found: <https://example.org/book/tests/tests/ra-known-quirks>
+    │ 
+    │ found: <https://example.org/book/tests/tests/ra-known-quirks.html>
+    │ 
+    │ not found: <https://example.org/book/404>
+    │ 
+    │ ignored: <https://example.com/book/ra-known-quirks>
     ·          ──────────────────────────────────────────
- 56 │ 
- 57 │ trailing slash, found: <https://example.org/book/tests/tests/trailing-slash/>
- 58 │ 
- 59 │ trailing slash, found: <https://example.org/book/tests/tests/trailing-slash>
- 60 │ 
- 61 │ trailing slash, not found: <https://example.org/book/tests/tests/ra-known-quirks/>
- 62 │ 
- 63 │ # canonical urls to HEAD
- 64 │ 
- 65 │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
- 66 │ 
- 67 │ [published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbookkit/tests/tests/ra-known-quirks.md)
- 68 │ 
- 69 │ [file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbookkit/tests/tests/shinjuku.jpg)
- 70 │ 
- 71 │ [fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbookkit/tests/tests/ra-known-quirks.md#associated_items_on_primitive_types)
- 72 │ 
- 73 │ # image-in-link
- 74 │ 
- 75 │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
+    │ 
+    │ trailing slash, found: <https://example.org/book/tests/tests/trailing-slash/>
+    │ 
+    │ trailing slash, found: <https://example.org/book/tests/tests/trailing-slash>
+    │ 
+    │ trailing slash, not found: <https://example.org/book/tests/tests/ra-known-quirks/>
+    │ 
+    │ # canonical urls to HEAD
+    │ 
+    │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
+    │ 
+    │ [published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbookkit/tests/tests/ra-known-quirks.md)
+    │ 
+    │ [file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbookkit/tests/tests/shinjuku.jpg)
+    │ 
+    │ [fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbookkit/tests/tests/ra-known-quirks.md#associated_items_on_primitive_types)
+    │ 
+    │ # image-in-link
+    │ 
+    │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
     · ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
- 76 │ 
- 77 │ [![selfie](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg)](https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg)
+    │ 
+    │ [![selfie](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg)](https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg)
     · ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
- 78 │ 
+    │ 
     ╰────

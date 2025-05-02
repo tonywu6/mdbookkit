@@ -4,9 +4,9 @@ expression: report
 ---
   warning: path to a file outside source control
     ╭─[crates/mdbookkit/tests/tests/link-forever.md:35:1]
- 34 │ 
- 35 │ [`//LICENSE-MIT.md`](//LICENSE-MIT.md)
+    │ 
+    │ [`//LICENSE-MIT.md`](//LICENSE-MIT.md)
     · ───────────────────┬──────────────────
     ·                    ╰── path to a file outside source control: file:///LICENSE-MIT.md
- 36 │ 
+    │ 
     ╰────

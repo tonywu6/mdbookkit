@@ -4,18 +4,18 @@ expression: report
 ---
   info: successfully resolved all links
     ╭─[index:25:5]
- 24 │ 
- 25 │ The [`option`][std::option] and [`result`][std::result] modules define optional and
+    │ 
+    │ The [`option`][std::option] and [`result`][std::result] modules define optional and
     ·     ───────────┬───────────     ───────────┬───────────
     ·                │                           ╰── https://doc.rust-lang.org/stable/core/result/index.html
     ·                ╰── https://doc.rust-lang.org/stable/core/option/index.html
- 26 │ error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter] module
+    │ error-handling types, [`Option<T>`] and [`Result<T, E>`]. The [`iter`][std::iter] module
     ·                       ──────┬──────     ────────┬───────      ─────────┬─────────
     ·                             │                   │                      ╰── https://doc.rust-lang.org/stable/core/iter/index.html
     ·                             │                   ╰── https://doc.rust-lang.org/stable/core/result/enum.Result.html
     ·                             ╰── https://doc.rust-lang.org/stable/core/option/enum.Option.html
- 27 │ defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to access
+    │ defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to access
     ·                                ──────┬─────
     ·                                      ╰── https://doc.rust-lang.org/stable/core/iter/traits/iterator/trait.Iterator.html
- 28 │ collections. [^1]
+    │ collections. [^1]
     ╰────

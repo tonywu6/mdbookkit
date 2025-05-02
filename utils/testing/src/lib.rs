@@ -57,8 +57,16 @@ impl PortableSnapshots {
             .fold(snapshot_dir, |dir, path| dir.join(path));
 
         let result = insta::Settings::clone_current()
-            .tap_mut(|settings| settings.set_snapshot_path(path))
-            .tap_mut(|settings| settings.set_prepend_module_to_snapshot(false))
+            .tap_mut(|s| s.set_snapshot_path(path))
+            .tap_mut(|s| s.set_prepend_module_to_snapshot(false))
+            .tap_mut(|s| {
+                s.set_filters(vec![
+                    (r"file:///[A-Z]:/", "file:///"), // windows paths
+                    (r"(?m)^(\s+)\d{1} ", "$1  "),    // miette line numbers
+                    (r"(?m)^(\s+)\d{2} ", "$1   "),
+                    (r"(?m)^(\s+)\d{3} ", "$1    "),
+                ])
+            })
             .bind(cb);
 
         Ok(result)

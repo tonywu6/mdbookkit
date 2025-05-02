@@ -4,64 +4,64 @@ expression: report
 ---
   info: link to book page or file rewritten as path
     ╭─[crates/mdbookkit/tests/tests/link-forever.md:11:1]
- 10 │ 
- 11 │ [link-forever.md](/crates/mdbookkit/tests/tests/link-forever.md#absolute-paths)
+    │ 
+    │ [link-forever.md](/crates/mdbookkit/tests/tests/link-forever.md#absolute-paths)
     · ───────────────────────────────────────┬───────────────────────────────────────
     ·                                        ╰─┤ file: crates/mdbookkit/tests/tests/link-forever.md
     ·                                          │ link: #absolute-paths
- 12 │ 
+    │ 
     ╰────
     ╭─[crates/mdbookkit/tests/tests/link-forever.md:49:8]
- 48 │ 
- 49 │ found: <https://example.org/book/tests/tests/ra-known-quirks>
+    │ 
+    │ found: <https://example.org/book/tests/tests/ra-known-quirks>
     ·        ───────────────────────────┬──────────────────────────
     ·                                   ╰─┤ file: crates/mdbookkit/tests/tests/ra-known-quirks.md
     ·                                     │ link: ra-known-quirks.md
- 50 │ 
- 51 │ found: <https://example.org/book/tests/tests/ra-known-quirks.html>
+    │ 
+    │ found: <https://example.org/book/tests/tests/ra-known-quirks.html>
     ·        ─────────────────────────────┬─────────────────────────────
     ·                                     ╰─┤ file: crates/mdbookkit/tests/tests/ra-known-quirks.md
     ·                                       │ link: ra-known-quirks.md
- 52 │ 
- 53 │ not found: <https://example.org/book/404>
- 54 │ 
- 55 │ ignored: <https://example.com/book/ra-known-quirks>
- 56 │ 
- 57 │ trailing slash, found: <https://example.org/book/tests/tests/trailing-slash/>
+    │ 
+    │ not found: <https://example.org/book/404>
+    │ 
+    │ ignored: <https://example.com/book/ra-known-quirks>
+    │ 
+    │ trailing slash, found: <https://example.org/book/tests/tests/trailing-slash/>
     ·                        ───────────────────────────┬──────────────────────────
     ·                                                   ╰─┤ file: crates/mdbookkit/tests/tests/trailing-slash/index.md
     ·                                                     │ link: trailing-slash/index.md
- 58 │ 
- 59 │ trailing slash, found: <https://example.org/book/tests/tests/trailing-slash>
+    │ 
+    │ trailing slash, found: <https://example.org/book/tests/tests/trailing-slash>
     ·                        ──────────────────────────┬──────────────────────────
     ·                                                  ╰─┤ file: crates/mdbookkit/tests/tests/trailing-slash/index.md
     ·                                                    │ link: trailing-slash/index.md
- 60 │ 
- 61 │ trailing slash, not found: <https://example.org/book/tests/tests/ra-known-quirks/>
- 62 │ 
- 63 │ # canonical urls to HEAD
- 64 │ 
- 65 │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
- 66 │ 
- 67 │ [published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbookkit/tests/tests/ra-known-quirks.md)
+    │ 
+    │ trailing slash, not found: <https://example.org/book/tests/tests/ra-known-quirks/>
+    │ 
+    │ # canonical urls to HEAD
+    │ 
+    │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
+    │ 
+    │ [published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbookkit/tests/tests/ra-known-quirks.md)
     · ──────────────────────────────────────────────────┬──────────────────────────────────────────────────
     ·                                                   ╰─┤ file: crates/mdbookkit/tests/tests/ra-known-quirks.md
     ·                                                     │ link: ra-known-quirks.md
- 68 │ 
- 69 │ [file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbookkit/tests/tests/shinjuku.jpg)
- 70 │ 
- 71 │ [fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbookkit/tests/tests/ra-known-quirks.md#associated_items_on_primitive_types)
- 72 │ 
- 73 │ # image-in-link
- 74 │ 
- 75 │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
- 76 │ 
- 77 │ [![selfie](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg)](https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg)
+    │ 
+    │ [file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbookkit/tests/tests/shinjuku.jpg)
+    │ 
+    │ [fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbookkit/tests/tests/ra-known-quirks.md#associated_items_on_primitive_types)
+    │ 
+    │ # image-in-link
+    │ 
+    │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
+    │ 
+    │ [![selfie](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg)](https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg)
     ·  ──────────────────────────────────────┬──────────────────────────────────────
     ·                                        ╰─┤ file: crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg
     ·                                          │ link: Macaca_nigra_self-portrait_large.jpg
- 78 │ 
- 79 │ [![selfie](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg) <br> Self-portrait of a female Macaca nigra in North Sulawesi (2011)](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg)
+    │ 
+    │ [![selfie](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg) <br> Self-portrait of a female Macaca nigra in North Sulawesi (2011)](/crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg)
     · ────────────────────────────────────────────────────────────────────────────────────────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────┬
     ·                                                                                                             │                                                                                                           ╰─┤ file: crates/mdbookkit/tests/tests/Macaca_nigra_self-portrait_large.jpg
     ·                                                                                                             │                                                                                                             │ link: Macaca_nigra_self-portrait_large.jpg
