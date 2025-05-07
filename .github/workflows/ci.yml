@@ -70,6 +70,7 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           path: |
+            .bin/
             target/
           key: ${{ steps.cache-key.outputs.CACHE_KEY }}
           restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
@@ -93,6 +94,7 @@ jobs:
         if: always()
         with:
           path: |
+            .bin/
             target/
           key: ${{ steps.cache-key.outputs.CACHE_KEY }}
 

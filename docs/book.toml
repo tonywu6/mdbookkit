@@ -8,7 +8,7 @@ title = "mdbookkit"
 [build]
 build-dir = "dist"
 create-missing = false
-extra-watch-dirs = ["app"]
+extra-watch-dirs = ["app", "../crates"]
 
 [rust]
 edition = "2021"
@@ -58,10 +58,6 @@ command = "cargo bin mdbook-alerts"
 
 [preprocessor.app]
 command = "deno run --allow-all app/build/preprocessor.ts"
-
-[_metadata]
-base-url = "https://tonywu6.github.io/mdbookkit/"
-default-theme-color = "#0f1419"
 
 [_metadata.socials."/"]
 image = "src/media/social.webp"

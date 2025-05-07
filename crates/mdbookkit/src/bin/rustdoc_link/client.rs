@@ -130,7 +130,7 @@ impl Server {
 
         let stabilizer = EventSampling {
             buffer: Duration::from_millis(500),
-            timeout: Duration::from_secs(60),
+            timeout: env.config.rust_analyzer_timeout(),
         }
         .using(rx);
 

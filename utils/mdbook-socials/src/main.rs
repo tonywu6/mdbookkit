@@ -55,11 +55,15 @@ fn main() -> Result<()> {
                 None => return Ok((prefix, metadata)),
                 Some(image) => image,
             };
-            let image = book_toml_path.join(&image)?;
-            let image = src_dir
-                .make_relative(&image)
-                .context("failed to make relative path to image")?;
-            let image = book_toml.metadata.base_url.join(&image)?;
+            let image = if let Ok(image) = image.parse::<Url>() {
+                image
+            } else {
+                let image = book_toml_path.join(&image)?;
+                let image = src_dir
+                    .make_relative(&image)
+                    .context("failed to make relative path to image")?;
+                book_toml.preprocessor.link_forever.book_url.join(&image)?
+            };
             let metadata = PageMetadata {
                 title: metadata.title,
                 image: Some(image.to_string()),
@@ -69,24 +73,8 @@ fn main() -> Result<()> {
         .collect::<Result<Vec<_>>>()?
         .tap_mut(|metadata| metadata.sort_by(|(p1, _), (p2, _)| p1.cmp(p2)));
 
-    let theme_color = book_toml
-        .metadata
-        .default_theme_color
-        .as_deref()
-        .unwrap_or("#00000000");
-
     for path in glob(out_dir.join("**/*.html")?.path())? {
         let url = Url::from_file_path(path?).unwrap();
-
-        let pathname = out_dir
-            .make_relative(&url)
-            .context("failed to get page pathname")?;
-
-        let src_path = src_dir.join(&pathname.replace(".html", ".md"))?;
-
-        if !std::fs::exists(src_path.path()).unwrap_or(false) {
-            continue;
-        }
 
         let html = std::fs::read_to_string(url.path())?;
 
@@ -114,7 +102,9 @@ fn main() -> Result<()> {
             (collapse_whitespace(title), collapse_whitespace(description))
         };
 
-        let pathname = pathname
+        let pathname = out_dir
+            .make_relative(&url)
+            .context("failed to get page pathname")?
             .replace("index.html", "")
             .replace(".html", "")
             .pipe(|p| format!("/{p}"));
@@ -145,7 +135,11 @@ fn main() -> Result<()> {
             }
         });
 
-        let og_url = book_toml.metadata.base_url.join(&pathname[1..])?;
+        let og_url = book_toml
+            .preprocessor
+            .link_forever
+            .book_url
+            .join(&pathname[1..])?;
 
         let og_site_name = book_toml.book.title.as_deref();
 
@@ -194,10 +188,6 @@ fn main() -> Result<()> {
                     elem.before(&meta, ContentType::Html);
                     Ok(())
                 }),
-                element!(r#"meta[name="theme-color"]"#, |elem| {
-                    elem.set_attribute("content", theme_color)?;
-                    Ok(())
-                }),
             ],
             ..Default::default()
         }
@@ -236,6 +226,7 @@ struct BookToml {
     build: BuildConfig,
     #[serde(rename = "_metadata")]
     metadata: MetadataConfig,
+    preprocessor: PreprocessorConfig,
 }
 
 #[derive(Deserialize)]
@@ -249,6 +240,18 @@ struct BookConfig {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
+struct PreprocessorConfig {
+    link_forever: LinkConfig,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "kebab-case")]
+struct LinkConfig {
+    book_url: Url,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "kebab-case")]
 struct BuildConfig {
     #[serde(default)]
     build_dir: Option<String>,
@@ -257,9 +260,6 @@ struct BuildConfig {
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
 struct MetadataConfig {
-    base_url: Url,
-    #[serde(default)]
-    default_theme_color: Option<String>,
     #[serde(default)]
     socials: Socials,
 }
