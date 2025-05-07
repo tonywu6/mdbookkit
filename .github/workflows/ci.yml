@@ -25,6 +25,8 @@ jobs:
   test:
     name: Test
 
+    if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'release-plz-')
+
     strategy:
       matrix:
         toolchain:
@@ -33,6 +35,14 @@ jobs:
           - ubuntu-latest
           # - macos-latest # is expensive
           - windows-latest
+
+        # https://github.com/orgs/community/discussions/26253#discussioncomment-6745038
+        pull_request:
+          - ${{github.event_name == 'pull_request'}}
+        exclude:
+          - pull_request: true
+        include:
+          - platform: ubuntu-latest
 
       fail-fast: false
 
