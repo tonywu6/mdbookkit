@@ -7,7 +7,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use async_lsp::{
     concurrency::ConcurrencyLayer, panic::CatchUnwindLayer, router::Router, LanguageServer,
     MainLoop, ServerSocket,
@@ -17,8 +17,8 @@ use lsp_types::{
     request::Request,
     ClientCapabilities, ClientInfo, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
     GeneralClientCapabilities, GotoDefinitionParams, GotoDefinitionResponse, InitializeParams,
-    InitializedParams, LogMessageParams, MessageType, NumberOrString, Position,
-    PositionEncodingKind, ProgressParams, ProgressParamsValue, ShowMessageParams,
+    InitializeResult, InitializedParams, LogMessageParams, MessageType, NumberOrString, Position,
+    PositionEncodingKind, ProgressParams, ProgressParamsValue, ServerInfo, ShowMessageParams,
     TextDocumentIdentifier, TextDocumentItem, TextDocumentPositionParams, Url,
     WindowClientCapabilities, WorkDoneProgress, WorkspaceFolder,
 };
@@ -79,6 +79,7 @@ impl Client {
             .stabilizer
             .wait()
             .await
+            .with_context(|| format!("using rust-analyzer version {}", ra_version(&server.info)))
             .context("timed out waiting for rust-analyzer to finish indexing")?;
 
         Ok(opened)
@@ -116,6 +117,7 @@ struct Server {
     server: ServerSocket,
     stabilizer: EventSampler<()>,
     background: Arc<JoinHandle<()>>,
+    info: Option<ServerInfo>,
 }
 
 impl Server {
@@ -124,19 +126,6 @@ impl Server {
             () => {
                 "rust-analyzer"
             };
-        }
-
-        let (tx, rx) = mpsc::channel(16);
-
-        let stabilizer = EventSampling {
-            buffer: Duration::from_millis(500),
-            timeout: env.config.rust_analyzer_timeout(),
-        }
-        .using(rx);
-
-        struct State {
-            tx: mpsc::Sender<Poll<()>>,
-            percent_indexed: Option<u32>,
         }
 
         /// Listen for [Work Done Progress][workDoneProgress] events from rust-analyzer
@@ -242,6 +231,19 @@ impl Server {
             }
         }
 
+        let (tx, rx) = mpsc::channel(16);
+
+        let stabilizer = EventSampling {
+            buffer: Duration::from_millis(500),
+            timeout: env.config.rust_analyzer_timeout(),
+        }
+        .using(rx);
+
+        struct State {
+            tx: mpsc::Sender<Poll<()>>,
+            percent_indexed: Option<u32>,
+        }
+
         let (background, mut server) = MainLoop::new_client(move |_| {
             let state = State {
                 tx,
@@ -306,7 +308,10 @@ impl Server {
             }
         };
 
-        let init = server
+        let InitializeResult {
+            server_info: info,
+            capabilities,
+        } = server
             .initialize(InitializeParams {
                 workspace_folders: Some(vec![WorkspaceFolder {
                     uri: env.crate_dir.clone(),
@@ -347,10 +352,11 @@ impl Server {
             })
             .await?;
 
-        log::trace!("{init:#?}");
-
-        if init.capabilities.position_encoding != Some(PositionEncodingKind::UTF8) {
-            bail!("this rust-analyzer does not support utf-8 positions")
+        if capabilities.position_encoding != Some(PositionEncodingKind::UTF8) {
+            let version = ra_version(&info);
+            let error = anyhow!("using rust-analyzer version {version}")
+                .context("this rust-analyzer does not support utf-8 positions");
+            bail!(error)
         }
 
         server.initialized(InitializedParams {})?;
@@ -361,6 +367,7 @@ impl Server {
             server,
             stabilizer,
             background,
+            info,
         })
     }
 
@@ -536,4 +543,10 @@ fn log_message(message: String, typ: MessageType) {
         }
         _ => log::trace!("rust-analyzer: {message}"),
     }
+}
+
+fn ra_version(info: &Option<ServerInfo>) -> &str {
+    info.as_ref()
+        .and_then(|ServerInfo { version, .. }| version.as_deref())
+        .unwrap_or("(unknown)")
 }
