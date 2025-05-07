@@ -142,3 +142,6 @@ required-features = ["link-forever"]
 
 [package.metadata.docs.rs]
 all-features = true
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/{ name }-v{ version }/{ name }-{ target }{ archive-suffix }"

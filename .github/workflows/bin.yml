@@ -42,10 +42,9 @@ jobs:
           - aarch64-pc-windows-msvc
           - x86_64-pc-windows-msvc
 
-        release:
-          - ${{github.event_name == 'release'}}
-
         # only linux builds unless release
+        release:
+          - ${{github.event_name == 'release' || github.event_name == 'workflow_dispatch'}}
         exclude:
           - release: false
             target: aarch64-apple-darwin
@@ -92,31 +91,7 @@ jobs:
           restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
         id: cache-restore
 
-      - name: Build rustdoc-link
-        uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          target: ${{ matrix.target }}
-          bin: mdbook-rustdoc-link
-          features: rustdoc-link
-          tar: unix
-          zip: windows
-          codesign: "-" # https://developer.apple.com/documentation/security/seccodesignatureflags/adhoc
-          token: ${{ secrets.GITHUB_TOKEN }}
-          dry-run: ${{ github.event_name != 'release' }}
-
-      - name: Build link-forever
-        uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          target: ${{ matrix.target }}
-          bin: mdbook-link-forever
-          features: link-forever
-          tar: unix
-          zip: windows
-          codesign: "-"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          dry-run: ${{ github.event_name != 'release' }}
-
-      - name: Build both (for binstall)
+      - name: Build binaries
         uses: taiki-e/upload-rust-binary-action@v1
         with:
           target: ${{ matrix.target }}
