@@ -147,16 +147,23 @@ body {
     margin-block-end: 1rem;
   }
 
-  details.toc {
-    margin-block-start: 2rem;
+  details {
+    margin-block: 2rem;
 
-    > summary {
-      font-weight: bold;
-      cursor: pointer;
+    &[open] > summary {
+      margin-block-end: 1rem;
     }
 
-    li {
-      margin-block: 0.25rem;
+    &.toc {
+      > summary {
+        margin-block-end: 0;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      li {
+        margin-block: 0.25rem;
+      }
     }
   }
 
@@ -252,6 +259,7 @@ body {
   figure {
     display: flex;
     flex-flow: column nowrap;
+    gap: 1rem;
     justify-content: center;
     min-width: 0;
     min-height: 0;
@@ -265,16 +273,11 @@ body {
       max-height: 100%;
     }
 
-    > pre {
-      margin: 0;
-    }
-
-    > p {
-      margin: 0;
+    > * {
+      margin-block: 0;
     }
 
     > figcaption {
-      margin-block-start: 0.8em;
       font-size: 0.8em;
       font-weight: 600;
 
@@ -290,17 +293,23 @@ body {
 }
 
 .code-header {
-  padding: 0;
-  margin: 0;
-  font-family: var(--mono-font);
-  white-space: pre-wrap;
+  margin: 1.5rem 0;
 
-  & h3 {
-    font-size: 1.125rem;
+  > h3,
+  > h4 {
+    margin: 1rem 0;
+    font-family: var(--mono-font);
+    font-weight: normal;
+    line-height: 1.6;
   }
 
-  & h4 {
-    font-size: 1rem;
+  > :not(h3, h4) {
+    margin-inline-start: 4ch;
+
+    + h3,
+    + h4 {
+      margin-block-start: 2rem;
+    }
   }
 }
 

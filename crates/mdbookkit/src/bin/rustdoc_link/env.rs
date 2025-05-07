@@ -2,6 +2,7 @@ use std::{
     ops::Deref,
     path::{Path, PathBuf},
     sync::Arc,
+    time::Duration,
 };
 
 use anyhow::{anyhow, bail, Context, Result};
@@ -107,6 +108,14 @@ pub struct Config {
     #[cfg_attr(feature = "common-cli", arg(long, hide = true))]
     pub prefer_local_links: bool,
 
+    /// Timeout in seconds to wait for rust-analyzer to finish indexing.
+    #[serde(default)]
+    #[cfg_attr(
+        feature = "common-cli",
+        arg(long, value_name("SECONDS"), default_value("60"))
+    )]
+    pub rust_analyzer_timeout: Option<u64>,
+
     #[allow(unused)]
     #[serde(default)]
     #[doc(hidden)]
@@ -130,6 +139,12 @@ pub struct Config {
     #[doc(hidden)]
     #[cfg_attr(feature = "common-cli", arg(skip))]
     pub command: Option<String>,
+}
+
+impl Config {
+    pub fn rust_analyzer_timeout(&self) -> Duration {
+        Duration::from_secs(self.rust_analyzer_timeout.unwrap_or(60))
+    }
 }
 
 #[derive(Debug, Clone)]

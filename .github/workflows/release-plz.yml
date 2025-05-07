@@ -5,9 +5,10 @@ permissions:
   contents: write
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
@@ -46,7 +47,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
 
-    if: github.repository_owner == 'tonywu6'
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.repository_owner == 'tonywu6'
 
     permissions:
       contents: write
