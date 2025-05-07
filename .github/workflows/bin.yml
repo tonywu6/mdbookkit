@@ -108,6 +108,19 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           dry-run: ${{ github.event_name != 'release' }}
 
+      - name: Build both (for binstall)
+        uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          target: ${{ matrix.target }}
+          bin: mdbook-rustdoc-link,mdbook-link-forever
+          features: rustdoc-link,link-forever
+          archive: mdbookkit-$target
+          tar: unix
+          zip: windows
+          codesign: "-"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          dry-run: ${{ github.event_name != 'release' }}
+
       - uses: actions/upload-artifact@v4
         with:
           path: |
