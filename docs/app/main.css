@@ -71,6 +71,11 @@ body {
       }
     }
 
+    &:has(img) {
+      display: inline-block;
+      text-decoration: none;
+    }
+
     &:has(del:only-child) {
       text-decoration: none;
     }
@@ -317,6 +322,18 @@ body {
   white-space: nowrap;
 }
 
+.badges {
+  overflow: auto hidden;
+
+  > p {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    line-height: 1;
+    white-space: nowrap;
+  }
+}
+
 figure.fig-text {
   display: block;
   padding: 0.6rem;
@@ -368,6 +385,15 @@ figure.fig-text {
       padding-inline: var(--blockquote-padding-inline);
     }
 
+    > .badges {
+      padding-inline: 0;
+
+      > p {
+        width: max-content;
+        margin-inline: var(--blockquote-padding-inline);
+      }
+    }
+
     > ul,
     > ol {
       padding-inline-start: 40px;
@@ -381,27 +407,18 @@ figure.fig-text {
       padding-inline: 0;
       margin-block-end: 1rem;
 
-      > figcaption {
+      > :not(pre, img, picture, video, :has(img, picture, video)) {
         padding-inline: var(--blockquote-padding-inline);
-      }
-
-      > pre {
-        padding-inline: 0;
-        margin-block-end: 1rem;
-
-        > code {
-          padding: var(--blockquote-padding-block) var(--blockquote-padding-inline);
-        }
       }
     }
 
     > pre {
       padding-inline: 0;
       margin-block-end: 1rem;
+    }
 
-      > code {
-        padding: var(--blockquote-padding-block) var(--blockquote-padding-inline);
-      }
+    pre > code {
+      padding: var(--blockquote-padding-block) var(--blockquote-padding-inline);
     }
 
     > blockquote {

@@ -219,7 +219,7 @@ fn describe_options<C: CommandFactory>() -> Result<String> {
             let description = opt
                 .get_long_help()
                 .map(|h| h.to_string())
-                .unwrap_or_default();
+                .unwrap_or(help.clone());
 
             let action = opt.get_action();
 

@@ -1,10 +1,6 @@
 name: Publish docs
 
 on:
-  push:
-    branches:
-      - main
-
   release:
     types:
       - published
@@ -21,6 +17,7 @@ concurrency:
 jobs:
   build:
     name: Build
+
     runs-on: ubuntu-latest
 
     steps:
