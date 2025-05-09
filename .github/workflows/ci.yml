@@ -32,27 +32,18 @@ jobs:
 
     strategy:
       matrix:
-        toolchain:
-          - stable
         platform:
-          - ubuntu-latest
-          - macos-latest # is expensive
-          - windows-latest
+          - runs-on: ubuntu-latest
+            enabled: true
+          - runs-on: windows-latest
+            enabled: ${{github.ref_name == 'main' && github.event_name == 'push'}}
 
-        # https://github.com/orgs/community/discussions/26253#discussioncomment-6745038
-        windows:
-          - ${{github.event_name == 'push'}}
-        macos:
-          - false
         exclude:
-          - windows: false
-          - macos: false
-        include:
-          - platform: ubuntu-latest
+          - enabled: false
 
       fail-fast: false
 
-    runs-on: ${{ matrix.platform }}
+    runs-on: ${{ matrix.platform.os }}
 
     permissions:
       contents: read
@@ -65,7 +56,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ matrix.toolchain }}
+          toolchain: stable
 
       - uses: cargo-bins/cargo-binstall@b9bf4400702f721d469eec4d280125f650c85638
 
