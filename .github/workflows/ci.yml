@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "**/Cargo.*"
+      - "**.rs"
 
   pull_request:
     branches:
@@ -33,14 +36,17 @@ jobs:
           - stable
         platform:
           - ubuntu-latest
-          # - macos-latest # is expensive
+          - macos-latest # is expensive
           - windows-latest
 
         # https://github.com/orgs/community/discussions/26253#discussioncomment-6745038
-        pull_request:
-          - ${{github.event_name == 'pull_request'}}
+        windows:
+          - ${{github.event_name == 'push'}}
+        macos:
+          - false
         exclude:
-          - pull_request: true
+          - windows: false
+          - macos: false
         include:
           - platform: ubuntu-latest
 
