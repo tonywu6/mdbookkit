@@ -34,17 +34,19 @@ jobs:
     strategy:
       matrix:
         platform:
-          - runs-on: ubuntu-latest
-            enabled: true
-          - runs-on: windows-latest
-            enabled: ${{github.ref_name == 'main' && github.event_name == 'push'}}
+          - ubuntu-latest
+          - windows-latest
+
+        windows:
+          - ${{github.ref_name == 'main' && github.event_name == 'push'}}
 
         exclude:
-          - enabled: false
+          - platform: windows-latest
+            windows: false
 
       fail-fast: false
 
-    runs-on: ${{ matrix.platform.os }}
+    runs-on: ${{ matrix.platform }}
 
     permissions:
       contents: read
