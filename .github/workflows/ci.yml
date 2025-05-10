@@ -21,8 +21,9 @@ on:
 env:
   CARGO_HOME: .cargo
   CARGO_TERM_COLOR: "always"
-  RUST_LOG: "info"
   RUST_BACKTRACE: "1"
+  RUST_LOG: "info"
+  BINSTALL_LOG_LEVEL: "debug"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
@@ -31,6 +32,10 @@ concurrency:
 jobs:
   test:
     name: Test (${{ matrix.platform }})
+
+    permissions:
+      contents: read
+      actions: write # evict cache
 
     if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'release-plz-')
     # don't run on release-plz branches because they are updated only after
@@ -70,12 +75,11 @@ jobs:
         shell: bash
         id: cargo-version
 
-      - uses: tonywu6/cache-hit-please@58ed976f5281bd7dd2931035b573c09041b45ca6
+      - uses: tonywu6/cache-hit-please@v1
         id: cache
         with:
           deps: |
             ${{runner.arch}}
-            ${{runner.os}}
             ${{steps.cargo-version.outputs.cargo-version}}
             ${{hashFiles('**/Cargo.toml')}}
             ${{hashFiles('**/Cargo.lock')}}
@@ -90,6 +94,9 @@ jobs:
             .cargo/registry/cache/
             .cargo/git/db/
             target/
+
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: Prepare binaries
         run: |
