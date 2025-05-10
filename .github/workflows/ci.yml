@@ -117,21 +117,9 @@ jobs:
             target/
           key: ${{ steps.cache-key.outputs.CACHE_KEY }}
 
-      - name: Save cache key
-        if: matrix.platform == 'ubuntu-latest'
-        id: save-cache-key
-        run: |
-          echo "CACHE_KEY=${{ steps.cache-key.outputs.CACHE_KEY }}" >> "$GITHUB_OUTPUT"
-          {
-            echo "CACHE_KEY_RESTORE<<EOF"
-            echo "${{ steps.cache-key.outputs.CACHE_KEY }}"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-        shell: bash
-
     outputs:
-      CACHE_KEY: ${{ steps.save-cache-key.outputs.CACHE_KEY }}
-      CACHE_KEY_RESTORE: ${{ steps.save-cache-key.outputs.CACHE_KEY_RESTORE }}
+      CACHE_KEY: ${{ steps.cache-key.outputs.CACHE_KEY }}
+      CACHE_KEY_RESTORE: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
 
   build_features:
     name: Build features
