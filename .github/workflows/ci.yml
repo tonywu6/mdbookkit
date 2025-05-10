@@ -19,11 +19,9 @@ on:
   workflow_dispatch:
 
 env:
-  CARGO_HOME: .cargo
   CARGO_TERM_COLOR: "always"
   RUST_BACKTRACE: "1"
   RUST_LOG: "info"
-  BINSTALL_LOG_LEVEL: "debug"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
@@ -87,12 +85,6 @@ jobs:
 
           path: |
             .bin/
-            .cargo/.crates.toml
-            .cargo/.crates2.json
-            .cargo/bin/
-            .cargo/registry/index/
-            .cargo/registry/cache/
-            .cargo/git/db/
             target/
 
         env:
