@@ -31,10 +31,6 @@ jobs:
   test:
     name: Test (${{ matrix.platform }})
 
-    permissions:
-      contents: read
-      actions: write # evict cache
-
     if: github.event_name != 'pull_request' || !startsWith(github.head_ref, 'release-plz-')
     # don't run on release-plz branches because they are updated only after
     # CI is already successful on main
@@ -75,20 +71,20 @@ jobs:
 
       - uses: tonywu6/cache-hit-please@v1
         id: cache
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
           deps: |
+            ${{runner.os}}
             ${{runner.arch}}
             ${{steps.cargo-version.outputs.cargo-version}}
             ${{hashFiles('**/Cargo.toml')}}
             ${{hashFiles('**/Cargo.lock')}}
             ${{github.workflow}}
-
+            ${{github.run_id}}
           path: |
             .bin/
             target/
-
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: Prepare binaries
         run: |
