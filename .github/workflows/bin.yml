@@ -69,27 +69,27 @@ jobs:
           target: ${{ matrix.target }}
         if: runner.os == 'Linux'
 
-      - name: Get cache key
-        run: |
-          CARGO_VERSION=$(cargo --version)
-          echo "CACHE_KEY=${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}" >> "$GITHUB_OUTPUT"
-          {
-            echo "CACHE_KEY_RESTORE<<EOF"
-            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-"
-            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-"
-            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-        id: cache-key
+      - name: Get Cargo version
+        run: echo "cargo-version=$(cargo --version)" >> "$GITHUB_OUTPUT"
         shell: bash
+        id: cargo-version
 
-      - uses: actions/cache/restore@v4
+      - uses: tonywu6/cache-hit-please@v1.1
+        id: cache
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
+          deps: |
+            ${{runner.os}}
+            ${{runner.arch}}
+            ${{steps.cargo-version.outputs.cargo-version}}
+            ${{hashFiles('**/Cargo.toml')}}
+            ${{hashFiles('**/Cargo.lock')}}
+            ${{github.workflow}}
+            ${{github.run_id}}
           path: |
+            .bin/
             target/
-          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
-          restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
-        id: cache-restore
 
       - name: Build binaries
         uses: taiki-e/upload-rust-binary-action@v1
@@ -115,10 +115,3 @@ jobs:
           if-no-files-found: warn
           retention-days: 1
         if: github.event_name != 'release'
-
-      - uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: |
-            target
-          key: ${{ steps.cache-key.outputs.CACHE_KEY }}

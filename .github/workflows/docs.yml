@@ -32,26 +32,27 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Get cache key
-        run: |
-          CARGO_VERSION=$(cargo --version)
-          echo "CACHE_KEY=${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}" >> "$GITHUB_OUTPUT"
-          {
-            echo "CACHE_KEY_RESTORE<<EOF"
-            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-"
-            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-"
-            echo "${{runner.os}}-${{runner.arch}}-$CARGO_VERSION-"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-        id: cache-key
+      - name: Get Cargo version
+        run: echo "cargo-version=$(cargo --version)" >> "$GITHUB_OUTPUT"
+        shell: bash
+        id: cargo-version
 
-      - uses: actions/cache/restore@v4
+      - uses: tonywu6/cache-hit-please@v1.1
+        id: cache
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
+          deps: |
+            ${{runner.os}}
+            ${{runner.arch}}
+            ${{steps.cargo-version.outputs.cargo-version}}
+            ${{hashFiles('**/Cargo.toml')}}
+            ${{hashFiles('**/Cargo.lock')}}
+            ${{github.workflow}}
+            ${{github.run_id}}
           path: |
             .bin/
             target/
-          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
-          restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
 
       - run: cargo bin --install
       - run: cargo run --package util-rust-analyzer -- download
@@ -69,14 +70,6 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/dist
-
-      - uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: |
-            .bin/
-            target/
-          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
 
   deploy:
     name: Deploy
