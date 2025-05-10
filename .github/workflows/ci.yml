@@ -42,7 +42,7 @@ jobs:
           - windows-latest
 
         windows:
-          - ${{github.ref_name == 'main' && github.event_name == 'push'}}
+          - ${{github.ref_name == 'main'}}
           # run on windows only on main
 
         exclude:
