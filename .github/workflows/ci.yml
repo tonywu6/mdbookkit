@@ -19,6 +19,7 @@ on:
   workflow_dispatch:
 
 env:
+  CARGO_HOME: .cargo
   CARGO_TERM_COLOR: "always"
   RUST_LOG: "info"
   RUST_BACKTRACE: "1"
@@ -86,6 +87,12 @@ jobs:
         with:
           path: |
             .bin/
+            .cargo/.crates.toml
+            .cargo/.crates2.json
+            .cargo/bin/
+            .cargo/registry/index/
+            .cargo/registry/cache/
+            .cargo/git/db/
             target/
           key: ${{ steps.cache-key.outputs.CACHE_KEY }}
           restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
@@ -114,6 +121,12 @@ jobs:
         with:
           path: |
             .bin/
+            .cargo/.crates.toml
+            .cargo/.crates2.json
+            .cargo/bin/
+            .cargo/registry/index/
+            .cargo/registry/cache/
+            .cargo/git/db/
             target/
           key: ${{ steps.cache-key.outputs.CACHE_KEY }}
 
@@ -152,6 +165,13 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           path: |
+            .bin/
+            .cargo/.crates.toml
+            .cargo/.crates2.json
+            .cargo/bin/
+            .cargo/registry/index/
+            .cargo/registry/cache/
+            .cargo/git/db/
             target/
           key: ${{ needs.test.outputs.CACHE_KEY }}
           restore-keys: ${{ needs.test.outputs.CACHE_KEY_RESTORE }}
@@ -186,6 +206,13 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           path: |
+            .bin/
+            .cargo/.crates.toml
+            .cargo/.crates2.json
+            .cargo/bin/
+            .cargo/registry/index/
+            .cargo/registry/cache/
+            .cargo/git/db/
             target/
           key: ${{ needs.test.outputs.CACHE_KEY }}
           restore-keys: ${{ needs.test.outputs.CACHE_KEY_RESTORE }}
