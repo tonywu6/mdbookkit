@@ -54,10 +54,6 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
 
-    permissions:
-      contents: read
-      actions: write # evict cache
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -69,22 +65,22 @@ jobs:
 
       - uses: cargo-bins/cargo-binstall@b9bf4400702f721d469eec4d280125f650c85638
 
-      - name: Get cache key
-        run: |
-          CARGO_VERSION=$(cargo --version)
-          echo "CACHE_KEY=${{ runner.os }}-${{ runner.arch }}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-${{github.workflow}}-${{github.job}}" >> "$GITHUB_OUTPUT"
-          {
-            echo "CACHE_KEY_RESTORE<<EOF"
-            echo "${{ runner.os }}-${{ runner.arch }}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-${{hashFiles('**/Cargo.lock')}}-"
-            echo "${{ runner.os }}-${{ runner.arch }}-$CARGO_VERSION-${{hashFiles('**/Cargo.toml')}}-"
-            echo "${{ runner.os }}-${{ runner.arch }}-$CARGO_VERSION-"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-        id: cache-key
+      - name: Get Cargo version
+        run: echo "cargo-version=$(cargo --version)" >> "$GITHUB_OUTPUT"
         shell: bash
+        id: cargo-version
 
-      - uses: actions/cache/restore@v4
+      - uses: tonywu6/cache-hit-please@58ed976f5281bd7dd2931035b573c09041b45ca6
+        id: cache
         with:
+          deps: |
+            ${{runner.arch}}
+            ${{runner.os}}
+            ${{steps.cargo-version.outputs.cargo-version}}
+            ${{hashFiles('**/Cargo.toml')}}
+            ${{hashFiles('**/Cargo.lock')}}
+            ${{github.workflow}}
+
           path: |
             .bin/
             .cargo/.crates.toml
@@ -94,9 +90,6 @@ jobs:
             .cargo/registry/cache/
             .cargo/git/db/
             target/
-          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
-          restore-keys: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
-        id: cache-restore
 
       - name: Prepare binaries
         run: |
@@ -109,30 +102,10 @@ jobs:
       - name: Test
         run: cargo test --all-features --no-fail-fast -- --include-ignored
 
-      - name: Evict cache
-        run: gh cache delete '${{ steps.cache-key.outputs.CACHE_KEY }}'
-        if: ${{ steps.cache-restore.outputs.cache-hit }}
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: |
-            .bin/
-            .cargo/.crates.toml
-            .cargo/.crates2.json
-            .cargo/bin/
-            .cargo/registry/index/
-            .cargo/registry/cache/
-            .cargo/git/db/
-            target/
-          key: ${{ steps.cache-key.outputs.CACHE_KEY }}
-
     outputs:
-      CACHE_KEY: ${{ steps.cache-key.outputs.CACHE_KEY }}
-      CACHE_KEY_RESTORE: ${{ steps.cache-key.outputs.CACHE_KEY_RESTORE }}
+      cache-primary-key: ${{steps.cache.outputs.primary-key}}
+      cache-restore-key: ${{steps.cache.outputs.restore-key}}
+      cache-path: ${{steps.cache.outputs.path}}
 
   build_features:
     name: Build features
@@ -164,17 +137,9 @@ jobs:
 
       - uses: actions/cache/restore@v4
         with:
-          path: |
-            .bin/
-            .cargo/.crates.toml
-            .cargo/.crates2.json
-            .cargo/bin/
-            .cargo/registry/index/
-            .cargo/registry/cache/
-            .cargo/git/db/
-            target/
-          key: ${{ needs.test.outputs.CACHE_KEY }}
-          restore-keys: ${{ needs.test.outputs.CACHE_KEY_RESTORE }}
+          path: ${{needs.test.outputs.cache-path}}
+          key: ${{ needs.test.outputs.cache-primary-key }}
+          restore-keys: ${{ needs.test.outputs.cache-restore-key }}
 
       - run: cargo build --features ${{ matrix.features }}
 
@@ -205,24 +170,13 @@ jobs:
 
       - uses: actions/cache/restore@v4
         with:
-          path: |
-            .bin/
-            .cargo/.crates.toml
-            .cargo/.crates2.json
-            .cargo/bin/
-            .cargo/registry/index/
-            .cargo/registry/cache/
-            .cargo/git/db/
-            target/
-          key: ${{ needs.test.outputs.CACHE_KEY }}
-          restore-keys: ${{ needs.test.outputs.CACHE_KEY_RESTORE }}
+          path: ${{needs.test.outputs.cache-path}}
+          key: ${{ needs.test.outputs.cache-primary-key }}
+          restore-keys: ${{ needs.test.outputs.cache-restore-key }}
 
       - run: cargo run --package util-rust-analyzer -- download
         env:
           RA_VERSION: ${{ matrix.ra-version }}
-
-      - name: Build tests
-        run: cargo test --all-features --no-run
 
       - name: Test
         run: cargo test --features rustdoc-link
