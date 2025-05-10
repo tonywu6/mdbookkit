@@ -206,4 +206,8 @@ jobs:
         env:
           RA_VERSION: ${{ matrix.ra-version }}
 
-      - run: cargo test --features rustdoc-link
+      - name: Build tests
+        run: cargo test --all-features --no-run
+
+      - name: Test
+        run: cargo test --features rustdoc-link
