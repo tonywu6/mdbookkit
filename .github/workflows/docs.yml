@@ -37,7 +37,7 @@ jobs:
         shell: bash
         id: cargo-version
 
-      - uses: tonywu6/cache-hit-please@v1.1
+      - uses: tonywu6/cache-hit-please@v1.1.0
         id: cache
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
