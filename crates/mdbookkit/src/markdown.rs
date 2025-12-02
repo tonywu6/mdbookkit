@@ -66,7 +66,7 @@ impl<'a, S> PatchStream<'a, S> {
     /// `stream` should be an [`Iterator`] yielding tuples of (`events`, `range`):
     ///
     /// - `events` is an [`Iterator`] yielding [`Event`]s which is the replacement
-    ///    Markdown to be rendered into `source` using [`pulldown_cmark_to_cmark`].
+    ///   Markdown to be rendered into `source` using [`pulldown_cmark_to_cmark`].
     ///
     /// - `range` is a [`Range<usize>`] representing the byte span in `source` that
     ///   should be patched.

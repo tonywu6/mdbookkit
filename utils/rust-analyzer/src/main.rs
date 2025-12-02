@@ -16,6 +16,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use tap::{Pipe, Tap};
 use tempfile::tempfile;
 
+#[derive(Debug)]
 struct Download {
     release: String,
     path: PathBuf,
@@ -146,7 +147,9 @@ enum Version {
 fn main() -> Result<()> {
     let program = Program::parse();
 
-    let release = program.ra_version.unwrap_or("2025-03-17".into());
+    let release = std::env::var("RA_VERSION")
+        .ok()
+        .unwrap_or("2025-12-01".into());
 
     let path = match program.ra_path {
         Some(path) => path,

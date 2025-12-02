@@ -283,6 +283,7 @@ impl Server {
             .current_dir(env.crate_dir.to_path()?)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
+            // TODO: managed subcommand stderr
             .stderr(Stdio::inherit())
             .spawn()
             .context("failed to spawn rust-analyzer")?;

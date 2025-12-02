@@ -78,7 +78,6 @@ lib-rustdoc-link = [
   "dep:syn",
   "dep:tempfile",
   "dep:tokio",
-  "dep:tokio",
   "dep:tokio-util",
   "dep:tower",
   "tokio/process",

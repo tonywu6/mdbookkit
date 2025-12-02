@@ -339,7 +339,7 @@ where
 struct LoggingReportHandler;
 
 impl LoggingReportHandler {
-    fn render_report(&self, f: &mut impl fmt::Write, diagnostic: &(dyn Diagnostic)) -> fmt::Result {
+    fn render_report(&self, f: &mut impl fmt::Write, diagnostic: &dyn Diagnostic) -> fmt::Result {
         let level = match diagnostic.severity() {
             Some(Severity::Error) | None => "error",
             Some(Severity::Warning) => "warning",
