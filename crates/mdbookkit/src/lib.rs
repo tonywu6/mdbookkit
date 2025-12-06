@@ -8,10 +8,10 @@
 //!
 //! [preprocessors]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
 
-#[cfg(feature = "common-logger")]
+pub mod book;
 pub mod diagnostics;
-pub mod env;
+pub mod error;
 pub mod logging;
 pub mod markdown;
-
-pub mod bin;
+#[cfg(feature = "_testing")]
+pub mod testing;

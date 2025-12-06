@@ -15,12 +15,9 @@ clap = { workspace = true }
 env_logger = { workspace = true }
 gix-url = { version = "0.30.0" }
 log = { workspace = true }
+mdbookkit = { workspace = true }
 miette = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 shlex = { workspace = true }
 tokio = { workspace = true }
-
-[dependencies.mdbookkit]
-features = ["lib-rustdoc-link"]
-path = "../crates/mdbookkit"

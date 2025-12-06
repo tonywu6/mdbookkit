@@ -16,128 +16,30 @@ documentation = "https://tonywu6.github.io/mdbookkit/"
 keywords = ["mdbook", "documentation", "rust-analyzer", "lsp", "permalink"]
 readme = "README.md"
 
-autobins = false
-autotests = false
-
 [dependencies]
 anyhow = { workspace = true }
-async-lsp = { version = "0.2.2", optional = true }
-cargo_toml = { version = "0.21.0", optional = true }
-chrono = { version = "0.4.40", features = [
-  "clock",
-], default-features = false, optional = true }
-clap = { workspace = true, optional = true }
-console = { version = "0.15.11", optional = true }
-dirs = { version = "6.0.0", optional = true }
-env_logger = { workspace = true, optional = true }
-git2 = { version = "0.20.1", default-features = false, optional = true }
-gix-url = { version = "0.30.0", optional = true }
-indicatif = { version = "0.17.11", optional = true }
+chrono = { version = "0.4.40", features = ["clock"], default-features = false }
+clap = { workspace = true }
+console = { version = "0.15.11" }
+env_logger = { workspace = true }
+indicatif = { version = "0.17.11" }
 log = { workspace = true }
-lsp-types = { version = "0.95.0", optional = true }
-mdbook = { workspace = true, optional = true }
-miette = { workspace = true, optional = true }
-owo-colors = { version = "4.2.0", optional = true }
-percent-encoding = { version = "2.3.1", optional = true }
-proc-macro2 = { version = "1.0.94", features = [
-  "span-locations",
-], optional = true }
+mdbook = { workspace = true }
+miette = { workspace = true }
+owo-colors = { version = "4.2.0" }
 pulldown-cmark = { workspace = true }
 pulldown-cmark-to-cmark = { workspace = true }
-serde = { workspace = true, features = ["rc"] }
+serde = { workspace = true }
 serde_json = { workspace = true }
-sha2 = { version = "0.10.8", optional = true }
-shlex = { workspace = true, optional = true }
-syn = { version = "2.0.99", optional = true }
 tap = { workspace = true }
-tempfile = { workspace = true, optional = true }
-thiserror = { workspace = true }
-tokio = { workspace = true, optional = true }
-tokio-util = { version = "0.7.13", features = ["compat"], optional = true }
-toml = { workspace = true, optional = true }
-tower = { version = "0.5.2", optional = true }
-url = { workspace = true, features = ["serde"], optional = true }
+toml = { workspace = true }
 
-[dev-dependencies]
-assert_cmd = { workspace = true }
-cargo-run-bin = { workspace = true }
-insta = { workspace = true }
-predicates = { workspace = true }
-similar = { workspace = true }
-util-testing = { workspace = true }
+cargo-run-bin = { workspace = true, optional = true }
+insta = { workspace = true, optional = true }
+url = { workspace = true, optional = true }
 
 [features]
-lib-rustdoc-link = [
-  "dep:async-lsp",
-  "dep:cargo_toml",
-  "dep:dirs",
-  "dep:lsp-types",
-  "dep:proc-macro2",
-  "dep:sha2",
-  "dep:shlex",
-  "dep:syn",
-  "dep:tempfile",
-  "dep:tokio",
-  "dep:tokio-util",
-  "dep:tower",
-  "tokio/process",
-  "tokio/rt",
-  "tokio/time",
-]
-rustdoc-link = [
-  "lib-rustdoc-link",
-  "dep:toml",
-  "tokio/fs",
-  "tokio/rt-multi-thread",
-  "common-cli",
-  "common-logger",
-]
-
-lib-link-forever = ["dep:mdbook", "dep:percent-encoding", "dep:url"]
-link-forever = [
-  "lib-link-forever",
-  "dep:git2",
-  "dep:gix-url",
-  "common-cli",
-  "common-logger",
-]
-
-common-logger = [
-  "dep:chrono",
-  "dep:console",
-  "dep:env_logger",
-  "dep:indicatif",
-  "dep:miette",
-  "dep:owo-colors",
-]
-
-common-cli = ["dep:clap", "dep:mdbook", "dep:toml"]
-
-default = []
-
-# aliases
-mdbook-link-forever = ["link-forever"]
-mdbook-rustdoc-link = ["rustdoc-link"]
-
-[[bin]]
-name = "mdbook-rustdoc-link"
-path = "src/bin/rustdoc_link/main.rs"
-required-features = ["rustdoc-link"]
-
-[[test]]
-name = "rustdoc-link"
-path = "tests/rustdoc_link.rs"
-required-features = ["rustdoc-link"]
-
-[[bin]]
-name = "mdbook-link-forever"
-path = "src/bin/link_forever/main.rs"
-required-features = ["link-forever"]
-
-[[test]]
-name = "link-forever"
-path = "tests/link_forever.rs"
-required-features = ["link-forever"]
+_testing = ["dep:cargo-run-bin", "dep:insta", "dep:url"]
 
 [package.metadata.docs.rs]
 all-features = true

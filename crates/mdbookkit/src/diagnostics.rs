@@ -1,6 +1,9 @@
 //! Error reporting for preprocessors.
 
-use std::fmt::{self, Debug, Display, Write};
+use std::{
+    borrow::Borrow,
+    fmt::{self, Debug, Display, Write},
+};
 
 use log::{Level, LevelFilter};
 use miette::{
@@ -12,10 +15,10 @@ use tap::{Pipe, Tap};
 
 /// Trait for Markdown diagnostics. This will eventually be printed to stderr.
 ///
-/// Each [`Problem`] represents a specific message, such as a warning, associated with
+/// Each [`IssueItem`] represents a specific message, such as a warning, associated with
 /// an [`Issue`] (the type and severity of the issue) and a location in the Markdown
 /// source, represented by [`LabeledSpan`].
-pub trait Problem: Send + Sync {
+pub trait IssueItem: Send + Sync {
     type Kind: Issue;
     fn issue(&self) -> Self::Kind;
     fn label(&self) -> LabeledSpan;
@@ -40,7 +43,7 @@ pub struct Diagnostics<'a, K, P> {
 impl<K, P> Diagnostics<'_, K, P>
 where
     K: Title,
-    P: Problem,
+    P: IssueItem,
 {
     /// Render a report of the diagnostics using [miette]'s graphical reporting
     pub fn to_report(&self, colored: bool) -> String {
@@ -86,7 +89,7 @@ where
 
 impl<'a, K, P> Diagnostics<'a, K, P>
 where
-    P: Problem,
+    P: IssueItem,
 {
     pub fn new(text: &'a str, name: K, issues: Vec<P>) -> Self {
         Self { text, name, issues }
@@ -105,6 +108,10 @@ where
         }
     }
 
+    pub fn name(&self) -> &K {
+        &self.name
+    }
+
     fn status(&self) -> P::Kind {
         self.issues
             .iter()
@@ -117,7 +124,7 @@ where
 impl<K, P> Diagnostic for Diagnostics<'_, K, P>
 where
     K: Title,
-    P: Problem,
+    P: IssueItem,
 {
     fn severity(&self) -> Option<Severity> {
         match self.status().level() {
@@ -173,19 +180,19 @@ where
     }
 }
 
-impl<K, P: Problem> Debug for Diagnostics<'_, K, P> {
+impl<K, P: IssueItem> Debug for Diagnostics<'_, K, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(&self.status(), f)
     }
 }
 
-impl<K, P: Problem> Display for Diagnostics<'_, K, P> {
+impl<K, P: IssueItem> Display for Diagnostics<'_, K, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.status(), f)
     }
 }
 
-impl<K, P: Problem> std::error::Error for Diagnostics<'_, K, P> {}
+impl<K, P: IssueItem> std::error::Error for Diagnostics<'_, K, P> {}
 
 /// Builder for printing diagnostics over multiple files.
 pub struct ReportBuilder<'a, K, P, F> {
@@ -238,6 +245,15 @@ impl<'a, K, P, F> ReportBuilder<'a, K, P, F> {
         self
     }
 
+    pub fn named<Q>(mut self, mut f: impl FnMut(&K) -> bool) -> Self
+    where
+        K: Borrow<Q>,
+        Q: Eq + ?Sized,
+    {
+        self.items.retain(|d| f(&d.name));
+        self
+    }
+
     pub fn logging(mut self, logging: bool) -> Self {
         self.logging = logging;
         self
@@ -246,7 +262,7 @@ impl<'a, K, P, F> ReportBuilder<'a, K, P, F> {
 
 impl<'a, K, P, F> ReportBuilder<'a, K, P, F>
 where
-    P: Problem,
+    P: IssueItem,
 {
     pub fn build(self) -> Reporter<'a, P>
     where
@@ -293,7 +309,7 @@ pub struct Reporter<'a, P> {
 
 impl<P> Reporter<'_, P>
 where
-    P: Problem,
+    P: IssueItem,
 {
     pub fn to_status(&self) -> P::Kind {
         self.items
@@ -408,11 +424,7 @@ trait StyleCompat {
 
 impl StyleCompat for Style {
     fn toggle(self, enabled: bool) -> Self {
-        if enabled {
-            self
-        } else {
-            Style::new()
-        }
+        if enabled { self } else { Style::new() }
     }
 }
 

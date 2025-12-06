@@ -1,0 +1,57 @@
+[package]
+name = "mdbook-rustdoc-link"
+publish = true
+version = "1.1.2"
+
+edition.workspace = true
+rust-version.workspace = true
+
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# categories = ["command-line-utilities"]
+# description = "toolkit for mdBook 📖"
+# documentation = "https://tonywu6.github.io/mdbookkit/"
+# keywords = ["mdbook", "documentation", "rust-analyzer", "lsp", "permalink"]
+# readme = "README.md"
+
+[dependencies]
+anyhow = { workspace = true }
+async-lsp = { version = "0.2.2" }
+cargo_toml = { version = "0.21.0" }
+clap = { workspace = true }
+console = { workspace = true }
+dirs = { version = "6.0.0" }
+log = { workspace = true }
+lsp-types = { version = "0.95.0" }
+mdbook = { workspace = true }
+mdbookkit = { workspace = true }
+miette = { workspace = true }
+proc-macro2 = { version = "1.0.94", features = ["span-locations"] }
+pulldown-cmark = { workspace = true }
+serde = { workspace = true, features = ["rc"] }
+serde_json = { workspace = true }
+sha2 = { version = "0.10.8" }
+shlex = { workspace = true }
+syn = { version = "2.0.99" }
+tap = { workspace = true }
+tempfile = { workspace = true }
+tokio = { workspace = true, features = [
+  "fs",
+  "macros",
+  "process",
+  "rt-multi-thread",
+  "time",
+] }
+tokio-util = { version = "0.7.13", features = ["compat"] }
+tower = { version = "0.5.2" }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+insta = { workspace = true }
+mdbookkit = { workspace = true, features = ["_testing"] }
+predicates = { workspace = true }
+rstest = { workspace = true }
+similar = { workspace = true }
+tempfile = { workspace = true }

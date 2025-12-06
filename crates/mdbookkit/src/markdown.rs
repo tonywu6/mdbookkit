@@ -3,7 +3,7 @@
 use std::{borrow::Cow, fmt::Write, ops::Range};
 
 use pulldown_cmark::{Event, Options};
-use pulldown_cmark_to_cmark::{cmark, Error};
+use pulldown_cmark_to_cmark::{Error, cmark};
 use tap::Pipe;
 
 /// _Patch_ a Markdown string, instead of regenerating it entirely, in order to preserve
@@ -102,7 +102,7 @@ where
 }
 
 /// <https://github.com/rust-lang/mdBook/blob/v0.4.47/src/utils/mod.rs#L197-L208>
-pub const fn mdbook_markdown() -> Options {
+pub const fn mdbook_markdown_options() -> Options {
     Options::empty()
         .union(Options::ENABLE_TABLES)
         .union(Options::ENABLE_FOOTNOTES)

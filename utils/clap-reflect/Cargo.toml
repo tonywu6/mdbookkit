@@ -13,11 +13,8 @@ rust-version.workspace = true
 anyhow = { workspace = true }
 clap = { workspace = true }
 mdbook = { workspace = true }
+mdbookkit = { workspace = true }
 minijinja = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tap = { workspace = true }
-
-[dependencies.mdbookkit]
-features = ["lib-rustdoc-link", "lib-link-forever", "common-cli"]
-path = "../../crates/mdbookkit"

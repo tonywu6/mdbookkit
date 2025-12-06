@@ -1,0 +1,50 @@
+---
+source: crates/mdbook-link-forever/src/tests.rs
+assertion_line: 98
+expression: report
+---
+  info: link is ignored as it is not supported
+    ╭─[crates/mdbook-link-forever/src/tests/links.md:47:13]
+    │ 
+    │ ## heading: <https://räksmörgås.josefsson.org/>
+    ·             ───────────────────────────────────
+    │ 
+    │ ## heading: pub async fn foobar(rt: &mut [Foo]) -> [Bar]\<Self> <!-- omit from toc -->
+    ·                                          ─────     ─────
+    │ 
+    │ # canonical urls to book
+    │ 
+    │ found: <https://example.org/book/tests/headings>
+    │ 
+    │ found: <https://example.org/book/tests/headings.html>
+    │ 
+    │ not found: <https://example.org/book/404>
+    │ 
+    │ ignored: <https://example.com/book/headings>
+    ·          ───────────────────────────────────
+    │ 
+    │ trailing slash, found: <https://example.org/book/tests/trailing-slash/>
+    │ 
+    │ trailing slash, found: <https://example.org/book/tests/trailing-slash>
+    │ 
+    │ trailing slash, not found: <https://example.org/book/tests/headings/>
+    │ 
+    │ # canonical urls to HEAD
+    │ 
+    │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
+    │ 
+    │ [published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-link-forever/src/tests/headings.md)
+    │ 
+    │ [file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbook-link-forever/src/tests/shinjuku.jpg)
+    │ 
+    │ [fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-link-forever/src/tests/headings.md#associated_items_on_primitive_types)
+    │ 
+    │ # image-in-link
+    │ 
+    │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
+    · ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    │ 
+    │ [![selfie](/crates/mdbook-link-forever/src/tests/Macaca_nigra_self-portrait_large.jpg)](https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg)
+    · ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+    │ 
+    ╰────

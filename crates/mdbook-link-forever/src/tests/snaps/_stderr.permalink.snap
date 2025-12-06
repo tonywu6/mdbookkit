@@ -1,0 +1,30 @@
+---
+source: crates/mdbook-link-forever/src/tests.rs
+assertion_line: 98
+expression: report
+---
+  info: link converted to permalink
+    ╭─[crates/mdbook-link-forever/src/tests/links.md:3:1]
+    │ 
+    │ [Cargo.toml](../../../../Cargo.toml)
+    · ──────────────────┬─────────────────
+    ·                   ╰── link: https://github.com/lorem/ipsum/tree/dolor/Cargo.toml
+    │ 
+    │ ![error reporting](../../../../docs/src/rustdoc-link/media/error-reporting.png)
+    · ───────────────────────────────────────┬───────────────────────────────────────
+    ·                                        ╰── link: https://github.com/lorem/ipsum/tree/dolor/docs/src/rustdoc-link/media/error-reporting.png
+    │ 
+    │ # absolute paths
+    │ 
+    │ [LICENSE-APACHE.md](/LICENSE-APACHE.md)
+    · ───────────────────┬───────────────────
+    ·                    ╰── link: https://github.com/lorem/ipsum/tree/dolor/LICENSE-APACHE.md
+    │ 
+    ╰────
+    ╭─[crates/mdbook-link-forever/src/tests/links.md:69:1]
+    │ 
+    │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
+    · ───────────────────────────────────┬───────────────────────────────────
+    ·                                    ╰── link: https://github.com/lorem/ipsum/tree/dolor/LICENSE-APACHE.md
+    │ 
+    ╰────
