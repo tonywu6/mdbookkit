@@ -41,6 +41,11 @@ fn main() -> Result<()> {
 
     match command {
         Some(Command::Supports { .. }) => return Ok(()),
+        #[cfg(feature = "_testing")]
+        Some(Command::Describe) => {
+            print!("{}", mdbookkit::docs::describe_preprocessor::<Config>()?);
+            return Ok(());
+        }
         None => {}
     }
 
@@ -120,6 +125,9 @@ struct Program {
 enum Command {
     #[clap(hide = true)]
     Supports { renderer: String },
+    #[cfg(feature = "_testing")]
+    #[clap(hide = true)]
+    Describe,
 }
 
 struct Environment {

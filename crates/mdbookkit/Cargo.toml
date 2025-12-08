@@ -36,10 +36,11 @@ toml = { workspace = true }
 
 cargo-run-bin = { workspace = true, optional = true }
 insta = { workspace = true, optional = true }
+minijinja = { workspace = true, optional = true }
 url = { workspace = true, optional = true }
 
 [features]
-_testing = ["dep:cargo-run-bin", "dep:insta", "dep:url"]
+_testing = ["dep:cargo-run-bin", "dep:insta", "dep:minijinja", "dep:url"]
 
 [package.metadata.docs.rs]
 all-features = true

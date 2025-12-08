@@ -40,3 +40,6 @@ mdbookkit = { workspace = true, features = ["_testing"] }
 predicates = { workspace = true }
 rstest = { workspace = true }
 tempfile = { workspace = true }
+
+[features]
+_testing = ["mdbookkit/_testing"]

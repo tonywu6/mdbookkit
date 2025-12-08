@@ -55,3 +55,6 @@ predicates = { workspace = true }
 rstest = { workspace = true }
 similar = { workspace = true }
 tempfile = { workspace = true }
+
+[features]
+_testing = ["mdbookkit/_testing"]

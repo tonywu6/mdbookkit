@@ -181,6 +181,8 @@ async fn main() -> Result<()> {
         Some(Command::Supports { .. }) => Ok(()),
         Some(Command::Markdown(options)) => markdown(options).await,
         Some(Command::RustAnalyzer) => which(),
+        #[cfg(feature = "_testing")]
+        Some(Command::Describe) => describe(),
         None => mdbook().await,
     }
 }
@@ -204,6 +206,10 @@ enum Command {
     /// See <https://rust-lang.github.io/mdBook/for_developers/preprocessors.html#hooking-into-mdbook>
     #[clap(hide = true)]
     Supports { renderer: String },
+
+    #[cfg(feature = "_testing")]
+    #[clap(hide = true)]
+    Describe,
 }
 
 async fn mdbook() -> Result<()> {
@@ -333,6 +339,12 @@ fn which() -> Result<()> {
         RustAnalyzer::Path => println!("using rust-analyzer on PATH (run `which rust-analyzer`)"),
     }
 
+    Ok(())
+}
+
+#[cfg(feature = "_testing")]
+fn describe() -> Result<()> {
+    print!("{}", mdbookkit::docs::describe_preprocessor::<Config>()?);
     Ok(())
 }
 
