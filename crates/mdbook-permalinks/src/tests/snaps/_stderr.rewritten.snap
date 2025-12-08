@@ -1,0 +1,71 @@
+---
+source: crates/mdbook-permalinks/src/tests.rs
+expression: report
+---
+  info: link to book page or file rewritten as path
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:11:1]
+    │ 
+    │ [links.md](/crates/mdbook-permalinks/src/tests/links.md#absolute-paths)
+    · ───────────────────────────────────┬───────────────────────────────────
+    ·                                    ╰─┤ file: crates/mdbook-permalinks/src/tests/links.md
+    ·                                      │ link: #absolute-paths
+    │ 
+    ╰────
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:53:8]
+    │ 
+    │ found: <https://example.org/book/tests/headings>
+    ·        ────────────────────┬────────────────────
+    ·                            ╰─┤ file: crates/mdbook-permalinks/src/tests/headings.md
+    ·                              │ link: headings.md
+    │ 
+    │ found: <https://example.org/book/tests/headings.html>
+    ·        ───────────────────────┬──────────────────────
+    ·                               ╰─┤ file: crates/mdbook-permalinks/src/tests/headings.md
+    ·                                 │ link: headings.md
+    │ 
+    │ not found: <https://example.org/book/404>
+    │ 
+    │ ignored: <https://example.com/book/headings>
+    │ 
+    │ trailing slash, found: <https://example.org/book/tests/trailing-slash/>
+    ·                        ────────────────────────┬───────────────────────
+    ·                                                ╰─┤ file: crates/mdbook-permalinks/src/tests/trailing-slash/index.md
+    ·                                                  │ link: trailing-slash/index.md
+    │ 
+    │ trailing slash, found: <https://example.org/book/tests/trailing-slash>
+    ·                        ───────────────────────┬───────────────────────
+    ·                                               ╰─┤ file: crates/mdbook-permalinks/src/tests/trailing-slash/index.md
+    ·                                                 │ link: trailing-slash/index.md
+    │ 
+    │ trailing slash, not found: <https://example.org/book/tests/headings/>
+    │ 
+    │ # canonical urls to HEAD
+    │ 
+    │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
+    │ 
+    │ [published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/headings.md)
+    · ──────────────────────────────────────────────────┬─────────────────────────────────────────────────
+    ·                                                   ╰─┤ file: crates/mdbook-permalinks/src/tests/headings.md
+    ·                                                     │ link: headings.md
+    │ 
+    │ [file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbook-permalinks/src/tests/shinjuku.jpg)
+    │ 
+    │ [fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/headings.md#associated_items_on_primitive_types)
+    │ 
+    │ # image-in-link
+    │ 
+    │ [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
+    │ 
+    │ [![selfie](/crates/mdbook-permalinks/src/tests/Macaca_nigra_self-portrait_large.jpg)](https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg)
+    ·  ─────────────────────────────────────────┬─────────────────────────────────────────
+    ·                                           ╰─┤ file: crates/mdbook-permalinks/src/tests/Macaca_nigra_self-portrait_large.jpg
+    ·                                             │ link: Macaca_nigra_self-portrait_large.jpg
+    │ 
+    │ [![selfie](/crates/mdbook-permalinks/src/tests/Macaca_nigra_self-portrait_large.jpg) <br> Self-portrait of a female Macaca nigra in North Sulawesi (2011)](/crates/mdbook-permalinks/src/tests/Macaca_nigra_self-portrait_large.jpg)
+    · ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬
+    ·                                                                                                                   │                                                                                                                 ╰─┤ file: crates/mdbook-permalinks/src/tests/Macaca_nigra_self-portrait_large.jpg
+    ·                                                                                                                   │                                                                                                                   │ link: Macaca_nigra_self-portrait_large.jpg
+    ·                                                                                                                   ╰─┤ file: crates/mdbook-permalinks/src/tests/Macaca_nigra_self-portrait_large.jpg
+    ·                                                                                                                     │ link: Macaca_nigra_self-portrait_large.jpg
+    │ 
+    ╰────

@@ -188,7 +188,7 @@ impl Environment {
     }
 
     fn new(book: &PreprocessorContext) -> Result<Result<Self>> {
-        let config = config_from_book::<Config>(&book.config, "link-forever")
+        let config = config_from_book::<Config>(&book.config, env!("CARGO_PKG_NAME"))
             .context("failed to read preprocessor config from book.toml")?;
 
         let vcs = match VersionControl::try_from_git(&config, &book.config) {

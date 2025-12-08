@@ -1,14 +1,13 @@
 ---
-source: crates/mdbook-link-forever/src/tests.rs
-assertion_line: 98
+source: crates/mdbook-permalinks/src/tests.rs
 expression: report
 ---
   warning: fragment does not exist in page
-    ╭─[crates/mdbook-link-forever/src/tests/links.md:43:1]
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:43:1]
     │ 
     │ [associated items](../tests/headings.md#associated_items_on_primitive_types)
     · ──────────────────────────────────────┬─────────────────────────────────────
-    ·                                       ╰── #associated_items_on_primitive_types not found in crates/mdbook-link-forever/src/tests/headings.md
+    ·                                       ╰── #associated_items_on_primitive_types not found in crates/mdbook-permalinks/src/tests/headings.md
     │ 
     │ ## heading: $\sqrt{3x-1}+(1+x)^2$
     │ 
@@ -36,12 +35,12 @@ expression: report
     │ 
     │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
     │ 
-    │ [published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-link-forever/src/tests/headings.md)
+    │ [published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/headings.md)
     │ 
-    │ [file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbook-link-forever/src/tests/shinjuku.jpg)
+    │ [file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbook-permalinks/src/tests/shinjuku.jpg)
     │ 
-    │ [fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-link-forever/src/tests/headings.md#associated_items_on_primitive_types)
-    · ─────────────────────────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────
-    ·                                                                          ╰── #associated_items_on_primitive_types not found in crates/mdbook-link-forever/src/tests/headings.md
+    │ [fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/headings.md#associated_items_on_primitive_types)
+    · ────────────────────────────────────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────
+    ·                                                                         ╰── #associated_items_on_primitive_types not found in crates/mdbook-permalinks/src/tests/headings.md
     │ 
     ╰────

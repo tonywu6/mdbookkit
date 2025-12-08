@@ -8,7 +8,7 @@
 
 [LICENSE-APACHE.md](/LICENSE-APACHE.md)
 
-[link-forever.md](/crates/mdbook-link-forever/src/tests/links.md#absolute-paths)
+[links.md](/crates/mdbook-permalinks/src/tests/links.md#absolute-paths)
 
 # book files
 
@@ -68,19 +68,19 @@ trailing slash, not found: <https://example.org/book/tests/headings/>
 
 [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
 
-[published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-link-forever/src/tests/headings.md)
+[published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/headings.md)
 
-[file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbook-link-forever/src/tests/shinjuku.jpg)
+[file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbook-permalinks/src/tests/shinjuku.jpg)
 
-[fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-link-forever/src/tests/headings.md#associated_items_on_primitive_types)
+[fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/headings.md#associated_items_on_primitive_types)
 
 # image-in-link
 
 [![crates.io](https://img.shields.io/crates/v/mdbookkit?style=flat-square)](https://crates.io/crates/mdbookkit)
 
-[![selfie](/crates/mdbook-link-forever/src/tests/Macaca_nigra_self-portrait_large.jpg)](https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg)
+[![selfie](/crates/mdbook-permalinks/src/tests/Macaca_nigra_self-portrait_large.jpg)](https://commons.wikimedia.org/wiki/File:Macaca_nigra_self-portrait_large.jpg)
 
-[![selfie](/crates/mdbook-link-forever/src/tests/Macaca_nigra_self-portrait_large.jpg) <br> Self-portrait of a female Macaca nigra in North Sulawesi (2011)](/crates/mdbook-link-forever/src/tests/Macaca_nigra_self-portrait_large.jpg)
+[![selfie](/crates/mdbook-permalinks/src/tests/Macaca_nigra_self-portrait_large.jpg) <br> Self-portrait of a female Macaca nigra in North Sulawesi (2011)](/crates/mdbook-permalinks/src/tests/Macaca_nigra_self-portrait_large.jpg)
 
 [Foo]: https://example.org
 [Bar]: https://example.org

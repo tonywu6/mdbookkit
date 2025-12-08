@@ -1,10 +1,9 @@
 ---
-source: crates/mdbook-link-forever/src/tests.rs
-assertion_line: 98
+source: crates/mdbook-permalinks/src/tests.rs
 expression: report
 ---
   warning: path to a file outside source control
-    ╭─[crates/mdbook-link-forever/src/tests/links.md:37:1]
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:37:1]
     │ 
     │ [`//LICENSE-MIT.md`](//LICENSE-MIT.md)
     · ───────────────────┬──────────────────

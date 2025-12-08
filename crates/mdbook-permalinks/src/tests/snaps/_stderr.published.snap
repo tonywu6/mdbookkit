@@ -1,43 +1,42 @@
 ---
-source: crates/mdbook-link-forever/src/tests.rs
-assertion_line: 98
+source: crates/mdbook-permalinks/src/tests.rs
 expression: report
 ---
   info: link to book page or file
-    ╭─[crates/mdbook-link-forever/src/tests/links.md:15:1]
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:15:1]
     │ 
     │ [Anchors](./headings.md)
     · ────────────┬───────────
-    ·             ╰── file: crates/mdbook-link-forever/src/tests/headings.md
+    ·             ╰── file: crates/mdbook-permalinks/src/tests/headings.md
     │ 
     │ [main.rs](../main.rs)
     · ──────────┬──────────
-    ·           ╰── file: crates/mdbook-link-forever/src/main.rs
+    ·           ╰── file: crates/mdbook-permalinks/src/main.rs
     │ 
     │ ![selfie](Macaca_nigra_self-portrait_large.jpg)
     · ───────────────────────┬───────────────────────
-    ·                        ╰── file: crates/mdbook-link-forever/src/tests/Macaca_nigra_self-portrait_large.jpg
+    ·                        ╰── file: crates/mdbook-permalinks/src/tests/Macaca_nigra_self-portrait_large.jpg
     │ 
     │ # fragments
     │ 
     │ [Fragments](./links.md#fragments)
     · ────────────────┬────────────────
-    ·                 ╰── file: crates/mdbook-link-forever/src/tests/links.md
+    ·                 ╰── file: crates/mdbook-permalinks/src/tests/links.md
     │ 
     │ [Heading 1](./links.md#heading-sqrt3x-11x2)
     · ─────────────────────┬─────────────────────
-    ·                      ╰── file: crates/mdbook-link-forever/src/tests/links.md
+    ·                      ╰── file: crates/mdbook-permalinks/src/tests/links.md
     │ 
     │ [Heading 2](./links.md#heading-httpsräksmörgåsjosefssonorg)
     · ─────────────────────────────┬─────────────────────────────
-    ·                              ╰── file: crates/mdbook-link-forever/src/tests/links.md
+    ·                              ╰── file: crates/mdbook-permalinks/src/tests/links.md
     │ 
     │ [foobar](#heading-pub-async-fn-foobarrt-mut-foo---barself)
     · ─────────────────────────────┬────────────────────────────
-    ·                              ╰── file: crates/mdbook-link-forever/src/tests/links.md
+    ·                              ╰── file: crates/mdbook-permalinks/src/tests/links.md
     │ 
     │ [macro_export](./headings.md#macro_export)
     · ─────────────────────┬────────────────────
-    ·                      ╰── file: crates/mdbook-link-forever/src/tests/headings.md
+    ·                      ╰── file: crates/mdbook-permalinks/src/tests/headings.md
     │ 
     ╰────

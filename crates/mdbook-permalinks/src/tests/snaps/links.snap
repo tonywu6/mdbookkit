@@ -1,6 +1,5 @@
 ---
-source: crates/mdbook-link-forever/src/tests.rs
-assertion_line: 71
+source: crates/mdbook-permalinks/src/tests.rs
 expression: output
 ---
 # relative paths
@@ -13,7 +12,7 @@ expression: output
 
 [LICENSE-APACHE.md](https://github.com/lorem/ipsum/tree/dolor/LICENSE-APACHE.md)
 
-[link-forever.md](#absolute-paths)
+[links.md](#absolute-paths)
 
 # book files
 
@@ -75,9 +74,9 @@ trailing slash, not found: <https://example.org/book/tests/headings/>
 
 [published](headings.md)
 
-[file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbook-link-forever/src/tests/shinjuku.jpg)
+[file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbook-permalinks/src/tests/shinjuku.jpg)
 
-[fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-link-forever/src/tests/headings.md#associated_items_on_primitive_types)
+[fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/headings.md#associated_items_on_primitive_types)
 
 # image-in-link
 

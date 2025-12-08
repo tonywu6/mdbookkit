@@ -1,10 +1,9 @@
 ---
-source: crates/mdbook-link-forever/src/tests.rs
-assertion_line: 98
+source: crates/mdbook-permalinks/src/tests.rs
 expression: report
 ---
   info: link converted to permalink
-    ╭─[crates/mdbook-link-forever/src/tests/links.md:3:1]
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:3:1]
     │ 
     │ [Cargo.toml](../../../../Cargo.toml)
     · ──────────────────┬─────────────────
@@ -21,7 +20,7 @@ expression: report
     ·                    ╰── link: https://github.com/lorem/ipsum/tree/dolor/LICENSE-APACHE.md
     │ 
     ╰────
-    ╭─[crates/mdbook-link-forever/src/tests/links.md:69:1]
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:69:1]
     │ 
     │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
     · ───────────────────────────────────┬───────────────────────────────────

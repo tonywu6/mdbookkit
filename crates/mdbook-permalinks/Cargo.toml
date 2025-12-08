@@ -1,5 +1,5 @@
 [package]
-name = "mdbook-link-forever"
+name = "mdbook-permalinks"
 publish = true
 version = "1.1.2"
 

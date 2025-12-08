@@ -40,15 +40,18 @@ fn test_output() -> TestOutput {
             .unwrap();
     }
 
-    tokio::runtime::Builder::new_multi_thread()
+    let env = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
         .unwrap()
-        .block_on(client.resolve(&mut pages))
-        .context("failed to resolve links")
-        .unwrap();
-
-    let env = client.env().clone();
+        .block_on(async {
+            client
+                .resolve(&mut pages)
+                .await
+                .context("failed to resolve links")
+                .unwrap();
+            client.stop().await
+        });
 
     TestOutput { env, pages }
 }

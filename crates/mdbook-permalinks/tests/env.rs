@@ -14,14 +14,7 @@ fn test_minimum_env() -> Result<()> {
 
     log::info!("setup: compile self");
     Command::new("cargo")
-        .args([
-            "build",
-            "--package",
-            env!("CARGO_PKG_NAME"),
-            "--all-features",
-            "--bin",
-            "mdbook-link-forever",
-        ])
+        .args(["build", "--package", env!("CARGO_PKG_NAME")])
         .arg(if cfg!(debug_assertions) {
             "--profile=dev"
         } else {
@@ -49,7 +42,7 @@ fn test_minimum_env() -> Result<()> {
     std::fs::File::options()
         .append(true)
         .open(root.path().join("book.toml"))?
-        .pipe(|mut file| file.write_all("[preprocessor.link-forever]\n".as_bytes()))?;
+        .pipe(|mut file| file.write_all("[preprocessor.permalinks]\n".as_bytes()))?;
 
     log::info!("when: book has path-based links");
     std::fs::File::options()

@@ -1582,7 +1582,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mdbook-link-forever"
+name = "mdbook-permalinks"
 version = "1.1.2"
 dependencies = [
  "anyhow",
@@ -1608,7 +1608,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mdbook-rustdoc-link"
+name = "mdbook-rustdoc-links"
 version = "1.1.2"
 dependencies = [
  "anyhow",

@@ -33,7 +33,10 @@ static FIXTURE: LazyLock<Fixture> = LazyLock::new(|| {
                 root: CARGO_WORKSPACE_DIR.clone(),
                 link: GitHubPermalink::new("lorem", "ipsum", "dolor").pipe(Permalink::GitHub),
             },
-            book_src: CARGO_WORKSPACE_DIR.join("crates/mdbook-link-forever/src/")?,
+            book_src: CARGO_WORKSPACE_DIR
+                .join("crates/")?
+                .join(concat!(env!("CARGO_PKG_NAME"), "/"))?
+                .join("src/")?,
             markdown: mdbook_markdown_options(),
             config: Config {
                 book_url: Some("https://example.org/book".parse::<Url>()?.into()),

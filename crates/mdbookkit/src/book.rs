@@ -23,6 +23,7 @@ pub fn config_from_book<T>(config: &mdbook::Config, name: &str) -> Result<T>
 where
     T: DeserializeOwned + Default,
 {
+    let name = name.strip_prefix("mdbook-").unwrap_or(name);
     if let Some(config) = config.get_preprocessor(name) {
         T::deserialize(toml::Value::Table(config.clone()))?
     } else {
