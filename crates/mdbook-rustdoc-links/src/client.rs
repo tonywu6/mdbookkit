@@ -21,8 +21,9 @@ use lsp_types::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use tap::{Pipe, TapFallible};
+use tap::TapFallible;
 use tokio::{
+    io::{AsyncBufReadExt, BufReader},
     sync::{OnceCell, OwnedSemaphorePermit, Semaphore, mpsc},
     task::JoinHandle,
 };
@@ -261,28 +262,39 @@ impl Server {
             ServiceBuilder::new().service(router)
         });
 
-        let proc = env
+        let mut proc = env
             .which()
             .command()?
             .current_dir(env.crate_dir.to_path()?)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            // TODO: managed subcommand stderr
-            .stderr(Stdio::null())
+            .stderr(Stdio::piped())
             .spawn()
             .context("failed to spawn rust-analyzer")?;
 
-        let background = tokio::spawn(async move {
-            let mut proc = proc;
-            let stdout = proc.stdout.take().unwrap();
+        let background = {
             let stdin = proc.stdin.take().unwrap();
-            background
-                .run_buffered(stdout.compat(), stdin.compat_write())
-                .await
-                .tap_err(log_debug!())
-                .ok();
-        })
-        .pipe(Arc::new);
+            let stdout = proc.stdout.take().unwrap();
+            let stderr = proc.stderr.take().unwrap();
+
+            tokio::spawn(async move {
+                let mut stderr = BufReader::new(stderr).lines();
+                while let Some(line) = stderr.next_line().await.ok().flatten() {
+                    log::debug!("{line}");
+                }
+            });
+
+            let background = tokio::spawn(async move {
+                background
+                    .run_buffered(stdout.compat(), stdin.compat_write())
+                    .await
+                    .context("LSP client stopped unexpectedly")
+                    .tap_err(log_debug!())
+                    .ok();
+            });
+
+            Arc::new(background)
+        };
 
         let features = {
             let features = &env.config.cargo_features;

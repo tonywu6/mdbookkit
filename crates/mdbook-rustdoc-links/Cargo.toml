@@ -39,6 +39,7 @@ tap = { workspace = true }
 tempfile = { workspace = true }
 tokio = { workspace = true, features = [
   "fs",
+  "io-util",
   "macros",
   "process",
   "rt-multi-thread",
