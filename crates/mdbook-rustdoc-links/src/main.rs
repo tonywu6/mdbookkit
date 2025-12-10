@@ -204,9 +204,9 @@ enum Command {
 }
 
 async fn mdbook() -> Result<()> {
-    let (context, mut book) = book_from_stdin().context("failed to parse book content")?;
+    let (ctx, mut book) = book_from_stdin().context("failed to read from mdbook")?;
 
-    let config = config(&context).context("failed to read preprocessor config from book.toml")?;
+    let config = config(&ctx).context("failed to read preprocessor config from book.toml")?;
 
     let client = Environment::new(config)
         .context("failed to initialize `mdbook-rustdoc-link`")?
@@ -268,7 +268,7 @@ async fn mdbook() -> Result<()> {
         }
     });
 
-    book.to_stdout()?;
+    book.to_stdout(&ctx)?;
 
     env.config.fail_on_warnings.check(status.level())?;
 

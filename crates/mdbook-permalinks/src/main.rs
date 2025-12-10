@@ -521,8 +521,8 @@ fn main() -> Result<()> {
     let Program { command } = clap::Parser::parse();
     match command {
         None => {
-            let (ctx, book) = book_from_stdin().context("failed to parse book content")?;
-            Permalinks.run(&ctx, book)?.to_stdout()?;
+            let (ctx, book) = book_from_stdin().context("failed to read from mdbook")?;
+            Permalinks.run(&ctx, book)?.to_stdout(&ctx)?;
             Ok(())
         }
         Some(Command::Supports { .. }) => Ok(()),
