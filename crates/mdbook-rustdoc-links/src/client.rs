@@ -31,7 +31,7 @@ use tower::ServiceBuilder;
 
 use mdbookkit::{log_debug, log_warning, logging::spinner};
 
-use super::{
+use crate::{
     env::Environment,
     link::ItemLinks,
     sync::{EventSampler, EventSampling},

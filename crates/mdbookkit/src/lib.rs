@@ -17,3 +17,7 @@ pub mod logging;
 pub mod markdown;
 #[cfg(feature = "_testing")]
 pub mod testing;
+
+// referenced in docs
+#[doc(hidden)]
+pub use diagnostics::Diagnostics;

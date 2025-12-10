@@ -1,25 +1,14 @@
 # Caching
 
 By default, `mdbook-rustdoc-link` spawns a fresh `rust-analyzer` process every time it
-is run. rust-analyzer then reindexes your entire project before resolving links.
+runs. rust-analyzer then reindexes your entire project before resolving links.
 
-This significantly impacts the responsiveness of `mdbook serve` — it is as if for every
-live reload, you had to reopen your editor, and it gets even worse the more dependencies
-your project has.
+This makes the `mdbook serve` command significantly slower, more so if your project
+contains a large number of dependencies. It is as if for every live reload, you had to
+reopen your editor.
 
-To mitigate this, there is an experimental caching feature, disabled by default.
-
-<details class="toc" open>
-  <summary>Sections</summary>
-
-- [Enabling caching](#enabling-caching)
-- [How it works](#how-it-works)
-- [Help wanted 🙌](#help-wanted-)
-  - [Cache priming and progress tracking](#cache-priming-and-progress-tracking)
-  - [Using `ra-multiplex`](#using-ra-multiplex)
-  - [Postscript](#postscript)
-
-</details>
+To mitigate this, there is an experimental caching feature. The feature is disabled by
+default.
 
 ## Enabling caching
 
@@ -53,7 +42,7 @@ the previous build.
 > [!NOTE]
 >
 > The following are implementation details. See
-> [rustdoc_link/cache.rs](/crates/mdbookkit/src/bin/rustdoc_link/cache.rs).
+> [cache.rs](/crates/mdbook-rustdoc-links/src/cache.rs).
 
 The effectiveness of this mechanism is based on the following assumptions:
 
@@ -97,7 +86,7 @@ Progress][lsp-work-done-progress] notifications to know when rust-analyzer has f
 cache priming, before actually sending out external docs requests. This requires parsing
 non-structured log messages that rust-analyzer sends out and some debouncing/throttling
 logic, which is not ideal, see
-[client.rs](/crates/mdbookkit/src/bin/rustdoc_link/client.rs#L142).
+[client.rs](/crates/mdbook-rustdoc-links/src/client.rs#L153).
 
 Not waiting for indexing to finish and sending out requests too early causes
 rust-analyzer to respond with empty results.

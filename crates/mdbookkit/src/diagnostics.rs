@@ -33,7 +33,7 @@ pub trait Issue: Default + Debug + Display + Clone + Send + Sync {
     fn level(&self) -> Level;
 }
 
-/// A collection of [`Problem`]s associated with a Markdown file.
+/// A collection of [`IssueItem`]s associated with a Markdown file.
 pub struct Diagnostics<'a, K, P> {
     text: &'a str,
     name: K,

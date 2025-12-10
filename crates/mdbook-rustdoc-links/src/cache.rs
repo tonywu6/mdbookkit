@@ -14,7 +14,7 @@ use tokio::task::JoinSet;
 
 use mdbookkit::log_debug;
 
-use super::{Resolver, env::Environment, link::ItemLinks, page::Pages, url::UrlToPath};
+use crate::{env::Environment, link::ItemLinks, page::Pages, resolver::Resolver, url::UrlToPath};
 
 #[allow(async_fn_in_trait)]
 pub trait Cache: DeserializeOwned + Serialize {

@@ -19,7 +19,7 @@ pub type MarkdownStream<'a> = Parser<'a, ItemLinks>;
 ///
 /// Links that are "broken" that aren't actually doc links won't show up in the output,
 /// because the preprocessor ignores links that cannot be parsed and is capable of
-/// emitting only changed links, see [`PatchStream`][crate::markdown::PatchStream].
+/// emitting only changed links, see [`PatchStream`][mdbookkit::markdown::PatchStream].
 pub struct ItemLinks;
 
 impl ItemLinks {

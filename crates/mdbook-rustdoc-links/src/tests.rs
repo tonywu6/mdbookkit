@@ -7,10 +7,10 @@ use tap::Pipe;
 use mdbookkit::{portable_snapshots, test_document, testing::TestDocument};
 
 use crate::{
-    Resolver,
     client::Client,
     env::{Config, Environment},
     page::Pages,
+    resolver::Resolver,
 };
 
 struct TestOutput {

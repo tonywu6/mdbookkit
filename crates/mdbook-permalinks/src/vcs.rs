@@ -133,8 +133,8 @@ pub struct CustomPermalink {
 ///
 /// Encoding characters are always in uppercase [^2].
 ///
-/// [^1]: https://url.spec.whatwg.org/#path-percent-encode-set
-/// [^2]: https://url.spec.whatwg.org/#percent-encode
+/// [^1]: <https://url.spec.whatwg.org/#path-percent-encode-set>
+/// [^2]: <https://url.spec.whatwg.org/#percent-encode>
 macro_rules! encoded_param {
     ($param:literal) => {
         concat!("%7B", $param, "%7D")

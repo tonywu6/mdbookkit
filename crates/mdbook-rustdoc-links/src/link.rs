@@ -8,7 +8,7 @@ use tap::{Pipe, Tap, TapFallible};
 
 use mdbookkit::log_trace;
 
-use super::{env::EmitConfig, item::Item};
+use crate::{env::EmitConfig, item::Item};
 
 pub mod diagnostic;
 

@@ -12,17 +12,15 @@ mentioned below).
 An item must be **in scope in the entrypoint** for the proprocessor to generate a link
 for it.
 
-Let's say you have the following as your `lib.rs`:
+For example, with the following as `lib.rs`:
 
 <figure>
 
 ```rs
 use anyhow::Context;
-/// Type that can provide links.
-pub trait Resolver {}
-mod env {
-    /// Options for the preprocessor.
-    pub struct Config {}
+pub struct Diagnostics {}
+mod error {
+    pub fn is_ci() {}
 }
 ```
 
@@ -31,16 +29,16 @@ mod env {
 Items in the entrypoint can be linked to with just their names:
 
 > ```md
-> [`Resolver`] — Type that can provide links.
+> [`Diagnostics`] encapsulates possible issues detected within Markdown sources.
 >
-> This crate also uses the [`Context`] trait from [`anyhow`].
+> This crate uses the [`Context`] trait from [`anyhow`].
 > ```
 >
-> [`Resolver`] — Type that can provide links.
+> [`Diagnostics`] encapsulates possible issues detected within Markdown sources.
 >
-> This crate also uses the [`Context`] trait from [`anyhow`].
+> This crate uses the [`Context`] trait from [`anyhow`].
 
-This includes items from the prelude (unless you are using `#![no_implicit_prelude]`):
+This includes items from the prelude:
 
 > ```md
 > [`FromIterator`] is in the prelude starting from Rust 2021.
@@ -52,20 +50,22 @@ Though technically not required — to make items from your crate more distingui
 from others in your Markdown source, you can write `crate::*`:
 
 > ```md
-> [Configurations](configuration.md) for the preprocessor is defined in the
-> [`Config`][crate::env::Config] type.
+> The [`is_ci`][crate::error::is_ci] function detects whether the preprocessor is
+> running in a [continuous integration](continuous-integration.md) environment, such
+> that warnings may be promoted to errors.
 > ```
 >
-> [Configurations](configuration.md) for the preprocessor is defined in the
-> [`Config`][crate::env::Config] type.
+> The [`is_ci`][crate::error::is_ci] function detects whether the preprocessor is
+> running in a [continuous integration](continuous-integration.md) environment, such
+> that warnings may be promoted to errors.
 
 For everything else, provide its full path, as if you were writing a `use` declaration:
 
 > ```md
-> [`JoinSet`][tokio::task::JoinSet] is analogous to `asyncio.as_completed`.
+> [`JoinSet`][tokio::task::JoinSet] is analogous to Python's `asyncio.as_completed`.
 > ```
 >
-> [`JoinSet`][tokio::task::JoinSet] is analogous to `asyncio.as_completed`.
+> [`JoinSet`][tokio::task::JoinSet] is analogous to Python's `asyncio.as_completed`.
 
 > [!TIP]
 >

@@ -13,11 +13,7 @@ use tap::Pipe;
 /// [`pulldown_cmark::Event`] stream, whitespace is NOT preserved. This is problematic
 /// for mdBook preprocessors, because preprocessors downstream may need to work on
 /// syntax that is whitespace-sensitive. Normalizing all whitespace could cause such
-/// usage to no longer be recognized. An example is [`mdbook-alerts`][alerts]
-/// which works on GitHub's ["alerts"][gh-alerts] syntax.
-///
-/// [alerts]: https://crates.io/crates/mdbook-alerts
-/// [gh-alerts]: https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts
+/// usage to no longer be recognized.
 pub struct PatchStream<'a, S> {
     source: &'a str,
     stream: S,

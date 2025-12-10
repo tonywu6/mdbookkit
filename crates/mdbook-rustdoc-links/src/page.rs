@@ -11,7 +11,7 @@ use tap::Pipe;
 
 use mdbookkit::markdown::{PatchStream, Spanned};
 
-use super::{
+use crate::{
     env::EmitConfig,
     item::Item,
     link::{ItemLinks, Link, LinkState},

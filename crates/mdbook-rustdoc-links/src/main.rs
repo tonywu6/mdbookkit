@@ -1,30 +1,29 @@
-use std::{borrow::Borrow, collections::HashMap, hash::Hash, io::Write, sync::Arc};
+use std::{collections::HashMap, io::Write};
 
-use anyhow::{Context, Result};
+use anyhow::{
+    Context,
+    // not shadowing Result because it is linked from docs
+    Result as Result2,
+};
 use clap::{Parser, Subcommand};
 use console::colors_enabled_stderr;
 use log::LevelFilter;
-use lsp_types::Position;
 use mdbook_preprocessor::PreprocessorContext;
 use tap::{Pipe, TapFallible};
-use tokio::task::JoinSet;
 
 use mdbookkit::{
     book::{BookConfigHelper, BookHelper, book_from_stdin, string_from_stdin},
     diagnostics::Issue,
-    log_debug, log_warning,
-    logging::{ConsoleLogger, is_logging, spinner},
-    styled,
+    log_warning,
+    logging::{ConsoleLogger, is_logging},
 };
 
 use self::{
     cache::{Cache, FileCache},
     client::Client,
     env::{Config, Environment, RustAnalyzer},
-    item::Item,
-    link::ItemLinks,
     page::Pages,
-    url::UrlToPath,
+    resolver::Resolver,
 };
 
 mod cache;
@@ -34,139 +33,14 @@ mod item;
 mod link;
 mod markdown;
 mod page;
+mod resolver;
 mod sync;
 #[cfg(test)]
 mod tests;
 mod url;
 
-/// Type that can provide links.
-///
-/// Resolvers should modify the provided [`Pages`] in place.
-///
-/// This is currently an abstraction over two sources of links:
-///
-/// - [`Client`], which invokes rust-analyzer
-/// - [`Cache`] implementations
-///
-/// [`Cache`]: crate::bin::rustdoc_link::cache::Cache
-trait Resolver {
-    async fn resolve<K>(&self, pages: &mut Pages<'_, K>) -> Result<()>
-    where
-        K: Eq + Hash;
-}
-
-impl Resolver for Client {
-    async fn resolve<K>(&self, pages: &mut Pages<'_, K>) -> Result<()>
-    where
-        K: Eq + Hash,
-    {
-        let request = pages.items();
-
-        if request.is_empty() {
-            return Ok(());
-        }
-
-        let main = std::fs::read_to_string(self.env().entrypoint.to_path()?)?;
-
-        let (context, request) = {
-            let mut context = format!("{main}\nfn {UNIQUE_ID} () {{\n");
-
-            let line = context.chars().filter(|&c| c == '\n').count();
-
-            let request = request
-                .iter()
-                .scan(line, |line, (key, item)| {
-                    build(&mut context, line, item).map(|cursors| (key.clone(), cursors))
-                })
-                .collect::<Vec<_>>();
-
-            fn build(context: &mut String, line: &mut usize, item: &Item) -> Option<Vec<Position>> {
-                use std::fmt::Write;
-                let _ = writeln!(context, "{}", item.stmt);
-                let cursors = item
-                    .cursor
-                    .as_ref()
-                    .iter()
-                    .map(|&col| Position::new(*line as _, col as _))
-                    .collect::<Vec<_>>();
-                *line += 1;
-                Some(cursors)
-            }
-
-            context.push('}');
-
-            (context, request)
-        };
-
-        log::debug!("request context\n\n{context}\n");
-
-        let document = self
-            .open(self.env().entrypoint.clone(), context)
-            .await?
-            .pipe(Arc::new);
-
-        spinner().create("resolve", Some(request.len() as _));
-
-        let tasks: JoinSet<Option<(String, ItemLinks)>> = request
-            .into_iter()
-            .map(|(key, pos)| {
-                let key = key.to_string();
-                let doc = document.clone();
-                resolve(doc, key, pos)
-            })
-            .collect();
-
-        async fn resolve(
-            doc: Arc<client::OpenDocument>,
-            key: String,
-            pos: Vec<Position>,
-        ) -> Option<(String, ItemLinks)> {
-            let _task = spinner().task("resolve", &key);
-            for p in pos {
-                let resolved = doc
-                    .resolve(p)
-                    .await
-                    .with_context(|| format!("{p:?}"))
-                    .context("failed to resolve symbol:")
-                    .tap_err(log_debug!())
-                    .ok();
-                if let Some(resolved) = resolved {
-                    return Some((key, resolved));
-                }
-            }
-            None
-        }
-
-        let resolved = tasks
-            .join_all()
-            .await
-            .into_iter()
-            .flatten()
-            .collect::<HashMap<_, _>>();
-
-        spinner().finish("resolve", styled!(("done").green()));
-
-        pages.apply(&resolved);
-
-        Ok(())
-    }
-}
-
-impl<K> Resolver for HashMap<K, ItemLinks>
-where
-    K: Borrow<str> + Eq + Hash,
-{
-    async fn resolve<P>(&self, pages: &mut Pages<'_, P>) -> Result<()>
-    where
-        P: Eq + Hash,
-    {
-        pages.apply(self);
-        Ok(())
-    }
-}
-
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result2<()> {
     ConsoleLogger::install(PREPROCESSOR_NAME);
     match Program::parse().command {
         Some(Command::Supports { .. }) => Ok(()),
@@ -203,7 +77,7 @@ enum Command {
     Describe,
 }
 
-async fn mdbook() -> Result<()> {
+async fn mdbook() -> Result2<()> {
     let (ctx, mut book) = book_from_stdin().context("failed to read from mdbook")?;
 
     let config = config(&ctx).context("failed to read preprocessor config from book.toml")?;
@@ -275,7 +149,7 @@ async fn mdbook() -> Result<()> {
     Ok(())
 }
 
-async fn markdown(config: Config) -> Result<()> {
+async fn markdown(config: Config) -> Result2<()> {
     let client = Environment::new(config)
         .context("failed to initialize")?
         .pipe(Client::new);
@@ -321,7 +195,7 @@ async fn markdown(config: Config) -> Result<()> {
     Ok(())
 }
 
-fn which() -> Result<()> {
+fn which() -> Result2<()> {
     let env = Environment::new(Default::default())?;
 
     match env.which() {
@@ -337,12 +211,12 @@ fn which() -> Result<()> {
 }
 
 #[cfg(feature = "_testing")]
-fn describe() -> Result<()> {
+fn describe() -> Result2<()> {
     print!("{}", mdbookkit::docs::describe_preprocessor::<Config>()?);
     Ok(())
 }
 
-fn config(ctx: &PreprocessorContext) -> Result<Config> {
+fn config(ctx: &PreprocessorContext) -> Result2<Config> {
     let mut config = ctx.config.preprocessor::<Config>(PREPROCESSOR_NAME)?;
 
     if let Some(path) = config.manifest_dir {

@@ -2,7 +2,9 @@ use std::{fmt::Debug, hash::Hash};
 
 use mdbookkit::diagnostics::{Diagnostics, ReportBuilder};
 
-use super::{super::link::diagnostic::LinkDiagnostic, Pages};
+use crate::link::diagnostic::LinkDiagnostic;
+
+use super::Pages;
 
 impl<'a, K: Eq + Hash> Pages<'a, K> {
     pub fn diagnostics(&self) -> Vec<PageDiagnostics<'a, K>>

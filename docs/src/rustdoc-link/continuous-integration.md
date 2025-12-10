@@ -73,7 +73,7 @@ You can explicitly control this behavior using the
 
 [^ci-true]:
     Specifically, when `CI` is anything other than `""`, `"0"`, or `"false"`. The logic
-    is encapsulated in the [`is_ci`][crate::env::is_ci] function.
+    is encapsulated in the [`is_ci`][crate::error::is_ci] function.
 
 [^stderr]:
     Specifically, when stderr is redirected to something that isn't a terminal, such as

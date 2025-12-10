@@ -15,7 +15,7 @@ use tokio::process::Command;
 
 use mdbookkit::{error::OnWarning, markdown::default_markdown_options};
 
-use super::markdown;
+use crate::markdown;
 
 /// Configuration for the preprocessor.
 ///
