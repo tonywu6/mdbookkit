@@ -1,7 +1,9 @@
-use pulldown_cmark::{BrokenLink, BrokenLinkCallback, CowStr, Event, Options, Parser};
+use mdbook_markdown::pulldown_cmark::{
+    BrokenLink, BrokenLinkCallback, CowStr, Event, Options, Parser,
+};
 use tap::Pipe;
 
-use mdbookkit::markdown::mdbook_markdown_options;
+use mdbookkit::markdown::default_markdown_options;
 
 pub fn stream(text: &str, options: Options) -> MarkdownStream<'_> {
     Parser::new_with_broken_link_callback(text, options, Some(ItemLinks))
@@ -12,8 +14,8 @@ pub type MarkdownStream<'a> = Parser<'a, ItemLinks>;
 /// [`BrokenLinkCallback`] implementation that unconditionally converts all "broken"
 /// links to links to be further processed.
 ///
-/// "Broken" links are links like `[text][link::item]` that don't have associated URLs,
-/// which are actually exactly what [rustdoc_link][super] wants.
+/// "Broken" links are links like `[text][link::item]` that don't have associated URLs
+/// that are expected for this preprocessor.
 ///
 /// Links that are "broken" that aren't actually doc links won't show up in the output,
 /// because the preprocessor ignores links that cannot be parsed and is capable of
@@ -23,8 +25,8 @@ pub struct ItemLinks;
 impl ItemLinks {
     // Explicitly disable smart punctuation to prevent quotes from being changed
     // or else things like lifetimes may become invalid
-    const OPTIONS: pulldown_cmark::Options =
-        mdbook_markdown_options().intersection(Options::ENABLE_SMART_PUNCTUATION.complement());
+    const OPTIONS: Options =
+        default_markdown_options().intersection(Options::ENABLE_SMART_PUNCTUATION.complement());
 }
 
 impl<'input> BrokenLinkCallback<'input> for ItemLinks {

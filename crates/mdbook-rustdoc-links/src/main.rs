@@ -1,25 +1,16 @@
-use std::{
-    borrow::Borrow,
-    collections::HashMap,
-    hash::Hash,
-    io::{Read, Write},
-    sync::Arc,
-};
+use std::{borrow::Borrow, collections::HashMap, hash::Hash, io::Write, sync::Arc};
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use console::colors_enabled_stderr;
 use log::LevelFilter;
 use lsp_types::Position;
-use mdbook::preprocess::PreprocessorContext;
+use mdbook_preprocessor::PreprocessorContext;
 use tap::{Pipe, TapFallible};
 use tokio::task::JoinSet;
 
 use mdbookkit::{
-    book::{
-        book_from_stdin, book_into_stdout, config_from_book, for_each_chapter_mut, iter_chapters,
-        smart_punctuation,
-    },
+    book::{BookConfigHelper, BookHelper, book_from_stdin, string_from_stdin},
     diagnostics::Issue,
     log_debug, log_warning,
     logging::{ConsoleLogger, is_logging, spinner},
@@ -176,7 +167,7 @@ where
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    ConsoleLogger::install(env!("CARGO_PKG_NAME"));
+    ConsoleLogger::install(PREPROCESSOR_NAME);
     match Program::parse().command {
         Some(Command::Supports { .. }) => Ok(()),
         Some(Command::Markdown(options)) => markdown(options).await,
@@ -225,7 +216,7 @@ async fn mdbook() -> Result<()> {
 
     let mut content = Pages::default();
 
-    for (path, ch) in iter_chapters(&book) {
+    for (path, ch) in book.iter_chapters() {
         let stream = client.env().markdown(&ch.content).into_offset_iter();
         content
             .read(path.clone(), &ch.content, stream)
@@ -242,7 +233,8 @@ async fn mdbook() -> Result<()> {
         .await
         .context("failed to resolve some links")?;
 
-    let mut result = iter_chapters(&book)
+    let mut result = book
+        .iter_chapters()
         .filter_map(|(path, _)| {
             let output = content
                 .emit(path, &client.env().emit_config())
@@ -268,13 +260,15 @@ async fn mdbook() -> Result<()> {
         FileCache::save(&env, &content).await.ok();
     }
 
-    for_each_chapter_mut(&mut book, |path, ch| {
-        if let Some(output) = result.remove(&path) {
+    book.for_each_chapter_mut(|ch| {
+        if let Some(path) = &ch.source_path
+            && let Some(output) = result.remove(path)
+        {
             ch.content = output
         }
     });
 
-    book_into_stdout(&book)?;
+    book.to_stdout()?;
 
     env.config.fail_on_warnings.check(status.level())?;
 
@@ -348,28 +342,22 @@ fn describe() -> Result<()> {
     Ok(())
 }
 
-fn config(context: &PreprocessorContext) -> Result<Config> {
-    let mut config = config_from_book::<Config>(&context.config, "rustdoc-link")?;
+fn config(ctx: &PreprocessorContext) -> Result<Config> {
+    let mut config = ctx.config.preprocessor::<Config>(PREPROCESSOR_NAME)?;
 
     if let Some(path) = config.manifest_dir {
-        config.manifest_dir = Some(context.root.join(path))
+        config.manifest_dir = Some(ctx.root.join(path))
     } else {
-        config.manifest_dir = Some(context.root.clone())
+        config.manifest_dir = Some(ctx.root.clone())
     }
 
     if let Some(path) = config.cache_dir {
-        config.cache_dir = Some(context.root.join(path))
+        config.cache_dir = Some(ctx.root.join(path))
     }
-
-    config.smart_punctuation = smart_punctuation(&context.config);
 
     Ok(config)
 }
 
-fn string_from_stdin() -> Result<String> {
-    Vec::new()
-        .pipe(|mut buf| std::io::stdin().read_to_end(&mut buf).and(Ok(buf)))?
-        .pipe(|buf| Ok(String::from_utf8(buf)?))
-}
+static UNIQUE_ID: &str = "__ded48f4d_0c4f_4950_b17d_55fd3b2a0c86__";
 
-const UNIQUE_ID: &str = "__ded48f4d_0c4f_4950_b17d_55fd3b2a0c86__";
+static PREPROCESSOR_NAME: &str = env!("CARGO_PKG_NAME");

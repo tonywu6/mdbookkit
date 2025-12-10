@@ -8,13 +8,12 @@ use std::{
 use anyhow::{Context, Result, anyhow, bail};
 use cargo_toml::{Manifest, Product};
 use lsp_types::Url;
-use pulldown_cmark::Options;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use shlex::Shlex;
 use tap::Pipe;
 use tokio::process::Command;
 
-use mdbookkit::{error::OnWarning, markdown::mdbook_markdown_options};
+use mdbookkit::{error::OnWarning, markdown::default_markdown_options};
 
 use super::markdown;
 
@@ -65,6 +64,7 @@ pub struct Config {
     #[arg(long, value_name("PATH"), value_hint(clap::ValueHint::DirPath))]
     pub manifest_dir: Option<PathBuf>,
 
+    // TODO: warn on cache miss due to failed resolution
     /// Directory in which to persist build cache.
     ///
     /// Setting this will enable caching. Will skip rust-analyzer if cache hits.
@@ -78,18 +78,6 @@ pub struct Config {
     #[serde(default)]
     #[arg(long, value_enum, value_name("MODE"), default_value_t = Default::default())]
     pub fail_on_warnings: OnWarning,
-
-    /// Whether to enable punctuations like smart quotes `“”`.
-    ///
-    /// This is only meaningful if your links happen to have visible text that has
-    /// specific punctuation. The processor otherwise passes through the rest of your
-    /// Markdown source untouched.
-    ///
-    /// **In `book.toml`** — this option is not needed because
-    /// `output.html.smart-punctuation` is honored.
-    #[serde(default)]
-    #[arg(long)]
-    pub smart_punctuation: bool,
 
     #[serde(default)]
     #[arg(long, hide = true)]
@@ -228,12 +216,7 @@ impl Environment {
     }
 
     pub fn markdown<'a>(&self, source: &'a str) -> markdown::MarkdownStream<'a> {
-        let options = if self.config.smart_punctuation {
-            Options::ENABLE_SMART_PUNCTUATION
-        } else {
-            Options::empty()
-        };
-        markdown::stream(source, options.union(mdbook_markdown_options()))
+        markdown::stream(source, default_markdown_options())
     }
 
     pub fn emit_config(&self) -> EmitConfig {

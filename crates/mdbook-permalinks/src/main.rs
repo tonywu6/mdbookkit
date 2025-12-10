@@ -3,27 +3,23 @@ use std::{collections::HashMap, fmt::Debug, str::FromStr};
 use anyhow::{Context, Result, anyhow};
 use console::colors_enabled_stderr;
 use log::LevelFilter;
-use mdbook::preprocess::PreprocessorContext;
-use percent_encoding::percent_decode_str;
+use mdbook_markdown::pulldown_cmark;
+use mdbook_preprocessor::{Preprocessor, PreprocessorContext, book::Book};
 use serde::Deserialize;
-use tap::{Pipe, Tap, TapFallible};
+use tap::{Pipe, TapFallible};
 use url::Url;
 
 use mdbookkit::{
-    book::{
-        book_from_stdin, book_into_stdout, config_from_book, for_each_chapter_mut, iter_chapters,
-        smart_punctuation,
-    },
+    book::{BookConfigHelper, BookHelper, book_from_stdin},
     diagnostics::Issue,
     error::OnWarning,
     log_debug, log_warning,
     logging::{ConsoleLogger, is_logging},
-    markdown::mdbook_markdown_options,
 };
 
 use self::{
     link::{LinkStatus, RelativeLink},
-    page::{Fragments, Pages},
+    page::Pages,
     vcs::{Permalink, PermalinkFormat},
 };
 
@@ -34,100 +30,26 @@ mod page;
 mod tests;
 mod vcs;
 
-fn main() -> Result<()> {
-    ConsoleLogger::install(env!("CARGO_PKG_NAME"));
+struct Permalinks;
 
-    let Program { command } = clap::Parser::parse();
-
-    match command {
-        Some(Command::Supports { .. }) => return Ok(()),
-        #[cfg(feature = "_testing")]
-        Some(Command::Describe) => {
-            print!("{}", mdbookkit::docs::describe_preprocessor::<Config>()?);
-            return Ok(());
-        }
-        None => {}
+impl Preprocessor for Permalinks {
+    fn name(&self) -> &str {
+        env!("CARGO_PKG_NAME")
     }
 
-    let (context, mut book) = book_from_stdin().context("failed to parse book content")?;
-
-    let env = match Environment::new(&context) {
-        Ok(Ok(env)) => env,
-        Ok(Err(err)) => {
-            log::warn!("{:?}", err.context("preprocessor will be disabled"));
-            return book_into_stdout(&book);
+    fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book> {
+        match Environment::new(ctx) {
+            Ok(Ok(env)) => env.run(ctx, book),
+            Ok(Err(err)) => {
+                log::warn!("{:?}", err.context("preprocessor will be disabled"));
+                Ok(book)
+            }
+            Err(err) => Err(err).context(format!(
+                "failed to initialize preprocessor `{}`",
+                self.name()
+            )),
         }
-        Err(err) => {
-            return Err(err).context(concat!(
-                "failed to initialize preprocessor `",
-                env!("CARGO_PKG_NAME"),
-                "`"
-            ));
-        }
-    };
-
-    let mut content = Pages::new(env.markdown);
-
-    for (path, ch) in iter_chapters(&book) {
-        let url = env
-            .book_src
-            .join(&path.to_string_lossy())
-            .context("could not read path as a url")?;
-        content
-            .insert(url, &ch.content)
-            .with_context(|| path.display().to_string())
-            .context("failed to parse Markdown source:")?;
     }
-
-    env.resolve(&mut content);
-
-    let mut result = iter_chapters(&book)
-        .filter_map(|(path, _)| {
-            let url = env.book_src.join(&path.to_string_lossy()).unwrap();
-            content
-                .emit(&url)
-                .tap_err(log_warning!())
-                .ok()
-                .map(|output| (path.clone(), output.to_string()))
-        })
-        .collect::<HashMap<_, _>>();
-
-    let status = env
-        .report_issues(&content, |_| true)
-        .names(|url| env.rel_path(url))
-        .level(LevelFilter::Warn)
-        .logging(is_logging())
-        .colored(colors_enabled_stderr())
-        .build()
-        .to_stderr()
-        .to_status();
-
-    for_each_chapter_mut(&mut book, |path, ch| {
-        if let Some(output) = result.remove(&path) {
-            ch.content = output
-        }
-    });
-
-    book_into_stdout(&book)?;
-
-    env.config.fail_on_warnings.check(status.level())?;
-
-    Ok(())
-}
-
-#[derive(clap::Parser, Debug, Clone)]
-struct Program {
-    #[command(subcommand)]
-    command: Option<Command>,
-}
-
-#[derive(clap::Subcommand, Debug, Clone)]
-enum Command {
-    #[clap(hide = true)]
-    Supports { renderer: String },
-    #[cfg(feature = "_testing")]
-    #[clap(hide = true)]
-    Describe,
 }
 
 struct Environment {
@@ -142,11 +64,66 @@ struct VersionControl {
     link: Permalink,
 }
 
+impl Preprocessor for Environment {
+    fn name(&self) -> &str {
+        PREPROCESSOR_NAME
+    }
+
+    fn run(&self, _: &PreprocessorContext, mut book: Book) -> Result<Book> {
+        let mut content = Pages::new(self.markdown);
+
+        for (path, ch) in book.iter_chapters() {
+            let url = self
+                .book_src
+                .join(&path.to_string_lossy())
+                .context("could not read path as a url")?;
+            content
+                .insert(url, &ch.content)
+                .with_context(|| path.display().to_string())
+                .context("failed to parse Markdown source:")?;
+        }
+
+        self.resolve(&mut content);
+
+        let mut result = book
+            .iter_chapters()
+            .filter_map(|(path, _)| {
+                let url = self.book_src.join(&path.to_string_lossy()).unwrap();
+                content
+                    .emit(&url)
+                    .tap_err(log_warning!())
+                    .ok()
+                    .map(|output| (path.clone(), output.to_string()))
+            })
+            .collect::<HashMap<_, _>>();
+
+        let status = self
+            .report_issues(&content, |_| true)
+            .names(|url| self.rel_path(url))
+            .level(LevelFilter::Warn)
+            .logging(is_logging())
+            .colored(colors_enabled_stderr())
+            .build()
+            .to_stderr()
+            .to_status();
+
+        book.for_each_chapter_mut(|ch| {
+            if let Some(path) = &ch.source_path
+                && let Some(output) = result.remove(path)
+            {
+                ch.content = output
+            }
+        });
+
+        self.config.fail_on_warnings.check(status.level())?;
+
+        Ok(book)
+    }
+}
+
 impl Environment {
     fn resolve(&self, content: &mut Pages<'_>) {
         self.validate();
-
-        let fragments = content.take_fragments();
 
         for (base, link) in content.links_mut() {
             let file = if link.link.starts_with('/') {
@@ -164,21 +141,15 @@ impl Environment {
 
             let env = self;
             let page_url = base.as_ref();
-            let fragments = &fragments;
 
             Resolver {
                 link,
                 page_url,
                 file_url,
                 env,
-                fragments,
             }
             .resolve();
         }
-
-        let mut fragments = fragments;
-        fragments.restore(content);
-        drop(fragments);
     }
 
     #[inline]
@@ -196,7 +167,9 @@ impl Environment {
     }
 
     fn new(book: &PreprocessorContext) -> Result<Result<Self>> {
-        let config = config_from_book::<Config>(&book.config, env!("CARGO_PKG_NAME"))
+        let config = book
+            .config
+            .preprocessor(PREPROCESSOR_NAME)
             .context("failed to read preprocessor config from book.toml")?;
 
         let vcs = match VersionControl::try_from_git(&config, &book.config) {
@@ -205,11 +178,7 @@ impl Environment {
             Err(err) => return Err(err),
         };
 
-        let markdown = mdbook_markdown_options().tap_mut(|m| {
-            if smart_punctuation(&book.config) {
-                m.insert(pulldown_cmark::Options::ENABLE_SMART_PUNCTUATION);
-            }
-        });
+        let markdown = book.config.markdown_options();
 
         let book_src = book
             .root
@@ -234,7 +203,6 @@ struct Resolver<'a, 'r> {
     page_url: &'a Url,
     link: &'a mut RelativeLink<'r>,
     env: &'a Environment,
-    fragments: &'a Fragments,
 }
 
 impl Resolver<'_, '_> {
@@ -257,7 +225,7 @@ impl Resolver<'_, '_> {
             page_url,
             file_url,
             env,
-            fragments,
+            ..
         } = self;
 
         let file_url = if let Some(path) = env.vcs.link.to_path(&file_url) {
@@ -327,14 +295,6 @@ impl Resolver<'_, '_> {
             } else {
                 link.status = LinkStatus::Published;
             }
-            Self {
-                link,
-                page_url,
-                file_url,
-                env,
-                fragments,
-            }
-            .resolve_fragment();
             return;
         }
 
@@ -353,8 +313,7 @@ impl Resolver<'_, '_> {
             file_url,
             page_url,
             link,
-            env,
-            fragments,
+            ..
         } = self;
 
         let path = {
@@ -421,15 +380,6 @@ impl Resolver<'_, '_> {
                 link.link = page_url.make_relative(&file_url).unwrap().into();
                 link.status = LinkStatus::Rewritten;
 
-                Self {
-                    link,
-                    page_url,
-                    file_url,
-                    env,
-                    fragments,
-                }
-                .resolve_fragment();
-
                 return;
             }
 
@@ -438,33 +388,6 @@ impl Resolver<'_, '_> {
 
         link.link = not_found[0].to_string().into();
         link.status = LinkStatus::NoSuchPath;
-    }
-
-    fn resolve_fragment(self) {
-        let Self {
-            mut file_url,
-            link,
-            fragments,
-            ..
-        } = self;
-
-        let Some(fragment) = file_url
-            .fragment()
-            .and_then(|f| percent_decode_str(f).decode_utf8().ok().or(Some(f.into())))
-            .map(|f| f.into_owned())
-        else {
-            return;
-        };
-
-        file_url.set_fragment(None);
-
-        let found = fragments.contains(&file_url, &fragment);
-
-        file_url.set_fragment(Some(&fragment));
-
-        if !found {
-            link.status = LinkStatus::NoSuchFragment;
-        }
     }
 }
 
@@ -592,3 +515,38 @@ impl<'de> Deserialize<'de> for UrlPrefix {
         Ok(Self::from(url))
     }
 }
+
+fn main() -> Result<()> {
+    ConsoleLogger::install(env!("CARGO_PKG_NAME"));
+    let Program { command } = clap::Parser::parse();
+    match command {
+        None => {
+            let (ctx, book) = book_from_stdin().context("failed to parse book content")?;
+            Permalinks.run(&ctx, book)?.to_stdout()?;
+            Ok(())
+        }
+        Some(Command::Supports { .. }) => Ok(()),
+        #[cfg(feature = "_testing")]
+        Some(Command::Describe) => {
+            print!("{}", mdbookkit::docs::describe_preprocessor::<Config>()?);
+            Ok(())
+        }
+    }
+}
+
+#[derive(clap::Parser, Debug, Clone)]
+struct Program {
+    #[command(subcommand)]
+    command: Option<Command>,
+}
+
+#[derive(clap::Subcommand, Debug, Clone)]
+enum Command {
+    #[clap(hide = true)]
+    Supports { renderer: String },
+    #[cfg(feature = "_testing")]
+    #[clap(hide = true)]
+    Describe,
+}
+
+static PREPROCESSOR_NAME: &str = env!("CARGO_PKG_NAME");

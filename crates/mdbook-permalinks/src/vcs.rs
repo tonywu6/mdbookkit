@@ -2,6 +2,7 @@ use std::{collections::HashMap, ops::ControlFlow};
 
 use anyhow::{Context, Result, anyhow, bail};
 use git2::{DescribeOptions, Repository};
+use mdbook_preprocessor::config::Config as MDBookConfig;
 use tap::{Pipe, Tap, TapFallible};
 use url::{Url, form_urlencoded::Serializer as SearchParams};
 
@@ -10,7 +11,7 @@ use mdbookkit::log_debug;
 use crate::{Config, VersionControl};
 
 impl VersionControl {
-    pub fn try_from_git(config: &Config, book: &mdbook::Config) -> Result<Result<Self>> {
+    pub fn try_from_git(config: &Config, book: &MDBookConfig) -> Result<Result<Self>> {
         let repo = match Repository::open_from_env()
             .context("preprocessor requires a git repository to work")
             .context("failed to find a git repository")
@@ -315,9 +316,9 @@ fn get_git_head(repo: &Repository) -> Result<Option<String>> {
     }
 }
 
-fn find_git_remote(repo: &Repository, config: &mdbook::Config) -> Result<Result<RepoSource>> {
+fn find_git_remote(repo: &Repository, config: &MDBookConfig) -> Result<Result<RepoSource>> {
     if let Some(url) = config
-        .get_deserialized_opt::<String, _>("output.html.git-repository-url")
+        .get::<String>("output.html.git-repository-url")
         .context("failed to get `output.html.git-repository-url`")?
     {
         gix_url::parse(url.as_str().into())?
@@ -373,6 +374,7 @@ fn remote_as_github(url: &gix_url::Url) -> Result<(String, String)> {
 mod tests {
     use anyhow::Result;
     use git2::Repository;
+    use mdbook_preprocessor::config::Config as MDBookConfig;
 
     use super::{CustomPermalink, PermalinkFormat, find_git_remote, remote_as_github};
 
@@ -382,7 +384,7 @@ mod tests {
         [output.html]
         git-repository-url = "https://github.com/lorem/ipsum/tree/main/crates/dolor"
         "#
-        .parse::<mdbook::Config>()?;
+        .parse::<MDBookConfig>()?;
         let repo = Repository::open_from_env()?;
         let repo = find_git_remote(&repo, &config)??;
         let (owner, repo) = remote_as_github(repo.as_ref())?;
@@ -393,7 +395,7 @@ mod tests {
 
     #[test]
     fn test_github_url_from_repo() -> Result<()> {
-        let config = "".parse::<mdbook::Config>()?;
+        let config = "".parse::<MDBookConfig>()?;
         let repo = Repository::open_from_env()?;
         let repo = find_git_remote(&repo, &config)??;
         let (_, repo) = remote_as_github(repo.as_ref())?;
@@ -407,7 +409,7 @@ mod tests {
         [output.html]
         git-repository-url = "git@my-alt.github.com:lorem/ipsum.git"
         "#
-        .parse::<mdbook::Config>()?;
+        .parse::<MDBookConfig>()?;
         let repo = Repository::open_from_env()?;
         let repo = find_git_remote(&repo, &config)??;
         let (owner, repo) = remote_as_github(repo.as_ref())?;
@@ -423,7 +425,7 @@ mod tests {
         [output.html]
         git-repository-url = "https://gitlab.haskell.org/ghc/ghc"
         "#
-        .parse::<mdbook::Config>()
+        .parse::<MDBookConfig>()
         .unwrap();
         let repo = Repository::open_from_env().unwrap();
         let repo = find_git_remote(&repo, &config).unwrap().unwrap();

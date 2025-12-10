@@ -7,7 +7,7 @@ use tap::Pipe;
 use url::Url;
 
 use mdbookkit::{
-    markdown::mdbook_markdown_options,
+    markdown::default_markdown_options,
     portable_snapshots, test_document,
     testing::{CARGO_WORKSPACE_DIR, TestDocument, setup_logging},
 };
@@ -37,14 +37,14 @@ static FIXTURE: LazyLock<Fixture> = LazyLock::new(|| {
                 .join("crates/")?
                 .join(concat!(env!("CARGO_PKG_NAME"), "/"))?
                 .join("src/")?,
-            markdown: mdbook_markdown_options(),
+            markdown: default_markdown_options(),
             config: Config {
                 book_url: Some("https://example.org/book".parse::<Url>()?.into()),
                 ..Default::default()
             },
         };
 
-        let mut pages = Pages::new(mdbook_markdown_options());
+        let mut pages = Pages::new(default_markdown_options());
 
         for doc in TEST_DOCUMENTS {
             pages.insert(doc.url(), doc.content)?;
@@ -77,7 +77,7 @@ macro_rules! test_output {
     };
 }
 
-test_output!["tests/links.md", "tests/headings.md",];
+test_output!["tests/links.md",];
 
 macro_rules! matcher {
     ( $pattern:pat ) => {
@@ -92,7 +92,6 @@ macro_rules! matcher {
 #[case("_stderr.permalink", matcher!(LinkStatus::Permalink))]
 #[case("_stderr.not-checked-in", matcher!(LinkStatus::PathNotCheckedIn))]
 #[case("_stderr.no-such-path", matcher!(LinkStatus::NoSuchPath))]
-#[case("_stderr.no-such-fragment", matcher!(LinkStatus::NoSuchFragment))]
 #[case("_stderr.link-error", matcher!(LinkStatus::Error(..)))]
 fn test_stderr(#[case] name: &str, #[case] matcher: impl Fn(&LinkStatus) -> bool) -> Result<()> {
     let Fixture { env, pages } = &*FIXTURE;

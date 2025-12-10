@@ -177,7 +177,10 @@ body {
     background-color: unset;
     border-block-start: none;
     border-block-end: none;
-    border-inline-start: 0.25rem solid var(--quote-border);
+
+    &:not(.blockquote-tag) {
+      border-inline-start: 0.25rem solid var(--quote-border);
+    }
 
     > :last-child {
       margin-block-end: 0;

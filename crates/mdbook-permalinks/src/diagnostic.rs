@@ -84,14 +84,6 @@ impl IssueItem for LinkDiagnostic<'_> {
             LinkStatus::Rewritten => Some(format!("file: {link}\nlink: {}", self.link.link)),
             LinkStatus::PathNotCheckedIn => Some(format!("{status}: {link}")),
             LinkStatus::NoSuchPath => Some(format!("{status}: {link}")),
-            LinkStatus::NoSuchFragment => {
-                let (_, fragment) = self
-                    .link
-                    .link
-                    .split_once('#')
-                    .expect("should have a fragment");
-                Some(format!("#{fragment} not found in {link}"))
-            }
             LinkStatus::Error(..) => Some(format!("{status}")),
         };
         LabeledSpan::new_with_span(label, self.link.span.clone())
@@ -128,7 +120,6 @@ impl Issue for LinkStatus {
             Self::Permalink => log::Level::Info,
             Self::PathNotCheckedIn => log::Level::Warn,
             Self::NoSuchPath => log::Level::Warn,
-            Self::NoSuchFragment => log::Level::Warn,
             Self::Error(..) => log::Level::Warn,
         }
     }
@@ -158,7 +149,6 @@ impl LinkStatus {
     fn order(&self) -> usize {
         match self {
             Self::Error(..) => 103,
-            Self::NoSuchFragment => 102,
             Self::NoSuchPath => 101,
             Self::PathNotCheckedIn => 100,
             Self::Permalink => 3,

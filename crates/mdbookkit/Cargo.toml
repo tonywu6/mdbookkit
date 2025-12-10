@@ -24,10 +24,10 @@ console = { version = "0.15.11" }
 env_logger = { workspace = true }
 indicatif = { version = "0.17.11" }
 log = { workspace = true }
-mdbook = { workspace = true }
+mdbook-markdown = { workspace = true }
+mdbook-preprocessor = { workspace = true }
 miette = { workspace = true }
 owo-colors = { version = "4.2.0" }
-pulldown-cmark = { workspace = true }
 pulldown-cmark-to-cmark = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

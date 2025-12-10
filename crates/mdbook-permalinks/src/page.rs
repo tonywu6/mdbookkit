@@ -1,16 +1,8 @@
-use std::{
-    borrow::Borrow,
-    collections::{HashMap, HashSet},
-    fmt::Debug,
-    hash::Hash,
-    ops::Range,
-    sync::Arc,
-};
+use std::{borrow::Borrow, collections::HashMap, fmt::Debug, hash::Hash, sync::Arc};
 
 use anyhow::{Context, Result, bail};
-use mdbook::utils::unique_id_from_content;
-use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd, html::push_html};
-use tap::{Pipe, Tap, TapFallible};
+use mdbook_markdown::pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
+use tap::{Pipe, TapFallible};
 use url::Url;
 
 use mdbookkit::{
@@ -28,7 +20,6 @@ pub struct Pages<'a> {
 struct Page<'a> {
     source: &'a str,
     links: Vec<LinkSpan<'a>>,
-    fragments: HashSet<String>,
 }
 
 impl<'a> Pages<'a> {
@@ -75,14 +66,6 @@ impl<'a> Pages<'a> {
         let page = page.with_context(|| format!("no such document {key:?}"))?;
         page.emit()
     }
-
-    pub fn take_fragments(&mut self) -> Fragments {
-        self.pages
-            .iter_mut()
-            .map(|(url, page)| (url.clone(), std::mem::take(&mut page.fragments)))
-            .collect::<HashMap<_, _>>()
-            .pipe(Fragments)
-    }
 }
 
 impl<'a> Page<'a> {
@@ -93,41 +76,12 @@ impl<'a> Page<'a> {
         let mut this = Self {
             source,
             links: Default::default(),
-            fragments: Default::default(),
         };
-
-        struct Heading<'a> {
-            span: Range<usize>,
-            text: Vec<Event<'a>>,
-        }
-
-        let mut heading: Option<Heading<'_>> = None;
-        let mut counter: HashMap<String, usize> = Default::default();
 
         let mut opened: Option<LinkSpan<'_>> = None;
 
         for (event, span) in stream {
             match event {
-                Event::Start(Tag::Heading { id, .. }) => {
-                    if let Some(id) = id {
-                        this.insert_id(&id, &mut counter);
-                    } else if heading.is_some() {
-                        bail!("unexpected `Tag::Heading` in `Tag::Heading` at {span:?}");
-                    } else {
-                        heading = Some(Heading { span, text: vec![] })
-                    }
-                }
-
-                Event::End(TagEnd::Heading(..)) => {
-                    let Some(Heading { span: start, text }) = heading.take() else {
-                        bail!("unexpected `TagEnd::Heading` at {span:?}")
-                    };
-                    if start != span {
-                        bail!("mismatching span, expected {start:?}, got {span:?}")
-                    }
-                    this.slugify(text.iter(), &mut counter);
-                }
-
                 Event::Start(tag @ (Tag::Link { .. } | Tag::Image { .. })) => {
                     let (usage, link, title) = match tag {
                         Tag::Link {
@@ -169,19 +123,11 @@ impl<'a> Page<'a> {
                     }
                 }
 
-                event => match (heading.as_mut(), opened.as_mut()) {
-                    (Some(heading), Some(link)) => {
-                        heading.text.push(event.clone());
-                        link.0.push(LinkText::Text(event));
+                event => {
+                    if let Some(link) = opened.as_mut() {
+                        link.0.push(LinkText::Text(event))
                     }
-                    (Some(heading), None) => {
-                        heading.text.push(event);
-                    }
-                    (None, Some(link)) => {
-                        link.0.push(LinkText::Text(event));
-                    }
-                    (None, None) => {}
-                },
+                }
             }
         }
 
@@ -196,47 +142,5 @@ impl<'a> Page<'a> {
             .into_string()
             .tap_err(log_warning!())?
             .pipe(Ok)
-    }
-
-    fn slugify<'r, S>(&mut self, heading: S, counter: &mut HashMap<String, usize>)
-    where
-        S: Iterator<Item = &'r Event<'r>>,
-    {
-        let fragment = String::new().tap_mut(|s| push_html(s, heading.cloned()));
-        let fragment = unique_id_from_content(&fragment, counter);
-        self.fragments.insert(fragment);
-    }
-
-    fn insert_id(&mut self, id: &str, counter: &mut HashMap<String, usize>) {
-        counter.insert(id.into(), 1);
-        self.fragments.insert(id.into());
-    }
-}
-
-#[must_use]
-pub struct Fragments(HashMap<Arc<Url>, HashSet<String>>);
-
-impl Fragments {
-    pub fn contains(&self, page: &Url, fragment: &str) -> bool {
-        self.0
-            .get(page)
-            .map(|f| f.contains(fragment))
-            .unwrap_or(false)
-    }
-
-    pub fn restore(&mut self, pages: &mut Pages<'_>) {
-        let fragments = std::mem::take(&mut self.0);
-        for (url, items) in fragments {
-            pages.pages.get_mut(&url).unwrap().fragments = items;
-        }
-    }
-}
-
-/// Drop bomb
-impl Drop for Fragments {
-    fn drop(&mut self) {
-        if !self.0.is_empty() {
-            unreachable!("page fragments were not restored")
-        }
     }
 }

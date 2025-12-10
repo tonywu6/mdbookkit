@@ -2,7 +2,7 @@
 
 use std::{borrow::Cow, fmt::Write, ops::Range};
 
-use pulldown_cmark::{Event, Options};
+use mdbook_markdown::pulldown_cmark::{Event, Options};
 use pulldown_cmark_to_cmark::{Error, cmark};
 use tap::Pipe;
 
@@ -101,8 +101,10 @@ where
     }
 }
 
-/// <https://github.com/rust-lang/mdBook/blob/v0.4.47/src/utils/mod.rs#L197-L208>
-pub const fn mdbook_markdown_options() -> Options {
+/// <https://github.com/rust-lang/mdBook/blob/v0.5.1/crates/mdbook-markdown/src/lib.rs#L46-L50>
+///
+/// See also [`markdown_options`][super::book::BookConfigHelper::markdown_options].
+pub const fn default_markdown_options() -> Options {
     Options::empty()
         .union(Options::ENABLE_TABLES)
         .union(Options::ENABLE_FOOTNOTES)

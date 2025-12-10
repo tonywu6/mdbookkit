@@ -1,5 +1,6 @@
 ---
 source: crates/mdbook-permalinks/src/tests.rs
+assertion_line: 106
 expression: report
 ---
   info: link to book page or file rewritten as path
@@ -11,21 +12,21 @@ expression: report
     ·                                      │ link: #absolute-paths
     │ 
     ╰────
-    ╭─[crates/mdbook-permalinks/src/tests/links.md:53:8]
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:31:8]
     │ 
-    │ found: <https://example.org/book/tests/headings>
-    ·        ────────────────────┬────────────────────
-    ·                            ╰─┤ file: crates/mdbook-permalinks/src/tests/headings.md
-    ·                              │ link: headings.md
+    │ found: <https://example.org/book/tests/links>
+    ·        ───────────────────┬──────────────────
+    ·                           ╰─┤ file: crates/mdbook-permalinks/src/tests/links.md
+    ·                             │ link: 
     │ 
-    │ found: <https://example.org/book/tests/headings.html>
-    ·        ───────────────────────┬──────────────────────
-    ·                               ╰─┤ file: crates/mdbook-permalinks/src/tests/headings.md
-    ·                                 │ link: headings.md
+    │ found: <https://example.org/book/tests/links.html>
+    ·        ─────────────────────┬─────────────────────
+    ·                             ╰─┤ file: crates/mdbook-permalinks/src/tests/links.md
+    ·                               │ link: 
     │ 
     │ not found: <https://example.org/book/404>
     │ 
-    │ ignored: <https://example.com/book/headings>
+    │ ignored: <https://example.com/book/links>
     │ 
     │ trailing slash, found: <https://example.org/book/tests/trailing-slash/>
     ·                        ────────────────────────┬───────────────────────
@@ -37,20 +38,18 @@ expression: report
     ·                                               ╰─┤ file: crates/mdbook-permalinks/src/tests/trailing-slash/index.md
     ·                                                 │ link: trailing-slash/index.md
     │ 
-    │ trailing slash, not found: <https://example.org/book/tests/headings/>
+    │ trailing slash, not found: <https://example.org/book/tests/links/>
     │ 
     │ # canonical urls to HEAD
     │ 
     │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
     │ 
-    │ [published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/headings.md)
-    · ──────────────────────────────────────────────────┬─────────────────────────────────────────────────
-    ·                                                   ╰─┤ file: crates/mdbook-permalinks/src/tests/headings.md
-    ·                                                     │ link: headings.md
+    │ [published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/links.md)
+    · ────────────────────────────────────────────────┬────────────────────────────────────────────────
+    ·                                                 ╰─┤ file: crates/mdbook-permalinks/src/tests/links.md
+    ·                                                   │ link: 
     │ 
     │ [file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbook-permalinks/src/tests/shinjuku.jpg)
-    │ 
-    │ [fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/headings.md#associated_items_on_primitive_types)
     │ 
     │ # image-in-link
     │ 

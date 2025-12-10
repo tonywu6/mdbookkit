@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::{Context, Result, bail};
-use pulldown_cmark::{CowStr, Event, Tag, TagEnd};
+use mdbook_markdown::pulldown_cmark::{CowStr, Event, Tag, TagEnd};
 use tap::Pipe;
 
 use mdbookkit::markdown::{PatchStream, Spanned};

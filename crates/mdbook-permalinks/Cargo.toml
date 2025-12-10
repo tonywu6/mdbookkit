@@ -23,11 +23,11 @@ console = { workspace = true }
 git2 = { version = "0.20.1", default-features = false }
 gix-url = { version = "0.30.0" }
 log = { workspace = true }
-mdbook = { workspace = true }
+mdbook-markdown = { workspace = true }
+mdbook-preprocessor = { workspace = true }
 mdbookkit = { workspace = true }
 miette = { workspace = true }
 percent-encoding = { version = "2.3.1" }
-pulldown-cmark = { workspace = true }
 serde = { workspace = true }
 tap = { workspace = true }
 thiserror = { workspace = true }

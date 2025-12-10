@@ -2,7 +2,7 @@ use std::{borrow::Cow, ops::Range, sync::Arc};
 
 use anyhow::{Result, bail};
 use lsp_types::Url;
-use pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
+use mdbook_markdown::pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
 use serde::{Deserialize, Serialize};
 use tap::{Pipe, Tap, TapFallible};
 
@@ -190,7 +190,7 @@ mod __emit {
         slice::Iter,
     };
 
-    use pulldown_cmark::Event;
+    use mdbook_markdown::pulldown_cmark::Event;
 
     pub type EmitLink<'a> =
         Chain<Chain<Once<Event<'a>>, Cloned<Iter<'a, Event<'a>>>>, Once<Event<'a>>>;

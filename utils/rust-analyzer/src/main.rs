@@ -39,7 +39,9 @@ impl Download {
         let Self { release, path } = self;
 
         let platform = env!("TARGET");
-        let url = format!("https://github.com/rust-lang/rust-analyzer/releases/download/{release}/rust-analyzer-{platform}.gz");
+        let url = format!(
+            "https://github.com/rust-lang/rust-analyzer/releases/download/{release}/rust-analyzer-{platform}.gz"
+        );
 
         let mut res = reqwest::blocking::get(url)?;
 
@@ -72,7 +74,9 @@ impl Download {
         let temp = tempfile()?;
 
         let platform = env!("TARGET");
-        let url = format!("https://github.com/rust-lang/rust-analyzer/releases/download/{release}/rust-analyzer-{platform}.zip");
+        let url = format!(
+            "https://github.com/rust-lang/rust-analyzer/releases/download/{release}/rust-analyzer-{platform}.zip"
+        );
 
         let mut res = reqwest::blocking::get(url)?;
 
@@ -133,10 +137,6 @@ enum Command {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true, hide = true)]
         args: Vec<String>,
     },
-    Version {
-        #[command(subcommand)]
-        version: Option<Version>,
-    },
 }
 
 #[derive(clap::Subcommand, Debug)]
@@ -164,19 +164,6 @@ fn main() -> Result<()> {
     match program.command {
         Command::Download => download.download(),
         Command::Analyzer { args } => analyzer(&download, args),
-        Command::Version { version } => match version {
-            Some(Version::Supports { .. }) => Ok(()),
-            None => {
-                #[cfg(feature = "ra-version")]
-                {
-                    ra_version::preprocessor(&download)
-                }
-                #[cfg(not(feature = "ra-version"))]
-                {
-                    panic!("feature `ra-version` not enabled")
-                }
-            }
-        },
     }
 }
 
@@ -223,40 +210,5 @@ impl<W: io::Write> io::Write for Progress<W> {
 impl<W> Progress<W> {
     fn new(p: ProgressBar) -> impl FnOnce(W) -> Self {
         |w| Self(w, p)
-    }
-}
-
-/// Preprocessor to replace `<ra-version>(version)</ra-version>` with the currently
-/// used RA version. Used in docs.
-#[cfg(feature = "ra-version")]
-mod ra_version {
-    use std::io::{Read, Write};
-
-    use anyhow::Result;
-    use mdbook::{book::Book, preprocess::PreprocessorContext, BookItem};
-    use tap::Pipe;
-
-    use crate::Download;
-
-    pub fn preprocessor(Download { release, .. }: &Download) -> Result<()> {
-        let (_, mut book): (PreprocessorContext, Book) = Vec::new()
-            .pipe(|mut buf| std::io::stdin().read_to_end(&mut buf).and(Ok(buf)))?
-            .pipe(String::from_utf8)?
-            .pipe_as_ref(serde_json::from_str)?;
-
-        let version = format!("`{release}`");
-
-        let tag = "<ra-version>(version)</ra-version>";
-
-        book.for_each_mut(|page| {
-            let BookItem::Chapter(page) = page else {
-                return;
-            };
-            page.content = page.content.replace(tag, &version);
-        });
-
-        let output = serde_json::to_string(&book)?;
-        std::io::stdout().write_all(output.as_bytes())?;
-        Ok(())
     }
 }

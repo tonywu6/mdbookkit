@@ -1,9 +1,10 @@
 ---
 source: crates/mdbook-permalinks/src/tests.rs
+assertion_line: 106
 expression: report
 ---
   warning: file does not exist at path
-    ╭─[crates/mdbook-permalinks/src/tests/links.md:35:1]
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:23:1]
     │ 
     │ [Cargo.lock](../../Cargo.lock)
     · ───────────────┬──────────────
@@ -15,41 +16,31 @@ expression: report
     · ──────────────┬──────────────
     ·               ╰── file does not exist at path: crates/mdbook-permalinks/src/tests/shinjuku.jpg
     │ 
-    │ # fragment not found
-    │ 
-    │ [associated items](../tests/headings.md#associated_items_on_primitive_types)
-    │ 
-    │ ## heading: $\sqrt{3x-1}+(1+x)^2$
-    │ 
-    │ ## heading: <https://räksmörgås.josefsson.org/>
-    │ 
-    │ ## heading: pub async fn foobar(rt: &mut [Foo]) -> [Bar]\<Self> <!-- omit from toc -->
-    │ 
     │ # canonical urls to book
     │ 
-    │ found: <https://example.org/book/tests/headings>
+    │ found: <https://example.org/book/tests/links>
     │ 
-    │ found: <https://example.org/book/tests/headings.html>
+    │ found: <https://example.org/book/tests/links.html>
     │ 
     │ not found: <https://example.org/book/404>
     ·            ───────────────┬──────────────
     ·                           ╰── file does not exist at path: crates/mdbook-permalinks/src/404.md
     │ 
-    │ ignored: <https://example.com/book/headings>
+    │ ignored: <https://example.com/book/links>
     │ 
     │ trailing slash, found: <https://example.org/book/tests/trailing-slash/>
     │ 
     │ trailing slash, found: <https://example.org/book/tests/trailing-slash>
     │ 
-    │ trailing slash, not found: <https://example.org/book/tests/headings/>
-    ·                            ─────────────────────┬────────────────────
-    ·                                                 ╰── file does not exist at path: crates/mdbook-permalinks/src/tests/headings/index.md
+    │ trailing slash, not found: <https://example.org/book/tests/links/>
+    ·                            ───────────────────┬───────────────────
+    ·                                               ╰── file does not exist at path: crates/mdbook-permalinks/src/tests/links/index.md
     │ 
     │ # canonical urls to HEAD
     │ 
     │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
     │ 
-    │ [published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/headings.md)
+    │ [published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/links.md)
     │ 
     │ [file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbook-permalinks/src/tests/shinjuku.jpg)
     · ────────────────────────────────────────────────────┬────────────────────────────────────────────────────

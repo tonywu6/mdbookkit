@@ -12,23 +12,11 @@
 
 # book files
 
-[Anchors](./headings.md)
+[Links](./links.md)
 
 [main.rs](../main.rs)
 
 ![selfie](Macaca_nigra_self-portrait_large.jpg)
-
-# fragments
-
-[Fragments](./links.md#fragments)
-
-[Heading 1](./links.md#heading-sqrt3x-11x2)
-
-[Heading 2](./links.md#heading-httpsräksmörgåsjosefssonorg)
-
-[foobar](#heading-pub-async-fn-foobarrt-mut-foo---barself)
-
-[macro_export](./headings.md#macro_export)
 
 # file not found
 
@@ -38,41 +26,29 @@
 
 ![shinjuku.jpg](shinjuku.jpg)
 
-# fragment not found
-
-[associated items](../tests/headings.md#associated_items_on_primitive_types)
-
-## heading: $\sqrt{3x-1}+(1+x)^2$
-
-## heading: <https://räksmörgås.josefsson.org/>
-
-## heading: pub async fn foobar(rt: &mut [Foo]) -> [Bar]\<Self> <!-- omit from toc -->
-
 # canonical urls to book
 
-found: <https://example.org/book/tests/headings>
+found: <https://example.org/book/tests/links>
 
-found: <https://example.org/book/tests/headings.html>
+found: <https://example.org/book/tests/links.html>
 
 not found: <https://example.org/book/404>
 
-ignored: <https://example.com/book/headings>
+ignored: <https://example.com/book/links>
 
 trailing slash, found: <https://example.org/book/tests/trailing-slash/>
 
 trailing slash, found: <https://example.org/book/tests/trailing-slash>
 
-trailing slash, not found: <https://example.org/book/tests/headings/>
+trailing slash, not found: <https://example.org/book/tests/links/>
 
 # canonical urls to HEAD
 
 [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
 
-[published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/headings.md)
+[published](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/links.md)
 
 [file not found](https://github.com/lorem/ipsum/raw/HEAD/crates/mdbook-permalinks/src/tests/shinjuku.jpg)
-
-[fragment not found](https://github.com/lorem/ipsum/tree/HEAD/crates/mdbook-permalinks/src/tests/headings.md#associated_items_on_primitive_types)
 
 # image-in-link
 

@@ -1,6 +1,6 @@
 use std::{fmt::Debug, ops::Range};
 
-use pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
+use mdbook_markdown::pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
 
 #[derive(Debug, Default, Clone, thiserror::Error)]
 pub enum LinkStatus {
@@ -21,8 +21,6 @@ pub enum LinkStatus {
     PathNotCheckedIn,
     #[error("file does not exist at path")]
     NoSuchPath,
-    #[error("fragment does not exist in page")]
-    NoSuchFragment,
 
     #[error("error generating a link: {0}")]
     Error(String),

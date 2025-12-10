@@ -1,7 +1,6 @@
 [book]
 authors = ["Tony Wu"]
 language = "en"
-multilingual = false
 src = "src"
 title = "mdbookkit"
 
@@ -10,14 +9,11 @@ build-dir = "dist"
 create-missing = false
 extra-watch-dirs = ["app", "../crates"]
 
-[rust]
-edition = "2021"
-
 [output.html]
 additional-css = ["app/dist.css"]
 additional-js = ["app/dist.js"]
 default-theme = "ayu"
-git-repository-icon = "fa-github"
+git-repository-icon = "fab-github"
 git-repository-url = "https://github.com/tonywu6/mdbookkit"
 hash-files = true
 preferred-dark-theme = "ayu"
@@ -26,47 +22,46 @@ site-url = "/"
 [output.html.playground]
 runnable = false
 
-[preprocessor.rustdoc-link-options]
-before = ["rustdoc-link"]
-command = "cargo run --package util-clap-reflect -- --reflect rustdoc-link-options"
+# [preprocessor.rustdoc-link-options]
+# before = ["rustdoc-link"]
+# command = "cargo run --package util-clap-reflect -- --reflect rustdoc-link-options"
 
-[preprocessor.link-forever-options]
-before = ["rustdoc-link"]
-command = "cargo run --package util-clap-reflect -- --reflect link-forever-options"
+# [preprocessor.link-forever-options]
+# before = ["rustdoc-link"]
+# command = "cargo run --package util-clap-reflect -- --reflect link-forever-options"
 
-[preprocessor.rustdoc-link]
+[preprocessor.rustdoc-links]
 after = ["links"]
 cache-dir = "build"
-cargo-features = ["clap/unstable-doc"]
-command = "cargo run --package mdbookkit --bin mdbook-rustdoc-link --all-features"
+command = "cargo run --package mdbook-rustdoc-links"
 manifest-dir = "."
-rust-analyzer = "cargo run --package util-rust-analyzer --all-features -- analyzer"
+rust-analyzer = "cargo run --package util-rust-analyzer -- analyzer"
 
-[preprocessor.link-forever]
-after = ["rustdoc-link"]
+[preprocessor.permalinks]
+after = ["rustdoc-links"]
 always-link = [".rs"]
 book-url = "https://tonywu6.github.io/mdbookkit/"
-command = "cargo run --package mdbookkit --bin mdbook-link-forever --all-features"
+command = "cargo run --package mdbook-permalinks"
 
-[preprocessor.rust-analyzer-version]
-after = ["rustdoc-link"]
-command = "cargo run --package util-rust-analyzer --all-features -- version"
+# [preprocessor.rust-analyzer-version]
+# after = ["rustdoc-link"]
+# command = "cargo run --package util-rust-analyzer --all-features -- version"
 
-[preprocessor.alerts]
-after = ["rustdoc-link"]
-command = "cargo bin mdbook-alerts"
+# [preprocessor.alerts]
+# after = ["rustdoc-link"]
+# command = "cargo bin mdbook-alerts"
 
 [preprocessor.app]
 command = "deno run --allow-all app/build/preprocessor.ts"
 
-[_metadata.socials."/"]
-image = "src/media/social.webp"
-title = "mdbookkit"
+# [_metadata.socials."/"]
+# image = "src/media/social.webp"
+# title = "mdbookkit"
 
-[_metadata.socials."/rustdoc-link"]
-image = "src/rustdoc-link/media/social.webp"
-title = "mdbook-rustdoc-link"
+# [_metadata.socials."/rustdoc-link"]
+# image = "src/rustdoc-link/media/social.webp"
+# title = "mdbook-rustdoc-link"
 
-[_metadata.socials."/link-forever"]
-image = "src/link-forever/media/social.webp"
-title = "mdbook-link-forever"
+# [_metadata.socials."/link-forever"]
+# image = "src/link-forever/media/social.webp"
+# title = "mdbook-link-forever"
