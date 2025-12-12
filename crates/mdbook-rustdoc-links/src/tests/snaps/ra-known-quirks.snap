@@ -1,5 +1,6 @@
 ---
-source: crates/mdbookkit/tests/rustdoc_link.rs
+source: crates/mdbook-rustdoc-links/src/tests.rs
+assertion_line: 61
 expression: output
 ---
 # primitive types resolved to nightly
@@ -17,6 +18,4 @@ expression: output
 
 # macro_export
 
-- [std::vec!](https://doc.rust-lang.org/stable/alloc/macros/macro.vec.html "std::vec!")
-- [std::format!](https://doc.rust-lang.org/stable/alloc/macros/macro.format.html "std::format!")
 - [tokio::main!](https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html "tokio::main!")

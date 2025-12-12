@@ -1,5 +1,6 @@
 ---
-source: crates/mdbookkit/tests/rustdoc_link.rs
+source: crates/mdbook-rustdoc-links/src/tests.rs
+assertion_line: 61
 expression: output
 ---
 # mdbook-rustdoc-link
@@ -11,9 +12,9 @@ expression: output
 
 </div>
 
-**[_rustdoc_-style linking][rustdoc] for [mdBook]** (with the help of [rust-analyzer]).
+Link to Rust API docs by name in [mdBook], [_rustdoc_-style][rustdoc].
 
-You write:
+Instead of manually finding and pasting URLs, you simply write ...
 
 ```md
 The [`option`][std::option] and [`result`][std::result] modules define optional and
@@ -22,7 +23,7 @@ defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to 
 collections. [^1]
 ```
 
-You get:
+... and you will get:
 
 <figure class="fig-text">
 
@@ -33,33 +34,31 @@ collections. [^1]
 
 </figure>
 
-`mdbook-rustdoc-link` is an mdBook [preprocessor]. Using rust-analyzer, it converts type
-names, module paths, and so on, into links to online crate docs. No more finding and
-pasting URLs by hand.
-
 <figure>
 
 ![screen recording of mdbook-rustdoc-link during mdbook build](media/screencap.webp)
 
 </figure>
 
+> [!NOTE]
+>
+> This preprocessor depends on [rust-analyzer] to accurately resolve Rust items.
+
 ## Overview
 
-To get started, simply follow the [quickstart guide](getting-started.md)!
-
-If you would like to read more about this crate:
+Follow the [quickstart guide](getting-started.md) to try out the preprocessor.
 
 For **writing documentation** —
 
-- To learn more about how it is resolving items into links, including
+- To learn more about how the preprocessor resolves items into links, including
   [feature-gated items](name-resolution.md#feature-gated-items), see
   [Name resolution](name-resolution.md).
-- To know how to link to other types of items like
+- To learn how to link to additional items such as
   [functions, macros](supported-syntax.md#functions-and-macros), and
   [implementors](supported-syntax.md#implementors-and-fully-qualified-syntax), see
   [Supported syntax](supported-syntax.md).
 
-For **adapting this crate to your project** —
+For **making the preprocessor work with your project** —
 
 - If you use [Cargo workspaces][workspaces], see specific instructions in
   [Workspace layout](workspace-layout.md).

@@ -1,20 +1,21 @@
 # Caching
 
 By default, `mdbook-rustdoc-link` spawns a fresh `rust-analyzer` process every time it
-runs. rust-analyzer then reindexes your entire project before resolving links.
+runs. rust-analyzer must then reindex your entire project before being able to resolve
+links.
 
-This makes the `mdbook serve` command significantly slower, more so if your project
-contains a large number of dependencies. It is as if for every live reload, you had to
-reopen your editor.
+This makes the `mdbook serve` command significantly less responsive, which gets worse if
+your project contains a large number of dependencies. It is as if for every live reload,
+you had to reopen your editor.
 
 To mitigate this, there is an experimental caching feature. The feature is disabled by
 default.
 
 ## Enabling caching
 
-In your `book.toml`, in the `[preprocessor.rustdoc-link]` table, set
+In `book.toml`, in the `[preprocessor.rustdoc-link]` table, set
 [`cache-dir`](configuration.md#cache-dir) to the relative path of a directory of your
-choice (_other than_ your book's `build-dir`), for example:
+choice, _outside_ of your book's `build-dir`, for example:
 
 ```toml
 [preprocessor.rustdoc-link]
@@ -22,10 +23,11 @@ cache-dir = "cache"
 # You could also point to an arbitrary directory in target/
 ```
 
-Now, when `mdbook` rebuilds your book during `build` or `serve`, the preprocessor reuses
-the previous resolution and **skips rust-analyzer entirely if** your edit does not
-involve changes in the set of Rust items to be linked, that is, no new items unseen in
-the previous build.
+This enables the preprocessor to persist the list of links resolved during a build. When
+mdBook rebuilds your book during `build` or `serve`, the preprocessor reuses the
+previous resolution and **skips rust-analyzer entirely if** your edit does not involve
+changes in the set of Rust items to be linked, that is, if there are no new items unseen
+in the previous build.
 
 > [!IMPORTANT]
 >
@@ -34,7 +36,11 @@ the previous build.
 > file could trigger additional reloads. See [Specify exclude
 > patterns][specify-exclude-patterns] in the mdBook documentation.
 >
-> **Do not** use your book's `build-dir` as the `cache-dir`: `mdbook` clears the output
+> Items that fail to resolve are not included in the cache. If such "broken" links
+> persist in the Markdown source, cache will be invalidated on every run, and
+> rust-analyzer will always run.
+>
+> **Do not** use your book's `build-dir` as the `cache-dir`: mdbook clears the output
 > directory on every build, making this setup useless.
 
 ## How it works
@@ -46,11 +52,11 @@ the previous build.
 
 The effectiveness of this mechanism is based on the following assumptions:
 
-- Most of the changes made during authoring don't actually involve item links.
+- Most of the changes made during authoring don't involve item links.
 - Assuming the environment is unchanged, the same set of items should resolve to the
   same set of links.
 
-The cache keeps the following information in a `cache.json`:
+The cache keeps the following information in a `cache.json` file:
 
 - The set of items to be resolved, and their resolved links
 - The environment, as a checksum over the contents of:
@@ -63,13 +69,6 @@ The cache keeps the following information in a `cache.json`:
 If a subsequent run has the same set of items (or a subset) and the same checksum
 (meaning you did not update your code), then the preprocessor simply reuses the previous
 results.
-
-> [!TIP]
->
-> Items that fail to resolve are not included in the cache.
->
-> If you keep such broken links in your Markdown source, the cache will permanently
-> miss, and rust-analyzer will run on every edit.
 
 ## Help wanted 🙌
 
@@ -118,10 +117,10 @@ items eventually resolving. Subsequent builds hang indefinitely before timing ou
 
 ### Postscript
 
-`mdbook` encourages a stateless architecture for preprocessors. Preprocessors are
-expected to work like pure functions over the entire book, even for `mdbook serve`.
-Preprocessors are not informed on whether they are invoked as part of `mdbook build`
-(prefer fresh starts) or `mdbook serve` (maintain states between run).
+mdBook encourages a stateless architecture for preprocessors. Preprocessors are expected
+to work like pure functions over the entire book, even for `mdbook serve`. Preprocessors
+are not informed on whether they are invoked as part of `mdbook build` (prefer fresh
+starts) or `mdbook serve` (maintain states between run).
 
 `rust-analyzer`, meanwhile, has a stateful architecture that also doesn't yet have
 [persistent caching][ra-persistent-cache][^1]. It is [designed][ra-architecture] to take
@@ -129,9 +128,9 @@ in a ground state (your project initially) and then evolve the state (your proje
 edited) entirely in memory.
 
 So `rust-analyzer` has an extremely incremental architecture, perfect for complex
-languages like Rust, and `mdbook` has an explicitly non-incremental architecture,
-perfect for rendering Markdown. This makes them somewhat challenging to work well
-together in a live-reload scenario.
+languages like Rust, and mdBook has an explicitly non-incremental architecture, perfect
+for rendering Markdown. This makes them somewhat challenging to work well together in a
+live-reload scenario.
 
 [^1]:
     It was mentioned that the [recently updated, salsa-ified rust-analyzer][salsa]

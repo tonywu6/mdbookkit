@@ -1,29 +1,30 @@
 # Getting started
 
-Follow these steps to start using `mdbook-rustdoc-link` in your book project!
-
 ## Install
 
 You will need to:
 
-1. Have [rust-analyzer]:
+1. Have [rust-analyzer].:
 
-   - If you already use the [VS Code extension][ra-extension]: this crate automatically
-     uses the server binary that comes with it, no extra setup is needed!
-   - Otherwise, [install][ra-install] rust-analyzer (e.g. via `rustup`) and make sure
-     it's on your `PATH`.
+   - If you already use the [VS Code extension][ra-extension], no setup is required: the
+     preprocessor automatically uses the server binary packaged with it.
+   - Otherwise, [install][ra-install] rust-analyzer (e.g. via `rustup`) and make sure it
+     is available on `PATH`.
 
-2. Install this crate:
+2. Install the preprocessor:
 
    ```
    cargo install mdbookkit --features rustdoc-link
    ```
 
-   Or you can grab precompiled binaries from [GitHub releases][gh-releases].
+   Alternatively, you may obtain precompiled binaries from [GitHub
+   releases][gh-releases].
+
+   <!-- TODO: cargo binstall -->
 
 ## Configure
 
-Configure your `book.toml` to use it as a [preprocessor]:
+Configure your `book.toml` to use the installed program as a [preprocessor]:
 
 ```toml
 [book]
@@ -32,20 +33,22 @@ title = "My Book"
 [preprocessor.rustdoc-link]
 # mdBook will run `mdbook-rustdoc-link`
 after = ["links"]
-# recommended, so that it can see content from {{#include}} as well
+# mdBook will run this preprocessor after the default `links` preprocessor.
+# This is recommended. It allows the preprocessor to see text embedded
+# via {{#include}} directives.
 ```
 
 ## Write
 
-In your documentation, when you want to link to a Rust item, such as a type, a function,
-etc., simply use its name in place of a URL, like this:
+In your documentation, where you want to link to a Rust item, such as a type, a
+function, etc., simply use its name in place of a URL:
 
 ```md
 Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a
 [`JoinHandle`][tokio::task::JoinHandle] struct.
 ```
 
-The preprocessor will then turn them into hyperlinks:
+The preprocessor will convert such symbols into hyperlinks:
 
 <figure class="fig-text">
 
@@ -54,22 +57,20 @@ Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a
 
 </figure>
 
-This works in both `mdbook build` and `mdbook serve`!
+The preprocessor runs in both `mdbook build` and `mdbook serve`.
 
 ![screen recording of mdbook-rustdoc-link during mdbook build](media/screencap.webp)
 
-To read more about this project, feel free to return to [Overview](index.md#overview).
-
 > [!IMPORTANT]
 >
-> It is assumed that you are running `mdbook` within a Cargo project.
+> It is assumed that you are running mdBook from within a Cargo project.
 >
 > If you are working on a crate, and your book directory is within your source tree,
-> such as next to `Cargo.toml`, then running `mdbook` from there will "just work".
+> such as next to `Cargo.toml`, then running mdBook from there will "just work".
 >
-> If your book doesn't belong to a Cargo project, refer to
-> [Workspace layout](workspace-layout.md) for more information on how you can setup up
-> the preprocessor.
+> If your book doesn't reside within a Cargo project, refer to
+> [Workspace layout](workspace-layout.md) for instructions on setting up the
+> preprocessor.
 
 > [!TIP]
 >
@@ -78,9 +79,13 @@ To read more about this project, feel free to return to [Overview](index.md#over
 >
 > Items from `std` will generate links to <https://doc.rust-lang.org>, while items from
 > third-party crates will generate links to <https://docs.rs>.
->
-> So really, rust-analyzer is doing the heavy-lifting here. This crate is just the glue
-> code :)
+
+## Next steps
+
+- See the full list of [supported syntax](supported-syntax.md).
+- Understand [how the preprocessor resolves links](name-resolution.md) under the hood.
+- Check out [available configuration options](configuration.md).
+- Learn about some [known issues and limitations](known-issues.md).
 
 <!-- prettier-ignore-start -->
 

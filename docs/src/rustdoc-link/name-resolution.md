@@ -1,16 +1,13 @@
 # Name resolution
 
-`mdbook-rustdoc-link` resolves items in the context of your crate's "entrypoint", which
-is usually your `lib.rs` or `main.rs` (the [specific rules](#which-entrypoint) are
-mentioned below).
+The preprocessor resolves items **in the scope of your crate's "entrypoint."** This is
+usually `lib.rs` or `main.rs` (the [exact rules](#which-entrypoint) are mentioned
+below).
 
 > [!TIP]
 >
-> If you use Cargo workspaces, or if your source tree has special layout, see
-> [Workspace layout](workspace-layout.md) for more information.
-
-An item must be **in scope in the entrypoint** for the proprocessor to generate a link
-for it.
+> If you use Cargo workspaces, or if your source tree has a custom layout, consult
+> [Workspace layout](workspace-layout.md) for additional instructions.
 
 For example, with the following as `lib.rs`:
 
@@ -29,12 +26,12 @@ mod error {
 Items in the entrypoint can be linked to with just their names:
 
 > ```md
-> [`Diagnostics`] encapsulates possible issues detected within Markdown sources.
+> [`Diagnostics`] contains issues detected within Markdown sources.
 >
 > This crate uses the [`Context`] trait from [`anyhow`].
 > ```
 >
-> [`Diagnostics`] encapsulates possible issues detected within Markdown sources.
+> [`Diagnostics`] contains issues detected within Markdown sources.
 >
 > This crate uses the [`Context`] trait from [`anyhow`].
 
@@ -46,8 +43,8 @@ This includes items from the prelude:
 >
 > [`FromIterator`] is in the prelude starting from Rust 2021.
 
-Though technically not required — to make items from your crate more distinguishable
-from others in your Markdown source, you can write `crate::*`:
+To distinguish an item as being from your crate rather than from a third-party crate,
+you may write `crate::*`, although this is not required:
 
 > ```md
 > The [`is_ci`][crate::error::is_ci] function detects whether the preprocessor is
@@ -67,11 +64,7 @@ For everything else, provide its full path, as if you were writing a `use` decla
 >
 > [`JoinSet`][tokio::task::JoinSet] is analogous to Python's `asyncio.as_completed`.
 
-> [!TIP]
->
-> In short, write links the way you `use` an item in your `lib.rs` or `main.rs`.
-
-The preprocessor will emit a warning if an item cannot be resolved:
+The preprocessor emits warnings for items that cannot be resolved:
 
 <figure>
 
@@ -84,11 +77,6 @@ Formatting of diagnostics powered by [miette]
 </figcaption>
 
 </figure>
-
-This is something to remember especially if you are including doc comments as part of
-your Markdown docs. Only rustdoc has the ability to [resolve names from where the
-comments are written][rustdoc-scoping], so links that work in doc comments may not work
-when using this preprocessor!
 
 ## Feature-gated items
 
@@ -112,7 +100,7 @@ Then, specify the item as normal:
 >
 > [Tutorial for clap's Derive API][clap::_derive::_tutorial]
 
-## Which entrypoint
+## Which "entrypoint"?
 
 For this preprocessor, the "entrypoint" is usually `src/lib.rs` or `src/main.rs`.
 
@@ -126,12 +114,11 @@ For this preprocessor, the "entrypoint" is usually `src/lib.rs` or `src/main.rs`
 
 > [!NOTE]
 >
-> The following are implementation details. See
-> [rustdoc_link/mod.rs](/crates/mdbookkit/src/bin/rustdoc_link/mod.rs).
+> The following are implementation details.
 
-`mdbook-rustdoc-link` parses your book and collects every link that looks like a Rust
-item. Then it synthesizes a Rust function that spells out all the items, which looks
-roughly like this:
+The preprocessor parses your book and collects every link that looks like a Rust item.
+Then it synthesizes a Rust function that spells out all the items, which could look
+something like:
 
 ```rs
 fn __ded48f4d_0c4f_4950_b17d_55fd3b2a0c86__ () {
@@ -144,16 +131,9 @@ fn __ded48f4d_0c4f_4950_b17d_55fd3b2a0c86__ () {
 }
 ```
 
-> Note that this is barely valid Rust — `Result::<T, E>;` is a type without a value, and
-> you wouldn't use `serde::Serialize` as a regular macro.
->
-> This is where language servers like rust-analyzer excel — they can [provide maximally
-> useful information out of badly-shaped code][why-lsp].
-
-The preprocessor appends this fake function to your `lib.rs` or `main.rs` (in memory, it
-doesn't modify your file) and [sends][didOpen] it to rust-analyzer. Then, for each item
-that needs to be resolved, the preprocessor sends an [external documentation
-request][externalDocs].
+The preprocessor appends this fake function to your `lib.rs` or `main.rs` (in memory)
+and [sends][didOpen] it to rust-analyzer. Then, for each item that needs to be resolved,
+the preprocessor sends an [external documentation request][externalDocs].
 
 ```json
 {
@@ -166,10 +146,8 @@ request][externalDocs].
 }
 ```
 
-Hence item names in your book must be resolvable from your crate entrypoint!
-
 This process is as if you had typed a name into your source file and used the "Open
-Docs" feature — except it's fully automated.
+Docs" feature — except it is automated.
 
 <figure id="media-open-docs">
   <img src="media/open-docs.png" alt="the Open Docs option in VS Code">
@@ -181,6 +159,12 @@ Docs" feature — except it's fully automated.
     }
   }
 </style>
+
+> Note that the synthesized function is barely valid Rust — `Result::<T, E>;` is a type
+> without a value, and you wouldn't use `serde::Serialize` as a regular macro.
+>
+> This is where language servers like rust-analyzer excel — they can [provide maximally
+> useful information out of badly-shaped code][why-lsp].
 
 <!-- prettier-ignore-start -->
 

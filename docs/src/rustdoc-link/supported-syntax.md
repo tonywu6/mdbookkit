@@ -7,37 +7,20 @@
 
 </div>
 
-This page showcases all the syntax supported by `mdbook-rustdoc-link`.
-
-Most of the formats [supported by rustdoc][rustdoc-linking] are supported. Unsupported
+Most of the syntax [supported by rustdoc][rustdoc-linking] are supported. Unsupported
 syntax and differences in behavior are emphasized below.
 
 In general, specifying items as you would when writing Rust code should "just work".
-
-<details class="toc" open>
-  <summary>Sections</summary>
-
-- [Types, modules, and associated items](#types-modules-and-associated-items)
-- [Generic parameters](#generic-parameters)
-- [Functions and macros](#functions-and-macros)
-- [Implementors and fully qualified syntax](#implementors-and-fully-qualified-syntax)
-- [Disambiguators](#disambiguators)
-- [Special types](#special-types)
-- [Struct fields](#struct-fields)
-- [Markdown link syntax](#markdown-link-syntax)
-- [Linking to page sections](#linking-to-page-sections)
-
-</details>
 
 > [!TIP]
 >
 > This page is also used for snapshot testing! To see how all the links would look like
 > in Markdown after they have been processed, see
-> [supported-syntax.snap](/crates/mdbookkit/tests/snaps/rustdoc_link/supported-syntax.snap)
+> [supported-syntax.snap](/crates/mdbook-rustdoc-links/src/tests/snaps/supported-syntax.snap)
 > and
-> [supported-syntax.stderr.snap](/crates/mdbookkit/tests/snaps/rustdoc_link/supported-syntax.stderr.snap).
+> [supported-syntax.stderr.snap](/crates/mdbook-rustdoc-links/src/tests/snaps/supported-syntax.stderr.snap).
 
-## Types, modules, and associated items
+## Types, modules, associated items
 
 > ```md
 > Module [`alloc`][std::alloc] — Memory allocation APIs.
@@ -63,7 +46,7 @@ In general, specifying items as you would when writing Rust code should "just wo
 
 ## Generic parameters
 
-Types can contain generic parameters. This is _compatible_ with rustdoc.
+Types may contain generic parameters. This is _compatible_ with rustdoc.
 
 > ```md
 > [`Vec<T>`] — A heap-allocated _vector_ that is resizable at runtime.
@@ -83,7 +66,7 @@ Types can contain generic parameters. This is _compatible_ with rustdoc.
 > | [`&'a mut T`][std::marker::PhantomData<&'a mut T>] | **in**variant     |
 > | [`fn(T)`][std::marker::PhantomData<fn(T)>]         | **contra**variant |
 
-This includes if you use turbofish:
+Turbofish are also supported:
 
 > ```md
 > `collect()` is one of the few times you’ll see the syntax affectionately known as the
@@ -95,37 +78,43 @@ This includes if you use turbofish:
 
 ## Functions and macros
 
-To indicate that an item is a function, add `()` after the function name. To indicate
-that an item is a macro, add `!` after the macro name, optionally followed by `()`,
-`[]`, or `{}`. This is _compatible_ with rustdoc.
-
-Note that there cannot be arguments within `()`, `[]`, or `{}`.
-
-> ```md
-> [`vec!`][std::vec!][^2] is different from [`vec`][std::vec], and don't accidentally
-> use [`format()`][std::fmt::format()] in place of [`format!()`][std::format!()][^2]!
-> ```
->
-> [`vec!`][std::vec!][^2] is different from [`vec`][std::vec], and don't accidentally
-> use [`format()`][std::fmt::format()] in place of [`format!()`][std::format!()][^2]!
-
-The macro syntax works for attribute and derive macros as well (even though this is not
-how they are invoked).
+Functions and macros can be linked to just like other named items. To distinguish a
+function from other items of the same name, add `()` after the function name. To
+distinguish a macro from other items of the same name, add `!` after the macro name.
+This is _compatible_ with rustdoc.
 
 > ```md
-> There is a [derive macro][serde::Serialize!] to generate implementations of the
-> [`Serialize`][serde::Serialize] trait.
+> [`vec!`][std::vec!] is different from [`vec`][std::vec], and don't accidentally use
+> [`format`][std::fmt::format()] in place of [`format!`][std::format!]!
 > ```
 >
-> There is a [derive macro][serde::Serialize!] to generate implementations of the
-> [`Serialize`][serde::Serialize] trait.
+> [`vec!`][std::vec!] is different from [`vec`][std::vec], and don't accidentally use
+> [`format`][std::fmt::format()] in place of [`format!`][std::format!]!
 
-## Implementors and fully qualified syntax
+Note that there cannot be arguments within `()`, `[]`, or `{}`. The `macro!` syntax
+works for attribute and derive macros as well (even though this is not how they are
+invoked).
 
-Trait implementors may supply additional documentation about their implementations. To
-link to implemented items instead of the traits themselves, use fully qualified paths,
-including `<... as Trait>` if necessary. This is a _new feature_ that rustdoc does not
-currently support.
+> [!NOTE]
+>
+> As of rust-analyzer <ra-version>(version)</ra-version>, the `macro!` syntax can no
+> longer disambiguate between a derive macro and its corresponding trait. For example,
+>
+> > ```
+> > Both [`serde::Serialize`] and [`serde::Serialize!`] link to the `Serialize` trait.
+> > ```
+> >
+> > Both [`serde::Serialize`] and [`serde::Serialize!`] link to the `Serialize` trait.
+>
+> To link to such derive macros, you must use paths that directly point to them, such as
+> `serde_derive::Serialize`.
+
+## Fully qualified paths
+
+Trait implementors may supply additional documentation about the implementation. To link
+to such documentation instead of the traits themselves, use fully qualified paths,
+including `<... as Trait>` if necessary. This is an _additional syntax_ that rustdoc
+does not currently support.
 
 > ```md
 > [`Result<T, E>`] implements [`IntoIterator`]; its
@@ -146,50 +135,11 @@ currently support.
 > [!NOTE]
 >
 > If your type has generic parameters, you must supply concrete types for them for
-> rust-analyzer to be able to locate an implementation. That is, `Result<T, E>` won't
+> rust-analyzer to be able to locate an implementation. That is, `Result<T, E>` will not
 > work, but `Result<(), ()>` will (unless there happen to be types `T` and `E` literally
 > in scope).
 
-## Disambiguators
-
-rustdoc's [disambiguator syntax][disambiguator] `prefix@name` is **accepted but
-ignored**:
-
-> ```md
-> [`std::vec`], [`mod@std::vec`], and [`macro@std::vec`] all link to the `vec` _module_.
-> ```
->
-> [`std::vec`], [`mod@std::vec`], and [`macro@std::vec`] all link to the `vec` _module_.
-
-This is largely okay because currently, duplicate names in Rust are allowed only if they
-correspond to items in different [namespaces], for example, between macros and modules,
-and between struct fields and methods — this is mostly covered by the function and macro
-syntax, described [above](#functions-and-macros).
-
-If you encounter items that must be disambiguated using rustdoc's disambiguator syntax,
-other than [the "special types" listed below](#special-types), please [file an
-issue][gh-issues]!
-
-## Special types
-
-> [!WARNING]
-
-There is **no support** on types whose syntax is not a path; they are currently not
-parsed at all:
-
-> references `&T`, slices `[T]`, arrays `[T; N]`, tuples `(T1, T2)`, pointers like
-> `*const T`, trait objects like `dyn Any`, and the never type `!`
-
-Note that such types can still be used as generic params, just not as standalone types.
-
-## Struct fields
-
-> [!WARNING]
-
-Linking to struct fields is **not supported** yet. This is **incompatible** with
-rustdoc.
-
-## Markdown link syntax
+## Link format
 
 All Markdown link formats supported by rustdoc are supported:
 
@@ -225,18 +175,15 @@ treated the same as inline-style links `[text](id)`:
 Shortcuts are supported, and can contain inline markups:
 
 > ```md
-> You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
+> You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_] macro.
 > ```
 >
-> You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_][^2] macro.
-
-(The items must still be resolvable; in this case `Vec` and `vec!` come from the
-prelude.)
+> You can create a [`Vec`] with [**`Vec::new`**], or by using the [_`vec!`_] macro.
 
 ## Linking to page sections
 
-To link to a known section on a page, use a URL fragment, just like a normal link. This
-is _compatible_ with rustdoc.
+To link to a known section on a page, use a URL fragment, as you would otherwise specify
+for an HTTP URL. This is _compatible_ with rustdoc.
 
 <!-- prettier-ignore-start -->
 
@@ -248,18 +195,42 @@ is _compatible_ with rustdoc.
 
 <!-- prettier-ignore-end -->
 
+## Unsupported syntax
+
+### Disambiguators
+
+rustdoc's [disambiguator syntax][disambiguator] `prefix@name` is **accepted but
+ignored.** To disambiguate functions and macros, use the
+[functions and macros](#functions-and-macros) syntax.
+
+> ```md
+> [`std::vec`], [`mod@std::vec`], and [`macro@std::vec`] all link to the `vec` _module_.
+> ```
+>
+> [`std::vec`], [`mod@std::vec`], and [`macro@std::vec`] all link to the `vec` _module_.
+
+### Special types
+
+There is **no support** on types whose syntax is not a path; they are currently not
+parsed at all:
+
+> references `&T`, slices `[T]`, arrays `[T; N]`, tuples `(T1, T2)`, pointers like
+> `*const T`, trait objects like `dyn Any`, and the never type `!`
+
+Note that such types can still be used as generic params, just not as standalone types.
+
+### Struct fields
+
+Linking to struct fields is **not supported** yet. This is **incompatible** with
+rustdoc.
+
 [^1]:
     rust-analyzer's ability to generate links for enum variants like `Option::Some` was
     improved only somewhat recently: before
     [#19246](https://github.com/rust-lang/rust-analyzer/pull/19246), links for variants
     and associated items may only point to the types themselves. If linking to such
     items doesn't seem to work for you, be sure to upgrade to a newer rust-analyzer
-    first!
-
-[^2]:
-    As of rust-analyzer <ra-version>(version)</ra-version>, links generated for macros
-    don't always work. Examples include [`std::format!`] (seen above) and
-    [`tokio::main!`]. For more info, see [Known issues](known-issues.md#macros).
+    first.
 
 <!-- prettier-ignore-start -->
 

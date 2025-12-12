@@ -3,11 +3,11 @@
 As mentioned in [Name resolution](name-resolution.md), the preprocessor must know where
 your crate's entrypoint is.
 
-To do that, it tries to find a `Cargo.toml` by running
+To do that, it will try to locate the nearest `Cargo.toml` by running
 [`cargo locate-project`][locate-project], by default from the current working directory.
 
-If you have a single-crate setup, this should "just work", regardless of where your book
-directory is within your source tree.
+If you have a single-package setup, this should "just work", regardless of where your
+book directory is within your source tree.
 
 If you are using [Cargo workspaces][workspaces], then the preprocessor may fail with the
 message:
@@ -16,24 +16,14 @@ message:
 Error: Cargo.toml does not have any lib or bin target
 ```
 
-This means it found your workspace `Cargo.toml` instead of a member crate's. To use the
-preprocessor in this case, some extra setup is needed.
-
-<details class="toc" open>
-  <summary>Sections</summary>
-
-- [Using the `manifest-dir` option](#using-the-manifest-dir-option)
-- [Placing your book inside a member crate](#placing-your-book-inside-a-member-crate)
-- [Documenting multiple crates](#documenting-multiple-crates)
-- [Using without a Cargo project](#using-without-a-cargo-project)
-
-</details>
+In this case, the preprocessor has located the workspace `Cargo.toml` rather than that
+of a specific package, and some extra setup is required.
 
 ## Using the `manifest-dir` option
 
 In your `book.toml`, in the `[preprocessor.rustdoc-link]` table, set the
 [`manifest-dir`](configuration.md#manifest-dir) option to the relative path to a member
-crate.
+package.
 
 For example, if you have the following workspace layout:
 
@@ -62,10 +52,10 @@ manifest-dir = "../crates/fancy-crate"
 > `manifest-dir` should be a path **relative to `book.toml`**, not relative to workspace
 > root.
 
-## Placing your book inside a member crate
+## Placing your book inside a member package
 
-If you have a "main" crate, you can also move your book directory to that crate, and run
-`mdbook` from there:
+If you have a "main" package, you can also move your book directory to that package, and
+run mdBook from there:
 
 ```
 my-workspace/
@@ -82,15 +72,16 @@ my-workspace/
         └── ...
 ```
 
-## Documenting multiple crates
+## Documenting multiple packages
 
-If you would like to document items from several independent crates, but still would
+If you would like to document items from several independent packages, but still would
 like to centralize your book in one place — unfortunately, the preprocessor does not yet
 have the ability to work with multiple entrypoints.
 
-A possible workaround would be to turn your book folder into a private crate that
-depends on the crates you would like to document. Then you can link to them as if they
-were third-party crates.
+A possible workaround would be to turn your book folder into a private package that
+depends on the packages you would like to document. Then you can link to them as if they
+were third-party packages. The generated links will point to the original packages
+instead of this private package.
 
 ```
 my-workspace/
@@ -126,7 +117,7 @@ If your book isn't for a Rust project, but you still find a use in this preproce
 (e.g. perhaps you would like to mention `std`) — unfortunately, the preprocessor does
 not yet support running without a Cargo project.
 
-Instead, you can setup your book project as a private, dummy crate.
+Instead, you can setup your book project as a private, dummy package.
 
 ```
 my-book/

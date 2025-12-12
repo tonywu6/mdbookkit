@@ -32,7 +32,7 @@ runnable = false
 
 [preprocessor.rustdoc-links]
 after = ["links"]
-# cache-dir = "build"
+cache-dir = "build"
 command = "cargo run --package mdbook-rustdoc-links"
 manifest-dir = "."
 rust-analyzer = "cargo run --package util-rust-analyzer -- analyzer"

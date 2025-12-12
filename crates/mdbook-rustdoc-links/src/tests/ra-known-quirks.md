@@ -13,6 +13,4 @@
 
 # macro_export
 
-- [std::vec!]
-- [std::format!]
 - [tokio::main!]

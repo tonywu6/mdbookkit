@@ -1,35 +1,33 @@
 # Motivation
 
-[rustdoc supports linking to items by name][rustdoc], a.k.a. [intra-doc
-links][intra-doc-link]. This is awesome for at least two reasons:
+[rustdoc supports linking to items by name][rustdoc]. This is awesome for at least two
+reasons:
 
-- It's convenient. It could be as simple as [just adding brackets][uv-brackets].
-- [Docs.rs](https://docs.rs) will generate cross-crate links that are version-pinned.
+- It's convenient. It could be as simple as [just adding brackets around
+  names][uv-brackets].
+- Links generated via rustdoc are version-pinned. Instead of seeing links that default
+  to the latest version, where items may have been moved or deleted, you get the
+  versions that your packages actually depend on.
 
 mdBook doesn't have the luxury of accessing compiler internals yet, so you are left with
-manually sourcing links from docs.rs. Then one of two things could happen:
+manually sourcing links from [docs.rs](https://docs.rs). Then one of two things could
+happen:
 
-- APIs are mentioned without linking to reference docs.
+- APIs are mentioned without appropriate links to reference docs.
 
-  This is probably fine for tutorials and examples, but it does mean readers of your
-  docs won't be able to move from guides to references as easily.
+  This may be fine for tutorials and examples. However, readers of your docs will not be
+  able to navigate between guides and references as easily as it could have been.
 
-- You do want at least some cross-references, but it is cumbersome to find and copy the
-  correct links, and even more so to maintain them.
-
-  Links to docs.rs often use `latest` as the version, which could become out-of-sync
-  with your code, especially if they point to third-party or unstable APIs.
+- You do want at least some reference links. It could quickly become cumbersome to find
+  and copy the correct links by hand, and even more so to maintain them over time.
 
 `mdbook-rustdoc-link` is the tooling answer to these problems. _Effortless, correct, and
 good practice — choose all three!_
 
-> [!NOTE]
+> [!TIP]
 >
-> That being said, sometimes manually specifying URLs is the best option.
->
-> Most importantly, writing links by name means they won't be rendered as such when your
-> Markdown source is displayed elsewhere. If your document is also intended for places
-> like GitHub or crates.io, then you should probably not use this preprocessor.
+> This style of linking is also known as "intra-doc links" — read more about it in the
+> [original RFC][intra-doc-link].
 
 <!-- prettier-ignore-start -->
 
