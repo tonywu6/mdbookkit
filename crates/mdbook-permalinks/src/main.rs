@@ -169,8 +169,7 @@ impl Environment {
     fn new(book: &PreprocessorContext) -> Result<Result<Self>> {
         let config = book
             .config
-            .preprocessor(PREPROCESSOR_NAME)
-            .context("failed to read preprocessor config from book.toml")?;
+            .preprocessor(&[PREPROCESSOR_NAME, "mdbook-link-forever"])?;
 
         let vcs = match VersionControl::try_from_git(&config, &book.config) {
             Ok(Ok(vcs)) => vcs,

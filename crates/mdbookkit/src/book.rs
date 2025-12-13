@@ -39,7 +39,7 @@ pub fn book_from_stdin() -> Result<(PreprocessorContext, Book)> {
 }
 
 pub trait BookConfigHelper {
-    fn preprocessor<'de, T>(&self, name: &str) -> Result<T>
+    fn preprocessor<'de, T>(&self, names: &[&str]) -> Result<T>
     where
         T: Deserialize<'de> + Default;
 
@@ -47,13 +47,31 @@ pub trait BookConfigHelper {
 }
 
 impl BookConfigHelper for MDBookConfig {
-    fn preprocessor<'de, T>(&self, name: &str) -> Result<T>
+    fn preprocessor<'de, T>(&self, names: &[&str]) -> Result<T>
     where
         T: Deserialize<'de> + Default,
     {
-        let name = name.strip_prefix("mdbook-").unwrap_or(name);
-        let name = format!("preprocessor.{name}");
-        Ok(self.get::<T>(&name)?.unwrap_or_default())
+        fn format_name(name: &str) -> String {
+            let name = name.strip_prefix("mdbook-").unwrap_or(name);
+            format!("preprocessor.{name}")
+        }
+
+        for (idx, name) in names.iter().enumerate() {
+            let name = format_name(name);
+            if let Some(value) = (self.get::<T>(&name))
+                .with_context(|| format!("error while reading [{name}] in book.toml"))?
+            {
+                if idx != 0 {
+                    let recommended = format_name(names[0]);
+                    log::warn!(
+                        "The book.toml section [{name}] is deprecated. Use [{recommended}] instead."
+                    );
+                }
+                return Ok(value);
+            }
+        }
+
+        Ok(Default::default())
     }
 
     fn markdown_options(&self) -> MarkdownOptions {

@@ -36,7 +36,7 @@ impl OnWarning {
             log::Level::Error => Err(anyhow!("preprocessor has errors")),
             log::Level::Warn => match self {
                 Self::AlwaysFail => {
-                    anyhow!("treating warnings as errors because fail-on-unresolved is \"always\"")
+                    anyhow!("treating warnings as errors because the `fail-on-warnings` option is set to \"always\"")
                         .context("preprocessor has errors")
                         .pipe(Err)
                 }
@@ -44,7 +44,7 @@ impl OnWarning {
                     let Some(ci) = Self::warning_as_error() else {
                         return Ok(());
                     };
-                    anyhow!("treating warnings as errors because fail-on-unresolved is \"ci\" and CI={ci}")
+                    anyhow!("treating warnings as errors because the `fail-on-warnings` option is set to \"ci\" and CI={ci}")
                         .context("preprocessor has errors")
                         .pipe(Err)
                 }

@@ -217,7 +217,9 @@ fn describe() -> Result2<()> {
 }
 
 fn config(ctx: &PreprocessorContext) -> Result2<Config> {
-    let mut config = ctx.config.preprocessor::<Config>(PREPROCESSOR_NAME)?;
+    let mut config = ctx
+        .config
+        .preprocessor::<Config>(&[PREPROCESSOR_NAME, "mdbook-rustdoc-link"])?;
 
     if let Some(path) = config.manifest_dir {
         config.manifest_dir = Some(ctx.root.join(path))
