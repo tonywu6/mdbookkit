@@ -1,8 +1,7 @@
 # Caching
 
-By default, `mdbook-rustdoc-link` spawns a fresh `rust-analyzer` process every time it
-runs. rust-analyzer must then reindex your entire project before being able to resolve
-links.
+By default, the preprocessor spawns a fresh `rust-analyzer` process every time it runs.
+rust-analyzer must then reindex your entire project before being able to resolve links.
 
 This makes the `mdbook serve` command significantly less responsive, which gets worse if
 your project contains a large number of dependencies. It is as if for every live reload,
@@ -13,12 +12,12 @@ default.
 
 ## Enabling caching
 
-In `book.toml`, in the `[preprocessor.rustdoc-link]` table, set
+In `book.toml`, in the `[preprocessor.rustdoc-links]` table, set
 [`cache-dir`](configuration.md#cache-dir) to the relative path of a directory of your
 choice, _outside_ of your book's `build-dir`, for example:
 
 ```toml
-[preprocessor.rustdoc-link]
+[preprocessor.rustdoc-links]
 cache-dir = "cache"
 # You could also point to an arbitrary directory in target/
 ```
@@ -102,7 +101,7 @@ rust-analyzer to respond with empty results.
 `rust-analyzer` instance per cargo workspace."
 
 In theory, in an IDE setting (e.g. with VS Code), one could setup the IDE and
-`mdbook-rustdoc-link` to both connect to the same `ra-multiplex` server. Then the
+`mdbook-rustdoc-links` to both connect to the same `ra-multiplex` server. Then the
 preprocessor doesn't need to wait for cache priming (the cache is already warm from IDE
 use). Changes in the workspace could also be reflected in subsequent builds without the
 preprocessor being aware of them (because the IDE is doing the synchronizing).

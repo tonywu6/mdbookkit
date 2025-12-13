@@ -1,8 +1,7 @@
 # Continuous integration
 
-This page gives information and tips for using `mdbook-rustdoc-link` in a continuous
-integration (CI) environment. The preprocessor optimizes some behaviors for CI, in terms
-of error handling, logging, etc.
+The preprocessor optimizes some behaviors for continuous integration (CI) environments,
+in terms of error handling, logging, etc.
 
 ## Detecting CI
 
@@ -51,9 +50,9 @@ When running locally, when the preprocessor encounters any non-fatal issues, suc
 when a link fails to resolve, it prints them as warnings but continues to run. This is
 so that your book continues to build via `mdbook serve` while you make edits.
 
-When running in CI, all such warnings are promoted to errors. The preprocessor will exit
-with a non-zero status code which will fail your build. This is to prevent outdated or
-incorrect links from being accidentally deployed.
+**When running in CI, all such warnings are promoted to errors by default.** The
+preprocessor will exit with a non-zero status code which will fail your build. This is
+to prevent outdated or incorrect links from being accidentally deployed.
 
 You can explicitly control this behavior using the
 [`fail-on-warnings`](configuration.md#fail-on-warnings) option.

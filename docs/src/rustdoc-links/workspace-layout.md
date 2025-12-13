@@ -21,7 +21,7 @@ of a specific package, and some extra setup is required.
 
 ## Using the `manifest-dir` option
 
-In your `book.toml`, in the `[preprocessor.rustdoc-link]` table, set the
+In your `book.toml`, in the `[preprocessor.rustdoc-links]` table, set the
 [`manifest-dir`](configuration.md#manifest-dir) option to the relative path to a member
 package.
 
@@ -43,7 +43,7 @@ my-workspace/
 Then in your `book.toml`:
 
 ```toml
-[preprocessor.rustdoc-link]
+[preprocessor.rustdoc-links]
 manifest-dir = "../crates/fancy-crate"
 ```
 

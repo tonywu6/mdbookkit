@@ -14,7 +14,7 @@ You will need to:
 2. Install the preprocessor:
 
    ```
-   cargo install mdbookkit --features rustdoc-link
+   cargo install mdbook-rustdoc-links
    ```
 
    Alternatively, you may obtain precompiled binaries from [GitHub
@@ -30,8 +30,8 @@ Configure your `book.toml` to use the installed program as a [preprocessor]:
 [book]
 title = "My Book"
 
-[preprocessor.rustdoc-link]
-# mdBook will run `mdbook-rustdoc-link`
+[preprocessor.rustdoc-links]
+# mdBook will execute the command `mdbook-rustdoc-links`
 after = ["links"]
 # mdBook will run this preprocessor after the default `links` preprocessor.
 # This is recommended. It allows the preprocessor to see text embedded
@@ -74,7 +74,7 @@ The preprocessor runs in both `mdbook build` and `mdbook serve`.
 
 > [!TIP]
 >
-> `mdbook-rustdoc-link` makes use of rust-analyzer's ["Open Docs"][open-docs] feature,
+> `mdbook-rustdoc-links` makes use of rust-analyzer's ["Open Docs"][open-docs] feature,
 > which resolves links to documentation given a symbol.
 >
 > Items from `std` will generate links to <https://doc.rust-lang.org>, while items from

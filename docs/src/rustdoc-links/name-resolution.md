@@ -88,11 +88,11 @@ The tutorial for its Derive API is gated behind the `unstable-doc` feature. To l
 such items, configure the necessary features:
 
 ```toml
-[preprocessor.rustdoc-link]
+[preprocessor.rustdoc-links]
 cargo-features = ["clap/unstable-doc"]
 ```
 
-Then, specify the item as normal:
+Then, specify the item as usual:
 
 > ```md
 > [Tutorial for clap's Derive API][clap::_derive::_tutorial]

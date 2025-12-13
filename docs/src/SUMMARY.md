@@ -4,26 +4,26 @@
 
 ---
 
-- [rustdoc-link](rustdoc-link/index.md)
-  - [Getting started](rustdoc-link/getting-started.md)
-  - [Motivation](rustdoc-link/motivation.md)
-  - [Name resolution](rustdoc-link/name-resolution.md)
-  - [Supported syntax](rustdoc-link/supported-syntax.md)
-  - [Workspace layout](rustdoc-link/workspace-layout.md)
-  - [Caching](rustdoc-link/caching.md)
-  - [Standalone usage](rustdoc-link/standalone-usage.md)
-  - [Continuous integration](rustdoc-link/continuous-integration.md)
-  - [Configuration](rustdoc-link/configuration.md)
-  - [Known issues](rustdoc-link/known-issues.md)
+- [mdbook-rustdoc-links](rustdoc-links/index.md)
+  - [Getting started](rustdoc-links/getting-started.md)
+  - [Motivation](rustdoc-links/motivation.md)
+  - [Supported syntax](rustdoc-links/supported-syntax.md)
+  - [Name resolution](rustdoc-links/name-resolution.md)
+  - [Workspace layout](rustdoc-links/workspace-layout.md)
+  - [Caching](rustdoc-links/caching.md)
+  - [Standalone usage](rustdoc-links/standalone-usage.md)
+  - [Continuous integration](rustdoc-links/continuous-integration.md)
+  - [Configuration](rustdoc-links/configuration.md)
+  - [Known issues](rustdoc-links/known-issues.md)
 
 ---
 
-- [link-forever](link-forever/index.md)
-  - [Feature sheet](link-forever/features.md)
-  - [`{{#include}}` workarounds](link-forever/working-with-include.md)
-  - [Continuous integration](link-forever/continuous-integration.md)
-  - [Configuration](link-forever/configuration.md)
-  - [Known issues](link-forever/known-issues.md)
+- [mdbook-permalinks](permalinks/index.md)
+  - [Feature sheet](permalinks/features.md)
+  - [`{{#include}}` workarounds](permalinks/working-with-include.md)
+  - [Continuous integration](permalinks/continuous-integration.md)
+  - [Configuration](permalinks/configuration.md)
+  - [Known issues](permalinks/known-issues.md)
 
 ---
 

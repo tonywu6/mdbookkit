@@ -3,7 +3,7 @@
 <div class="hidden">
 
 **For best results, view this page at
-<https://tonywu6.github.io/mdbookkit/rustdoc-link>.**
+<https://tonywu6.github.io/mdbookkit/rustdoc-links>.**
 
 </div>
 
@@ -45,28 +45,31 @@ Follow the [quickstart guide](getting-started.md) to try out the preprocessor.
 
 For **writing documentation** —
 
-- To learn more about how the preprocessor resolves items into links, including
-  [feature-gated items](name-resolution.md#feature-gated-items), see
-  [Name resolution](name-resolution.md).
-- To learn how to link to additional items such as
+- [Supported syntax](supported-syntax.md): Full list of link syntax with examples. Know
+  how to link to additional items such as
   [functions, macros](supported-syntax.md#functions-and-macros), and
-  [implementors](supported-syntax.md#implementors-and-fully-qualified-syntax), see
-  [Supported syntax](supported-syntax.md).
+  [implementors](supported-syntax.md#implementors-and-fully-qualified-syntax).
+- [Name resolution](name-resolution.md): Understand how the preprocessor find Rust
+  items, including
+  [when items are gated behind features](name-resolution.md#feature-gated-items).
 
 For **making the preprocessor work with your project** —
 
-- If you use [Cargo workspaces][workspaces], see specific instructions in
-  [Workspace layout](workspace-layout.md).
-- If you are working on a large project, and processing is taking a long time, see the
-  discussion in [Caching](caching.md).
+- [Workspace layout](workspace-layout.md): Setup and options suitable for [Cargo
+  workspaces][workspaces].
+- [Caching](caching.md): If you are working on a large project and processing is taking
+  a long time.
 
 For **additional usage information** —
 
-- You can use this as a standalone command line tool: see
-  [Standalone usage](standalone-usage.md).
-- For tips on using this in CI, see [Continuous integration](continuous-integration.md).
-- For all available options and how to set them, see [Configuration](configuration.md).
-- Finally, review [Known issues](known-issues.md) and limitations.
+- [Standalone usage](standalone-usage.md): Use the preprocessor as a standalone command
+  line tool.
+- [Continuous integration](continuous-integration.md): Information for running the
+  preprocessor in CI environments, including
+  [logging](continuous-integration.md#logging) and
+  [failing a build when there are bad links](continuous-integration.md#error-handling).
+- [Configuration](configuration.md): List of available options.
+- [Known issues](known-issues.md) and limitations.
 
 Happy linking!
 

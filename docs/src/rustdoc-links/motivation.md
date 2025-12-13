@@ -21,8 +21,8 @@ happen:
 - You do want at least some reference links. It could quickly become cumbersome to find
   and copy the correct links by hand, and even more so to maintain them over time.
 
-`mdbook-rustdoc-link` is the tooling answer to these problems. _Effortless, correct, and
-good practice — choose all three!_
+`mdbook-rustdoc-links` is the tooling answer to these problems. _Effortless, correct,
+and good practice — choose all three!_
 
 > [!TIP]
 >
