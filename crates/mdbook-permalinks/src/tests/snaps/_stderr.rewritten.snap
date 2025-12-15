@@ -12,7 +12,7 @@ expression: report
     ·                                      │ link: #absolute-paths
     │ 
     ╰────
-    ╭─[crates/mdbook-permalinks/src/tests/links.md:31:8]
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:35:8]
     │ 
     │ found: <https://example.org/book/tests/links>
     ·        ───────────────────┬──────────────────

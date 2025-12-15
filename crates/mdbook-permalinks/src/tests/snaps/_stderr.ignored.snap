@@ -4,7 +4,7 @@ assertion_line: 106
 expression: report
 ---
   info: link is ignored as it is not supported
-    ╭─[crates/mdbook-permalinks/src/tests/links.md:37:10]
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:41:10]
     │ 
     │ ignored: <https://example.com/book/links>
     ·          ────────────────────────────────

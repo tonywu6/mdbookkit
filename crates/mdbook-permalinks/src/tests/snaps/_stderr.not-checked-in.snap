@@ -4,7 +4,7 @@ assertion_line: 106
 expression: report
 ---
   warning: path to a file outside source control
-    ╭─[crates/mdbook-permalinks/src/tests/links.md:25:1]
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:29:1]
     │ 
     │ [`//LICENSE-MIT.md`](//LICENSE-MIT.md)
     · ───────────────────┬──────────────────

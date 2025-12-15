@@ -4,7 +4,7 @@ assertion_line: 106
 expression: report
 ---
   info: link to book page or file
-    ╭─[crates/mdbook-permalinks/src/tests/links.md:15:1]
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:19:1]
     │ 
     │ [Links](./links.md)
     · ─────────┬─────────

@@ -4,7 +4,7 @@ assertion_line: 106
 expression: report
 ---
   warning: file does not exist at path
-    ╭─[crates/mdbook-permalinks/src/tests/links.md:23:1]
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:27:1]
     │ 
     │ [Cargo.lock](../../Cargo.lock)
     · ───────────────┬──────────────

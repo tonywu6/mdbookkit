@@ -2,13 +2,17 @@
 
 [Cargo.toml](../../../../Cargo.toml)
 
-![error reporting](../../../../docs/src/rustdoc-link/media/error-reporting.png)
+![error reporting](../../../../docs/src/permalinks/media/error-reporting.png)
 
 # absolute paths
 
 [LICENSE-APACHE.md](/LICENSE-APACHE.md)
 
 [links.md](/crates/mdbook-permalinks/src/tests/links.md#absolute-paths)
+
+# fragments
+
+[book.toml](/docs/book.toml#L40-44)
 
 # book files
 

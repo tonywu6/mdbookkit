@@ -238,6 +238,8 @@ impl Resolver<'_, '_> {
             file_url
         };
 
+        let (file_url, suffix) = UrlSuffix::take(file_url);
+
         let Ok(path) = file_url.to_file_path() else {
             link.status = LinkStatus::Ignored;
             return;
@@ -289,7 +291,10 @@ impl Resolver<'_, '_> {
         if !always_link {
             if link.link.starts_with('/') {
                 // mdbook doesn't support absolute paths like VS Code does
-                link.link = page_url.make_relative(&file_url).unwrap().into();
+                link.link = page_url
+                    .make_relative(&suffix.restored(file_url))
+                    .unwrap()
+                    .into();
                 link.status = LinkStatus::Rewritten;
             } else {
                 link.status = LinkStatus::Published;
@@ -299,8 +304,8 @@ impl Resolver<'_, '_> {
 
         match env.vcs.link.to_link(&relative_to_repo) {
             Ok(href) => {
+                link.link = suffix.restored(href).as_str().to_owned().into();
                 link.status = LinkStatus::Permalink;
-                link.link = href.as_str().to_owned().into();
             }
             Err(err) => link.status = LinkStatus::Error(format!("{err}")),
         }
@@ -512,6 +517,38 @@ impl<'de> Deserialize<'de> for UrlPrefix {
     {
         let url = Url::deserialize(deserializer)?;
         Ok(Self::from(url))
+    }
+}
+
+#[must_use]
+struct UrlSuffix {
+    query: Option<String>,
+    fragment: Option<String>,
+}
+
+impl UrlSuffix {
+    fn take(mut url: Url) -> (Url, Self) {
+        let query = url.query().map(|s| s.to_owned());
+        let fragment = url.fragment().map(|s| s.to_owned());
+        url.set_query(None);
+        url.set_fragment(None);
+        (url, Self { query, fragment })
+    }
+
+    fn restored(self, mut url: Url) -> Url {
+        let Self { query, fragment } = self;
+
+        match (url.query(), &query) {
+            (Some(_), None) => {}
+            _ => url.set_query(query.as_deref()),
+        }
+
+        match (url.fragment(), &fragment) {
+            (Some(_), None) => {}
+            _ => url.set_fragment(fragment.as_deref()),
+        }
+
+        url
     }
 }
 

@@ -10,9 +10,9 @@ expression: report
     · ──────────────────┬─────────────────
     ·                   ╰── link: https://github.com/lorem/ipsum/tree/dolor/Cargo.toml
     │ 
-    │ ![error reporting](../../../../docs/src/rustdoc-link/media/error-reporting.png)
-    · ───────────────────────────────────────┬───────────────────────────────────────
-    ·                                        ╰── link: https://github.com/lorem/ipsum/tree/dolor/docs/src/rustdoc-link/media/error-reporting.png
+    │ ![error reporting](../../../../docs/src/permalinks/media/error-reporting.png)
+    · ──────────────────────────────────────┬──────────────────────────────────────
+    ·                                       ╰── link: https://github.com/lorem/ipsum/tree/dolor/docs/src/permalinks/media/error-reporting.png
     │ 
     │ # absolute paths
     │ 
@@ -21,7 +21,14 @@ expression: report
     ·                    ╰── link: https://github.com/lorem/ipsum/tree/dolor/LICENSE-APACHE.md
     │ 
     ╰────
-    ╭─[crates/mdbook-permalinks/src/tests/links.md:47:1]
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:15:1]
+    │ 
+    │ [book.toml](/docs/book.toml#L40-44)
+    · ─────────────────┬─────────────────
+    ·                  ╰── link: https://github.com/lorem/ipsum/tree/dolor/docs/book.toml#L40-44
+    │ 
+    ╰────
+    ╭─[crates/mdbook-permalinks/src/tests/links.md:51:1]
     │ 
     │ [permalink](https://github.com/lorem/ipsum/tree/HEAD/LICENSE-APACHE.md)
     · ───────────────────────────────────┬───────────────────────────────────
