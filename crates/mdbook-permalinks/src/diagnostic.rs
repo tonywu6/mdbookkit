@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::BTreeMap};
 
 use miette::LabeledSpan;
-use tap::TapFallible;
+use tap::TapOptional;
 use url::Url;
 
 use mdbookkit::diagnostics::{Diagnostics, Issue, IssueItem, ReportBuilder};
@@ -75,7 +75,7 @@ impl IssueItem for LinkDiagnostic<'_> {
     }
 
     fn label(&self) -> LabeledSpan {
-        let link = self.shorten();
+        let link = self.shorten(&self.link.link);
         let status = &self.link.status;
         let label = match status {
             LinkStatus::Ignored => None,
@@ -83,7 +83,7 @@ impl IssueItem for LinkDiagnostic<'_> {
             LinkStatus::Permalink => Some(format!("link: {link}")),
             LinkStatus::Rewritten => Some(format!("file: {link}\nlink: {}", self.link.link)),
             LinkStatus::PathNotCheckedIn => Some(format!("{status}: {link}")),
-            LinkStatus::NoSuchPath => Some(format!("{status}: {link}")),
+            LinkStatus::NoSuchPath(candidates) => Some(format!("{status}: {link}")),
             LinkStatus::Error(..) => Some(format!("{status}")),
         };
         LabeledSpan::new_with_span(label, self.link.span.clone())
@@ -91,22 +91,29 @@ impl IssueItem for LinkDiagnostic<'_> {
 }
 
 impl LinkDiagnostic<'_> {
-    fn shorten(&self) -> Cow<'_, str> {
-        let Ok(link) = if self.link.link.starts_with('/') {
-            self.root.join(&self.link.link[1..])
+    fn shorten<'a>(&self, path: &'a str) -> Cow<'a, str> {
+        let url = if let Some(path) = path.strip_prefix('/') {
+            self.root.join(path)
         } else {
-            self.page.join(&self.link.link)
+            self.page.join(path)
         }
-        .tap_ok_mut(|u| u.set_fragment(None)) else {
-            return Cow::Borrowed(&self.link.link);
-        };
-        let Some(rel) = self.root.make_relative(&link) else {
-            return Cow::Borrowed(&self.link.link);
-        };
-        if rel.starts_with("../") {
-            Cow::Owned(link.to_string())
+        .ok()
+        .tap_some_mut(|url| {
+            url.set_query(None);
+            url.set_fragment(None);
+        });
+        if let Some(url) = url {
+            if let Some(rel) = self.root.make_relative(&url) {
+                if rel.starts_with("../") {
+                    Cow::Owned(url.to_string())
+                } else {
+                    Cow::Owned(rel)
+                }
+            } else {
+                Cow::Borrowed(path)
+            }
         } else {
-            Cow::Owned(rel)
+            Cow::Borrowed(path)
         }
     }
 }
@@ -119,7 +126,7 @@ impl Issue for LinkStatus {
             Self::Rewritten => log::Level::Info,
             Self::Permalink => log::Level::Info,
             Self::PathNotCheckedIn => log::Level::Warn,
-            Self::NoSuchPath => log::Level::Warn,
+            Self::NoSuchPath(..) => log::Level::Warn,
             Self::Error(..) => log::Level::Warn,
         }
     }
@@ -149,7 +156,7 @@ impl LinkStatus {
     fn order(&self) -> usize {
         match self {
             Self::Error(..) => 103,
-            Self::NoSuchPath => 101,
+            Self::NoSuchPath(..) => 101,
             Self::PathNotCheckedIn => 100,
             Self::Permalink => 3,
             Self::Rewritten => 2,

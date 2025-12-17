@@ -126,8 +126,8 @@ impl Environment {
         self.validate();
 
         for (base, link) in content.links_mut() {
-            let file = if link.link.starts_with('/') {
-                self.vcs.root.join(&link.link[1..])
+            let file = if let Some(link) = link.link.strip_prefix('/') {
+                self.vcs.root.join(link)
             } else {
                 base.join(&link.link)
             }
@@ -207,9 +207,8 @@ struct Resolver<'a, 'r> {
 impl Resolver<'_, '_> {
     fn resolve(self) {
         if let Some(book) = &self.env.config.book_url {
-            if let Some(page) = book.0.make_relative(&self.file_url) {
-                // hard-coded URLs to book pages
-                self.resolve_page(page)
+            if let Some(path) = book.0.make_relative(&self.file_url) {
+                self.resolve_book(path)
             } else {
                 self.resolve_file()
             }
@@ -227,18 +226,16 @@ impl Resolver<'_, '_> {
             ..
         } = self;
 
-        let file_url = if let Some(path) = env.vcs.link.to_path(&file_url) {
-            if let Ok(file_url) = env.vcs.root.join(&path) {
-                link.link = format!("/{path}").into();
-                file_url
-            } else {
-                file_url
-            }
+        let (file_url, hint, suffix, is_vcs) = if let Some((path, hint)) =
+            env.vcs.link.to_path(&file_url)
+            && let Ok(url) = env.vcs.root.join(&path)
+        {
+            let (_, suffix) = UrlSuffix::take(file_url);
+            (url, hint, suffix, true)
         } else {
-            file_url
+            let (url, suffix) = UrlSuffix::take(file_url);
+            (url, link.hint, suffix, false)
         };
-
-        let (file_url, suffix) = UrlSuffix::take(file_url);
 
         let Ok(path) = file_url.to_file_path() else {
             link.status = LinkStatus::Ignored;
@@ -268,7 +265,7 @@ impl Resolver<'_, '_> {
             .tap_err(log_debug!());
 
         if !matches!(exists, Ok(true)) {
-            link.status = LinkStatus::NoSuchPath;
+            link.status = LinkStatus::NoSuchPath(vec![]);
             return;
         }
 
@@ -281,7 +278,8 @@ impl Resolver<'_, '_> {
             return;
         };
 
-        let always_link = relative_to_book.starts_with("../")
+        let always_link = is_vcs
+            || relative_to_book.starts_with("../")
             || env
                 .config
                 .always_link
@@ -302,7 +300,7 @@ impl Resolver<'_, '_> {
             return;
         }
 
-        match env.vcs.link.to_link(&relative_to_repo) {
+        match env.vcs.link.to_link(&relative_to_repo, hint) {
             Ok(href) => {
                 link.link = suffix.restored(href).as_str().to_owned().into();
                 link.status = LinkStatus::Permalink;
@@ -311,8 +309,8 @@ impl Resolver<'_, '_> {
         }
     }
 
-    /// Check hard-coded URLs to book pages
-    fn resolve_page(self, page: String) {
+    /// Check hard-coded URLs to book content
+    fn resolve_book(self, path: String) {
         let Self {
             file_url,
             page_url,
@@ -321,11 +319,11 @@ impl Resolver<'_, '_> {
         } = self;
 
         let path = {
-            let mut path = page;
-            if let Some(idx) = path.find('#') {
+            let mut path = path;
+            if let Some(idx) = path.rfind('#') {
                 path.truncate(idx)
             };
-            if let Some(idx) = path.find('?') {
+            if let Some(idx) = path.rfind('?') {
                 path.truncate(idx)
             };
             path.strip_suffix(".html")
@@ -338,8 +336,6 @@ impl Resolver<'_, '_> {
             return;
         }
 
-        let mut not_found = vec![];
-
         // one does not simply avoid trailing slash issues...
         // https://github.com/slorber/trailing-slash-guide
         let try_files = if path.is_empty() || path.ends_with('/') {
@@ -348,7 +344,7 @@ impl Resolver<'_, '_> {
                 // be addressed with a trailing slash
                 format!("{path}index.md"),
                 format!("{path}README.md"),
-            ] as &[String]
+            ] as &[_]
         } else {
             &[
                 format!("{path}.md"),
@@ -356,8 +352,13 @@ impl Resolver<'_, '_> {
                 // /folder to /folder/, so these are okay
                 format!("{path}/index.md"),
                 format!("{path}/README.md"),
+                // preserve extension if any which allows checking for
+                // static files other than book pages
+                path,
             ]
         };
+
+        let mut not_found = None;
 
         for file in try_files {
             let Ok(file) = self.env.book_src.join(file).tap_err(log_debug!()) else {
@@ -387,11 +388,12 @@ impl Resolver<'_, '_> {
                 return;
             }
 
-            not_found.push(file);
+            not_found.get_or_insert(file);
         }
 
-        link.link = not_found[0].to_string().into();
-        link.status = LinkStatus::NoSuchPath;
+        if let Some(file) = not_found {
+            link.status = LinkStatus::NoSuchPath(vec![]);
+        }
     }
 }
 

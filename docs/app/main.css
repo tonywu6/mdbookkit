@@ -259,9 +259,19 @@ body {
     }
   }
 
-  .blockquote-tag-title svg {
-    position: relative;
-    top: 1px;
+  .blockquote-tag {
+    .blockquote-tag-title {
+      margin-block-end: 0.5rem;
+
+      svg {
+        position: relative;
+        top: 1px;
+      }
+    }
+
+    > :nth-child(2):not(:last-child) {
+      margin-block-start: 1rem;
+    }
   }
 }
 

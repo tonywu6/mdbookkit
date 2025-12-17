@@ -28,7 +28,7 @@ expression: report
     │   - The correct link is
     │     [https://docs.rs/tokio-macros/2.5.0/tokio_macros/~~macro~~attr.main.html][tokio::main]
     │ 
-    │ ### Trait items
+    │ ### Implemented items with the same name
     │ 
     │ Rust allows methods to have the same name if they are from different traits, and types
     │ can implement the same trait multiple times if the trait is generic. All such methods

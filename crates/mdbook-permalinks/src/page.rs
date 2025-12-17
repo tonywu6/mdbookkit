@@ -10,7 +10,7 @@ use mdbookkit::{
     markdown::{PatchStream, Spanned},
 };
 
-use crate::link::{EmitLinkSpan, LinkSpan, LinkStatus, LinkText, LinkUsage, RelativeLink};
+use crate::link::{ContentTypeHint, EmitLinkSpan, LinkSpan, LinkStatus, LinkText, RelativeLink};
 
 pub struct Pages<'a> {
     pages: HashMap<Arc<Url>, Page<'a>>,
@@ -86,17 +86,17 @@ impl<'a> Page<'a> {
                     let (usage, link, title) = match tag {
                         Tag::Link {
                             dest_url, title, ..
-                        } => (LinkUsage::Link, dest_url, title),
+                        } => (ContentTypeHint::Tree, dest_url, title),
                         Tag::Image {
                             dest_url, title, ..
-                        } => (LinkUsage::Image, dest_url, title),
+                        } => (ContentTypeHint::Raw, dest_url, title),
                         _ => unreachable!(),
                     };
                     let link = RelativeLink {
                         status: LinkStatus::PathNotCheckedIn,
                         span,
                         link,
-                        usage,
+                        hint: usage,
                         title,
                     }
                     .pipe(LinkText::Link);
@@ -108,8 +108,8 @@ impl<'a> Page<'a> {
 
                 event @ Event::End(end @ (TagEnd::Link | TagEnd::Image)) => {
                     let usage = match end {
-                        TagEnd::Link => LinkUsage::Link,
-                        TagEnd::Image => LinkUsage::Image,
+                        TagEnd::Link => ContentTypeHint::Tree,
+                        TagEnd::Image => ContentTypeHint::Raw,
                         _ => unreachable!(),
                     };
                     let Some(mut items) = opened.take() else {

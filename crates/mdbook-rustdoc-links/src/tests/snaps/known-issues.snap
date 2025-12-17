@@ -7,7 +7,7 @@ expression: output
 
 ## Performance
 
-`mdbook-rustdoc-link` itself doesn't need much processing power, but it invokes
+`mdbook-rustdoc-links` itself doesn't need much processing power, but it invokes
 rust-analyzer, which does a full scan of your workspace. The larger your workspace is,
 the longer mdBook will have to wait for the preprocessor. This is the source of the
 majority of the run time.
@@ -45,7 +45,7 @@ example:
   - The correct link is
     [https://docs.rs/tokio-macros/2.5.0/tokio_macros/~~macro~~attr.main.html][tokio::main]
 
-### Trait items
+### Implemented items with the same name
 
 Rust allows methods to have the same name if they are from different traits, and types
 can implement the same trait multiple times if the trait is generic. All such methods
@@ -83,8 +83,8 @@ rust-analyzer. For example:
 ## Sites other than docs.rs
 
 Currently, items from crates other than `std` always generate links that point to
-<https://docs.rs>. `mdbook-rustdoc-link` does not yet support configuring alternative
-URL prefixes.
+<https://docs.rs>. The preprocessor does not yet support configuring alternative URL
+prefixes.
 
 ## Wrong line numbers in diagnostics
 
@@ -101,7 +101,7 @@ could happen in files that use the `{{#include}}` directive, for example.
 
 This is an unfortunate limitation with mdBook's preprocessor architecture. Preprocessors
 are run sequentially, with the next preprocessor receiving Markdown source rendered by
-the previous one. If preprocessors running before `mdbook-rustdoc-link` modify Markdown
+the previous one. If preprocessors running before the preprocessor modify Markdown
 source in such ways that shift lines around, then the line numbers will look incorrect.
 
 Unless mdBook somehow gains [source map][sourcemap] support, this problem is unlikely to

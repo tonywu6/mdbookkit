@@ -1,6 +1,6 @@
-import { encodeHex } from "jsr:@std/encoding/hex";
-import * as pathlib from "jsr:@std/path";
-import * as esbuild from "npm:esbuild@0.25.2";
+import { encodeHex } from "@std/encoding/hex";
+import * as pathlib from "@std/path";
+import * as esbuild from "esbuild";
 
 const relpath = (path: string) => new URL(path, import.meta.url).pathname;
 
@@ -12,6 +12,7 @@ try {
 
 const built = await esbuild.build({
   bundle: true,
+  splitting: true,
   format: "esm",
   target: ["chrome93", "firefox93", "safari15", "es2020"],
   platform: "browser",
@@ -29,7 +30,7 @@ const css: string[] = [];
 const esm: string[] = [];
 
 for (const [path, file] of Object.entries(built.metafile.outputs)) {
-  if (file.entryPoint) {
+  if (file.entryPoint?.startsWith("app/")) {
     const name = JSON.stringify(`./${pathlib.basename(path)}`);
     switch (path.split(".").pop()) {
       case "css":

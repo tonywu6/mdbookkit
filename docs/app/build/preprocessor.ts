@@ -9,13 +9,14 @@ const [, book] = await read(Deno.stdin.readable).then(JSON.parse);
 console.log(JSON.stringify(book));
 
 async function read(r: ReadableStream): Promise<string> {
-  const reader = r.getReader();
-  const decoder = new TextDecoder();
+  const decoder = new TextDecoderStream();
+  r.pipeTo(decoder.writable);
+  const reader = decoder.readable.getReader();
   let result = "";
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    result += decoder.decode(value);
+    result += value;
   }
   return result;
 }

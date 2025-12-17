@@ -1,6 +1,7 @@
 use std::{fmt::Debug, ops::Range};
 
 use mdbook_markdown::pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
+use url::Url;
 
 #[derive(Debug, Default, Clone, thiserror::Error)]
 pub enum LinkStatus {
@@ -20,7 +21,7 @@ pub enum LinkStatus {
     #[error("path to a file outside source control")]
     PathNotCheckedIn,
     #[error("file does not exist at path")]
-    NoSuchPath,
+    NoSuchPath(Vec<Url>),
 
     #[error("error generating a link: {0}")]
     Error(String),
@@ -37,14 +38,14 @@ pub struct RelativeLink<'a> {
     pub status: LinkStatus,
     pub span: Range<usize>,
     pub link: CowStr<'a>,
-    pub usage: LinkUsage,
+    pub hint: ContentTypeHint,
     pub title: CowStr<'a>,
 }
 
-#[derive(Clone, Copy, PartialEq)]
-pub enum LinkUsage {
-    Link,
-    Image,
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum ContentTypeHint {
+    Tree,
+    Raw,
 }
 
 impl<'a> LinkSpan<'a> {
@@ -72,14 +73,14 @@ impl<'a> LinkSpan<'a> {
 
 impl RelativeLink<'_> {
     fn emit(&self) -> Tag<'_> {
-        match self.usage {
-            LinkUsage::Link => Tag::Link {
+        match self.hint {
+            ContentTypeHint::Tree => Tag::Link {
                 link_type: LinkType::Inline,
                 dest_url: self.link.clone(),
                 title: self.title.clone(),
                 id: CowStr::Borrowed(""),
             },
-            LinkUsage::Image => Tag::Image {
+            ContentTypeHint::Raw => Tag::Image {
                 link_type: LinkType::Inline,
                 dest_url: self.link.clone(),
                 title: self.title.clone(),
@@ -88,9 +89,9 @@ impl RelativeLink<'_> {
         }
     }
 
-    fn will_emit(&self) -> Option<LinkUsage> {
+    fn will_emit(&self) -> Option<ContentTypeHint> {
         if matches!(self.status, LinkStatus::Permalink | LinkStatus::Rewritten) {
-            Some(self.usage)
+            Some(self.hint)
         } else {
             None
         }
@@ -99,7 +100,7 @@ impl RelativeLink<'_> {
 
 pub struct EmitLinkSpan<'a> {
     iter: std::slice::Iter<'a, LinkText<'a>>,
-    opened: Vec<LinkUsage>,
+    opened: Vec<ContentTypeHint>,
 }
 
 impl<'a> Iterator for EmitLinkSpan<'a> {
@@ -110,11 +111,11 @@ impl<'a> Iterator for EmitLinkSpan<'a> {
             match next {
                 LinkText::Text(text) => {
                     match (text, self.opened.last()) {
-                        (Event::End(TagEnd::Link), Some(LinkUsage::Link)) => {
+                        (Event::End(TagEnd::Link), Some(ContentTypeHint::Tree)) => {
                             self.opened.pop();
                             return Some(text.clone());
                         }
-                        (Event::End(TagEnd::Image), Some(LinkUsage::Image)) => {
+                        (Event::End(TagEnd::Image), Some(ContentTypeHint::Raw)) => {
                             self.opened.pop();
                             return Some(text.clone());
                         }
@@ -167,11 +168,11 @@ impl<'a> EmitLinkSpan<'a> {
     }
 }
 
-impl Debug for LinkUsage {
+impl Debug for ContentTypeHint {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Link => f.write_str("link"),
-            Self::Image => f.write_str("image"),
+            Self::Tree => f.write_str("tree"),
+            Self::Raw => f.write_str("raw"),
         }
     }
 }

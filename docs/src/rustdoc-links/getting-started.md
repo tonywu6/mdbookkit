@@ -85,7 +85,7 @@ The preprocessor runs in both `mdbook build` and `mdbook serve`.
 - See the full list of [supported syntax](supported-syntax.md).
 - Understand [how the preprocessor resolves links](name-resolution.md) under the hood.
 - Check out [available configuration options](configuration.md).
-- Learn about some [known issues and limitations](known-issues.md).
+- Learn about [known issues and limitations](known-issues.md).
 
 <!-- prettier-ignore-start -->
 

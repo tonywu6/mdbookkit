@@ -1,4 +1,4 @@
-# mdbook-rustdoc-link
+# mdbook-rustdoc-links
 
 <div class="hidden">
 
@@ -49,7 +49,8 @@ For **writing documentation** —
   how to link to additional items such as
   [functions, macros](supported-syntax.md#functions-and-macros), and
   [implementors](supported-syntax.md#implementors-and-fully-qualified-syntax).
-- [Name resolution](name-resolution.md): Understand how the preprocessor find Rust
+
+- [Name resolution](name-resolution.md): Understand how the preprocessor finds Rust
   items, including
   [when items are gated behind features](name-resolution.md#feature-gated-items).
 
@@ -57,6 +58,7 @@ For **making the preprocessor work with your project** —
 
 - [Workspace layout](workspace-layout.md): Setup and options suitable for [Cargo
   workspaces][workspaces].
+
 - [Caching](caching.md): If you are working on a large project and processing is taking
   a long time.
 
@@ -64,11 +66,14 @@ For **additional usage information** —
 
 - [Standalone usage](standalone-usage.md): Use the preprocessor as a standalone command
   line tool.
+
 - [Continuous integration](continuous-integration.md): Information for running the
   preprocessor in CI environments, including
   [logging](continuous-integration.md#logging) and
   [failing a build when there are bad links](continuous-integration.md#error-handling).
+
 - [Configuration](configuration.md): List of available options.
+
 - [Known issues](known-issues.md) and limitations.
 
 Happy linking!

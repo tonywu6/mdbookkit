@@ -8,7 +8,7 @@ use url::{Url, form_urlencoded::Serializer as SearchParams};
 
 use mdbookkit::log_debug;
 
-use crate::{Config, VersionControl};
+use crate::{Config, VersionControl, link::ContentTypeHint};
 
 impl VersionControl {
     pub fn try_from_git(config: &Config, book: &MDBookConfig) -> Result<Result<Self>> {
@@ -75,9 +75,9 @@ impl VersionControl {
 
 pub trait PermalinkFormat {
     /// Try to convert this path to a permalink
-    fn to_link(&self, path: &str) -> Result<Url>;
+    fn to_link(&self, path: &str, hint: ContentTypeHint) -> Result<Url>;
     /// Try to extract a path (relative to repo root) from this link
-    fn to_path(&self, link: &Url) -> Option<String>;
+    fn to_path(&self, link: &Url) -> Option<(String, ContentTypeHint)>;
 }
 
 pub enum Permalink {
@@ -86,14 +86,16 @@ pub enum Permalink {
 }
 
 impl PermalinkFormat for Permalink {
-    fn to_link(&self, path: &str) -> Result<Url> {
+    #[inline]
+    fn to_link(&self, path: &str, hint: ContentTypeHint) -> Result<Url> {
         match self {
-            Self::GitHub(this) => this.to_link(path),
-            Self::Custom(this) => this.to_link(path),
+            Self::GitHub(this) => this.to_link(path, hint),
+            Self::Custom(this) => this.to_link(path, hint),
         }
     }
 
-    fn to_path(&self, link: &Url) -> Option<String> {
+    #[inline]
+    fn to_path(&self, link: &Url) -> Option<(String, ContentTypeHint)> {
         match self {
             Self::GitHub(this) => this.to_path(link),
             Self::Custom(this) => this.to_path(link),
@@ -104,11 +106,13 @@ impl PermalinkFormat for Permalink {
 pub struct GitHubPermalink(CustomPermalink);
 
 impl PermalinkFormat for GitHubPermalink {
-    fn to_link(&self, path: &str) -> Result<Url> {
-        self.0.to_link(path)
+    #[inline]
+    fn to_link(&self, path: &str, hint: ContentTypeHint) -> Result<Url> {
+        self.0.to_link(path, hint)
     }
 
-    fn to_path(&self, link: &Url) -> Option<String> {
+    #[inline]
+    fn to_path(&self, link: &Url) -> Option<(String, ContentTypeHint)> {
         self.0.to_path(link)
     }
 }
@@ -142,14 +146,17 @@ macro_rules! encoded_param {
 }
 
 impl PermalinkFormat for CustomPermalink {
-    fn to_link(&self, path: &str) -> Result<Url> {
+    fn to_link(&self, path: &str, hint: ContentTypeHint) -> Result<Url> {
         let path = self
             .pattern
             .path()
             .split('/')
             .map(|segment| match segment {
                 encoded_param!("ref") => &self.reference,
-                encoded_param!("tree") => "tree",
+                encoded_param!("tree") => match hint {
+                    ContentTypeHint::Tree => "tree",
+                    ContentTypeHint::Raw => "raw",
+                },
                 encoded_param!("path") => path,
                 _ => segment,
             })
@@ -181,16 +188,26 @@ impl PermalinkFormat for CustomPermalink {
             .pipe(Ok)
     }
 
-    // this is kind of ugly
-    fn to_path(&self, link: &Url) -> Option<String> {
+    // this is kind of messy
+    fn to_path(&self, link: &Url) -> Option<(String, ContentTypeHint)> {
         if self.pattern.origin() != link.origin() {
             return None;
         }
 
-        fn match_param(lhs: &str, rhs: Option<&str>) -> ControlFlow<()> {
+        let mut path = false;
+        let mut hint = ContentTypeHint::Tree;
+
+        let mut match_param = |lhs: &str, rhs: Option<&str>| -> ControlFlow<()> {
             match lhs {
                 encoded_param!("tree") => match rhs {
-                    Some("tree" | "blob" | "raw") => ControlFlow::Continue(()),
+                    Some("tree" | "blob") => {
+                        hint = ContentTypeHint::Tree;
+                        ControlFlow::Continue(())
+                    }
+                    Some("raw") => {
+                        hint = ContentTypeHint::Raw;
+                        ControlFlow::Continue(())
+                    }
                     _ => ControlFlow::Break(()),
                 },
                 encoded_param!("ref") => match rhs {
@@ -202,9 +219,7 @@ impl PermalinkFormat for CustomPermalink {
                     _ => ControlFlow::Break(()),
                 },
             }
-        }
-
-        let mut path = false;
+        };
 
         let mut lhs = self.pattern.path().split('/');
         let mut rhs = link.path().split('/');
@@ -251,7 +266,12 @@ impl PermalinkFormat for CustomPermalink {
                     None => return None,
                 },
                 "{tree}" => match link_query.get(&k).map(|v| &**v) {
-                    Some("tree" | "blob" | "raw") => {}
+                    Some("tree" | "blob") => {
+                        hint = ContentTypeHint::Tree;
+                    }
+                    Some("raw") => {
+                        hint = ContentTypeHint::Raw;
+                    }
                     _ => return None,
                 },
                 "{ref}" => match link_query.get(&k).map(|v| &**v) {
@@ -262,14 +282,7 @@ impl PermalinkFormat for CustomPermalink {
             }
         }
 
-        if let Some(path) = path {
-            match link.fragment() {
-                Some(fragment) => Some(format!("{path}#{fragment}")),
-                None => Some(path),
-            }
-        } else {
-            None
-        }
+        Some((path?, hint))
     }
 }
 
@@ -376,6 +389,8 @@ mod tests {
     use git2::Repository;
     use mdbook_preprocessor::config::Config as MDBookConfig;
 
+    use crate::link::ContentTypeHint;
+
     use super::{CustomPermalink, PermalinkFormat, find_git_remote, remote_as_github};
 
     #[test]
@@ -439,7 +454,7 @@ mod tests {
             reference: "main".into(),
         };
 
-        let link = scheme.to_link(".editorconfig")?;
+        let link = scheme.to_link(".editorconfig", ContentTypeHint::Tree)?;
 
         assert_eq!(
             link.as_str(),
@@ -456,7 +471,7 @@ mod tests {
             reference: "master".into(),
         };
 
-        let link = scheme.to_link(".editorconfig")?;
+        let link = scheme.to_link(".editorconfig", ContentTypeHint::Tree)?;
 
         assert_eq!(
             link.as_str(),
@@ -473,25 +488,12 @@ mod tests {
             reference: "main".into(),
         };
 
-        let path = scheme.to_path(&"https://github.com/lorem/ipsum/raw/HEAD/path/to/file".parse()?);
+        let (path, hint) = scheme
+            .to_path(&"https://github.com/lorem/ipsum/raw/HEAD/path/to/file".parse()?)
+            .unwrap();
 
-        assert_eq!(path.as_deref(), Some("path/to/file"));
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_link_to_path_with_fragments() -> Result<()> {
-        let scheme = CustomPermalink {
-            pattern: "https://github.com/lorem/ipsum/{tree}/{ref}/{path}".parse()?,
-            reference: "main".into(),
-        };
-
-        let path = scheme.to_path(
-            &"https://github.com/lorem/ipsum/blob/HEAD/path/to/file.md#section-1".parse()?,
-        );
-
-        assert_eq!(path.as_deref(), Some("path/to/file.md#section-1"));
+        assert_eq!(path, "path/to/file");
+        assert_eq!(hint, ContentTypeHint::Raw);
 
         Ok(())
     }
@@ -503,13 +505,17 @@ mod tests {
             reference: "main".into(),
         };
 
-        let path = scheme.to_path(&"https://github.com/lorem/ipsum/raw/HEAD".parse()?);
+        let (path, _) = scheme
+            .to_path(&"https://github.com/lorem/ipsum/raw/HEAD".parse()?)
+            .unwrap();
 
-        assert_eq!(path.as_deref(), Some(""));
+        assert_eq!(path, "");
 
-        let path = scheme.to_path(&"https://github.com/lorem/ipsum/raw/HEAD/".parse()?);
+        let (path, _) = scheme
+            .to_path(&"https://github.com/lorem/ipsum/raw/HEAD/".parse()?)
+            .unwrap();
 
-        assert_eq!(path.as_deref(), Some(""));
+        assert_eq!(path, "");
 
         Ok(())
     }
@@ -521,10 +527,11 @@ mod tests {
             reference: "main".into(),
         };
 
-        let path =
-            scheme.to_path(&"https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/.editorconfig?h=HEAD".parse()?);
+        let (path, hint) =
+            scheme.to_path(&"https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/raw/.editorconfig?h=HEAD".parse()?).unwrap();
 
-        assert_eq!(path.as_deref(), Some(".editorconfig"));
+        assert_eq!(path, ".editorconfig");
+        assert_eq!(hint, ContentTypeHint::Raw);
 
         Ok(())
     }

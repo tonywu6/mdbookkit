@@ -91,7 +91,7 @@ macro_rules! matcher {
 #[case("_stderr.rewritten", matcher!(LinkStatus::Rewritten))]
 #[case("_stderr.permalink", matcher!(LinkStatus::Permalink))]
 #[case("_stderr.not-checked-in", matcher!(LinkStatus::PathNotCheckedIn))]
-#[case("_stderr.no-such-path", matcher!(LinkStatus::NoSuchPath))]
+#[case("_stderr.no-such-path", matcher!(LinkStatus::NoSuchPath(..)))]
 #[case("_stderr.link-error", matcher!(LinkStatus::Error(..)))]
 fn test_stderr(#[case] name: &str, #[case] matcher: impl Fn(&LinkStatus) -> bool) -> Result<()> {
     let Fixture { env, pages } = &*FIXTURE;

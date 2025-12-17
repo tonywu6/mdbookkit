@@ -12,10 +12,13 @@
     "docs/src/app"
   ],
   "imports": {
-    "esbuild": "npm:esbuild@^0.25.1",
-    "prettier": "npm:prettier@^3.5.3",
-    "stylelint": "npm:stylelint@^16.18.0",
-    "stylelint-config-recess-order": "npm:stylelint-config-recess-order@^6.0.0",
+    "@std/encoding": "jsr:@std/encoding@^1.0.10",
+    "@std/path": "jsr:@std/path@^1.1.3",
+    "esbuild": "npm:esbuild@^0.25.12",
+    "mermaid": "npm:mermaid@^11.12.2",
+    "prettier": "npm:prettier@^3.7.4",
+    "stylelint": "npm:stylelint@^16.26.1",
+    "stylelint-config-recess-order": "npm:stylelint-config-recess-order@^6.1.0",
     "stylelint-config-standard": "npm:stylelint-config-standard@^38.0.0"
   },
   "nodeModulesDir": "auto",

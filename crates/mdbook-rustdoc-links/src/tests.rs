@@ -131,9 +131,9 @@ macro_rules! test_documents {
 }
 
 test_documents![
-    "../../../docs/src/rustdoc-link/index.md",
-    "../../../docs/src/rustdoc-link/getting-started.md",
-    "../../../docs/src/rustdoc-link/supported-syntax.md",
-    "../../../docs/src/rustdoc-link/known-issues.md",
+    "../../../docs/src/rustdoc-links/index.md",
+    "../../../docs/src/rustdoc-links/getting-started.md",
+    "../../../docs/src/rustdoc-links/supported-syntax.md",
+    "../../../docs/src/rustdoc-links/known-issues.md",
     "tests/ra-known-quirks.md",
 ];

@@ -1,57 +1,26 @@
-# mdbook-link-forever
+# mdbook-permalinks
 
-mdBook [preprocessor] that takes care of linking to files in your Git repository.
+Create permalinks to files in your Git repository just by using their paths.
 
-`mdbook-link-forever` rewrites path-based links to version-pinned GitHub permalinks. No
-more hard-coded GitHub URLs.
+Link to source code, examples, configuration files, etc., in your [mdBook]
+documentation, without having to hardcode URLs or worry about broken links. You simply
+write ...
 
 ```md
-Here's a link to the [Cargo workspace manifest](../../../Cargo.toml).
+Here is a link to the project's [Cargo.toml](../../../Cargo.toml).
 ```
+
+... and you get:
 
 <figure class="fig-text">
 
-Here's a link to the [Cargo workspace manifest](../../../Cargo.toml).
+Here is a link to the project's [Cargo.toml](../../../Cargo.toml).
 
 </figure>
 
-- Versions are determined at build time. Supports both tags and commit hashes.
-- Because paths are readily accessible at build time, it also
-  [validates](features.md#link-validation) them for you.
+## Overview
 
-## Getting started
-
-1. Install this crate:
-
-   ```
-   cargo install mdbookkit --features link-forever
-   ```
-
-2. Configure your `book.toml`:
-
-   ```toml
-   [book]
-   title = "My Book"
-
-   [output.html]
-   git-repository-url = "https://github.com/me/my-awesome-crate"
-   # will use this for permalinks
-
-   [preprocessor.link-forever]
-   # mdBook will run `mdbook-link-forever`
-   ```
-
-3. Link to files using paths, like this:
-
-   ```md
-   See [`book.toml`](../../book.toml#L44-L48) for an example config.
-   ```
-
-   <figure class="fig-text">
-
-   See [`book.toml`](../../book.toml#L44-L48) for an example config.
-
-   </figure>
+<!-- TODO: -->
 
 ## License
 
@@ -60,6 +29,6 @@ This project is released under the [Apache 2.0 License](/LICENSE-APACHE.md) and 
 
 <!-- prettier-ignore-start -->
 
-[preprocessor]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
+[mdBook]: https://rust-lang.github.io/mdBook/
 
 <!-- prettier-ignore-end -->

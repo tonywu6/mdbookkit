@@ -19,8 +19,9 @@
 ---
 
 - [mdbook-permalinks](permalinks/index.md)
-  - [Feature sheet](permalinks/features.md)
-  - [`{{#include}}` workarounds](permalinks/working-with-include.md)
+  - [Getting started](permalinks/getting-started.md)
+  - [Features](permalinks/features.md)
+  - [More ways to link](permalinks/more-ways-to-link.md)
   - [Continuous integration](permalinks/continuous-integration.md)
   - [Configuration](permalinks/configuration.md)
   - [Known issues](permalinks/known-issues.md)
