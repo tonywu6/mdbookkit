@@ -3,7 +3,6 @@ use std::sync::LazyLock;
 use anyhow::Result;
 use log::LevelFilter;
 use rstest::*;
-use tap::Pipe;
 use url::Url;
 
 use mdbookkit::{
@@ -12,12 +11,7 @@ use mdbookkit::{
     testing::{CARGO_WORKSPACE_DIR, TestDocument, setup_logging},
 };
 
-use crate::{
-    Config, Environment, VersionControl,
-    link::LinkStatus,
-    page::Pages,
-    vcs::{GitHubPermalink, Permalink},
-};
+use crate::{Config, Environment, VersionControl, link::LinkStatus, page::Pages, vcs::Permalink};
 
 struct Fixture {
     env: Environment,
@@ -31,7 +25,12 @@ static FIXTURE: LazyLock<Fixture> = LazyLock::new(|| {
         let env = Environment {
             vcs: VersionControl {
                 root: CARGO_WORKSPACE_DIR.clone(),
-                link: GitHubPermalink::new("lorem", "ipsum", "dolor").pipe(Permalink::GitHub),
+                link: Permalink {
+                    template: "https://example.org/git/{tree}/{ref}/{path}"
+                        .parse()
+                        .unwrap(),
+                    reference: "v0.0".into(),
+                },
             },
             book_src: CARGO_WORKSPACE_DIR
                 .join("crates/")?
@@ -77,7 +76,7 @@ macro_rules! test_output {
     };
 }
 
-test_output!["tests/links.md",];
+test_output!["tests/paths.md", "tests/urls.md", "tests/suffix.md",];
 
 macro_rules! matcher {
     ( $pattern:pat ) => {

@@ -1,0 +1,10 @@
+---
+source: crates/mdbook-permalinks/src/tests.rs
+assertion_line: 61
+expression: output
+---
+[](https://example.org/git/tree/v0.0/docs/book.toml?branch=default)
+
+[](https://example.org/git/tree/v0.0/docs/book.toml#L40-44)
+
+[](https://example.org/git/tree/v0.0/docs/book.toml?/#/L40-44)

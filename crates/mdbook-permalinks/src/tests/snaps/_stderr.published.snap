@@ -1,21 +1,23 @@
 ---
 source: crates/mdbook-permalinks/src/tests.rs
-assertion_line: 106
+assertion_line: 105
 expression: report
 ---
-  info: link to book page or file
-    ╭─[crates/mdbook-permalinks/src/tests/links.md:19:1]
+  info: linking to book page or file
+    ╭─[crates/mdbook-permalinks/src/tests/paths.md:15:1]
     │ 
-    │ [Links](./links.md)
-    · ─────────┬─────────
-    ·          ╰── file: crates/mdbook-permalinks/src/tests/links.md
+    │ [](paths.md)
+    · ──────┬─────
+    ·       ╰── crates/mdbook-permalinks/src/tests/paths.md
     │ 
-    │ [main.rs](../main.rs)
-    · ──────────┬──────────
-    ·           ╰── file: crates/mdbook-permalinks/src/main.rs
+    │ [](../main.rs)
+    · ───────┬──────
+    ·        ╰── crates/mdbook-permalinks/src/main.rs
     │ 
-    │ ![selfie](Macaca_nigra_self-portrait_large.jpg)
-    · ───────────────────────┬───────────────────────
-    ·                        ╰── file: crates/mdbook-permalinks/src/tests/Macaca_nigra_self-portrait_large.jpg
+    │ # images
+    │ 
+    │ ![](Minato_City,_Tokyo,_Japan.jpg)
+    · ─────────────────┬────────────────
+    ·                  ╰── crates/mdbook-permalinks/src/tests/Minato_City,_Tokyo,_Japan.jpg
     │ 
     ╰────

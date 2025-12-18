@@ -1,0 +1,38 @@
+---
+source: crates/mdbook-permalinks/src/tests.rs
+assertion_line: 61
+expression: output
+---
+# URLs to book
+
+[]()
+
+[]()
+
+[](trailing-slash/index.md)
+
+[](trailing-slash/index.md)
+
+![](Minato_City,_Tokyo,_Japan.jpg)
+
+# URLs to HEAD
+
+[](https://example.org/git/tree/v0.0/LICENSE-APACHE.md)
+
+[](https://example.org/git/tree/v0.0/Cargo.toml#L8-9)
+
+![](https://example.org/git/raw/v0.0/crates/mdbook-permalinks/src/tests/Minato_City,_Tokyo,_Japan.jpg)
+
+# not found
+
+[](https://example.org/book/tests/urls/)
+
+[](https://example.org/book/tests/url)
+
+[](https://example.org/git/tree/HEAD/LICENSE-GPL.md)
+
+# not applicable
+
+[](https://example.org/boo)
+
+[](https://example.org/git)

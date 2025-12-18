@@ -207,7 +207,9 @@ struct Resolver<'a, 'r> {
 impl Resolver<'_, '_> {
     fn resolve(self) {
         if let Some(book) = &self.env.config.book_url {
-            if let Some(path) = book.0.make_relative(&self.file_url) {
+            if let Some(path) = book.0.make_relative(&self.file_url)
+                && !path.starts_with("../")
+            {
                 self.resolve_book(path)
             } else {
                 self.resolve_file()
@@ -253,8 +255,6 @@ impl Resolver<'_, '_> {
         };
 
         if relative_to_repo.starts_with("../") {
-            // `path` could also be a symlink to a file outside source control somehow
-            // in which case it would NOT be marked as LinkStatus::External;
             link.status = LinkStatus::PathNotCheckedIn;
             return;
         }
@@ -265,7 +265,7 @@ impl Resolver<'_, '_> {
             .tap_err(log_debug!());
 
         if !matches!(exists, Ok(true)) {
-            link.status = LinkStatus::NoSuchPath(vec![]);
+            link.status = LinkStatus::NoSuchPath(vec![file_url]);
             return;
         }
 
@@ -320,10 +320,10 @@ impl Resolver<'_, '_> {
 
         let path = {
             let mut path = path;
-            if let Some(idx) = path.rfind('#') {
+            if let Some(idx) = path.find('#') {
                 path.truncate(idx)
             };
-            if let Some(idx) = path.rfind('?') {
+            if let Some(idx) = path.find('?') {
                 path.truncate(idx)
             };
             path.strip_suffix(".html")
@@ -358,7 +358,7 @@ impl Resolver<'_, '_> {
             ]
         };
 
-        let mut not_found = None;
+        let mut not_found = vec![];
 
         for file in try_files {
             let Ok(file) = self.env.book_src.join(file).tap_err(log_debug!()) else {
@@ -388,12 +388,10 @@ impl Resolver<'_, '_> {
                 return;
             }
 
-            not_found.get_or_insert(file);
+            not_found.push(file);
         }
 
-        if let Some(file) = not_found {
-            link.status = LinkStatus::NoSuchPath(vec![]);
-        }
+        link.status = LinkStatus::NoSuchPath(not_found);
     }
 }
 

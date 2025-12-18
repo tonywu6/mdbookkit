@@ -1,5 +1,6 @@
 ---
-source: crates/mdbookkit/tests/link_forever.rs
+source: crates/mdbook-permalinks/src/tests.rs
+assertion_line: 105
 expression: report
 ---
 

@@ -38,13 +38,12 @@ impl VersionControl {
 
         let link = {
             if let Some(pat) = &config.repo_url_template {
-                CustomPermalink {
-                    pattern: pat
+                Permalink {
+                    template: pat
                         .parse()
                         .context("failed to parse `repo-url-template` as a valid url")?,
                     reference,
                 }
-                .pipe(Permalink::Custom)
             } else {
                 let repo = match find_git_remote(&repo, book)? {
                     Ok(repo) => repo,
@@ -65,7 +64,7 @@ impl VersionControl {
                     })
                     .context("help: use `repo-url-template` option for a custom remote")
                     .context("failed to parse git remote url")?;
-                GitHubPermalink::new(&owner, &repo, &reference).pipe(Permalink::GitHub)
+                Permalink::github(&owner, &repo, &reference)
             }
         };
 
@@ -80,57 +79,23 @@ pub trait PermalinkFormat {
     fn to_path(&self, link: &Url) -> Option<(String, ContentTypeHint)>;
 }
 
-pub enum Permalink {
-    GitHub(GitHubPermalink),
-    Custom(CustomPermalink),
+pub struct Permalink {
+    pub template: Url,
+    pub reference: String,
 }
 
-impl PermalinkFormat for Permalink {
-    #[inline]
-    fn to_link(&self, path: &str, hint: ContentTypeHint) -> Result<Url> {
-        match self {
-            Self::GitHub(this) => this.to_link(path, hint),
-            Self::Custom(this) => this.to_link(path, hint),
-        }
-    }
-
-    #[inline]
-    fn to_path(&self, link: &Url) -> Option<(String, ContentTypeHint)> {
-        match self {
-            Self::GitHub(this) => this.to_path(link),
-            Self::Custom(this) => this.to_path(link),
-        }
-    }
-}
-
-pub struct GitHubPermalink(CustomPermalink);
-
-impl PermalinkFormat for GitHubPermalink {
-    #[inline]
-    fn to_link(&self, path: &str, hint: ContentTypeHint) -> Result<Url> {
-        self.0.to_link(path, hint)
-    }
-
-    #[inline]
-    fn to_path(&self, link: &Url) -> Option<(String, ContentTypeHint)> {
-        self.0.to_path(link)
-    }
-}
-
-impl GitHubPermalink {
-    /// c.f. <https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content--parameters>
-    pub fn new(owner: &str, repo: &str, reference: &str) -> Self {
-        let pattern = format!("https://github.com/{owner}/{repo}/{{tree}}/{{ref}}/{{path}}")
+impl Permalink {
+    /// See <https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content--parameters>
+    pub fn github(owner: &str, repo: &str, reference: &str) -> Self {
+        let template = format!("https://github.com/{owner}/{repo}/{{tree}}/{{ref}}/{{path}}")
             .parse()
             .expect("should be a valid url");
         let reference = reference.into();
-        Self(CustomPermalink { pattern, reference })
+        Self {
+            template,
+            reference,
+        }
     }
-}
-
-pub struct CustomPermalink {
-    pub pattern: Url,
-    pub reference: String,
 }
 
 /// `{` and `}` are always percent-encoded in path [^1].
@@ -145,10 +110,10 @@ macro_rules! encoded_param {
     };
 }
 
-impl PermalinkFormat for CustomPermalink {
+impl PermalinkFormat for Permalink {
     fn to_link(&self, path: &str, hint: ContentTypeHint) -> Result<Url> {
         let path = self
-            .pattern
+            .template
             .path()
             .split('/')
             .map(|segment| match segment {
@@ -164,7 +129,7 @@ impl PermalinkFormat for CustomPermalink {
             .join("/");
 
         let query = self
-            .pattern
+            .template
             .query_pairs()
             .fold(SearchParams::new(String::new()), |mut search, (k, v)| {
                 match v.as_ref() {
@@ -178,9 +143,9 @@ impl PermalinkFormat for CustomPermalink {
             .finish()
             .pipe(|query| if query.is_empty() { None } else { Some(query) });
 
-        let fragment = self.pattern.fragment();
+        let fragment = self.template.fragment();
 
-        self.pattern
+        self.template
             .clone()
             .tap_mut(|u| u.set_path(&path))
             .tap_mut(|u| u.set_query(query.as_deref()))
@@ -190,7 +155,7 @@ impl PermalinkFormat for CustomPermalink {
 
     // this is kind of messy
     fn to_path(&self, link: &Url) -> Option<(String, ContentTypeHint)> {
-        if self.pattern.origin() != link.origin() {
+        if self.template.origin() != link.origin() {
             return None;
         }
 
@@ -221,7 +186,7 @@ impl PermalinkFormat for CustomPermalink {
             }
         };
 
-        let mut lhs = self.pattern.path().split('/');
+        let mut lhs = self.template.path().split('/');
         let mut rhs = link.path().split('/');
 
         #[allow(clippy::while_let_on_iterator, reason = "symmetry")]
@@ -253,7 +218,7 @@ impl PermalinkFormat for CustomPermalink {
 
         let link_query = link.query_pairs().collect::<HashMap<_, _>>();
 
-        for (k, v) in self.pattern.query_pairs() {
+        for (k, v) in self.template.query_pairs() {
             match v.as_ref() {
                 "{path}" => match link_query.get(&k) {
                     Some(v) => {
@@ -391,7 +356,7 @@ mod tests {
 
     use crate::link::ContentTypeHint;
 
-    use super::{CustomPermalink, PermalinkFormat, find_git_remote, remote_as_github};
+    use super::{Permalink, PermalinkFormat, find_git_remote, remote_as_github};
 
     #[test]
     fn test_github_url_from_book() -> Result<()> {
@@ -449,10 +414,7 @@ mod tests {
 
     #[test]
     fn test_path_to_link() -> Result<()> {
-        let scheme = CustomPermalink {
-            pattern: "https://github.com/lorem/ipsum/{tree}/{ref}/{path}".parse()?,
-            reference: "main".into(),
-        };
+        let scheme = Permalink::github("lorem", "ipsum", "main");
 
         let link = scheme.to_link(".editorconfig", ContentTypeHint::Tree)?;
 
@@ -466,8 +428,8 @@ mod tests {
 
     #[test]
     fn test_path_to_link_with_suffix() -> Result<()> {
-        let scheme = CustomPermalink {
-            pattern: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
+        let scheme = Permalink {
+            template: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
             reference: "master".into(),
         };
 
@@ -483,10 +445,7 @@ mod tests {
 
     #[test]
     fn test_link_to_path() -> Result<()> {
-        let scheme = CustomPermalink {
-            pattern: "https://github.com/lorem/ipsum/{tree}/{ref}/{path}".parse()?,
-            reference: "main".into(),
-        };
+        let scheme = Permalink::github("lorem", "ipsum", "main");
 
         let (path, hint) = scheme
             .to_path(&"https://github.com/lorem/ipsum/raw/HEAD/path/to/file".parse()?)
@@ -500,10 +459,7 @@ mod tests {
 
     #[test]
     fn test_link_to_path_repo_root() -> Result<()> {
-        let scheme = CustomPermalink {
-            pattern: "https://github.com/lorem/ipsum/{tree}/{ref}/{path}".parse()?,
-            reference: "main".into(),
-        };
+        let scheme = Permalink::github("lorem", "ipsum", "main");
 
         let (path, _) = scheme
             .to_path(&"https://github.com/lorem/ipsum/raw/HEAD".parse()?)
@@ -522,8 +478,8 @@ mod tests {
 
     #[test]
     fn test_link_to_path_with_suffix() -> Result<()> {
-        let scheme = CustomPermalink {
-            pattern: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
+        let scheme = Permalink {
+            template: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
             reference: "main".into(),
         };
 
@@ -538,8 +494,8 @@ mod tests {
 
     #[test]
     fn test_link_to_path_non_head() -> Result<()> {
-        let scheme = CustomPermalink {
-            pattern: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
+        let scheme = Permalink {
+            template: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
             reference: "main".into(),
         };
 

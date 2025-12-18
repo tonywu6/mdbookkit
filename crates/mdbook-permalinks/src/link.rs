@@ -6,24 +6,24 @@ use url::Url;
 #[derive(Debug, Default, Clone, thiserror::Error)]
 pub enum LinkStatus {
     #[default]
-    #[error("link is ignored as it is not supported")]
+    #[error("links ignored")]
     Ignored,
 
     // "published" as in published with the book
-    #[error("link to book page or file")]
+    #[error("linking to book page or file")]
     Published,
 
-    #[error("link to book page or file rewritten as path")]
+    #[error("linking to book page or file, rewritten as paths")]
     Rewritten,
-    #[error("link converted to permalink")]
+    #[error("links converted to permalinks")]
     Permalink,
 
-    #[error("path to a file outside source control")]
+    #[error("paths outside of repository")]
     PathNotCheckedIn,
-    #[error("file does not exist at path")]
+    #[error("paths inaccessible")]
     NoSuchPath(Vec<Url>),
 
-    #[error("error generating a link: {0}")]
+    #[error("error encountered: {0}")]
     Error(String),
 }
 

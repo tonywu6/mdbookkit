@@ -1,0 +1,40 @@
+---
+source: crates/mdbook-permalinks/src/tests.rs
+assertion_line: 61
+expression: output
+---
+# relative paths
+
+[](https://example.org/git/tree/v0.0/Cargo.toml)
+
+[](https://example.org/git/tree/v0.0/docs/src/permalinks/index.md)
+
+# absolute paths
+
+[](https://example.org/git/tree/v0.0/LICENSE-APACHE.md)
+
+[](https://example.org/git/tree/v0.0/crates/mdbook-permalinks/Cargo.toml)
+
+# book files
+
+[](paths.md)
+
+[](../main.rs)
+
+# images
+
+![](Minato_City,_Tokyo,_Japan.jpg)
+
+![](https://example.org/git/raw/v0.0/docs/src/media/banner.webp)
+
+[![Banner image](https://example.org/git/raw/v0.0/docs/src/media/banner.webp)](https://example.org/git/tree/v0.0/docs/src/media/banner.webp)
+
+[banner-image]: /docs/src/media/banner.webp
+
+# not found
+
+[](../../Cargo.lock)
+
+[](//LICENSE-MIT.md)
+
+![](shinjuku.jpg)

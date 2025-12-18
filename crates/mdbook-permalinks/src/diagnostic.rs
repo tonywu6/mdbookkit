@@ -1,7 +1,7 @@
 use std::{borrow::Cow, collections::BTreeMap};
 
 use miette::LabeledSpan;
-use tap::TapOptional;
+use tap::{Pipe, TapOptional};
 use url::Url;
 
 use mdbookkit::diagnostics::{Diagnostics, Issue, IssueItem, ReportBuilder};
@@ -75,16 +75,27 @@ impl IssueItem for LinkDiagnostic<'_> {
     }
 
     fn label(&self) -> LabeledSpan {
-        let link = self.shorten(&self.link.link);
+        let link = &self.link.link;
+        let path = self.shorten(&self.link.link);
         let status = &self.link.status;
         let label = match status {
             LinkStatus::Ignored => None,
-            LinkStatus::Published => Some(format!("file: {link}")),
-            LinkStatus::Permalink => Some(format!("link: {link}")),
-            LinkStatus::Rewritten => Some(format!("file: {link}\nlink: {}", self.link.link)),
-            LinkStatus::PathNotCheckedIn => Some(format!("{status}: {link}")),
-            LinkStatus::NoSuchPath(candidates) => Some(format!("{status}: {link}")),
-            LinkStatus::Error(..) => Some(format!("{status}")),
+            LinkStatus::Published => Some(path.into()),
+            LinkStatus::Permalink => Some(path.into()),
+            LinkStatus::Rewritten => Some(format!("path: {path}\nlink: {:?}", &**link)),
+            LinkStatus::PathNotCheckedIn => Some(format!("resolves to {path}")),
+            LinkStatus::NoSuchPath(candidates) => candidates
+                .iter()
+                .filter_map(|url| self.shorten_url(url))
+                .fold(String::new(), |mut err, line| {
+                    err.push_str(&line);
+                    err.push('\n');
+                    err
+                })
+                .trim()
+                .to_owned()
+                .pipe(Some),
+            LinkStatus::Error(..) => Some(status.to_string()),
         };
         LabeledSpan::new_with_span(label, self.link.span.clone())
     }
@@ -103,17 +114,28 @@ impl LinkDiagnostic<'_> {
             url.set_fragment(None);
         });
         if let Some(url) = url {
-            if let Some(rel) = self.root.make_relative(&url) {
-                if rel.starts_with("../") {
-                    Cow::Owned(url.to_string())
-                } else {
-                    Cow::Owned(rel)
-                }
+            if let Some(shortened) = self.shorten_url(&url) {
+                Cow::Owned(shortened)
             } else {
                 Cow::Borrowed(path)
             }
         } else {
             Cow::Borrowed(path)
+        }
+    }
+
+    fn shorten_url(&self, url: &Url) -> Option<String> {
+        if let Some(rel) = self.root.make_relative(url)
+            && !rel.starts_with("../")
+        {
+            Some(rel)
+        } else if url.scheme() == "file" {
+            match url.to_file_path() {
+                Ok(path) => Some(path.display().to_string()),
+                Err(()) => Some(url.path().to_owned()),
+            }
+        } else {
+            None
         }
     }
 }
