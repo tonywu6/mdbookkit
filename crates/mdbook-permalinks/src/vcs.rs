@@ -68,8 +68,43 @@ impl VersionControl {
             }
         };
 
-        Ok(Ok(Self { root, link }))
+        Ok(Ok(Self { root, repo, link }))
     }
+
+    pub fn try_file(&self, file: &Url) -> Result<String, PathError> {
+        let Some(path) = self.root.make_relative(file) else {
+            return Err(PathError::Unreachable);
+        };
+
+        if path.starts_with("../") {
+            return Err(PathError::NotInRepo);
+        }
+
+        if file
+            .to_file_path()
+            .expect("should be a file: url")
+            .symlink_metadata()
+            .is_ok()
+        {
+            if !self.repo.is_path_ignored(&path).unwrap_or(false) {
+                Ok(path)
+            } else {
+                Err(PathError::Ignored)
+            }
+        } else {
+            Err(PathError::Unreachable)
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, thiserror::Error)]
+pub enum PathError {
+    #[error("does not exist")]
+    Unreachable,
+    #[error("is ignored by git")]
+    Ignored,
+    #[error("is not in repo")]
+    NotInRepo,
 }
 
 pub trait PermalinkFormat {

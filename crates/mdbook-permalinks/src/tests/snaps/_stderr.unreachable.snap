@@ -1,0 +1,50 @@
+---
+source: crates/mdbook-permalinks/src/tests.rs
+expression: report
+---
+  warning: links inaccessible
+    ╭─[crates/mdbook-permalinks/src/tests/paths.md:31:1]
+    │ 
+    │ [](../../Cargo.lock)
+    · ──────────┬─────────
+    ·           ╰── crates/mdbook-permalinks/Cargo.lock does not exist
+    │ 
+    │ [](//LICENSE-MIT.md)
+    · ──────────┬─────────
+    ·           ╰── /LICENSE-MIT.md is not in repo
+    │ 
+    │ ![](shinjuku.jpg)
+    · ────────┬────────
+    ·         ╰── crates/mdbook-permalinks/src/tests/shinjuku.jpg does not exist
+    │ 
+    │ # gitignored
+    │ 
+    │ [](/target/.rustc_info.json)
+    · ──────────────┬─────────────
+    ·               ╰── target/.rustc_info.json is ignored by git
+    │ 
+    │ [](/target/debug)
+    · ────────┬────────
+    ·         ╰── target/debug is ignored by git
+    ╰────
+
+  warning: links inaccessible
+    ╭─[crates/mdbook-permalinks/src/tests/urls.md:23:1]
+    │ 
+    │ [](https://example.org/book/tests/urls/)
+    · ────────────────────┬───────────────────
+    ·                     ╰─┤ crates/mdbook-permalinks/src/tests/urls/index.md does not exist
+    ·                       │ crates/mdbook-permalinks/src/tests/urls/README.md does not exist
+    │ 
+    │ [](https://example.org/book/tests/url)
+    · ───────────────────┬──────────────────
+    ·                    ╰─┤ crates/mdbook-permalinks/src/tests/url.md does not exist
+    ·                      │ crates/mdbook-permalinks/src/tests/url/index.md does not exist
+    ·                      │ crates/mdbook-permalinks/src/tests/url/README.md does not exist
+    ·                      │ crates/mdbook-permalinks/src/tests/url does not exist
+    │ 
+    │ [](https://example.org/git/tree/HEAD/LICENSE-GPL.md)
+    · ──────────────────────────┬─────────────────────────
+    ·                           ╰── LICENSE-GPL.md does not exist
+    │ 
+    ╰────

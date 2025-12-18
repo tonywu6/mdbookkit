@@ -93,7 +93,7 @@ impl<'a> Page<'a> {
                         _ => unreachable!(),
                     };
                     let link = RelativeLink {
-                        status: LinkStatus::PathNotCheckedIn,
+                        status: LinkStatus::Ignored,
                         span,
                         link,
                         hint: usage,

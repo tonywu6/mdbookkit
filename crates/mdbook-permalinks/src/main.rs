@@ -2,6 +2,7 @@ use std::{collections::HashMap, fmt::Debug, str::FromStr};
 
 use anyhow::{Context, Result, anyhow};
 use console::colors_enabled_stderr;
+use git2::Repository;
 use log::LevelFilter;
 use mdbook_markdown::pulldown_cmark;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext, book::Book};
@@ -62,6 +63,7 @@ struct Environment {
 struct VersionControl {
     root: Url,
     link: Permalink,
+    repo: Repository,
 }
 
 impl Preprocessor for Environment {
@@ -88,7 +90,7 @@ impl Preprocessor for Environment {
         let mut result = book
             .iter_chapters()
             .filter_map(|(path, _)| {
-                let url = self.book_src.join(&path.to_string_lossy()).unwrap();
+                let url = self.book_src.join(&path.to_string_lossy()).ok()?;
                 content
                     .emit(&url)
                     .tap_err(log_warning!())
@@ -206,14 +208,11 @@ struct Resolver<'a, 'r> {
 
 impl Resolver<'_, '_> {
     fn resolve(self) {
-        if let Some(book) = &self.env.config.book_url {
-            if let Some(path) = book.0.make_relative(&self.file_url)
-                && !path.starts_with("../")
-            {
-                self.resolve_book(path)
-            } else {
-                self.resolve_file()
-            }
+        if let Some(book) = &self.env.config.book_url
+            && let Some(path) = book.0.make_relative(&self.file_url)
+            && !path.starts_with("../")
+        {
+            self.resolve_book(path)
         } else {
             self.resolve_file()
         }
@@ -234,51 +233,27 @@ impl Resolver<'_, '_> {
         {
             let (_, suffix) = UrlSuffix::take(file_url);
             (url, hint, suffix, true)
-        } else {
+        } else if file_url.scheme() == "file" {
             let (url, suffix) = UrlSuffix::take(file_url);
             (url, link.hint, suffix, false)
-        };
-
-        let Ok(path) = file_url.to_file_path() else {
-            link.status = LinkStatus::Ignored;
+        } else {
             return;
         };
 
-        let Ok(relative_to_repo) = env
-            .vcs
-            .root
-            .make_relative(&file_url)
-            .context("url is from a different origin")
-            .tap_err(log_debug!())
-        else {
-            return;
+        let relative_to_repo = match self.env.vcs.try_file(&file_url) {
+            Ok(path) => path,
+            Err(err) => {
+                link.status = LinkStatus::Unreachable(vec![(file_url, err)]);
+                return;
+            }
         };
 
-        if relative_to_repo.starts_with("../") {
-            link.status = LinkStatus::PathNotCheckedIn;
-            return;
-        }
-
-        let exists = path
-            .try_exists()
-            .context("could not access path")
-            .tap_err(log_debug!());
-
-        if !matches!(exists, Ok(true)) {
-            link.status = LinkStatus::NoSuchPath(vec![file_url]);
-            return;
-        }
-
-        let Ok(relative_to_book) = env
+        let relative_to_book = env
             .book_src
             .make_relative(&file_url)
-            .context("url is from a different origin")
-            .tap_err(log_debug!())
-        else {
-            return;
-        };
+            .expect("should be a file");
 
-        let always_link = is_vcs
+        let should_link = is_vcs
             || relative_to_book.starts_with("../")
             || env
                 .config
@@ -286,16 +261,16 @@ impl Resolver<'_, '_> {
                 .iter()
                 .any(|suffix| file_url.path().ends_with(suffix));
 
-        if !always_link {
+        if !should_link {
             if link.link.starts_with('/') {
                 // mdbook doesn't support absolute paths like VS Code does
                 link.link = page_url
                     .make_relative(&suffix.restored(file_url))
-                    .unwrap()
+                    .expect("both should be file: urls")
                     .into();
                 link.status = LinkStatus::Rewritten;
             } else {
-                link.status = LinkStatus::Published;
+                link.status = LinkStatus::Unchanged;
             }
             return;
         }
@@ -331,11 +306,6 @@ impl Resolver<'_, '_> {
                 .unwrap_or(path)
         };
 
-        if path.starts_with("../") {
-            link.status = LinkStatus::Ignored;
-            return;
-        }
-
         // one does not simply avoid trailing slash issues...
         // https://github.com/slorber/trailing-slash-guide
         let try_files = if path.is_empty() || path.ends_with('/') {
@@ -361,37 +331,37 @@ impl Resolver<'_, '_> {
         let mut not_found = vec![];
 
         for file in try_files {
-            let Ok(file) = self.env.book_src.join(file).tap_err(log_debug!()) else {
+            let Ok(file) = (self.env.book_src.join(file))
+                .with_context(|| format!("invalid URL path {file:?}"))
+                .tap_err(log_debug!())
+            else {
                 continue;
             };
 
-            let Ok(path) = file.to_file_path() else {
-                continue;
-            };
+            match self.env.vcs.try_file(&file) {
+                Ok(_) => {
+                    let file_url = {
+                        let mut file = file;
+                        file.set_query(file_url.query());
+                        file.set_fragment(file_url.fragment());
+                        file
+                    };
 
-            let exists = path
-                .try_exists()
-                .context("could not access path")
-                .tap_err(log_debug!());
+                    link.link = page_url
+                        .make_relative(&file_url)
+                        .expect("both should be file: urls")
+                        .into();
+                    link.status = LinkStatus::Rewritten;
 
-            if matches!(exists, Ok(true)) {
-                let file_url = {
-                    let mut file = file;
-                    file.set_query(file_url.query());
-                    file.set_fragment(file_url.fragment());
-                    file
-                };
-
-                link.link = page_url.make_relative(&file_url).unwrap().into();
-                link.status = LinkStatus::Rewritten;
-
-                return;
+                    return;
+                }
+                Err(err) => {
+                    not_found.push((file, err));
+                }
             }
-
-            not_found.push(file);
         }
 
-        link.status = LinkStatus::NoSuchPath(not_found);
+        link.status = LinkStatus::Unreachable(not_found);
     }
 }
 

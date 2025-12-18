@@ -1,6 +1,5 @@
 ---
 source: crates/mdbook-permalinks/src/tests.rs
-assertion_line: 61
 expression: output
 ---
 # relative paths
@@ -38,3 +37,9 @@ expression: output
 [](//LICENSE-MIT.md)
 
 ![](shinjuku.jpg)
+
+# gitignored
+
+[](/target/.rustc_info.json)
+
+[](/target/debug)

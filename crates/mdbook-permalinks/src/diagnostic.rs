@@ -39,7 +39,7 @@ impl Environment {
         let sorted = sorted
             .into_iter()
             .flat_map(|(base, issues)| {
-                let text = content.get_text(base).unwrap();
+                let text = content.get_text(base).expect("url should exist");
                 issues
                     .into_values()
                     .map(|issues| Diagnostics::new(text, base, issues))
@@ -80,17 +80,18 @@ impl IssueItem for LinkDiagnostic<'_> {
         let status = &self.link.status;
         let label = match status {
             LinkStatus::Ignored => None,
-            LinkStatus::Published => Some(path.into()),
+            LinkStatus::Unchanged => Some(path.into()),
             LinkStatus::Permalink => Some(path.into()),
             LinkStatus::Rewritten => Some(format!("path: {path}\nlink: {:?}", &**link)),
-            LinkStatus::PathNotCheckedIn => Some(format!("resolves to {path}")),
-            LinkStatus::NoSuchPath(candidates) => candidates
+            LinkStatus::Unreachable(errors) => errors
                 .iter()
-                .filter_map(|url| self.shorten_url(url))
-                .fold(String::new(), |mut err, line| {
-                    err.push_str(&line);
-                    err.push('\n');
-                    err
+                .filter_map(|(url, err)| self.shorten_url(url).map(|url| (url, err)))
+                .fold(String::new(), |mut msg, (url, err)| {
+                    msg.push_str(&url);
+                    msg.push(' ');
+                    msg.push_str(&err.to_string());
+                    msg.push('\n');
+                    msg
                 })
                 .trim()
                 .to_owned()
@@ -144,11 +145,10 @@ impl Issue for LinkStatus {
     fn level(&self) -> log::Level {
         match self {
             Self::Ignored => log::Level::Debug,
-            Self::Published => log::Level::Debug,
+            Self::Unchanged => log::Level::Debug,
             Self::Rewritten => log::Level::Info,
             Self::Permalink => log::Level::Info,
-            Self::PathNotCheckedIn => log::Level::Warn,
-            Self::NoSuchPath(..) => log::Level::Warn,
+            Self::Unreachable(..) => log::Level::Warn,
             Self::Error(..) => log::Level::Warn,
         }
     }
@@ -178,11 +178,10 @@ impl LinkStatus {
     fn order(&self) -> usize {
         match self {
             Self::Error(..) => 103,
-            Self::NoSuchPath(..) => 101,
-            Self::PathNotCheckedIn => 100,
+            Self::Unreachable(..) => 101,
             Self::Permalink => 3,
             Self::Rewritten => 2,
-            Self::Published => 1,
+            Self::Unchanged => 1,
             Self::Ignored => 0,
         }
     }

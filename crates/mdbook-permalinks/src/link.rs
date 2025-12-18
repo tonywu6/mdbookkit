@@ -3,25 +3,23 @@ use std::{fmt::Debug, ops::Range};
 use mdbook_markdown::pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
 use url::Url;
 
+use crate::vcs::PathError;
+
 #[derive(Debug, Default, Clone, thiserror::Error)]
 pub enum LinkStatus {
     #[default]
     #[error("links ignored")]
     Ignored,
 
-    // "published" as in published with the book
     #[error("linking to book page or file")]
-    Published,
-
+    Unchanged,
     #[error("linking to book page or file, rewritten as paths")]
     Rewritten,
     #[error("links converted to permalinks")]
     Permalink,
 
-    #[error("paths outside of repository")]
-    PathNotCheckedIn,
-    #[error("paths inaccessible")]
-    NoSuchPath(Vec<Url>),
+    #[error("links inaccessible")]
+    Unreachable(Vec<(Url, PathError)>),
 
     #[error("error encountered: {0}")]
     Error(String),

@@ -13,14 +13,14 @@ use crate::{
     resolver::Resolver,
 };
 
-struct TestOutput {
+struct Fixture {
     pages: Pages<'static, Url>,
     env: Environment,
 }
 
 #[fixture]
 #[once]
-fn test_output() -> TestOutput {
+fn fixture() -> Fixture {
     let client = Config {
         rust_analyzer: Some("cargo run --package util-rust-analyzer -- analyzer".into()),
         ..Default::default()
@@ -53,16 +53,16 @@ fn test_output() -> TestOutput {
             client.stop().await
         });
 
-    TestOutput { env, pages }
+    Fixture { env, pages }
 }
 
-fn assert_output(doc: TestDocument, TestOutput { pages, env }: &TestOutput) -> Result<()> {
+fn assert_output(doc: TestDocument, Fixture { pages, env }: &Fixture) -> Result<()> {
     let output = pages.emit(&doc.url(), &env.emit_config())?;
     portable_snapshots!().test(|| insta::assert_snapshot!(doc.name(), output))?;
     Ok(())
 }
 
-fn assert_report(doc: TestDocument, TestOutput { pages, .. }: &TestOutput) -> Result<()> {
+fn assert_report(doc: TestDocument, Fixture { pages, .. }: &Fixture) -> Result<()> {
     let report = pages
         .reporter()
         .level(log::LevelFilter::Info)
@@ -77,10 +77,7 @@ fn assert_report(doc: TestDocument, TestOutput { pages, .. }: &TestOutput) -> Re
     Ok(())
 }
 
-fn assert_whitespace_unchanged(
-    doc: TestDocument,
-    TestOutput { pages, env }: &TestOutput,
-) -> Result<()> {
+fn assert_whitespace_unchanged(doc: TestDocument, Fixture { pages, env }: &Fixture) -> Result<()> {
     let output = pages.emit(&doc.url(), &env.emit_config())?;
 
     let changed_lines = TextDiff::from_words(doc.content, &output)
@@ -112,20 +109,20 @@ macro_rules! test_documents {
 
         #[rstest]
         $(#[case(test_document!($path))])*
-        fn assert_outputs(#[case] doc: TestDocument, test_output: &TestOutput) -> Result<()> {
-            assert_output(doc, test_output)
+        fn assert_outputs(#[case] doc: TestDocument, fixture: &Fixture) -> Result<()> {
+            assert_output(doc, fixture)
         }
 
         #[rstest]
         $(#[case(test_document!($path))])*
-        fn assert_reports(#[case] doc: TestDocument, test_output: &TestOutput) -> Result<()> {
-            assert_report(doc, test_output)
+        fn assert_reports(#[case] doc: TestDocument, fixture: &Fixture) -> Result<()> {
+            assert_report(doc, fixture)
         }
 
         #[rstest]
         $(#[case(test_document!($path))])*
-        fn check_whitespace(#[case] doc: TestDocument, test_output: &TestOutput) -> Result<()> {
-            assert_whitespace_unchanged(doc, test_output)
+        fn check_whitespace(#[case] doc: TestDocument, fixture: &Fixture) -> Result<()> {
+            assert_whitespace_unchanged(doc, fixture)
         }
     };
 }

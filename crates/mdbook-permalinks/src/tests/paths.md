@@ -33,3 +33,9 @@
 [](//LICENSE-MIT.md)
 
 ![](shinjuku.jpg)
+
+# gitignored
+
+[](/target/.rustc_info.json)
+
+[](/target/debug)
