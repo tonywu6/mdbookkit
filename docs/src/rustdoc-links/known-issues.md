@@ -2,7 +2,7 @@
 
 ## Performance
 
-`mdbook-rustdoc-links` itself doesn't need much processing power, but it invokes
+The preprocessor itself doesn't need much processing power, but it invokes
 rust-analyzer, which does a full scan of your workspace. The larger your workspace is,
 the longer mdBook will have to wait for the preprocessor. This is the source of the
 majority of the run time.

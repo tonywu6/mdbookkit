@@ -18,7 +18,7 @@ defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to 
 collections. [^1]
 ```
 
-... and you will get:
+... and you get:
 
 <figure class="fig-text">
 

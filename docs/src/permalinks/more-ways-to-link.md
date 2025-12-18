@@ -8,7 +8,7 @@ cases where this may not work:
 - Furthermore, the included document may also be intended for additional platforms,
   where path-based links are not supported.
 
-The preprocessor supports some alternative link formats for such scenarios.
+For such cases, the preprocessor supports some alternative link formats.
 
 ```mermaid
 stateDiagram-v2
@@ -38,8 +38,8 @@ book.
 
 > For example, if `chapters/1.md` includes `shared/info.md`, and `shared/info.md`
 > contains a link to `./image.png` (i.e. `shared/image.png`), then the preprocessor can
-> only resolve `./image.png` starting from `chapters/1.md` (i.e. `chapters/image.png`),
-> which is incorrect.
+> only resolve `./image.png` starting from `chapters/1.md`, which becomes
+> `chapters/image.png`, which is incorrect.
 
 Instead of using relative paths, you may use paths that **start with a `/`**. Paths that
 start with a `/` are resolved **relative to the root of your repository**:
@@ -55,7 +55,7 @@ start with a `/` are resolved **relative to the root of your repository**:
 ## Using URLs
 
 In some situations, you cannot link using paths, and must fallback to full URLs. For
-example, you would like to reuse your package's `README.md` as your book's home page,
+example, you may want to reuse your package's `README.md` for your book's home page,
 where the `README.md` is also published to crates.io, where path-based links will become
 invalid.
 
@@ -83,15 +83,15 @@ commit/ref portion is **`HEAD`**, for example:
 
 ### Using URLs to your book
 
-Finally, you can link to a page or file within your book using full URLs and the
-preprocessor will validate that the corresponding file is accessible.
+You can link to a page or file within your book using full URLs and the preprocessor
+will validate that the corresponding file is accessible.
 
 To enable validation of book URLs, you must specify the URL prefix at which you will
 deploy your book via the [`book-url`](configuration.md#book-url) option:
 
 ```toml
 [preprocessor.permalinks]
-book-url = "https://example.org/"
+book-url = "https://example.org/book/"
 ```
 
 For each link that begins with this prefix, the preprocessor tests whether a matching

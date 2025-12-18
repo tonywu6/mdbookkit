@@ -20,7 +20,13 @@ Here is a link to the project's [Cargo.toml](../../../Cargo.toml).
 
 ## Overview
 
-<!-- TODO: -->
+- Create [permalinks](features.md#permalinks) by file path.
+- Links are [pinned to the tag or commit](features.md#versioning) that is checked out at
+  build time.
+- Links are [validated](features.md#link-validation) during build. Receive warnings when
+  a linked file become missing.
+- Repository URLs are [autoconfigured for GitHub](features.md#repo-url-auto-discovery),
+  or you can use a [custom URL scheme](configuration.md#repo-url-template).
 
 ## License
 

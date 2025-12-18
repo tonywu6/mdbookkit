@@ -47,8 +47,8 @@ See [`book.toml`](../../book.toml) for an example config.
 
 ## Next steps
 
+- See the list of [features](features.md) in detail.
 - Check out [available configuration options](configuration.md).
-  <!-- TODO: including options to ... -->
 - Learn about [known issues and limitations](known-issues.md).
 
 <!-- prettier-ignore-start -->

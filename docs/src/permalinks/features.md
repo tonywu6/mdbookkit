@@ -22,11 +22,7 @@ preprocessor will convert them to permalinks.
 > like [path completions][vscode-path-completions] and [link
 > validation][link-validation].
 
-Permalinks are **versioned using the tag name or hash** of the commit from which the
-book was built. Your links remain consistent with their source commit even as content in
-your repository changes over time.
-
-URL fragments are preserved. For example, you may use fragments to link to specific
+**URL fragments** are preserved. For example, you may use fragments to link to specific
 lines, if your Git hosting provider supports it:
 
 > ```md
@@ -38,8 +34,14 @@ lines, if your Git hosting provider supports it:
 > [preprocess its style sheet](../../app/build/build.ts#L13-25).
 
 By default, links to files under your book's `src/` directory are not converted, since
-mdBook already [copies them to build output][mdbook-src-build], but this is configurable
+mdBook already [copies them to build output][mdbook-src-build]. This is configurable
 using the [`always-link`](configuration.md#always-link) option.
+
+## Versioning
+
+Permalinks are **versioned using the tag name or hash** of the commit from which the
+book was built. Your links remain consistent with their source commit even as content in
+your repository changes over time.
 
 ## Repo URL auto-discovery
 
@@ -54,6 +56,10 @@ following places and uses the first one it finds:
 > For Git remotes, both HTTP URLs and "scp-like" URIs (`git@github.com:org/repo.git`)
 > are supported.
 
+Currently, the preprocessor automatically uses repo URLs from the following providers:
+
+- GitHub, `https://github.com/*`
+
 Alternatively, you may configure a custom URL format using the
 [`repo-url-template`](configuration.md#repo-url-template) option.
 
@@ -65,9 +71,12 @@ Providers such as GitHub support two types of permalinks:
 - a `raw` URL that directly serves the file's content, suitable for embedding or
   downloading
 
-The preprocessor detects whether a path is used within a clickable link or an image and
-selects the most appropriate type of URL to use. For example, the following snippet
-creates an image wrapped in a clickable link which opens the image's page on GitHub:
+The preprocessor detects the context in which a link appears and selects the most
+appropriate type of URL to use: `tree` if it is a clickable link, or `raw` if it is for
+an image.
+
+For example, the following snippet creates an image wrapped in a clickable link which
+opens the image's page on GitHub:
 
 > ```md
 > [![Minato City][minato-city]][minato-city]

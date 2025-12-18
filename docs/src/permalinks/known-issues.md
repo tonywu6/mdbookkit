@@ -2,12 +2,12 @@
 
 ## Working with `{{#include}}`
 
-Linking by relative paths may not make sense when the links are in files that are
-embedded using mdBook's `{{#include}}` directive.
+Linking by relative paths may not work when the links are in files that are embedded
+using mdBook's `{{#include}}` directive.
 
-See [Working with `{{#include}}`](working-with-include.md) for some possible
-workarounds.
+See [More ways to link](more-ways-to-link.md) for some possible workarounds.
 
 ## Links in HTML
 
-Links in HTML (`href` and `src`) are currently neither transformed nor checked.
+URLs in HTML (`href` and `src`) are currently unsupported. They are neither checked nor
+transformed.
