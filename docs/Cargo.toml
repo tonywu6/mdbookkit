@@ -15,9 +15,14 @@ clap = { workspace = true, features = ["unstable-doc"] }
 env_logger = { workspace = true }
 gix-url = { version = "0.30.0" }
 log = { workspace = true }
+mdbook-markdown = { workspace = true }
 mdbookkit = { workspace = true }
 miette = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 shlex = { workspace = true }
 tokio = { workspace = true }
+
+[[bin]]
+name = "mdbookkit-docs"
+path = "bin/main.rs"

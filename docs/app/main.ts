@@ -9,22 +9,26 @@ document
   });
 
 (async () => {
-  const diagrams = document.querySelectorAll("pre:has(code.language-mermaid)");
-
-  if (!diagrams.length) {
-    return;
+  if (document.querySelector("pre.mermaid")) {
+    const { default: mermaid } = await import("mermaid");
+    mermaid.initialize({
+      securityLevel: "antiscript",
+      theme: "dark",
+      themeVariables: {
+        fontFamily: `
+          "Noto Sans",
+          "Open Sans",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "Helvetica Neue",
+          ui-sans-serif,
+          sans-serif,
+          "Apple Color Emoji",
+          "Segoe UI Emoji";
+        `,
+      },
+    });
+    await mermaid.run();
   }
-
-  diagrams.forEach((elem) => {
-    const code = elem.querySelector("code")?.textContent;
-    if (!code) {
-      return;
-    }
-    elem.textContent = code;
-    elem.setAttribute("class", "mermaid");
-  });
-
-  const { default: mermaid } = await import("mermaid");
-  mermaid.initialize({});
-  await mermaid.run();
 })();

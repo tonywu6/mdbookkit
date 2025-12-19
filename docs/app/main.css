@@ -273,6 +273,27 @@ body {
       margin-block-start: 1rem;
     }
   }
+
+  .mermaid {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    min-height: 0;
+
+    &:not(:has(svg)) {
+      visibility: hidden;
+    }
+  }
+
+  @media screen and (width <= 420px) {
+    .mermaid {
+      padding-inline: 0.5rem;
+    }
+
+    figure:has(.mermaid svg) {
+      height: auto !important;
+    }
+  }
 }
 
 .code-header {

@@ -1576,6 +1576,7 @@ dependencies = [
  "env_logger",
  "gix-url",
  "log",
+ "mdbook-markdown",
  "mdbookkit",
  "miette",
  "serde",

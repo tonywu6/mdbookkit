@@ -7,7 +7,7 @@ title = "mdbookkit"
 [build]
 build-dir = "dist"
 create-missing = false
-extra-watch-dirs = ["app", "../crates"]
+extra-watch-dirs = ["app", "bin", "../crates"]
 
 [output.html]
 additional-css = ["app/dist.css"]
@@ -53,6 +53,9 @@ command = "cargo run --package mdbook-permalinks"
 
 [preprocessor.app]
 command = "deno run --allow-all app/build/preprocessor.ts"
+
+[preprocessor.preprocess]
+command = "cargo run -- preprocess"
 
 # [_metadata.socials."/"]
 # image = "src/media/social.webp"

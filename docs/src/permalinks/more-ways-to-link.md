@@ -8,13 +8,12 @@ cases where this may not work:
 - Furthermore, the included document may also be intended for additional platforms,
   where path-based links are not supported.
 
-For such cases, the preprocessor supports some alternative link formats.
+For such cases, the preprocessor supports some alternative link formats. Here is a
+simplified guide on when to use which format:
+
+<figure style="height: 480px">
 
 ```mermaid
----
-config:
-  theme: dark
----
 stateDiagram-v2
     start          : Is the text included using {{#include}}
     included       : Is the file being included also published elsewhere <br>(e.g. crates.io)
@@ -31,6 +30,8 @@ stateDiagram-v2
     external --> bookUrl: a book page or <br>a file in the book
     external --> repoUrl: a file in your repo <br>outside the book
 ```
+
+</figure>
 
 ## Using absolute paths
 
