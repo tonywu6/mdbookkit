@@ -1,5 +1,6 @@
 ---
 source: crates/mdbook-permalinks/src/tests.rs
+assertion_line: 67
 expression: output
 ---
 # relative paths
@@ -37,6 +38,8 @@ expression: output
 [](//LICENSE-MIT.md)
 
 ![](shinjuku.jpg)
+
+[](https://example.org/git/tree/v0.0/crates/mdbook-permalinks/src/tests/draft.md)
 
 # gitignored
 

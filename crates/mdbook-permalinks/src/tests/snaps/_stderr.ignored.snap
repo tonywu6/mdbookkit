@@ -1,10 +1,16 @@
 ---
 source: crates/mdbook-permalinks/src/tests.rs
-assertion_line: 105
+assertion_line: 121
 expression: report
 ---
   info: links ignored
-    ╭─[crates/mdbook-permalinks/src/tests/urls.md:31:1]
+   ╭─[crates/mdbook-permalinks/src/tests/trailing-slash/index.md:1:1]
+   │ <https://github.com/slorber/trailing-slash-guide>
+   · ─────────────────────────────────────────────────
+   ╰────
+
+  info: links ignored
+    ╭─[crates/mdbook-permalinks/src/tests/urls.md:33:1]
     │ 
     │ [](https://example.org/boo)
     · ───────────────────────────

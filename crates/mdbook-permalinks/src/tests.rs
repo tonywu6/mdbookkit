@@ -64,7 +64,7 @@ fn fixture() -> Fixture {
 
 fn assert_output(doc: TestDocument, fixture: &Fixture) -> Result<()> {
     let output = fixture.pages.emit(&doc.url())?;
-    portable_snapshots!().test(|| insta::assert_snapshot!(doc.name(), output))?;
+    portable_snapshots!().test(doc.name(), |name| insta::assert_snapshot!(name, output))?;
     Ok(())
 }
 
@@ -82,7 +82,12 @@ macro_rules! test_output {
     };
 }
 
-test_output!["tests/paths.md", "tests/urls.md", "tests/suffix.md",];
+test_output![
+    "tests/paths.md",
+    "tests/urls.md",
+    "tests/suffix.md",
+    "tests/trailing-slash/index.md",
+];
 
 macro_rules! matcher {
     ( $pattern:pat ) => {
@@ -113,6 +118,6 @@ fn test_stderr(
         .build()
         .to_report();
     drop(env);
-    portable_snapshots!().test(|| insta::assert_snapshot!(name, report))?;
+    portable_snapshots!().test(name, |name| insta::assert_snapshot!(name, report))?;
     Ok(())
 }

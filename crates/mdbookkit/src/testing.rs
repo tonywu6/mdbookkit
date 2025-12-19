@@ -27,21 +27,40 @@ macro_rules! test_document {
 }
 
 impl TestDocument {
-    pub fn url(&self) -> Url {
+    pub fn cwd(&self) -> Url {
         CARGO_WORKSPACE_DIR
             .join(self.source_path)
             .unwrap()
-            .join(self.target_path)
+            .join(".")
             .unwrap()
     }
 
+    pub fn url(&self) -> Url {
+        self.cwd().join(self.target_path).unwrap()
+    }
+
     pub fn name(&self) -> String {
-        std::path::Path::new(self.target_path)
+        let dir = Path::new(self.source_path)
             .with_extension("")
             .file_name()
             .unwrap()
             .to_string_lossy()
-            .into_owned()
+            .into_owned();
+
+        let url = self.url();
+        let cwd = self.cwd().join(&format!("{dir}/")).unwrap();
+        let rel = cwd.make_relative(&url).unwrap();
+
+        if rel.starts_with("../") {
+            let rel = CARGO_WORKSPACE_DIR.make_relative(&url).unwrap();
+            if rel.starts_with("../") {
+                url.path_segments().unwrap().next_back().unwrap().to_owned()
+            } else {
+                rel
+            }
+        } else {
+            rel
+        }
     }
 }
 
@@ -49,7 +68,7 @@ impl TestDocument {
 macro_rules! portable_snapshots {
     () => {
         $crate::testing::PortableSnapshots {
-            file: std::path::Path::new(file!()),
+            source_path: std::path::Path::new(file!()),
         }
     };
 }
@@ -57,19 +76,30 @@ macro_rules! portable_snapshots {
 #[derive(Debug)]
 #[must_use]
 pub struct PortableSnapshots {
-    pub file: &'static Path,
+    pub source_path: &'static Path,
 }
 
 impl PortableSnapshots {
-    pub fn test<T: FnOnce() -> R, R>(&self, cb: T) -> Result<R> {
-        let Self { file } = self;
+    pub fn test<P, F, R>(&self, name: P, cb: F) -> Result<R>
+    where
+        P: AsRef<Path>,
+        F: FnOnce(&str) -> R,
+    {
+        let Self { source_path } = self;
 
-        let path = file.with_extension("").join("snaps");
+        let name = name.as_ref();
+
+        let path = source_path.with_extension("").join("snaps");
         let path = CARGO_WORKSPACE_DIR
-            .join(&path.to_string_lossy())
-            .unwrap()
             .to_file_path()
-            .unwrap();
+            .unwrap()
+            .join(&*path.to_string_lossy())
+            .join(name.parent().unwrap());
+
+        let name = name
+            .file_name()
+            .unwrap_or(name.as_os_str())
+            .to_string_lossy();
 
         let result = insta::Settings::clone_current()
             .tap_mut(|s| s.set_snapshot_path(path))
@@ -82,7 +112,7 @@ impl PortableSnapshots {
                     (r"(?m)^(\s+)\d{3} ", "$1    "),
                 ])
             })
-            .bind(cb);
+            .bind(|| cb(&name));
 
         Ok(result)
     }

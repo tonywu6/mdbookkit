@@ -1,6 +1,5 @@
 ---
 source: crates/mdbook-permalinks/src/tests.rs
-assertion_line: 61
 expression: output
 ---
 # URLs to book
@@ -28,6 +27,8 @@ expression: output
 [](https://example.org/book/tests/urls/)
 
 [](https://example.org/book/tests/url)
+
+[](https://example.org/book/tests/draft)
 
 [](https://example.org/git/tree/HEAD/LICENSE-GPL.md)
 

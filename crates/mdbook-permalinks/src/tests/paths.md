@@ -34,6 +34,8 @@
 
 ![](shinjuku.jpg)
 
+[](draft.md)
+
 # gitignored
 
 [](/target/.rustc_info.json)

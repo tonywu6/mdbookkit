@@ -58,7 +58,7 @@ fn fixture() -> Fixture {
 
 fn assert_output(doc: TestDocument, Fixture { pages, env }: &Fixture) -> Result<()> {
     let output = pages.emit(&doc.url(), &env.emit_config())?;
-    portable_snapshots!().test(|| insta::assert_snapshot!(doc.name(), output))?;
+    portable_snapshots!().test(doc.name(), |name| insta::assert_snapshot!(name, output))?;
     Ok(())
 }
 
@@ -72,8 +72,9 @@ fn assert_report(doc: TestDocument, Fixture { pages, .. }: &Fixture) -> Result<(
         .logging(false)
         .build()
         .to_report();
-    portable_snapshots!()
-        .test(|| insta::assert_snapshot!(format!("{}.stderr", doc.name()), report))?;
+    portable_snapshots!().test(format!("{}.stderr", doc.name()), |name| {
+        insta::assert_snapshot!(name, report)
+    })?;
     Ok(())
 }
 

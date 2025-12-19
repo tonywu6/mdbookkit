@@ -134,11 +134,9 @@ async fn mdbook() -> Result2<()> {
         FileCache::save(&env, &content).await.ok();
     }
 
-    book.for_each_chapter_mut(|ch| {
-        if let Some(path) = &ch.source_path
-            && let Some(output) = result.remove(path)
-        {
-            ch.content = output
+    book.for_each_text_mut(|path, content| {
+        if let Some(output) = result.remove(path) {
+            *content = output;
         }
     });
 

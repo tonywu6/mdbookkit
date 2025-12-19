@@ -1,9 +1,9 @@
 ---
-source: crates/mdbookkit/tests/rustdoc_link.rs
+source: crates/mdbook-rustdoc-links/src/tests.rs
 expression: report
 ---
   info: successfully resolved all links
-    ╭─[index:25:5]
+    ╭─[docs/src/rustdoc-links/index.md:25:5]
     │ 
     │ The [`option`][std::option] and [`result`][std::result] modules define optional and
     ·     ───────────┬───────────     ───────────┬───────────

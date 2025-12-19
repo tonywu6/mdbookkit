@@ -1,10 +1,9 @@
 ---
 source: crates/mdbook-rustdoc-links/src/tests.rs
-assertion_line: 76
 expression: report
 ---
   info: successfully resolved all links
-     ╭─[supported-syntax:29:10]
+     ╭─[docs/src/rustdoc-links/supported-syntax.md:29:10]
      │ >
      │ > Module [`alloc`][std::alloc] — Memory allocation APIs.
      ·          ──────────┬──────────

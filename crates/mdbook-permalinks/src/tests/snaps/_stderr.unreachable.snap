@@ -1,5 +1,6 @@
 ---
 source: crates/mdbook-permalinks/src/tests.rs
+assertion_line: 121
 expression: report
 ---
   warning: links inaccessible
@@ -17,6 +18,8 @@ expression: report
     · ────────┬────────
     ·         ╰── crates/mdbook-permalinks/src/tests/shinjuku.jpg does not exist
     │ 
+    │ [](draft.md)
+    │ 
     │ # gitignored
     │ 
     │ [](/target/.rustc_info.json)
@@ -33,15 +36,22 @@ expression: report
     │ 
     │ [](https://example.org/book/tests/urls/)
     · ────────────────────┬───────────────────
-    ·                     ╰─┤ crates/mdbook-permalinks/src/tests/urls/index.md does not exist
-    ·                       │ crates/mdbook-permalinks/src/tests/urls/README.md does not exist
+    ·                     ╰─┤ crates/mdbook-permalinks/src/tests/urls/index.md is not in SUMMARY.md
+    ·                       │ crates/mdbook-permalinks/src/tests/urls/README.md is not in SUMMARY.md
     │ 
     │ [](https://example.org/book/tests/url)
     · ───────────────────┬──────────────────
-    ·                    ╰─┤ crates/mdbook-permalinks/src/tests/url.md does not exist
-    ·                      │ crates/mdbook-permalinks/src/tests/url/index.md does not exist
-    ·                      │ crates/mdbook-permalinks/src/tests/url/README.md does not exist
+    ·                    ╰─┤ crates/mdbook-permalinks/src/tests/url.md is not in SUMMARY.md
+    ·                      │ crates/mdbook-permalinks/src/tests/url/index.md is not in SUMMARY.md
+    ·                      │ crates/mdbook-permalinks/src/tests/url/README.md is not in SUMMARY.md
     ·                      │ crates/mdbook-permalinks/src/tests/url does not exist
+    │ 
+    │ [](https://example.org/book/tests/draft)
+    · ────────────────────┬───────────────────
+    ·                     ╰─┤ crates/mdbook-permalinks/src/tests/draft.md is not in SUMMARY.md
+    ·                       │ crates/mdbook-permalinks/src/tests/draft/index.md is not in SUMMARY.md
+    ·                       │ crates/mdbook-permalinks/src/tests/draft/README.md is not in SUMMARY.md
+    ·                       │ crates/mdbook-permalinks/src/tests/draft does not exist
     │ 
     │ [](https://example.org/git/tree/HEAD/LICENSE-GPL.md)
     · ──────────────────────────┬─────────────────────────

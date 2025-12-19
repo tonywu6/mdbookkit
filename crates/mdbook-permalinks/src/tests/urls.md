@@ -24,6 +24,8 @@
 
 [](https://example.org/book/tests/url)
 
+[](https://example.org/book/tests/draft)
+
 [](https://example.org/git/tree/HEAD/LICENSE-GPL.md)
 
 # not applicable

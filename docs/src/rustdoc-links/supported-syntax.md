@@ -15,10 +15,13 @@ In general, specifying items as you would when writing Rust code should "just wo
 > [!TIP]
 >
 > This page is also used for snapshot testing! To see how all the links would look like
-> in Markdown after they have been processed, see
-> [supported-syntax.snap](/crates/mdbook-rustdoc-links/src/tests/snaps/supported-syntax.snap)
-> and
-> [supported-syntax.stderr.snap](/crates/mdbook-rustdoc-links/src/tests/snaps/supported-syntax.stderr.snap).
+> in Markdown after they have been processed, see [supported-syntax.snap] and
+> [supported-syntax.stderr.snap].
+>
+> [supported-syntax.snap]:
+>   /crates/mdbook-rustdoc-links/src/tests/snaps/docs/src/rustdoc-links/supported-syntax.md.snap
+> [supported-syntax.stderr.snap]:
+>   /crates/mdbook-rustdoc-links/src/tests/snaps/docs/src/rustdoc-links/supported-syntax.md.stderr.snap
 
 ## Types, modules, associated items
 

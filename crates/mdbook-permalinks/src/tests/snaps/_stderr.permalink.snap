@@ -1,6 +1,6 @@
 ---
 source: crates/mdbook-permalinks/src/tests.rs
-assertion_line: 105
+assertion_line: 121
 expression: report
 ---
   info: links converted to permalinks
@@ -35,6 +35,20 @@ expression: report
     · ──────────────────────┬──────────────────────┬
     ·                       │                      ╰── https://example.org/git/raw/v0.0/docs/src/media/banner.webp
     ·                       ╰── https://example.org/git/tree/v0.0/docs/src/media/banner.webp
+    │ 
+    │ [banner-image]: /docs/src/media/banner.webp
+    │ 
+    │ # not found
+    │ 
+    │ [](../../Cargo.lock)
+    │ 
+    │ [](//LICENSE-MIT.md)
+    │ 
+    │ ![](shinjuku.jpg)
+    │ 
+    │ [](draft.md)
+    · ──────┬─────
+    ·       ╰── https://example.org/git/tree/v0.0/crates/mdbook-permalinks/src/tests/draft.md
     │ 
     ╰────
 

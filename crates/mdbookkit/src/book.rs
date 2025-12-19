@@ -101,6 +101,8 @@ impl BookConfigHelper for MDBookConfig {
 pub trait BookHelper {
     fn iter_chapters(&self) -> impl Iterator<Item = (&PathBuf, &Chapter)>;
 
+    fn for_each_text_mut(&mut self, func: impl FnMut(&PathBuf, &mut String));
+
     fn to_stdout(self, ctx: &PreprocessorContext) -> Result<()>;
 }
 
@@ -115,6 +117,20 @@ impl BookHelper for Book {
             };
             Some((path, ch))
         })
+    }
+
+    fn for_each_text_mut(&mut self, mut func: impl FnMut(&PathBuf, &mut String)) {
+        self.for_each_chapter_mut(|ch| {
+            let &mut Chapter {
+                source_path: Some(ref path),
+                ref mut content,
+                ..
+            } = ch
+            else {
+                return;
+            };
+            func(path, content);
+        });
     }
 
     fn to_stdout(self, ctx: &PreprocessorContext) -> Result<()> {

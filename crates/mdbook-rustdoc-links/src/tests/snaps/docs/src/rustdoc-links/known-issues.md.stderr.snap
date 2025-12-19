@@ -1,10 +1,9 @@
 ---
 source: crates/mdbook-rustdoc-links/src/tests.rs
-assertion_line: 76
 expression: report
 ---
   info: successfully resolved all links
-    ╭─[known-issues:27:25]
+    ╭─[docs/src/rustdoc-links/known-issues.md:27:25]
     │ the derived trait by using the [macro syntax](supported-syntax.md#functions-and-macros),
     │ for example, by writing [`[serde::Serialize!]`][serde::Serialize] instead of
     ·                         ────────────────────┬────────────────────
@@ -47,7 +46,7 @@ expression: report
     ·                               ╰── https://doc.rust-lang.org/stable/core/net/ip_addr/enum.IpAddr.html#method.from
     │ 
     ╰────
-     ╭─[known-issues:121:3]
+     ╭─[docs/src/rustdoc-links/known-issues.md:121:3]
      │ 
      │ - [~~`panic!`~~], and many other `std` macros
      ·   ───────┬──────

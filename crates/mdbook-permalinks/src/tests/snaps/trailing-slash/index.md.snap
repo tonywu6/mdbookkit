@@ -1,0 +1,6 @@
+---
+source: crates/mdbook-permalinks/src/tests.rs
+assertion_line: 67
+expression: output
+---
+<https://github.com/slorber/trailing-slash-guide>

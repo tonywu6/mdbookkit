@@ -1,10 +1,9 @@
 ---
 source: crates/mdbook-rustdoc-links/src/tests.rs
-assertion_line: 76
 expression: report
 ---
   info: successfully resolved all links
-    ╭─[getting-started:55:6]
+    ╭─[docs/src/rustdoc-links/getting-started.md:55:6]
     │ 
     │ Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a
     ·      ───────────┬──────────  ───────────┬──────────

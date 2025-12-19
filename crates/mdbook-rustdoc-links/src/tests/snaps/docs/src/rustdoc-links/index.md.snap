@@ -1,6 +1,5 @@
 ---
 source: crates/mdbook-rustdoc-links/src/tests.rs
-assertion_line: 61
 expression: output
 ---
 # mdbook-rustdoc-links

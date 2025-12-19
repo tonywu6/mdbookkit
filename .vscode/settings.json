@@ -11,8 +11,8 @@
   "deno.enable": true,
   "editor.formatOnSave": true,
   "files.associations": {
-    "**/*.snap": "markdown",
-    "**/*.snap.new": "markdown"
+    "**/*.md.snap": "markdown",
+    "**/*.md.snap.new": "markdown"
   },
   "javascript.validate.enable": false,
   "markdown.extension.toc.levels": "2..6",

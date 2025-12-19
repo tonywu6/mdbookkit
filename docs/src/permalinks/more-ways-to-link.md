@@ -11,6 +11,10 @@ cases where this may not work:
 For such cases, the preprocessor supports some alternative link formats.
 
 ```mermaid
+---
+config:
+  theme: dark
+---
 stateDiagram-v2
     start          : Is the text included using {{#include}}
     included       : Is the file being included also published elsewhere <br>(e.g. crates.io)
