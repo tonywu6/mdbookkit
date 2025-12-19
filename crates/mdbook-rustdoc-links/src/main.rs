@@ -22,6 +22,7 @@ use self::{
     cache::{Cache, FileCache},
     client::Client,
     env::{Config, Environment, RustAnalyzer},
+    link::diagnostic::LinkStatus,
     page::Pages,
     resolver::Resolver,
 };
@@ -143,6 +144,14 @@ async fn mdbook() -> Result2<()> {
     book.to_stdout(&ctx)?;
 
     env.config.fail_on_warnings.check(status.level())?;
+
+    if env.config.cache_dir.is_some() && status == LinkStatus::Unresolved {
+        log::warn!(
+            "The `cache-dir` option is enabled, but some items were \
+            not resolved, which will cause rust-analyzer to always run \
+            despite the cache."
+        );
+    }
 
     Ok(())
 }

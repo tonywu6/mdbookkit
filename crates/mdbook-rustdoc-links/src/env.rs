@@ -64,7 +64,6 @@ pub struct Config {
     #[arg(long, value_name("PATH"), value_hint(clap::ValueHint::DirPath))]
     pub manifest_dir: Option<PathBuf>,
 
-    // TODO: warn on cache miss due to failed resolution
     /// Directory in which to persist build cache.
     ///
     /// Setting this will enable caching. Will skip rust-analyzer if cache hits.

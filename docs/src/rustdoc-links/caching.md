@@ -36,7 +36,7 @@ in the previous build.
 > patterns][specify-exclude-patterns] in the mdBook documentation.
 >
 > Items that fail to resolve are not included in the cache. If such "broken" links
-> persist in the Markdown source, cache will be invalidated on every run, and
+> persist in the Markdown source, cache will be invalidated on every build, and
 > rust-analyzer will always run.
 >
 > **Do not** use your book's `build-dir` as the `cache-dir`: mdbook clears the output
