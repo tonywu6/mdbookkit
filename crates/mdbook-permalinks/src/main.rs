@@ -1,4 +1,8 @@
-use std::{collections::HashMap, fmt::Debug, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Debug,
+    str::FromStr,
+};
 
 use anyhow::{Context, Result, anyhow};
 use console::colors_enabled_stderr;
@@ -7,7 +11,7 @@ use log::LevelFilter;
 use mdbook_markdown::pulldown_cmark;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext, book::Book};
 use serde::Deserialize;
-use tap::{Pipe, TapFallible};
+use tap::{Pipe, Tap, TapFallible};
 use url::Url;
 
 use mdbookkit::{
@@ -19,7 +23,7 @@ use mdbookkit::{
 };
 
 use self::{
-    link::{LinkStatus, RelativeLink},
+    link::{LinkStatus, PathStatus, RelativeLink},
     page::Pages,
     vcs::{Permalink, PermalinkFormat},
 };
@@ -54,9 +58,9 @@ impl Preprocessor for Permalinks {
 }
 
 struct Environment {
-    book_src: Url,
-    markdown: pulldown_cmark::Options,
     vcs: VersionControl,
+    root_dir: Url,
+    markdown: pulldown_cmark::Options,
     config: Config,
 }
 
@@ -75,14 +79,14 @@ impl Preprocessor for Environment {
         let mut content = Pages::new(self.markdown);
 
         for (path, ch) in book.iter_chapters() {
+            let path = path.to_string_lossy();
             let url = self
-                .book_src
-                .join(&path.to_string_lossy())
+                .root_dir
+                .join(&path)
                 .context("could not read path as a url")?;
             content
                 .insert(url, &ch.content)
-                .with_context(|| path.display().to_string())
-                .context("failed to parse Markdown source:")?;
+                .with_context(|| format!("failed to parse {path}"))?;
         }
 
         self.resolve(&mut content);
@@ -90,7 +94,7 @@ impl Preprocessor for Environment {
         let mut result = book
             .iter_chapters()
             .filter_map(|(path, _)| {
-                let url = self.book_src.join(&path.to_string_lossy()).ok()?;
+                let url = self.root_dir.join(&path.to_string_lossy()).ok()?;
                 content
                     .emit(&url)
                     .tap_err(log_warning!())
@@ -109,11 +113,9 @@ impl Preprocessor for Environment {
             .to_stderr()
             .to_status();
 
-        book.for_each_chapter_mut(|ch| {
-            if let Some(path) = &ch.source_path
-                && let Some(output) = result.remove(path)
-            {
-                ch.content = output
+        book.for_each_text_mut(|path, content| {
+            if let Some(output) = result.remove(path) {
+                *content = output;
             }
         });
 
@@ -126,6 +128,8 @@ impl Preprocessor for Environment {
 impl Environment {
     fn resolve(&self, content: &mut Pages<'_>) {
         self.validate();
+
+        let book_pages = &content.paths(&self.root_dir);
 
         for (base, link) in content.links_mut() {
             let file = if let Some(link) = link.link.strip_prefix('/') {
@@ -148,6 +152,7 @@ impl Environment {
                 link,
                 page_url,
                 file_url,
+                book_pages,
                 env,
             }
             .resolve();
@@ -157,9 +162,9 @@ impl Environment {
     #[inline]
     fn validate(&self) {
         debug_assert!(
-            self.book_src.as_str().ends_with('/'),
+            self.root_dir.as_str().ends_with('/'),
             "book_src should have a trailing slash, got {}",
-            self.book_src
+            self.root_dir
         );
         debug_assert!(
             self.vcs.root.as_str().ends_with('/'),
@@ -181,7 +186,7 @@ impl Environment {
 
         let markdown = book.config.markdown_options();
 
-        let book_src = book
+        let root_dir = book
             .root
             .canonicalize()
             .context("failed to locate book root")?
@@ -190,9 +195,9 @@ impl Environment {
             .map_err(|_| anyhow!("book `src` should be a valid absolute path"))?;
 
         Ok(Ok(Self {
-            book_src,
-            markdown,
             vcs,
+            root_dir,
+            markdown,
             config,
         }))
     }
@@ -200,9 +205,10 @@ impl Environment {
 
 #[must_use]
 struct Resolver<'a, 'r> {
+    link: &'a mut RelativeLink<'r>,
     file_url: Url,
     page_url: &'a Url,
-    link: &'a mut RelativeLink<'r>,
+    book_pages: &'a HashSet<String>,
     env: &'a Environment,
 }
 
@@ -249,15 +255,14 @@ impl Resolver<'_, '_> {
         };
 
         let relative_to_book = env
-            .book_src
+            .root_dir
             .make_relative(&file_url)
             .expect("should be a file");
 
         let should_link = is_vcs
             || relative_to_book.starts_with("../")
-            || env
-                .config
-                .always_link
+            || relative_to_book.ends_with(".md") && !self.book_pages.contains(&relative_to_book)
+            || (env.config.always_link)
                 .iter()
                 .any(|suffix| file_url.path().ends_with(suffix));
 
@@ -275,7 +280,7 @@ impl Resolver<'_, '_> {
             return;
         }
 
-        match env.vcs.link.to_link(&relative_to_repo, hint) {
+        match env.vcs.link.to_link(&relative_to_repo.path, hint) {
             Ok(href) => {
                 link.link = suffix.restored(href).as_str().to_owned().into();
                 link.status = LinkStatus::Permalink;
@@ -301,51 +306,64 @@ impl Resolver<'_, '_> {
             if let Some(idx) = path.find('?') {
                 path.truncate(idx)
             };
-            path.strip_suffix(".html")
-                .map(ToOwned::to_owned)
-                .unwrap_or(path)
-        };
-
-        // one does not simply avoid trailing slash issues...
-        // https://github.com/slorber/trailing-slash-guide
-        let try_files = if path.is_empty() || path.ends_with('/') {
-            &[
-                // enforce that index.html pages should consistently
-                // be addressed with a trailing slash
-                format!("{path}index.md"),
-                format!("{path}README.md"),
-            ] as &[_]
-        } else {
-            &[
-                format!("{path}.md"),
-                // all major hosting providers implicitly redirect
-                // /folder to /folder/, so these are okay
-                format!("{path}/index.md"),
-                format!("{path}/README.md"),
-                // preserve extension if any which allows checking for
-                // static files other than book pages
-                path,
-            ]
+            path
         };
 
         let mut not_found = vec![];
 
-        for file in try_files {
-            let Ok(file) = (self.env.book_src.join(file))
-                .with_context(|| format!("invalid URL path {file:?}"))
-                .tap_err(log_debug!())
-            else {
-                continue;
-            };
+        let is_index = path.is_empty() || path.ends_with('/');
 
-            match self.env.vcs.try_file(&file) {
-                Ok(_) => {
-                    let file_url = {
-                        let mut file = file;
-                        file.set_query(file_url.query());
-                        file.set_fragment(file_url.fragment());
-                        file
-                    };
+        let try_pages = {
+            let path = path.strip_suffix(".html").unwrap_or(&path);
+            // one does not simply avoid trailing slash issues...
+            // https://github.com/slorber/trailing-slash-guide
+            if is_index {
+                &[
+                    // enforce that index.html pages should consistently
+                    // be addressed with a trailing slash
+                    format!("{path}index.md"),
+                    format!("{path}README.md"),
+                ] as &[_]
+            } else {
+                &[
+                    format!("{path}.md"),
+                    // all major hosting providers implicitly redirect
+                    // /folder to /folder/, so these are okay
+                    format!("{path}/index.md"),
+                    format!("{path}/README.md"),
+                ]
+            }
+        };
+
+        for page in try_pages {
+            let file_url = (self.env.root_dir)
+                .join(page)
+                .expect("should be a valid url")
+                .tap_mut(|u| u.set_query(file_url.query()))
+                .tap_mut(|u| u.set_fragment(file_url.fragment()));
+
+            if self.book_pages.contains(page) {
+                link.link = page_url
+                    .make_relative(&file_url)
+                    .expect("both should be file: urls")
+                    .into();
+                link.status = LinkStatus::Rewritten;
+                return;
+            }
+
+            not_found.push((file_url, PathStatus::NotInBook));
+        }
+
+        if !is_index {
+            let try_file = (self.env.root_dir)
+                .join(&path)
+                .expect("should be a valid url");
+
+            match self.env.vcs.try_file(&try_file) {
+                Ok(result) if !result.metadata.is_dir() => {
+                    let file_url = try_file
+                        .tap_mut(|u| u.set_query(file_url.query()))
+                        .tap_mut(|u| u.set_fragment(file_url.fragment()));
 
                     link.link = page_url
                         .make_relative(&file_url)
@@ -355,8 +373,13 @@ impl Resolver<'_, '_> {
 
                     return;
                 }
+                Ok(_) => {
+                    // a directory may exist but not accessible
+                    // due to having no index.html
+                    not_found.push((try_file, PathStatus::NotInBook));
+                }
                 Err(err) => {
-                    not_found.push((file, err));
+                    not_found.push((try_file, err));
                 }
             }
         }

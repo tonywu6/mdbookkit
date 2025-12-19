@@ -8,7 +8,10 @@ use url::{Url, form_urlencoded::Serializer as SearchParams};
 
 use mdbookkit::log_debug;
 
-use crate::{Config, VersionControl, link::ContentTypeHint};
+use crate::{
+    Config, VersionControl,
+    link::{ContentTypeHint, PathStatus},
+};
 
 impl VersionControl {
     pub fn try_from_git(config: &Config, book: &MDBookConfig) -> Result<Result<Self>> {
@@ -71,40 +74,34 @@ impl VersionControl {
         Ok(Ok(Self { root, repo, link }))
     }
 
-    pub fn try_file(&self, file: &Url) -> Result<String, PathError> {
+    pub fn try_file(&self, file: &Url) -> Result<TryFile, PathStatus> {
         let Some(path) = self.root.make_relative(file) else {
-            return Err(PathError::Unreachable);
+            return Err(PathStatus::Unreachable);
         };
 
         if path.starts_with("../") {
-            return Err(PathError::NotInRepo);
+            return Err(PathStatus::NotInRepo);
         }
 
-        if file
+        if let Ok(metadata) = file
             .to_file_path()
             .expect("should be a file: url")
             .symlink_metadata()
-            .is_ok()
         {
             if !self.repo.is_path_ignored(&path).unwrap_or(false) {
-                Ok(path)
+                Ok(TryFile { path, metadata })
             } else {
-                Err(PathError::Ignored)
+                Err(PathStatus::Ignored)
             }
         } else {
-            Err(PathError::Unreachable)
+            Err(PathStatus::Unreachable)
         }
     }
 }
 
-#[derive(Debug, Clone, Copy, thiserror::Error)]
-pub enum PathError {
-    #[error("does not exist")]
-    Unreachable,
-    #[error("is ignored by git")]
-    Ignored,
-    #[error("is not in repo")]
-    NotInRepo,
+pub struct TryFile {
+    pub path: String,
+    pub metadata: std::fs::Metadata,
 }
 
 pub trait PermalinkFormat {

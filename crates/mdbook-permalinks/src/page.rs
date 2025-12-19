@@ -1,4 +1,10 @@
-use std::{borrow::Borrow, collections::HashMap, fmt::Debug, hash::Hash, sync::Arc};
+use std::{
+    borrow::Borrow,
+    collections::{HashMap, HashSet},
+    fmt::Debug,
+    hash::Hash,
+    sync::Arc,
+};
 
 use anyhow::{Context, Result, bail};
 use mdbook_markdown::pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
@@ -28,6 +34,13 @@ impl<'a> Pages<'a> {
             pages: Default::default(),
             markdown,
         }
+    }
+
+    pub fn paths(&self, root: &Url) -> HashSet<String> {
+        self.pages
+            .keys()
+            .filter_map(|url| root.make_relative(url))
+            .collect()
     }
 
     pub fn insert(&mut self, url: Url, source: &'a str) -> Result<&mut Self> {

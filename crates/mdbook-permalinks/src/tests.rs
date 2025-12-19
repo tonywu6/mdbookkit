@@ -36,7 +36,7 @@ fn fixture() -> Fixture {
                 },
                 repo: Repository::open_from_env().unwrap(),
             },
-            book_src: CARGO_WORKSPACE_DIR
+            root_dir: CARGO_WORKSPACE_DIR
                 .join("crates/")?
                 .join(concat!(env!("CARGO_PKG_NAME"), "/"))?
                 .join("src/")?,

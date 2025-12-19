@@ -3,8 +3,6 @@ use std::{fmt::Debug, ops::Range};
 use mdbook_markdown::pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
 use url::Url;
 
-use crate::vcs::PathError;
-
 #[derive(Debug, Default, Clone, thiserror::Error)]
 pub enum LinkStatus {
     #[default]
@@ -19,10 +17,22 @@ pub enum LinkStatus {
     Permalink,
 
     #[error("links inaccessible")]
-    Unreachable(Vec<(Url, PathError)>),
+    Unreachable(Vec<(Url, PathStatus)>),
 
     #[error("error encountered: {0}")]
     Error(String),
+}
+
+#[derive(Debug, Clone, Copy, thiserror::Error)]
+pub enum PathStatus {
+    #[error("does not exist")]
+    Unreachable,
+    #[error("is ignored by git")]
+    Ignored,
+    #[error("is not in repo")]
+    NotInRepo,
+    #[error("is not in SUMMARY.md")]
+    NotInBook,
 }
 
 pub struct LinkSpan<'a>(pub Vec<LinkText<'a>>);
