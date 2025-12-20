@@ -3,7 +3,7 @@ source: crates/mdbook-rustdoc-links/src/tests.rs
 expression: report
 ---
   info: successfully resolved all links
-     ╭─[docs/src/rustdoc-links/supported-syntax.md:29:10]
+     ╭─[docs/src/rustdoc-links/supported-syntax.md:32:10]
      │ >
      │ > Module [`alloc`][std::alloc] — Memory allocation APIs.
      ·          ──────────┬──────────

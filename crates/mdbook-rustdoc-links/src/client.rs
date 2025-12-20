@@ -29,8 +29,9 @@ use tokio::{
 };
 use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 use tower::ServiceBuilder;
+use tracing::{Level, debug, trace};
 
-use mdbookkit::{log_debug, log_warning, logging::spinner};
+use mdbookkit::{emit_debug, emit_warning, timer, timer_event};
 
 use crate::{
     env::Environment,
@@ -92,7 +93,7 @@ impl Client {
                 .dispose()
                 .await
                 .context("failed to properly stop rust-analyzer")
-                .tap_err(log_warning!())
+                .tap_err(emit_warning!())
                 .ok();
         }
         self.env
@@ -109,10 +110,18 @@ struct Server {
 
 impl Server {
     async fn spawn(env: &Environment) -> Result<Self> {
-        macro_rules! ra_spinner {
-            () => {
-                "rust-analyzer"
-            };
+        struct State {
+            sender: mpsc::Sender<Poll<()>>,
+            timer: Option<tracing::Span>,
+            // this span is never entered, ticker/timing is updated on span close
+            percent_indexed: Option<u32>,
+            last_update: Option<String>,
+        }
+
+        impl State {
+            fn timer(&self) -> Option<tracing::span::Id> {
+                self.timer.as_ref()?.id()
+            }
         }
 
         /// Listen for [Work Done Progress][workDoneProgress] events from rust-analyzer
@@ -157,15 +166,20 @@ impl Server {
                     state.percent_indexed = Some(0);
 
                     let msg = begin.message.as_deref().unwrap_or_default();
-                    spinner().update(ra_spinner!(), msg);
+                    timer_event!(state.timer(), Level::INFO, "{msg}");
 
-                    let tx = state.tx.clone();
+                    let tx = state.sender.clone();
                     tokio::spawn(async move { tx.send(Poll::Pending).await.ok() });
                 }
 
                 Some(WorkDoneProgress::Report(report)) => {
-                    if let Some(msg) = &report.message {
-                        spinner().update(ra_spinner!(), msg);
+                    if let Some(msg) = report.message.as_deref()
+                        && (state.last_update.as_deref())
+                            .map(|last| last != msg)
+                            .unwrap_or(true)
+                    {
+                        state.last_update = Some(msg.into());
+                        timer_event!(state.timer(), Level::INFO, "{msg}");
                     }
 
                     let Some(indexed) = state.percent_indexed.as_mut() else {
@@ -185,7 +199,7 @@ impl Server {
                     };
 
                     if spurious {
-                        log::debug!("ignoring spurious rust-analyzer progress");
+                        debug!("ignoring spurious rust-analyzer progress");
                         state.percent_indexed = None;
                         return;
                     }
@@ -195,7 +209,7 @@ impl Server {
                     }
                 }
 
-                Some(WorkDoneProgress::End(end)) => {
+                Some(WorkDoneProgress::End(_)) => {
                     let Some(indexed) = state.percent_indexed else {
                         // progress was invalidated
                         return;
@@ -205,48 +219,47 @@ impl Server {
                         return;
                     }
 
-                    let msg = end.message.as_deref().unwrap_or("indexing done");
-                    spinner().update(ra_spinner!(), msg);
+                    state.timer.take();
 
-                    let tx = state.tx.clone();
+                    let tx = state.sender.clone();
                     tokio::spawn(async move { tx.send(Poll::Ready(())).await.ok() });
                 }
 
                 None => {
-                    log::trace!("{progress:#?}")
+                    trace!("{progress:#?}")
                 }
             }
         }
 
-        let (tx, rx) = mpsc::channel(16);
+        let (sender, receiver) = mpsc::channel(16);
+
+        let timer = timer!(Level::INFO, "rust-analyzer");
 
         let stabilizer = EventSampling {
             buffer: Duration::from_millis(500),
             timeout: env.config.rust_analyzer_timeout(),
+            receiver,
         }
-        .using(rx);
-
-        struct State {
-            tx: mpsc::Sender<Poll<()>>,
-            percent_indexed: Option<u32>,
-        }
+        .build();
 
         let (background, mut server) = MainLoop::new_client(move |_| {
             let state = State {
-                tx,
+                sender,
+                timer: Some(timer),
                 percent_indexed: Some(0),
+                last_update: None,
             };
 
             let mut router = Router::new(state);
 
             router
                 .notification::<Progress>(|state, progress| {
-                    log::trace!("{progress:#?}");
+                    trace!("{progress:#?}");
                     probe_progress(state, progress);
                     ControlFlow::Continue(())
                 })
                 .notification::<PublishDiagnostics>(|_, diagnostics| {
-                    log::trace!("{diagnostics:#?}");
+                    trace!("{diagnostics:#?}");
                     ControlFlow::Continue(())
                 })
                 .notification::<ShowMessage>(|_, ShowMessageParams { typ, message }| {
@@ -280,7 +293,7 @@ impl Server {
             tokio::spawn(async move {
                 let mut stderr = BufReader::new(stderr).lines();
                 while let Some(line) = stderr.next_line().await.ok().flatten() {
-                    log::debug!("{line}");
+                    debug!("{line}");
                 }
             });
 
@@ -289,7 +302,7 @@ impl Server {
                     .run_buffered(stdout.compat(), stdin.compat_write())
                     .await
                     .context("LSP client stopped unexpectedly")
-                    .tap_err(log_debug!())
+                    .tap_err(emit_debug!())
                     .ok();
             });
 
@@ -358,8 +371,6 @@ impl Server {
 
         server.initialized(InitializedParams {})?;
 
-        spinner().create(ra_spinner!(), None);
-
         Ok(Self {
             server,
             stabilizer,
@@ -420,7 +431,7 @@ impl DocumentLock {
             },
         })?;
 
-        log::debug!("textDocument/didOpen {}", uri);
+        debug!("textDocument/didOpen {}", uri);
 
         Ok(OpenDocument {
             uri,
@@ -452,7 +463,7 @@ impl OpenDocument {
             })
             .await
             .context("failed to request source definition")
-            .tap_err(log_warning!())
+            .tap_err(emit_warning!())
             .unwrap_or_default()
             .map(|defs| match defs {
                 GotoDefinitionResponse::Scalar(loc) => vec![loc.uri],
@@ -470,7 +481,7 @@ impl OpenDocument {
             .request::<ExternalDocs>(document_position(self.uri.clone(), position))
             .await
             .context("failed to request external docs")
-            .tap_err(log_warning!())
+            .tap_err(emit_warning!())
             .unwrap_or_default()
             .context("server returned no result for external docs")?;
 
@@ -486,9 +497,9 @@ impl Drop for OpenDocument {
                     uri: self.uri.clone(),
                 },
             })
-            .tap_ok(|_| log::debug!("textDocument/didClose {}", self.uri))
+            .tap_ok(|_| debug!("textDocument/didClose {}", self.uri))
             .context("error sending textDocument/didClose")
-            .tap_err(log_debug!())
+            .tap_err(emit_debug!())
             .ok();
     }
 }
@@ -532,13 +543,10 @@ fn indexing_progress(progress: &ProgressParams) -> Option<&WorkDoneProgress> {
 
 fn log_message(message: String, typ: MessageType) {
     match typ {
-        MessageType::ERROR | MessageType::WARNING => {
-            log::warn!("rust-analyzer: {message}")
+        MessageType::ERROR | MessageType::WARNING | MessageType::INFO | MessageType::LOG => {
+            debug!("rust-analyzer: {message}")
         }
-        MessageType::INFO | MessageType::LOG => {
-            log::debug!("rust-analyzer: {message}")
-        }
-        _ => log::trace!("rust-analyzer: {message}"),
+        _ => trace!("rust-analyzer: {message}"),
     }
 }
 

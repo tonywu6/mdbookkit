@@ -2,6 +2,7 @@ use std::{borrow::Cow, collections::BTreeMap};
 
 use miette::LabeledSpan;
 use tap::{Pipe, TapOptional};
+use tracing::Level;
 use url::Url;
 
 use mdbookkit::diagnostics::{Diagnostics, Issue, IssueItem, ReportBuilder};
@@ -142,14 +143,14 @@ impl LinkDiagnostic<'_> {
 }
 
 impl Issue for LinkStatus {
-    fn level(&self) -> log::Level {
+    fn level(&self) -> Level {
         match self {
-            Self::Ignored => log::Level::Debug,
-            Self::Unchanged => log::Level::Debug,
-            Self::Rewritten => log::Level::Info,
-            Self::Permalink => log::Level::Info,
-            Self::Unreachable(..) => log::Level::Warn,
-            Self::Error(..) => log::Level::Warn,
+            Self::Ignored => Level::DEBUG,
+            Self::Unchanged => Level::DEBUG,
+            Self::Rewritten => Level::INFO,
+            Self::Permalink => Level::INFO,
+            Self::Unreachable(..) => Level::WARN,
+            Self::Error(..) => Level::WARN,
         }
     }
 }

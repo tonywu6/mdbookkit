@@ -4,17 +4,11 @@ use anyhow::{Context, Result};
 use lsp_types::Position;
 use tap::{Pipe, TapFallible};
 use tokio::task::JoinSet;
+use tracing::{Instrument, Level, debug};
 
-use mdbookkit::{log_debug, logging::spinner, styled};
+use mdbookkit::{emit_debug, timer, timer_item};
 
-use crate::{
-    UNIQUE_ID,
-    client::{Client, OpenDocument},
-    item::Item,
-    link::ItemLinks,
-    page::Pages,
-    url::UrlToPath,
-};
+use crate::{UNIQUE_ID, client::Client, item::Item, link::ItemLinks, page::Pages, url::UrlToPath};
 
 /// Type that can provide links.
 ///
@@ -75,53 +69,47 @@ impl Resolver for Client {
             (context, request)
         };
 
-        log::debug!("request context\n\n{context}\n");
+        debug!("request context\n\n{context}\n");
 
         let document = self
             .open(self.env().entrypoint.clone(), context)
             .await?
             .pipe(Arc::new);
 
-        spinner().create("resolve", Some(request.len() as _));
+        let timer = timer!(Level::INFO, "resolve-items", count = request.len());
 
         let tasks: JoinSet<Option<(String, ItemLinks)>> = request
             .into_iter()
             .map(|(key, pos)| {
                 let key = key.to_string();
                 let doc = document.clone();
-                resolve(doc, key, pos)
+                let timer = timer_item!(&timer, Level::INFO, "resolve", item = ?key);
+                async move {
+                    for p in pos {
+                        let resolved = doc
+                            .resolve(p)
+                            .await
+                            .with_context(|| format!("{p:?}"))
+                            .context("failed to resolve symbol:")
+                            .tap_err(emit_debug!())
+                            .ok();
+                        if let Some(resolved) = resolved {
+                            return Some((key, resolved));
+                        }
+                    }
+                    None
+                }
+                .instrument(timer)
             })
             .collect();
 
-        async fn resolve(
-            doc: Arc<OpenDocument>,
-            key: String,
-            pos: Vec<Position>,
-        ) -> Option<(String, ItemLinks)> {
-            let _task = spinner().task("resolve", &key);
-            for p in pos {
-                let resolved = doc
-                    .resolve(p)
-                    .await
-                    .with_context(|| format!("{p:?}"))
-                    .context("failed to resolve symbol:")
-                    .tap_err(log_debug!())
-                    .ok();
-                if let Some(resolved) = resolved {
-                    return Some((key, resolved));
-                }
-            }
-            None
-        }
-
         let resolved = tasks
             .join_all()
+            .instrument(timer)
             .await
             .into_iter()
             .flatten()
             .collect::<HashMap<_, _>>();
-
-        spinner().finish("resolve", styled!(("done").green()));
 
         pages.apply(&resolved);
 

@@ -1,12 +1,10 @@
 use std::{ffi::OsString, path::Path, sync::LazyLock};
 
 use anyhow::Result;
-use log::LevelFilter;
 use serde::Deserialize;
 use tap::{Pipe, Tap};
+use tracing::info;
 use url::Url;
-
-use crate::logging::ConsoleLogger;
 
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct TestDocument {
@@ -118,11 +116,6 @@ impl PortableSnapshots {
     }
 }
 
-pub fn setup_logging(name: &str) {
-    ConsoleLogger::try_install(name).ok();
-    log::set_max_level(LevelFilter::Debug);
-}
-
 pub fn setup_paths() -> Result<OsString> {
     let mut path = if let Some(path) = std::env::var_os("PATH") {
         std::env::split_paths(&path)
@@ -182,7 +175,7 @@ pub static CARGO_WORKSPACE_DIR: LazyLock<Url> = LazyLock::new(|| {
 pub fn not_in_ci<D: std::fmt::Display>(because: D) -> bool {
     let ci = std::env::var("CI").unwrap_or("".into());
     if matches!(ci.as_str(), "" | "0" | "false") {
-        log::info!("{because}");
+        info!("{because}");
         true
     } else {
         panic!("{because} but CI={ci}")

@@ -6,16 +6,15 @@ use anyhow::{
     Result as Result2,
 };
 use clap::{Parser, Subcommand};
-use console::colors_enabled_stderr;
-use log::LevelFilter;
 use mdbook_preprocessor::PreprocessorContext;
 use tap::{Pipe, TapFallible};
+use tracing::{instrument, level_filters::LevelFilter, warn};
 
 use mdbookkit::{
     book::{BookConfigHelper, BookHelper, book_from_stdin, string_from_stdin},
     diagnostics::Issue,
-    log_warning,
-    logging::{ConsoleLogger, is_logging},
+    emit_warning,
+    logging::Logging,
 };
 
 use self::{
@@ -42,7 +41,7 @@ mod url;
 
 #[tokio::main]
 async fn main() -> Result2<()> {
-    ConsoleLogger::install(PREPROCESSOR_NAME);
+    Logging::default().init();
     match Program::parse().command {
         Some(Command::Supports { .. }) => Ok(()),
         Some(Command::Markdown(options)) => markdown(options).await,
@@ -78,6 +77,7 @@ enum Command {
     Describe,
 }
 
+#[instrument("mdbook-rustdoc-links")]
 async fn mdbook() -> Result2<()> {
     let (ctx, mut book) = book_from_stdin().context("failed to read from mdbook")?;
 
@@ -113,7 +113,7 @@ async fn mdbook() -> Result2<()> {
         .filter_map(|(path, _)| {
             let output = content
                 .emit(path, &client.env().emit_config())
-                .tap_err(log_warning!())
+                .tap_err(emit_warning!())
                 .ok()?;
             Some((path.clone(), output.to_string()))
         })
@@ -124,9 +124,7 @@ async fn mdbook() -> Result2<()> {
     let status = content
         .reporter()
         .names(|path| path.display().to_string())
-        .level(LevelFilter::Warn)
-        .logging(is_logging())
-        .colored(colors_enabled_stderr())
+        .level(LevelFilter::WARN)
         .build()
         .to_stderr()
         .to_status();
@@ -146,9 +144,9 @@ async fn mdbook() -> Result2<()> {
     env.config.fail_on_warnings.check(status.level())?;
 
     if env.config.cache_dir.is_some() && status == LinkStatus::Unresolved {
-        log::warn!(
-            "The `cache-dir` option is enabled, but some items were \
-            not resolved, which will cause rust-analyzer to always run \
+        warn!(
+            "The `cache-dir` option is enabled, but some items could not \
+            be resolved, which will cause rust-analyzer to always run \
             despite the cache."
         );
     }
@@ -181,9 +179,7 @@ async fn markdown(config: Config) -> Result2<()> {
     let status = content
         .reporter()
         .names(|_| "<stdin>".into())
-        .level(LevelFilter::Warn)
-        .logging(is_logging())
-        .colored(colors_enabled_stderr())
+        .level(LevelFilter::WARN)
         .build()
         .to_stderr()
         .to_status();

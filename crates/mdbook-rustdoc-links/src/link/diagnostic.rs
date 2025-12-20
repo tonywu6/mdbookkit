@@ -1,7 +1,7 @@
 use std::fmt;
 
-use log::Level;
 use miette::LabeledSpan;
+use tracing::Level;
 
 use mdbookkit::diagnostics::{Issue, IssueItem};
 
@@ -35,9 +35,9 @@ impl IssueItem for LinkDiagnostic {
 impl Issue for LinkStatus {
     fn level(&self) -> Level {
         match self {
-            Self::Unresolved => Level::Warn,
-            Self::Debug => Level::Trace,
-            Self::Ok => Level::Info,
+            Self::Unresolved => Level::WARN,
+            Self::Debug => Level::TRACE,
+            Self::Ok => Level::INFO,
         }
     }
 }

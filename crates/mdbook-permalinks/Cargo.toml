@@ -19,10 +19,8 @@ repository.workspace = true
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true }
-console = { workspace = true }
 git2 = { version = "0.20.1", default-features = false }
 gix-url = { version = "0.30.0" }
-log = { workspace = true }
 mdbook-markdown = { workspace = true }
 mdbook-preprocessor = { workspace = true }
 mdbookkit = { workspace = true }
@@ -31,6 +29,7 @@ percent-encoding = { version = "2.3.1" }
 serde = { workspace = true }
 tap = { workspace = true }
 thiserror = { workspace = true }
+tracing = { workspace = true }
 url = { workspace = true, features = ["serde"] }
 
 [dev-dependencies]

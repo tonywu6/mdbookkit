@@ -47,14 +47,14 @@ To distinguish an item as being from your crate rather than from a third-party c
 you may write `crate::*`, although this is not required:
 
 > ```md
-> The [`is_ci`][crate::error::is_ci] function detects whether the preprocessor is
-> running in a [continuous integration](continuous-integration.md) environment, such
-> that warnings may be promoted to errors.
+> The [`is_ci`][crate::env::is_ci] function detects whether the preprocessor is running
+> in a [continuous integration](continuous-integration.md) environment, such that
+> warnings may be promoted to errors.
 > ```
 >
-> The [`is_ci`][crate::error::is_ci] function detects whether the preprocessor is
-> running in a [continuous integration](continuous-integration.md) environment, such
-> that warnings may be promoted to errors.
+> The [`is_ci`][crate::env::is_ci] function detects whether the preprocessor is running
+> in a [continuous integration](continuous-integration.md) environment, such that
+> warnings may be promoted to errors.
 
 For everything else, provide its full path, as if you were writing a `use` declaration:
 

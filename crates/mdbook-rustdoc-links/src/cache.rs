@@ -11,8 +11,9 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use sha2::{Digest, Sha256};
 use tap::{Pipe, Tap, TapFallible};
 use tokio::task::JoinSet;
+use tracing::debug;
 
-use mdbookkit::log_debug;
+use mdbookkit::emit_debug;
 
 use crate::{env::Environment, link::ItemLinks, page::Pages, resolver::Resolver, url::UrlToPath};
 
@@ -28,10 +29,10 @@ pub trait Cache: DeserializeOwned + Serialize {
 
     async fn load(env: &Environment) -> Result<Self::Validated> {
         env.load_temp::<Self, _>("cache.json")
-            .tap_err(log_debug!())?
+            .tap_err(emit_debug!())?
             .reuse(env)
             .await
-            .tap_err(log_debug!())
+            .tap_err(emit_debug!())
     }
 
     async fn save<K>(env: &Environment, content: &Pages<'_, K>) -> Result<()>
@@ -40,7 +41,7 @@ pub trait Cache: DeserializeOwned + Serialize {
     {
         let this = Self::build(env, content).await?;
         env.save_temp::<Self, _>("cache.json", &this)
-            .tap_err(log_debug!())
+            .tap_err(emit_debug!())
     }
 }
 
@@ -145,14 +146,14 @@ impl FileCacheV1 {
             // should be tolerable to skip files that we somehow can't read?
             result
                 .context("failed to read cache dependency")
-                .tap_err(log_debug!())
+                .tap_err(emit_debug!())
                 .ok()
         })
         .collect::<Vec<_>>()
         .tap_mut(|deps| deps.sort_by(|(k1, _), (k2, _)| k1.cmp(k2))) // order affects hashing
         .into_iter()
         .fold(Sha256::new(), |mut hash, (name, src)| {
-            log::debug!("hashing {name}");
+            debug!("hashing {name}");
             hash.update(src);
             hash
         })

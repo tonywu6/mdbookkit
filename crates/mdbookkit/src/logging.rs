@@ -1,479 +1,493 @@
-//! Progress reporting and logging for preprocessors.
-
 use std::{
     collections::BTreeSet,
-    fmt, io,
-    sync::{OnceLock, mpsc},
+    fmt::Debug,
+    sync::{Arc, LazyLock, mpsc},
     thread,
     time::{Duration, Instant},
 };
 
-use anyhow::{Context, Result};
-use console::{StyledObject, Term, colors_enabled_stderr, set_colors_enabled};
-use env_logger::Logger;
+use console::{StyledObject, Term};
 use indicatif::{HumanDuration, ProgressBar, ProgressDrawTarget, ProgressStyle};
-use log::{Level, LevelFilter, Log};
 use tap::{Pipe, Tap};
+use tracing::{
+    Event, Subscriber,
+    field::{Field, Visit},
+    span::{Attributes, Id},
+    warn,
+};
+use tracing_subscriber::{
+    EnvFilter, Layer,
+    filter::{LevelFilter, filter_fn},
+    layer::{Context, SubscriberExt},
+    registry::{LookupSpan, SpanRef},
+    util::SubscriberInitExt,
+};
 
-pub fn spinner() -> SpinnerHandle {
-    SpinnerHandle
-}
+use crate::env::{MDBOOK_LOG, is_colored, is_logging, set_colored, set_logging};
 
-pub struct SpinnerHandle;
-
-macro_rules! spinner_log {
-    ( $level:ident ! ( $($args:tt)* ) ) => {
-        log::$level!(target: env!("CARGO_CRATE_NAME"), $($args)*);
-    };
-}
-
-impl SpinnerHandle {
-    pub fn create(&self, prefix: &str, total: Option<u64>) -> &Self {
-        let prefix = prefix.into();
-        let msg = Message::Create { prefix, total };
-
-        if let Some(Spinner { tx, .. }) = SPINNER.get() {
-            tx.send(msg).ok();
-        } else {
-            spinner_log!(info!("{msg}"));
-        }
-
-        self
-    }
-
-    pub fn update<D: fmt::Display>(&self, prefix: &str, update: D) -> &Self {
-        let key = prefix.into();
-        let update = update.to_string();
-        let msg = Message::Update { key, update };
-
-        if let Some(Spinner { tx, .. }) = SPINNER.get() {
-            tx.send(msg).ok();
-        } else {
-            spinner_log!(info!("{msg}"));
-        }
-
-        self
-    }
-
-    pub fn task<D: fmt::Display>(&self, prefix: &str, task: D) -> TaskHandle {
-        let key = String::from(prefix);
-        let task = task.to_string();
-
-        let open = Message::Task {
-            key: key.clone(),
-            task: task.clone(),
-        };
-        let done = Some(Message::Done { key, task });
-
-        if let Some(Spinner { tx, .. }) = SPINNER.get() {
-            tx.send(open).ok();
-            let spin = Some(tx.clone());
-            return TaskHandle { spin, done };
-        }
-
-        spinner_log!(info!("{open}"));
-        let spin = None;
-        TaskHandle { spin, done }
-    }
-
-    pub fn finish<D: fmt::Display>(&self, prefix: &str, update: D) {
-        let key = prefix.into();
-        let update = update.to_string();
-        let msg = Message::Finish { key, update };
-
-        if let Some(Spinner { tx, .. }) = SPINNER.get() {
-            tx.send(msg).ok();
-        } else {
-            spinner_log!(info!("{msg}"));
-        }
-    }
-}
-
-#[must_use]
-pub struct TaskHandle {
-    spin: Option<mpsc::Sender<Message>>,
-    done: Option<Message>,
-}
-
-impl Drop for TaskHandle {
-    fn drop(&mut self) {
-        let Some(done) = self.done.take() else { return };
-        if let Some(ref tx) = self.spin {
-            tx.send(done).ok();
-        } else {
-            spinner_log!(info!("{done}"));
-        }
-    }
-}
-
-#[derive(Debug)]
-enum Message {
-    Create { prefix: String, total: Option<u64> },
-    Update { key: String, update: String },
-    Task { key: String, task: String },
-    Done { key: String, task: String },
-    Finish { key: String, update: String },
-}
-
-impl fmt::Display for Message {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Create { prefix, .. } => fmt::Display::fmt(prefix, f),
-            Self::Update { key, update } => {
-                fmt::Display::fmt(key, f)?;
-                fmt::Display::fmt(" ", f)?;
-                fmt::Display::fmt(update, f)?;
-                Ok(())
-            }
-            Self::Task { key, task } => {
-                fmt::Display::fmt(key, f)?;
-                fmt::Display::fmt(" ", f)?;
-                fmt::Display::fmt(task, f)?;
-                Ok(())
-            }
-            Self::Done { key, task } => {
-                fmt::Display::fmt(key, f)?;
-                fmt::Display::fmt(" ", f)?;
-                fmt::Display::fmt(task, f)?;
-                fmt::Display::fmt(" .. done", f)?;
-                Ok(())
-            }
-            Self::Finish { key, update } => {
-                fmt::Display::fmt(key, f)?;
-                fmt::Display::fmt(" .. ", f)?;
-                fmt::Display::fmt(update, f)?;
-                Ok(())
-            }
-        }
-    }
-}
-
-pub fn styled<D>(val: D) -> console::StyledObject<D> {
-    if let Some(Spinner { term, .. }) = SPINNER.get() {
-        term.style()
-    } else {
-        console::Style::new().for_stderr()
-    }
-    .apply_to(val)
-}
-
+#[doc(hidden)]
 #[macro_export]
-macro_rules! styled {
-    ( ( $($display:tt)+ ) . $($style:tt)+ ) => {{
-        $crate::logging::styled( $($display)* ) . $($style)*
+macro_rules! branded {
+    // cannot use env!("CARGO_PKG_NAME") because that would be
+    // the package name at callsite
+    ( $suffix:literal ) => {{ concat!("mdbookkit.", $suffix) }};
+}
+
+macro_rules! is_branded {
+    ( $metadata:expr, $suffix:literal ) => {{ $metadata.fields().field(branded!($suffix)).is_some() }};
+    ( $metadata:expr ) => {{
+        $metadata
+            .fields()
+            .iter()
+            .any(|f| f.name().starts_with("mdbookkit."))
     }};
 }
 
-pub fn is_logging() -> bool {
-    SPINNER.get().is_none()
+pub struct Logging {
+    pub logging: Option<bool>,
+    pub colored: Option<bool>,
+    pub level: LevelFilter,
 }
 
-#[macro_export]
-macro_rules! log_debug {
-    () => {
-        |err| log::debug!("{err:?}")
-    };
-}
-
-#[macro_export]
-macro_rules! log_trace {
-    () => {
-        |err| log::trace!("{err:?}")
-    };
-}
-
-#[macro_export]
-macro_rules! log_warning {
-    () => {
-        |err| {
-            if log::log_enabled!(log::Level::Debug) {
-                log::warn!("{err:?}")
-            } else {
-                log::warn!("{err}")
-            }
-        }
-    };
-    (detailed) => {
-        |err| log::warn!("{err:?}")
-    };
-}
-
-/// Either a [`console::Term`] or an [`env_logger::Logger`].
-///
-/// This is automatically detected upon installation as the global logger. The logic is:
-///
-/// - If the `RUST_LOG` env var is set, this will use [`env_logger`].
-/// - If stderr is not "user-attended", as determined by [`console::user_attended_stderr()`],
-///   like if stderr is piped to a file, this will use [`env_logger`].
-/// - Otherwise, this will use [`console`].
-///
-/// When this is a [`console::Term`], logs are handled by the global [`indicatif`] spinner.
-///
-/// When this is an [`env_logger::Logger`], there will not be a spinner, and progress
-/// reports are printed as logs instead.
-pub enum ConsoleLogger {
-    Console(Term),
-    Logger(Logger),
-}
-
-impl ConsoleLogger {
-    /// Install a [`ConsoleLogger`] as the global [`log`] logger.
-    pub fn install(name: &str) {
-        Self::try_install(name).expect("logger should not have been set");
+impl Logging {
+    pub fn init(self) {
+        init_logging(self);
     }
+}
 
-    pub fn try_install(name: &str) -> Result<()> {
-        log::set_boxed_logger(Box::new(Self::new(name)))?;
-        log::set_max_level(LevelFilter::max());
-        Ok(())
-    }
-
-    fn new(name: &str) -> Self {
-        match maybe_logging() {
-            Some(LevelFilter::Off) => SPINNER
-                .get_or_init(|| spawn_spinner(name))
-                .term
-                .clone()
-                .pipe(Self::Console),
-            level => env_logger::Builder::new()
-                .format(log_format)
-                .parse_default_env()
-                .tap_mut(|builder| {
-                    if let Some(level) = level {
-                        builder.filter_level(level);
-                    }
-                })
-                .build()
-                .pipe(Self::Logger),
+impl Default for Logging {
+    fn default() -> Self {
+        Self {
+            logging: None,
+            colored: None,
+            level: LevelFilter::INFO,
         }
     }
 }
 
-fn maybe_logging() -> Option<LevelFilter> {
-    if std::env::var("RUST_LOG")
-        .map(|v| !v.is_empty())
-        .unwrap_or(false)
-    {
-        // RUST_LOG to be parsed by env_logger
-        None
-    } else if !console::user_attended_stderr() {
-        // RUST_LOG not set but stderr isn't a terminal
-        // log info and above
-        Some(LevelFilter::Info)
+fn init_logging(options: Logging) {
+    if let Some(logging) = options.logging {
+        set_logging(logging);
+    }
+    if let Some(colored) = options.colored {
+        set_colored(colored);
+    }
+
+    // https://github.com/rust-lang/mdBook/blob/v0.5.2/src/main.rs#L93
+
+    let filter = EnvFilter::builder()
+        .with_default_directive(options.level.into())
+        .parse_lossy(MDBOOK_LOG.as_deref().unwrap_or_default());
+
+    let logger = tracing_subscriber::fmt::layer()
+        .without_time()
+        .with_target(filter.max_level_hint().unwrap_or(options.level) < LevelFilter::INFO)
+        .with_ansi(is_colored())
+        .with_writer(|| WRITER.clone())
+        .with_filter(if TICKER.is_some() {
+            Some(filter_fn(|metadata| !is_branded!(metadata)))
+        } else {
+            None
+        });
+
+    let ticker = ConsoleLayer.with_filter(if TICKER.is_none() {
+        Some(filter_fn(|metadata| !metadata.is_event()))
     } else {
-        // use spinner instead
-        Some(LevelFilter::Off)
+        None
+    });
+
+    tracing_subscriber::registry()
+        .with(filter)
+        .with(logger)
+        .with(ticker)
+        .init();
+}
+
+macro_rules! derive_event {
+    ( $id:expr, $metadata:expr, $($field:literal = $value:expr),* ) => {{
+        let metadata = $metadata;
+        let fields = ::tracing::field::FieldSet::new(&[$($field),*], metadata.callsite());
+        #[allow(unused)]
+        let mut iter = fields.iter();
+        let values = [$(
+            (&iter.next().unwrap(), ::core::option::Option::Some(&$value as &dyn tracing::field::Value)),
+        )*];
+        Event::child_of($id, metadata, &fields.value_set(&values));
+    }};
+}
+
+#[macro_export]
+macro_rules! timer {
+    ( $level:expr, $key:literal, $( $span:tt )* ) => {
+        ::tracing::span!(
+            $level,
+            $key,
+            { $crate::branded!("timer") } = ::tracing::field::Empty,
+            $($span)*
+        )
+    };
+    ( $level:expr, $key:literal ) => {
+        $crate::timer!($level, $key,)
     }
 }
 
-impl Log for ConsoleLogger {
-    fn enabled(&self, metadata: &log::Metadata) -> bool {
-        match self {
-            ConsoleLogger::Logger(logger) => logger.enabled(metadata),
-            ConsoleLogger::Console(_) => {
-                if metadata.target().starts_with(env!("CARGO_CRATE_NAME")) {
-                    metadata.level() <= Level::Info
-                } else {
-                    metadata.level() <= Level::Warn
-                }
+#[macro_export]
+macro_rules! timer_event {
+    ( $parent:expr, $level:expr, $( $span:tt )* ) => {
+        ::tracing::event!(
+            parent: $parent,
+            $level,
+            { $crate::branded!("timer.event") } = ::tracing::field::Empty,
+            $($span)*
+        )
+    };
+    ( $parent:expr, $level:expr ) => {
+        $crate::timer_event!($parent, $level,)
+    }
+}
+
+#[macro_export]
+macro_rules! timer_item {
+    ( $parent:expr, $level:expr, $key:literal, $( $span:tt )* ) => {
+        ::tracing::span!(
+            parent: $parent,
+            $level,
+            $key,
+            { $crate::branded!("timer.item") } = ::tracing::field::Empty,
+            $($span)*
+        )
+    };
+    ( $parent:expr, $level:expr, $key:literal ) => {
+        $crate::timer_item!($parent, $level, $key,)
+    }
+}
+
+struct ConsoleLayer;
+
+impl<S> Layer<S> for ConsoleLayer
+where
+    S: Subscriber + for<'a> LookupSpan<'a>,
+{
+    fn on_new_span(&self, attrs: &Attributes<'_>, id: &Id, ctx: Context<'_, S>) {
+        let Some(span) = ctx.span(id) else { return };
+
+        if is_branded!(span, "timer") {
+            let TimerVisitor { count, .. } = TimerVisitor::from_attrs(attrs);
+
+            let timer = Timer {
+                prefix: SpanPath::to_string(&span),
+                key: span.name(),
+                count,
+            };
+
+            span.extensions_mut().insert(timer.clone());
+
+            if let Some(ticker) = &*TICKER {
+                (ticker.tx).send(ProgressTick::TimerCreate(timer)).ok();
+            } else {
+                derive_event!(id, span.metadata(), "message" = "started");
+            }
+        } else if is_branded!(span, "timer.item")
+            && let TimerVisitor {
+                item: Some(item), ..
+            } = TimerVisitor::from_attrs(attrs)
+            && let Some(parent) = span.parent()
+            && let Some(Timer { key, .. }) = parent.extensions().get::<Timer>()
+        {
+            span.extensions_mut().insert(TimerItem(item.clone()));
+
+            if let Some(ticker) = &*TICKER {
+                (ticker.tx).send(ProgressTick::ItemOpen { key, item }).ok();
+            } else {
+                derive_event!(id, span.metadata(), "message" = "started");
             }
         }
     }
 
-    fn log(&self, record: &log::Record) {
-        match self {
-            ConsoleLogger::Logger(logger) => logger.log(record),
-            ConsoleLogger::Console(term) => {
-                if !self.enabled(record.metadata()) {
-                    return;
-                }
-                let Ok(message) = Vec::<u8>::new()
-                    .pipe(|mut buf| log_format(&mut buf, record).and(Ok(buf)))
-                    .context("failed to emit log message")
-                    .and_then(|buf| Ok(String::from_utf8(buf)?))
-                else {
-                    return;
-                };
-                let message = styled_log(message.trim_end(), record);
-                term.write_line(&message.to_string()).ok();
+    fn on_close(&self, id: Id, ctx: Context<'_, S>) {
+        let Some(span) = ctx.span(&id) else { return };
+
+        // n.b. using extensions_mut involves a RwLock write, which will cause
+        // derive_event to deadlock when it tries to read from the same span
+
+        if let Some(Timer { key, .. }) = span.extensions().get::<Timer>() {
+            if let Some(ticker) = &*TICKER {
+                ticker.tx.send(ProgressTick::TimerFinish { key }).ok();
+            } else {
+                derive_event!(id, span.metadata(), "message" = "finished");
+            }
+        } else if let Some(parent) = span.parent()
+            && let Some(Timer { key, .. }) = parent.extensions().get::<Timer>()
+            && let Some(TimerItem(item)) = span.extensions().get::<TimerItem>()
+        {
+            if let Some(ticker) = &*TICKER {
+                let item = item.clone();
+                (ticker.tx).send(ProgressTick::ItemDone { key, item }).ok();
+            } else {
+                derive_event!(id, span.metadata(), "message" = "finished");
             }
         }
     }
 
-    fn flush(&self) {
-        match self {
-            ConsoleLogger::Console(term) => {
-                term.flush().ok();
-            }
-            ConsoleLogger::Logger(logger) => {
-                logger.flush();
+    fn on_event(&self, event: &Event<'_>, ctx: Context<'_, S>) {
+        if !is_branded!(event.metadata(), "timer.event") {
+            return;
+        }
+
+        if let TimerVisitor {
+            message: Some(msg), ..
+        } = TimerVisitor::from_event(event)
+            && let Some(span) = (event.parent().cloned())
+                .or_else(|| ctx.current_span().id().cloned())
+                .and_then(|id| ctx.span(&id))
+            && let Some(Timer { key, .. }) = span.extensions().get::<Timer>()
+        {
+            if let Some(ticker) = &*TICKER {
+                (ticker.tx)
+                    .send(ProgressTick::TimerUpdate { key, msg })
+                    .ok();
             }
         }
     }
 }
 
-pub static SPINNER: OnceLock<Spinner> = OnceLock::new();
-
-pub struct Spinner {
-    tx: mpsc::Sender<Message>,
-    term: Term,
+#[derive(Debug, Default)]
+struct TimerVisitor {
+    message: Option<String>,
+    item: Option<Arc<str>>,
+    count: Option<u64>,
 }
 
-fn spawn_spinner(name: &str) -> Spinner {
-    // https://github.com/console-rs/indicatif/issues/698
-    set_colors_enabled(colors_enabled_stderr());
+impl Visit for TimerVisitor {
+    fn record_str(&mut self, field: &Field, value: &str) {
+        match field.name() {
+            "message" => self.message = Some(value.into()),
+            "item" => self.item = Some(value.into()),
+            _ => {}
+        }
+    }
 
+    fn record_u64(&mut self, field: &Field, value: u64) {
+        if field.name() == "count" {
+            self.count = Some(value)
+        }
+    }
+
+    fn record_debug(&mut self, field: &Field, value: &dyn Debug) {
+        self.record_str(field, &format!("{value:?}"));
+    }
+}
+
+impl TimerVisitor {
+    #[inline]
+    fn from_attrs(attrs: &Attributes<'_>) -> Self {
+        Self::default().tap_mut(|v| attrs.values().record(v))
+    }
+
+    #[inline]
+    fn from_event(event: &Event<'_>) -> Self {
+        Self::default().tap_mut(|v| event.record(v))
+    }
+}
+
+struct SpanPath<'a, R: LookupSpan<'a>>(Option<SpanRef<'a, R>>);
+
+impl<'a, R: LookupSpan<'a>> Iterator for SpanPath<'a, R> {
+    type Item = &'static str;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let span = self.0.take()?;
+        self.0 = span.parent();
+        Some(span.name())
+    }
+}
+
+impl<'a, R: LookupSpan<'a>> SpanPath<'a, R> {
+    fn new(span: &SpanRef<'a, R>) -> Self {
+        Self(span.parent())
+    }
+
+    fn to_string(span: &SpanRef<'a, R>) -> Option<Arc<str>> {
+        let mut items = Self::new(span).collect::<Vec<_>>();
+        if items.is_empty() {
+            None
+        } else {
+            items.reverse();
+            Some(items.join(":").into())
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Timer {
+    prefix: Option<Arc<str>>,
+    key: &'static str,
+    count: Option<u64>,
+}
+
+impl std::fmt::Display for Timer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(ref prefix) = self.prefix {
+            write!(f, "[{prefix}] {}", self.key)
+        } else {
+            write!(f, "{}", self.key)
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct TimerItem(Arc<str>);
+
+#[derive(Debug)]
+enum ProgressTick {
+    TimerCreate(Timer),
+    TimerUpdate { key: &'static str, msg: String },
+    ItemOpen { key: &'static str, item: Arc<str> },
+    ItemDone { key: &'static str, item: Arc<str> },
+    TimerFinish { key: &'static str },
+}
+
+#[derive(Clone)]
+struct ProgressTicker {
+    tx: mpsc::Sender<ProgressTick>,
+}
+
+static WRITER: LazyLock<Term> = LazyLock::new(Term::stderr);
+
+static TICKER: LazyLock<Option<ProgressTicker>> = LazyLock::new(|| {
+    if is_logging() {
+        None
+    } else {
+        Some(spawn_ticker())
+    }
+});
+
+fn spawn_ticker() -> ProgressTicker {
     let (tx, rx) = mpsc::channel();
 
-    let term = Term::stderr();
-
-    let target = term.clone();
-    let template = format!("{{spinner:.cyan}} [{name}] {{prefix}} ... {{msg}}",);
-
-    // this thread is detached. this is okay in usage because SPINNER.get_or_init
-    // guarantees this function is called at most once
+    let style = ProgressStyle::with_template("{spinner:.cyan} {prefix} ... {msg}")
+        .unwrap()
+        .tick_chars("⠇⠋⠙⠸⠴⠦⠿");
 
     thread::spawn(move || {
         struct Bar {
-            prefix: String,
+            timer: Timer,
             bar: ProgressBar,
+        }
+
+        impl Bar {
+            fn count(&self) {
+                let Self { timer, bar } = self;
+                if let Some(length) = bar.length() {
+                    let counter = styled(format!("({}/{length})", bar.position())).dim();
+                    bar.set_prefix(format!("{timer} {counter}"))
+                }
+            }
         }
 
         let mut current: Option<Bar> = None;
 
-        let mut tasks = BTreeSet::<String>::new();
+        let mut tasks = BTreeSet::new();
         let mut task_idx = 0;
         let mut interval = Instant::now();
 
         loop {
+            let current_ref = |key: &str| {
+                let bar = current.as_ref()?;
+                if bar.timer.key == key {
+                    Some(bar)
+                } else {
+                    None
+                }
+            };
+
             match rx.recv_timeout(Duration::from_millis(100)) {
                 Err(mpsc::RecvTimeoutError::Timeout) => {}
 
                 Err(mpsc::RecvTimeoutError::Disconnected) => break,
 
-                Ok(Message::Create { prefix, total }) => {
+                Ok(ProgressTick::TimerCreate(timer)) => {
                     if let Some(bar) = current {
                         bar.bar.abandon()
                     }
 
-                    let style = ProgressStyle::with_template(&template)
-                        .unwrap()
-                        .tick_chars("⠇⠋⠙⠸⠴⠦⠿");
-
-                    let bar = ProgressDrawTarget::term(target.clone(), 20)
-                        .pipe(|target| ProgressBar::with_draw_target(total, target))
-                        .with_prefix(prefix.clone())
-                        .with_style(style);
+                    let bar = ProgressDrawTarget::term(WRITER.clone(), 20)
+                        .pipe(|target| ProgressBar::with_draw_target(timer.count, target))
+                        .with_prefix(timer.to_string())
+                        .with_style(style.clone());
 
                     bar.enable_steady_tick(Duration::from_millis(100));
 
-                    current = Some(Bar { prefix, bar });
+                    current = Some(Bar { timer, bar });
                 }
 
-                Ok(Message::Update { key, update }) => {
-                    let Some(Bar {
-                        ref bar,
-                        ref prefix,
-                    }) = current
-                    else {
+                Ok(ProgressTick::TimerUpdate { key, msg }) => {
+                    let Some(Bar { bar, .. }) = current_ref(key) else {
                         continue;
                     };
 
-                    if &key != prefix {
-                        continue;
-                    }
-
-                    bar.set_message(update);
+                    bar.set_message(msg);
                     bar.tick();
                 }
 
-                Ok(Message::Finish { key, update }) => {
-                    let Some(Bar {
-                        ref bar,
-                        ref prefix,
-                    }) = current
-                    else {
+                Ok(ProgressTick::TimerFinish { key }) => {
+                    let Some(Bar { bar, .. }) = current_ref(key) else {
                         continue;
                     };
 
-                    if &key != prefix {
-                        continue;
-                    }
-
-                    bar.finish_with_message(update);
+                    bar.finish_with_message(styled("done").green().to_string());
                     current = None;
                 }
 
-                Ok(Message::Task { key, task }) => {
-                    let Some(Bar {
-                        ref bar,
-                        ref prefix,
-                    }) = current
-                    else {
+                Ok(ProgressTick::ItemOpen { key, item }) => {
+                    let Some(current) = current_ref(key) else {
                         continue;
                     };
 
-                    if &key != prefix {
-                        continue;
-                    }
+                    current.count();
+                    current.bar.set_message(styled(&item).magenta().to_string());
+                    current.bar.tick();
 
-                    if let Some(length) = bar.length() {
-                        let counter = styled(format!("({}/{length})", bar.position())).dim();
-                        bar.set_prefix(format!("{prefix} {counter}"))
-                    }
-
-                    bar.set_message(styled(&task).magenta().to_string());
-                    bar.tick();
-
-                    tasks.insert(task);
+                    tasks.insert(item);
                     interval = Instant::now();
                 }
 
-                Ok(Message::Done { key, task }) => {
-                    let Some(Bar {
-                        ref bar,
-                        ref prefix,
-                    }) = current
-                    else {
+                Ok(ProgressTick::ItemDone { key, item }) => {
+                    let Some(current) = current_ref(key) else {
                         continue;
                     };
 
-                    if &key != prefix {
-                        continue;
-                    }
+                    current.bar.inc(1);
 
-                    bar.inc(1);
+                    current.count();
+                    current.bar.set_message(styled(&item).green().to_string());
+                    current.bar.tick();
 
-                    if let Some(length) = bar.length() {
-                        let counter = styled(format!("({}/{length})", bar.position())).dim();
-                        bar.set_prefix(format!("{prefix} {counter}"))
-                    }
-
-                    bar.set_message(styled(&task).green().to_string());
-                    bar.tick();
-
-                    tasks.insert(task);
+                    tasks.remove(&item);
                     interval = Instant::now();
                 }
             }
 
             if let Some(Bar {
-                ref prefix,
+                timer: Timer { key, .. },
                 ref bar,
+                ..
             }) = current
             {
                 let now = Instant::now();
 
                 if now - interval > Duration::from_secs(10) {
                     interval = now;
+
                     if task_idx >= tasks.len() {
                         task_idx = 0
                     }
+
                     if let Some(task) = tasks.iter().nth(task_idx) {
-                        spinner_log!(warn!(
-                            "task {prefix} - {task} has been running for more than {}",
-                            HumanDuration(bar.elapsed())
-                        ));
+                        let elapsed = HumanDuration(bar.elapsed());
+                        // TODO: how to attach to current span
+                        // TODO: how to clear line for tracing when ticker is running
+                        warn!("task {key} - {task} has been running for more than {elapsed}");
                         bar.set_message(styled(task).magenta().to_string());
                         task_idx += 1;
                     }
@@ -482,27 +496,55 @@ fn spawn_spinner(name: &str) -> Spinner {
         }
     });
 
-    Spinner { tx, term }
+    ProgressTicker { tx }
 }
 
-/// <https://github.com/rust-lang/mdBook/blob/07b25cdb643899aeca2307fbab7690fa7eeec36b/src/main.rs#L100-L109>
-fn log_format<W: io::Write>(formatter: &mut W, record: &log::Record) -> io::Result<()> {
-    let message = format!(
-        "{} [{}] ({}): {}",
-        chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
-        record.level(),
-        record.target(),
-        record.args()
-    );
-    let message = styled_log(message, record);
-    writeln!(formatter, "{message}",)
+#[inline]
+pub fn stderr() -> impl std::io::Write {
+    WRITER.clone()
 }
 
-fn styled_log<D>(message: D, record: &log::Record) -> StyledObject<D> {
-    match record.level() {
-        Level::Warn => styled(message).yellow(),
-        Level::Error => styled(message).red(),
-        Level::Info => styled(message),
-        _ => styled(message).dim(),
-    }
+// FIXME: ensure colors do not appear in tracing output
+// https://github.com/tokio-rs/tracing/issues/3378
+#[inline]
+pub fn styled<D>(val: D) -> StyledObject<D> {
+    WRITER.style().apply_to(val)
 }
+
+#[macro_export]
+macro_rules! emit_trace {
+    () => {
+        |err| ::tracing::trace!("{err:?}")
+    };
+    ($fmt:expr) => {
+        |e| ::tracing::trace!($fmt, e)
+    };
+}
+
+#[macro_export]
+macro_rules! emit_debug {
+    () => {
+        |err| ::tracing::debug!("{err:?}")
+    };
+    ($fmt:expr) => {
+        |e| ::tracing::debug!($fmt, e)
+    };
+}
+
+#[macro_export]
+macro_rules! emit_warning {
+    () => {
+        |e| {
+            if ::tracing::enabled!(::tracing::Level::DEBUG) {
+                ::tracing::warn!("{:?}", e)
+            } else {
+                ::tracing::warn!("{}", e)
+            }
+        }
+    };
+    ($fmt:expr) => {
+        |e| ::tracing::warn!($fmt, e)
+    };
+}
+
+// TODO: clean up logging messages & make use of spans/instrument

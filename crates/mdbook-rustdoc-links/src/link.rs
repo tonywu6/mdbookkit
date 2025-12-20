@@ -6,7 +6,7 @@ use mdbook_markdown::pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
 use serde::{Deserialize, Serialize};
 use tap::{Pipe, Tap, TapFallible};
 
-use mdbookkit::log_trace;
+use mdbookkit::emit_trace;
 
 use crate::{env::EmitConfig, item::Item};
 
@@ -36,7 +36,7 @@ impl<'a> Link<'a> {
         };
 
         let state = Item::parse(path)
-            .tap_err(log_trace!())
+            .tap_err(emit_trace!())
             .ok()
             .map(LinkState::Parsed)
             .unwrap_or(LinkState::Unparsed);

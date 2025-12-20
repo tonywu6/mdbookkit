@@ -2,14 +2,15 @@ use std::sync::{Arc, Mutex};
 
 use anyhow::Result;
 use git2::Repository;
-use log::LevelFilter;
 use rstest::*;
+use tracing::level_filters::LevelFilter;
 use url::Url;
 
 use mdbookkit::{
+    logging::Logging,
     markdown::default_markdown_options,
     portable_snapshots, test_document,
-    testing::{CARGO_WORKSPACE_DIR, TestDocument, setup_logging},
+    testing::{CARGO_WORKSPACE_DIR, TestDocument},
 };
 
 use crate::{Config, Environment, VersionControl, link::LinkStatus, page::Pages, vcs::Permalink};
@@ -23,7 +24,12 @@ struct Fixture {
 #[once]
 fn fixture() -> Fixture {
     (|| -> Result<_> {
-        setup_logging(env!("CARGO_PKG_NAME"));
+        Logging {
+            logging: Some(true),
+            colored: Some(false),
+            level: LevelFilter::DEBUG,
+        }
+        .init();
 
         let env = Environment {
             vcs: VersionControl {
@@ -111,10 +117,8 @@ fn test_stderr(
     let env = env.lock().unwrap();
     let report = env
         .report_issues(pages, test)
-        .level(LevelFilter::Debug)
+        .level(LevelFilter::DEBUG)
         .names(|url| env.rel_path(url))
-        .colored(false)
-        .logging(false)
         .build()
         .to_report();
     drop(env);

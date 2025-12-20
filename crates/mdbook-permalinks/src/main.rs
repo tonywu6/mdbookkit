@@ -5,21 +5,20 @@ use std::{
 };
 
 use anyhow::{Context, Result, anyhow};
-use console::colors_enabled_stderr;
 use git2::Repository;
-use log::LevelFilter;
 use mdbook_markdown::pulldown_cmark;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext, book::Book};
 use serde::Deserialize;
 use tap::{Pipe, Tap, TapFallible};
+use tracing::{level_filters::LevelFilter, warn};
 use url::Url;
 
 use mdbookkit::{
     book::{BookConfigHelper, BookHelper, book_from_stdin},
     diagnostics::Issue,
+    emit_debug, emit_warning,
     error::OnWarning,
-    log_debug, log_warning,
-    logging::{ConsoleLogger, is_logging},
+    logging::Logging,
 };
 
 use self::{
@@ -46,7 +45,7 @@ impl Preprocessor for Permalinks {
         match Environment::new(ctx) {
             Ok(Ok(env)) => env.run(ctx, book),
             Ok(Err(err)) => {
-                log::warn!("{:?}", err.context("preprocessor will be disabled"));
+                warn!("{:?}", err.context("preprocessor will be disabled"));
                 Ok(book)
             }
             Err(err) => Err(err).context(format!(
@@ -97,7 +96,7 @@ impl Preprocessor for Environment {
                 let url = self.root_dir.join(&path.to_string_lossy()).ok()?;
                 content
                     .emit(&url)
-                    .tap_err(log_warning!())
+                    .tap_err(emit_warning!())
                     .ok()
                     .map(|output| (path.clone(), output.to_string()))
             })
@@ -106,9 +105,7 @@ impl Preprocessor for Environment {
         let status = self
             .report_issues(&content, |_| true)
             .names(|url| self.rel_path(url))
-            .level(LevelFilter::Warn)
-            .logging(is_logging())
-            .colored(colors_enabled_stderr())
+            .level(LevelFilter::WARN)
             .build()
             .to_stderr()
             .to_status();
@@ -138,7 +135,7 @@ impl Environment {
                 base.join(&link.link)
             }
             .context("could not derive url")
-            .tap_err(log_debug!());
+            .tap_err(emit_debug!());
 
             let Ok(file_url) = file else {
                 link.status = LinkStatus::Ignored;
@@ -546,7 +543,7 @@ impl UrlSuffix {
 }
 
 fn main() -> Result<()> {
-    ConsoleLogger::install(env!("CARGO_PKG_NAME"));
+    Logging::default().init();
     let Program { command } = clap::Parser::parse();
     match command {
         None => {

@@ -6,13 +6,19 @@ use predicates::prelude::*;
 use tap::Pipe;
 use tempfile::TempDir;
 
-use mdbookkit::testing::{setup_logging, setup_paths};
+use mdbookkit::{logging::Logging, testing::setup_paths};
+use tracing::{debug, info, level_filters::LevelFilter};
 
 #[test]
 fn test_minimum_env() -> Result<()> {
-    setup_logging(env!("CARGO_PKG_NAME"));
+    Logging {
+        logging: Some(true),
+        colored: Some(false),
+        level: LevelFilter::DEBUG,
+    }
+    .init();
 
-    log::info!("setup: compile self");
+    info!("setup: compile self");
     Command::new("cargo")
         .args(["build", "--package", env!("CARGO_PKG_NAME")])
         .arg(if cfg!(debug_assertions) {
@@ -27,9 +33,9 @@ fn test_minimum_env() -> Result<()> {
 
     let root = TempDir::new()?;
 
-    log::debug!("{root:?}");
+    debug!("{root:?}");
 
-    log::info!("given: a book");
+    info!("given: a book");
     Command::new("mdbook")
         .args(["init", "--force"])
         .env("PATH", &path)
@@ -38,21 +44,21 @@ fn test_minimum_env() -> Result<()> {
         .assert()
         .success();
 
-    log::info!("given: preprocessor is enabled");
+    info!("given: preprocessor is enabled");
     std::fs::File::options()
         .append(true)
         .open(root.path().join("book.toml"))?
         .pipe(|mut file| file.write_all("[preprocessor.permalinks]\n".as_bytes()))?;
 
-    log::info!("when: book has path-based links");
+    info!("when: book has path-based links");
     std::fs::File::options()
         .append(true)
         .open(root.path().join("src/chapter_1.md"))?
         .pipe(|mut file| file.write_all("\n[book.toml](../book.toml)\n".as_bytes()))?;
 
-    log::info!("when: book is not in source control");
+    info!("when: book is not in source control");
 
-    log::info!("then: book builds with warnings");
+    info!("then: book builds with warnings");
     Command::new("mdbook")
         .arg("build")
         .env("CI", "false")
@@ -62,9 +68,9 @@ fn test_minimum_env() -> Result<()> {
         .success()
         .stderr(predicate::str::contains("requires a git repository"));
 
-    log::info!("when: CI=true");
+    info!("when: CI=true");
 
-    log::info!("then: preprocessor fails");
+    info!("then: preprocessor fails");
     Command::new("mdbook")
         .arg("build")
         .env("CI", "true")
@@ -74,7 +80,7 @@ fn test_minimum_env() -> Result<()> {
         .failure()
         .stderr(predicate::str::contains("requires a git repository"));
 
-    log::info!("when: repo has no commit");
+    info!("when: repo has no commit");
     Command::new("git")
         .arg("init")
         .env("PATH", &path)
@@ -82,7 +88,7 @@ fn test_minimum_env() -> Result<()> {
         .assert()
         .success();
 
-    log::info!("then: book builds with warnings");
+    info!("then: book builds with warnings");
     Command::new("mdbook")
         .arg("build")
         .env("CI", "false")
@@ -92,7 +98,7 @@ fn test_minimum_env() -> Result<()> {
         .success()
         .stderr(predicate::str::contains("no commit found"));
 
-    log::info!("when: repo has no origin");
+    info!("when: repo has no origin");
     Command::new("git")
         .args(["commit", "--allow-empty"])
         .args(["--message", "init"])
@@ -105,7 +111,7 @@ fn test_minimum_env() -> Result<()> {
         .assert()
         .success();
 
-    log::info!("then: book builds with warnings");
+    info!("then: book builds with warnings");
     Command::new("mdbook")
         .arg("build")
         .env("CI", "false")
@@ -115,7 +121,7 @@ fn test_minimum_env() -> Result<()> {
         .success()
         .stderr(predicate::str::contains("failed to determine GitHub url"));
 
-    log::info!("when: repo has origin");
+    info!("when: repo has origin");
     Command::new("git")
         .args([
             "remote",
@@ -128,7 +134,7 @@ fn test_minimum_env() -> Result<()> {
         .assert()
         .success();
 
-    log::info!("then: book builds");
+    info!("then: book builds");
     Command::new("mdbook")
         .arg("build")
         .env("PATH", &path)
@@ -138,7 +144,7 @@ fn test_minimum_env() -> Result<()> {
         .stderr(predicate::str::contains("[WARN]").not())
         .stderr(predicate::str::contains("using commit"));
 
-    log::info!("when: HEAD is tagged");
+    info!("when: HEAD is tagged");
     Command::new("git")
         .args(["tag", "v0.1.0", "HEAD"])
         .env("PATH", &path)
@@ -146,7 +152,7 @@ fn test_minimum_env() -> Result<()> {
         .assert()
         .success();
 
-    log::info!("then: items are linked using tag instead of commit SHA");
+    info!("then: items are linked using tag instead of commit SHA");
     Command::new("mdbook")
         .arg("build")
         .env("PATH", &path)

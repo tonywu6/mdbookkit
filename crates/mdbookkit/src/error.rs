@@ -1,15 +1,9 @@
 use anyhow::{Result, anyhow};
 use serde::Deserialize;
 use tap::Pipe;
+use tracing::Level;
 
-pub fn is_ci() -> Option<String> {
-    let ci = std::env::var("CI").unwrap_or("".into());
-    if matches!(ci.as_str(), "" | "0" | "false") {
-        None
-    } else {
-        Some(ci)
-    }
-}
+use crate::env::is_ci;
 
 /// Flag indicating how the program should proceed when there are warnings.
 ///
@@ -31,17 +25,17 @@ pub enum OnWarning {
 }
 
 impl OnWarning {
-    pub fn check(&self, level: log::Level) -> Result<()> {
+    pub fn check(&self, level: Level) -> Result<()> {
         match level {
-            log::Level::Error => Err(anyhow!("preprocessor has errors")),
-            log::Level::Warn => match self {
+            Level::ERROR => Err(anyhow!("preprocessor has errors")),
+            Level::WARN => match self {
                 Self::AlwaysFail => {
                     anyhow!("treating warnings as errors because the `fail-on-warnings` option is set to \"always\"")
                         .context("preprocessor has errors")
                         .pipe(Err)
                 }
                 Self::FailInCi => {
-                    let Some(ci) = Self::warning_as_error() else {
+                    let Some(ci) = is_ci() else {
                         return Ok(());
                     };
                     anyhow!("treating warnings as errors because the `fail-on-warnings` option is set to \"ci\" and CI={ci}")
@@ -55,12 +49,8 @@ impl OnWarning {
 
     pub fn adjusted<T, E>(&self, result: Result<Result<T, E>, E>) -> Result<Result<T, E>, E> {
         match result {
-            Ok(Err(error)) if Self::warning_as_error().is_some() => Err(error),
+            Ok(Err(error)) if is_ci().is_some() => Err(error),
             result => result,
         }
-    }
-
-    fn warning_as_error() -> Option<String> {
-        is_ci()
     }
 }

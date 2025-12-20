@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use shlex::Shlex;
 use tap::Pipe;
 use tokio::process::Command;
+use tracing::debug;
 
 use mdbookkit::{error::OnWarning, markdown::default_markdown_options};
 
@@ -324,11 +325,11 @@ impl<'a> RustAnalyzer<'a> {
                 Ok(cmd)
             }
             Self::VsCode(cmd) => {
-                log::debug!("using rust-analyzer from {}", cmd.display());
+                debug!("using rust-analyzer from {}", cmd.display());
                 Ok(Command::new(cmd))
             }
             Self::Path => {
-                log::debug!("using rust-analyzer on PATH");
+                debug!("using rust-analyzer on PATH");
                 Ok(Command::new("rust-analyzer"))
             }
         }

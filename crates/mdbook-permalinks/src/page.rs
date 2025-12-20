@@ -12,7 +12,7 @@ use tap::{Pipe, TapFallible};
 use url::Url;
 
 use mdbookkit::{
-    log_warning,
+    emit_warning,
     markdown::{PatchStream, Spanned},
 };
 
@@ -153,7 +153,7 @@ impl<'a> Page<'a> {
             .filter_map(EmitLinkSpan::new)
             .pipe(|stream| PatchStream::new(self.source, stream))
             .into_string()
-            .tap_err(log_warning!())?
+            .tap_err(emit_warning!())?
             .pipe(Ok)
     }
 }

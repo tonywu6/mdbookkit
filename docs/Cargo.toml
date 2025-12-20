@@ -12,9 +12,7 @@ rust-version.workspace = true
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true, features = ["unstable-doc"] }
-env_logger = { workspace = true }
 gix-url = { version = "0.30.0" }
-log = { workspace = true }
 mdbook-markdown = { workspace = true }
 mdbookkit = { workspace = true }
 miette = { workspace = true }

@@ -2,16 +2,22 @@
 
 use std::{
     borrow::Borrow,
-    fmt::{self, Debug, Display, Write},
+    fmt::{self, Write as _},
+    io::Write as _,
 };
 
-use log::{Level, LevelFilter};
 use miette::{
     Diagnostic, GraphicalReportHandler, GraphicalTheme, LabeledSpan, MietteError,
     MietteSpanContents, ReportHandler, Severity, SourceCode, SourceSpan, SpanContents,
 };
 use owo_colors::Style;
 use tap::{Pipe, Tap};
+use tracing::{Level, debug, error, info, level_filters::LevelFilter, trace, warn};
+
+use crate::{
+    env::{is_colored, is_logging},
+    logging::stderr,
+};
 
 /// Trait for Markdown diagnostics. This will eventually be printed to stderr.
 ///
@@ -29,7 +35,7 @@ pub trait IssueItem: Send + Sync {
 /// **For implementors:** The [`Display`] implementation, which is the title of each
 /// diagnostic message, should use plurals whenever possible, because error reporters
 /// may elect to group together multiple labels of the same [`Issue`]
-pub trait Issue: Default + Debug + Display + Clone + Send + Sync {
+pub trait Issue: Default + fmt::Debug + fmt::Display + Clone + Send + Sync {
     fn level(&self) -> Level;
 }
 
@@ -46,8 +52,8 @@ where
     P: IssueItem,
 {
     /// Render a report of the diagnostics using [miette]'s graphical reporting
-    pub fn to_report(&self, colored: bool) -> String {
-        let handler = if colored {
+    pub fn to_report(&self) -> String {
+        let handler = if is_colored() {
             GraphicalTheme::unicode()
         } else {
             GraphicalTheme::unicode_nocolor()
@@ -55,13 +61,13 @@ where
         .tap_mut(|t| t.characters.error = "error:".into())
         .tap_mut(|t| t.characters.warning = "warning:".into())
         .tap_mut(|t| t.characters.advice = "info:".into())
-        .tap_mut(|t| t.styles.advice = Style::new().green().toggle(colored))
-        .tap_mut(|t| t.styles.warning = Style::new().yellow().toggle(colored))
-        .tap_mut(|t| t.styles.error = Style::new().red().toggle(colored))
+        .tap_mut(|t| t.styles.advice = Style::new().green().stderr())
+        .tap_mut(|t| t.styles.warning = Style::new().yellow().stderr())
+        .tap_mut(|t| t.styles.error = Style::new().red().stderr())
         .tap_mut(|t| {
             // pre-emptively specify colors for all diagnostics, just for this collection
             // doing this because miette doesn't support associating colors with labels yet
-            t.styles.highlights = if colored {
+            t.styles.highlights = if is_colored() {
                 self.issues
                     .iter()
                     .map(|item| level_style(item.issue().level()))
@@ -128,8 +134,8 @@ where
 {
     fn severity(&self) -> Option<Severity> {
         match self.status().level() {
-            Level::Error => Some(Severity::Error),
-            Level::Warn => Some(Severity::Warning),
+            Level::ERROR => Some(Severity::Error),
+            Level::WARN => Some(Severity::Warning),
             _ => Some(Severity::Advice),
         }
     }
@@ -142,7 +148,7 @@ where
         Some(Box::new(self.issues.iter().map(|p| p.label())))
     }
 
-    fn help<'a>(&'a self) -> Option<Box<dyn Display + 'a>> {
+    fn help<'a>(&'a self) -> Option<Box<dyn fmt::Display + 'a>> {
         // miette doesn't print the file name if there are no labels to report
         // so we print it here
         if self.issues.is_empty() {
@@ -180,13 +186,13 @@ where
     }
 }
 
-impl<K, P: IssueItem> Debug for Diagnostics<'_, K, P> {
+impl<K, P: IssueItem> fmt::Debug for Diagnostics<'_, K, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Debug::fmt(&self.status(), f)
     }
 }
 
-impl<K, P: IssueItem> Display for Diagnostics<'_, K, P> {
+impl<K, P: IssueItem> fmt::Display for Diagnostics<'_, K, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.status(), f)
     }
@@ -199,8 +205,6 @@ pub struct ReportBuilder<'a, K, P, F> {
     items: Vec<Diagnostics<'a, K, P>>,
     print_name: F,
     log_filter: LevelFilter,
-    colored: bool,
-    logging: bool,
 }
 
 impl<'a, K, P, F> ReportBuilder<'a, K, P, F> {
@@ -208,9 +212,7 @@ impl<'a, K, P, F> ReportBuilder<'a, K, P, F> {
         Self {
             items,
             print_name,
-            log_filter: LevelFilter::Trace,
-            colored: true,
-            logging: true,
+            log_filter: LevelFilter::TRACE,
         }
     }
 
@@ -220,28 +222,17 @@ impl<'a, K, P, F> ReportBuilder<'a, K, P, F> {
         G: for<'b> Fn(&'b K) -> String,
     {
         let Self {
-            items,
-            log_filter,
-            colored,
-            logging,
-            ..
+            items, log_filter, ..
         } = self;
         ReportBuilder {
             items,
             print_name,
             log_filter,
-            colored,
-            logging,
         }
     }
 
     pub fn level(mut self, level: LevelFilter) -> Self {
         self.log_filter = level;
-        self
-    }
-
-    pub fn colored(mut self, colored: bool) -> Self {
-        self.colored = colored;
         self
     }
 
@@ -251,11 +242,6 @@ impl<'a, K, P, F> ReportBuilder<'a, K, P, F> {
         Q: Eq + ?Sized,
     {
         self.items.retain(|d| f(&d.name));
-        self
-    }
-
-    pub fn logging(mut self, logging: bool) -> Self {
-        self.logging = logging;
         self
     }
 }
@@ -272,8 +258,6 @@ where
             items,
             print_name,
             log_filter,
-            colored,
-            logging,
         } = self;
 
         let items = items
@@ -293,18 +277,12 @@ where
             })
             .collect::<Vec<_>>();
 
-        Reporter {
-            items,
-            colored,
-            logging,
-        }
+        Reporter { items }
     }
 }
 
 pub struct Reporter<'a, P> {
     items: Vec<Diagnostics<'a, String, P>>,
-    colored: bool,
-    logging: bool,
 }
 
 impl<P> Reporter<'_, P>
@@ -324,14 +302,18 @@ where
             return self;
         }
 
-        if self.logging {
-            let status = self.to_status();
+        if is_logging() {
             let logs = self.to_logs();
-            log::log!(status.level(), "{logs}");
+            match self.to_status().level() {
+                Level::TRACE => trace!("\n\n{logs}"),
+                Level::DEBUG => debug!("\n\n{logs}"),
+                Level::INFO => info!("\n\n{logs}"),
+                Level::WARN => warn!("\n\n{logs}"),
+                Level::ERROR => error!("\n\n{logs}"),
+            }
         } else {
             let report = self.to_report();
-            log::logger().flush();
-            eprint!("\n\n{report}");
+            stderr().write_fmt(format_args!("\n\n{report}")).unwrap();
         };
 
         self
@@ -339,13 +321,14 @@ where
 
     pub fn to_report(&self) -> String {
         self.items.iter().fold(String::new(), |mut out, diag| {
-            writeln!(out, "{}", diag.to_report(self.colored)).unwrap();
+            writeln!(out, "{}", diag.to_report()).unwrap();
             out
         })
     }
 
     pub fn to_logs(&self) -> String {
         self.items.iter().fold(String::new(), |mut out, diag| {
+            // TODO: flatten, skip heading
             writeln!(out, "{}", diag.to_logs()).unwrap();
             out
         })
@@ -410,24 +393,24 @@ impl ReportHandler for LoggingReportHandler {
 
 const fn level_style(level: Level) -> Style {
     match level {
-        Level::Trace => Style::new().dimmed(),
-        Level::Debug => Style::new().magenta(),
-        Level::Info => Style::new().green(),
-        Level::Warn => Style::new().yellow(),
-        Level::Error => Style::new().red(),
+        Level::TRACE => Style::new().dimmed(),
+        Level::DEBUG => Style::new().magenta(),
+        Level::INFO => Style::new().green(),
+        Level::WARN => Style::new().yellow(),
+        Level::ERROR => Style::new().red(),
     }
 }
 
 trait StyleCompat {
-    fn toggle(self, enabled: bool) -> Self;
+    fn stderr(self) -> Self;
 }
 
 impl StyleCompat for Style {
-    fn toggle(self, enabled: bool) -> Self {
-        if enabled { self } else { Style::new() }
+    fn stderr(self) -> Self {
+        if is_colored() { self } else { Style::new() }
     }
 }
 
-pub trait Title: Send + Sync + Display {}
+pub trait Title: Send + Sync + fmt::Display {}
 
-impl<K: Send + Sync + Display> Title for K {}
+impl<K: Send + Sync + fmt::Display> Title for K {}

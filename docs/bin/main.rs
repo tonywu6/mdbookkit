@@ -3,7 +3,7 @@ use anyhow::{Context, Result};
 use mdbook_markdown::pulldown_cmark::{CodeBlockKind, CowStr, Event, Parser, Tag, TagEnd};
 use mdbookkit::{
     book::{BookHelper, book_from_stdin},
-    logging::ConsoleLogger,
+    logging::Logging,
     markdown::PatchStream,
 };
 
@@ -56,7 +56,7 @@ fn preprocess() -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    ConsoleLogger::install(env!("CARGO_PKG_NAME"));
+    Logging::default().init();
     let Program { command } = clap::Parser::parse();
     match command {
         Command::Preprocess { command: None } => preprocess(),

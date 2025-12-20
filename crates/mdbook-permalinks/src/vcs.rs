@@ -4,9 +4,10 @@ use anyhow::{Context, Result, anyhow, bail};
 use git2::{DescribeOptions, Repository};
 use mdbook_preprocessor::config::Config as MDBookConfig;
 use tap::{Pipe, Tap, TapFallible};
+use tracing::{debug, info};
 use url::{Url, form_urlencoded::Serializer as SearchParams};
 
-use mdbookkit::log_debug;
+use mdbookkit::emit_debug;
 
 use crate::{
     Config, VersionControl,
@@ -301,7 +302,7 @@ fn get_git_head(repo: &Repository) -> Result<Option<String>> {
     let head = match repo.head() {
         Ok(head) => head,
         Err(err) => {
-            log::debug!("{err}");
+            debug!("{err}");
             return Ok(None);
         }
     };
@@ -313,15 +314,15 @@ fn get_git_head(repo: &Repository) -> Result<Option<String>> {
                 .describe_tags()
                 .max_candidates_tags(0), // exact match
         )
-        .tap_err(log_debug!())
+        .tap_err(emit_debug!())
         .and_then(|tag| tag.format(None))
-        .tap_err(log_debug!())
+        .tap_err(emit_debug!())
     {
-        log::info!("using tag {tag:?}");
+        info!("using tag {tag:?}");
         Ok(Some(tag))
     } else {
         let sha = head.id().to_string();
-        log::info!("using commit {sha}");
+        info!("using commit {sha}");
         Ok(Some(sha))
     }
 }

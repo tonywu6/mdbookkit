@@ -12,6 +12,7 @@ pub mod book;
 pub mod diagnostics;
 #[cfg(feature = "_testing")]
 pub mod docs;
+pub mod env;
 pub mod error;
 pub mod logging;
 pub mod markdown;

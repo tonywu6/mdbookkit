@@ -22,10 +22,7 @@ anyhow = "1.0.95"
 assert_cmd = "2.0.16"
 cargo-run-bin = { version = "1.7.4", default-features = false }
 clap = { version = "4.5.31", features = ["derive"] }
-console = { version = "0.15.11" }
-env_logger = "0.11.6"
 insta = { version = "1.40.0", features = ["yaml", "filters"] }
-log = "0.4.26"
 mdbook-markdown = { version = "0.5.1" }
 mdbook-preprocessor = { version = "0.5.1" }
 mdbookkit = { path = "crates/mdbookkit" }
@@ -45,6 +42,7 @@ tempfile = "3.18.0"
 thiserror = "2.0.12"
 tokio = { version = "1", default-features = false }
 toml = "0.5"
+tracing = "0.1.44"
 url = "2.5.4"
 
 [workspace.metadata.bin]

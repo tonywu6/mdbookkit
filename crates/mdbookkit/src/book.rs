@@ -13,6 +13,7 @@ use mdbook_preprocessor::{
 use serde::Deserialize;
 use serde_json::{Value, json};
 use tap::Pipe;
+use tracing::warn;
 
 use crate::markdown::default_markdown_options;
 
@@ -63,8 +64,9 @@ impl BookConfigHelper for MDBookConfig {
             {
                 if idx != 0 {
                     let recommended = format_name(names[0]);
-                    log::warn!(
-                        "The book.toml section [{name}] is deprecated. Use [{recommended}] instead."
+                    warn!(
+                        "The book.toml section [{name}] is deprecated. \
+                        Use [{recommended}] instead."
                     );
                 }
                 return Ok(value);

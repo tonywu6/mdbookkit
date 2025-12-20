@@ -3,8 +3,9 @@ use lsp_types::Url;
 use rstest::*;
 use similar::{ChangeTag, TextDiff};
 use tap::Pipe;
+use tracing::level_filters::LevelFilter;
 
-use mdbookkit::{portable_snapshots, test_document, testing::TestDocument};
+use mdbookkit::{logging::Logging, portable_snapshots, test_document, testing::TestDocument};
 
 use crate::{
     client::Client,
@@ -21,6 +22,13 @@ struct Fixture {
 #[fixture]
 #[once]
 fn fixture() -> Fixture {
+    Logging {
+        logging: Some(true),
+        colored: Some(false),
+        level: LevelFilter::DEBUG,
+    }
+    .init();
+
     let client = Config {
         rust_analyzer: Some("cargo run --package util-rust-analyzer -- analyzer".into()),
         ..Default::default()
@@ -65,16 +73,16 @@ fn assert_output(doc: TestDocument, Fixture { pages, env }: &Fixture) -> Result<
 fn assert_report(doc: TestDocument, Fixture { pages, .. }: &Fixture) -> Result<()> {
     let report = pages
         .reporter()
-        .level(log::LevelFilter::Info)
+        .level(LevelFilter::INFO)
         .named(|u| u == &doc.url())
         .names(|_| doc.name())
-        .colored(false)
-        .logging(false)
         .build()
         .to_report();
+
     portable_snapshots!().test(format!("{}.stderr", doc.name()), |name| {
         insta::assert_snapshot!(name, report)
     })?;
+
     Ok(())
 }
 
