@@ -10,7 +10,7 @@ use tap::Pipe;
 /// as much of the original Markdown source as possible, especially with regard to whitespace.
 ///
 /// Currently, when using [`pulldown_cmark_to_cmark`] to generate Markdown from a
-/// [`pulldown_cmark::Event`] stream, whitespace is NOT preserved. This is problematic
+/// [`pulldown_cmark::Event`][Event] stream, whitespace is NOT preserved. This is problematic
 /// for mdBook preprocessors, because preprocessors downstream may need to work on
 /// syntax that is whitespace-sensitive. Normalizing all whitespace could cause such
 /// usage to no longer be recognized.

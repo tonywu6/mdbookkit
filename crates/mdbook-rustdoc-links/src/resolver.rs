@@ -6,7 +6,7 @@ use tap::{Pipe, TapFallible};
 use tokio::task::JoinSet;
 use tracing::{Instrument, Level, debug};
 
-use mdbookkit::{emit_debug, timer, timer_item};
+use mdbookkit::{emit_debug, ticker, ticker_item};
 
 use crate::{UNIQUE_ID, client::Client, item::Item, link::ItemLinks, page::Pages, url::UrlToPath};
 
@@ -76,14 +76,14 @@ impl Resolver for Client {
             .await?
             .pipe(Arc::new);
 
-        let timer = timer!(Level::INFO, "resolve-items", count = request.len());
+        let ticker = ticker!(Level::INFO, "resolve-items", count = request.len());
 
         let tasks: JoinSet<Option<(String, ItemLinks)>> = request
             .into_iter()
             .map(|(key, pos)| {
                 let key = key.to_string();
                 let doc = document.clone();
-                let timer = timer_item!(&timer, Level::INFO, "resolve", item = ?key);
+                let ticker = ticker_item!(&ticker, Level::INFO, "resolve", item = ?key);
                 async move {
                     for p in pos {
                         let resolved = doc
@@ -99,13 +99,13 @@ impl Resolver for Client {
                     }
                     None
                 }
-                .instrument(timer)
+                .instrument(ticker)
             })
             .collect();
 
         let resolved = tasks
             .join_all()
-            .instrument(timer)
+            .instrument(ticker)
             .await
             .into_iter()
             .flatten()

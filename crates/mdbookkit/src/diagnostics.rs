@@ -32,9 +32,9 @@ pub trait IssueItem: Send + Sync {
 
 /// Trait for diagnostics classes. This is like a specific error code.
 ///
-/// **For implementors:** The [`Display`] implementation, which is the title of each
-/// diagnostic message, should use plurals whenever possible, because error reporters
-/// may elect to group together multiple labels of the same [`Issue`]
+/// **For implementors:** The [`Display`][fmt::Display] implementation, which is the
+/// title of each diagnostic message, should use plurals whenever possible, because
+/// error reporters may elect to group together multiple labels of the same [`Issue`]
 pub trait Issue: Default + fmt::Debug + fmt::Display + Clone + Send + Sync {
     fn level(&self) -> Level;
 }
@@ -83,7 +83,7 @@ where
         output
     }
 
-    /// Render the diagnostics as a list of log messages suitable for [`log`].
+    /// Render the diagnostics as a list of log messages suitable for logging.
     pub fn to_logs(&self) -> String {
         let mut output = String::new();
         LoggingReportHandler

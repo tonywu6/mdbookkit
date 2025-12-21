@@ -31,7 +31,7 @@ use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 use tower::ServiceBuilder;
 use tracing::{Level, debug, trace};
 
-use mdbookkit::{emit_debug, emit_warning, timer, timer_event};
+use mdbookkit::{emit_debug, emit_warning, ticker, ticker_event};
 
 use crate::{
     env::Environment,
@@ -112,15 +112,15 @@ impl Server {
     async fn spawn(env: &Environment) -> Result<Self> {
         struct State {
             sender: mpsc::Sender<Poll<()>>,
-            timer: Option<tracing::Span>,
+            ticker: Option<tracing::Span>,
             // this span is never entered, ticker/timing is updated on span close
             percent_indexed: Option<u32>,
             last_update: Option<String>,
         }
 
         impl State {
-            fn timer(&self) -> Option<tracing::span::Id> {
-                self.timer.as_ref()?.id()
+            fn ticker(&self) -> Option<tracing::span::Id> {
+                self.ticker.as_ref()?.id()
             }
         }
 
@@ -166,7 +166,7 @@ impl Server {
                     state.percent_indexed = Some(0);
 
                     let msg = begin.message.as_deref().unwrap_or_default();
-                    timer_event!(state.timer(), Level::INFO, "{msg}");
+                    ticker_event!(state.ticker(), Level::INFO, "{msg}");
 
                     let tx = state.sender.clone();
                     tokio::spawn(async move { tx.send(Poll::Pending).await.ok() });
@@ -179,7 +179,7 @@ impl Server {
                             .unwrap_or(true)
                     {
                         state.last_update = Some(msg.into());
-                        timer_event!(state.timer(), Level::INFO, "{msg}");
+                        ticker_event!(state.ticker(), Level::INFO, "{msg}");
                     }
 
                     let Some(indexed) = state.percent_indexed.as_mut() else {
@@ -219,7 +219,7 @@ impl Server {
                         return;
                     }
 
-                    state.timer.take();
+                    state.ticker.take();
 
                     let tx = state.sender.clone();
                     tokio::spawn(async move { tx.send(Poll::Ready(())).await.ok() });
@@ -233,7 +233,7 @@ impl Server {
 
         let (sender, receiver) = mpsc::channel(16);
 
-        let timer = timer!(Level::INFO, "rust-analyzer");
+        let ticker = ticker!(Level::INFO, "rust-analyzer");
 
         let stabilizer = EventSampling {
             buffer: Duration::from_millis(500),
@@ -245,7 +245,7 @@ impl Server {
         let (background, mut server) = MainLoop::new_client(move |_| {
             let state = State {
                 sender,
-                timer: Some(timer),
+                ticker: Some(ticker),
                 percent_indexed: Some(0),
                 last_update: None,
             };

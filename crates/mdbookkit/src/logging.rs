@@ -1,19 +1,82 @@
+//! Logging facilities.
+//!
+//! ## How the ticker system works
+//!
+//! The ticker system integrates with [`tracing`].
+//!
+//! Use [`ticker!`][crate::ticker] to create a progress ticker backed by a [`tracing::Span`].
+//! When the span [closes][mod@tracing::span#closing-spans], the ticker is cleared.
+//!
+//! ```
+//! # use tracing::Level;
+//! # use mdbookkit::ticker;
+//! #
+//! let ticker = ticker!(Level::INFO, "task-name", count = 63);
+//! // ⠋ [parent-span] task-name (0/63) ...
+//! ```
+//!
+//! Use [`ticker_event!`][crate::ticker_event] to flash a message in the specified ticker.
+//! The message is backed by a [`tracing::Event`].
+//!
+//! ```
+//! # use tracing::Level;
+//! # use mdbookkit::{ticker, ticker_event};
+//! # let ticker = ticker!(Level::INFO, "task-name", count = 63);
+//! #
+//! ticker_event!(&ticker, Level::INFO, "task updated");
+//! // ⠋ [parent-span] task-name (0/63) ... task updated
+//! ```
+//!
+//! Use [`ticker_item!`][crate::ticker_item] to add a subtask to the specified ticker,
+//! backed by a [`tracing::Span`]. The `item` field provides the displayed name.
+//! When the span closes, the item count in the ticker is increased by 1.
+//!
+//! ```
+//! # use tracing::Level;
+//! # use mdbookkit::{ticker, ticker_item};
+//! # let ticker = ticker!(Level::INFO, "task-name", count = 63);
+//! #
+//! let item = ticker_item!(&ticker, Level::INFO, "task", item = "item name");
+//! // ⠋ [parent-span] task-name (0/63) ... item name
+//! drop(item);
+//! // ⠋ [parent-span] task-name (1/63) ... item name
+//! ```
+//!
+//! If the application is configured to be in logging mode, these are emitted as regular logs.
+//!
+//! ```plaintext
+//! INFO parent-span:task-name: started
+//! INFO parent-span:task-name: task updated
+//! INFO parent-span:task-name:task{item="item name"}: started
+//! INFO parent-span:task-name:task{item="item name"}: finished
+//! INFO parent-span:task-name: finished
+//! ```
+//!
+//! ### Notes
+//!
+//! This system uses the parent-child relationship between spans and events to known
+//! which progress bars to update.
+//!
+//! Parent spans must be specified explicitly because ticker and item lifecycles are
+//! tracked in [`Layer::on_new_span`] and [`Layer::on_close`], during which a parent span
+//! may not have been [entered][mod@tracing::span#entering-a-span], resulting in a
+//! `ticker_item!` or a `ticker_event!` without a parent.
+//!
+//! Spans are tracked at open/close instead of enter/exit because spans may enter/exit
+//! multiple times, which does not make sense for progress bars.
+
 use std::{
-    collections::BTreeSet,
-    fmt::Debug,
-    sync::{Arc, LazyLock, mpsc},
-    thread,
-    time::{Duration, Instant},
+    fmt::{Debug, Display},
+    io::Write,
+    sync::{Arc, LazyLock},
 };
 
-use console::{StyledObject, Term};
-use indicatif::{HumanDuration, ProgressBar, ProgressDrawTarget, ProgressStyle};
+use console::StyledObject;
 use tap::{Pipe, Tap};
 use tracing::{
     Event, Subscriber,
     field::{Field, Visit},
     span::{Attributes, Id},
-    warn,
 };
 use tracing_subscriber::{
     EnvFilter, Layer,
@@ -24,6 +87,10 @@ use tracing_subscriber::{
 };
 
 use crate::env::{MDBOOK_LOG, is_colored, is_logging, set_colored, set_logging};
+
+use self::writer::{MultiProgressTicker, MultiProgressWriter};
+
+mod writer;
 
 #[doc(hidden)]
 #[macro_export]
@@ -83,14 +150,14 @@ fn init_logging(options: Logging) {
         .without_time()
         .with_target(filter.max_level_hint().unwrap_or(options.level) < LevelFilter::INFO)
         .with_ansi(is_colored())
-        .with_writer(|| WRITER.clone())
-        .with_filter(if TICKER.is_some() {
+        .with_writer(|| TICKER.writer())
+        .with_filter(if TICKER.is_enabled() {
             Some(filter_fn(|metadata| !is_branded!(metadata)))
         } else {
             None
         });
 
-    let ticker = ConsoleLayer.with_filter(if TICKER.is_none() {
+    let ticker = TickerLayer.with_filter(if !TICKER.is_enabled() {
         Some(filter_fn(|metadata| !metadata.is_event()))
     } else {
         None
@@ -117,87 +184,87 @@ macro_rules! derive_event {
 }
 
 #[macro_export]
-macro_rules! timer {
+macro_rules! ticker {
     ( $level:expr, $key:literal, $( $span:tt )* ) => {
         ::tracing::span!(
             $level,
             $key,
-            { $crate::branded!("timer") } = ::tracing::field::Empty,
+            { $crate::branded!("ticker") } = ::tracing::field::Empty,
             $($span)*
         )
     };
     ( $level:expr, $key:literal ) => {
-        $crate::timer!($level, $key,)
+        $crate::ticker!($level, $key,)
     }
 }
 
 #[macro_export]
-macro_rules! timer_event {
+macro_rules! ticker_event {
     ( $parent:expr, $level:expr, $( $span:tt )* ) => {
         ::tracing::event!(
             parent: $parent,
             $level,
-            { $crate::branded!("timer.event") } = ::tracing::field::Empty,
+            { $crate::branded!("ticker.event") } = ::tracing::field::Empty,
             $($span)*
         )
     };
     ( $parent:expr, $level:expr ) => {
-        $crate::timer_event!($parent, $level,)
+        $crate::ticker_event!($parent, $level,)
     }
 }
 
 #[macro_export]
-macro_rules! timer_item {
+macro_rules! ticker_item {
     ( $parent:expr, $level:expr, $key:literal, $( $span:tt )* ) => {
         ::tracing::span!(
             parent: $parent,
             $level,
             $key,
-            { $crate::branded!("timer.item") } = ::tracing::field::Empty,
+            { $crate::branded!("ticker.item") } = ::tracing::field::Empty,
             $($span)*
         )
     };
     ( $parent:expr, $level:expr, $key:literal ) => {
-        $crate::timer_item!($parent, $level, $key,)
+        $crate::ticker_item!($parent, $level, $key,)
     }
 }
 
-struct ConsoleLayer;
+struct TickerLayer;
 
-impl<S> Layer<S> for ConsoleLayer
+impl<S> Layer<S> for TickerLayer
 where
     S: Subscriber + for<'a> LookupSpan<'a>,
 {
     fn on_new_span(&self, attrs: &Attributes<'_>, id: &Id, ctx: Context<'_, S>) {
         let Some(span) = ctx.span(id) else { return };
 
-        if is_branded!(span, "timer") {
-            let TimerVisitor { count, .. } = TimerVisitor::from_attrs(attrs);
+        if is_branded!(span, "ticker") {
+            let TickerVisitor { count, .. } = TickerVisitor::from_attrs(attrs);
 
-            let timer = Timer {
+            let ticker = TickerData {
                 prefix: SpanPath::to_string(&span),
                 key: span.name(),
                 count,
             };
 
-            span.extensions_mut().insert(timer.clone());
+            span.extensions_mut().insert(ticker.clone());
 
-            if let Some(ticker) = &*TICKER {
-                (ticker.tx).send(ProgressTick::TimerCreate(timer)).ok();
+            if let Some(tx) = TICKER.sender() {
+                tx.send(ProgressTick::TickerCreate(ticker)).ok();
             } else {
                 derive_event!(id, span.metadata(), "message" = "started");
             }
-        } else if is_branded!(span, "timer.item")
-            && let TimerVisitor {
+        } else if is_branded!(span, "ticker.item")
+            && let TickerVisitor {
                 item: Some(item), ..
-            } = TimerVisitor::from_attrs(attrs)
+            } = TickerVisitor::from_attrs(attrs)
             && let Some(parent) = span.parent()
-            && let Some(Timer { key, .. }) = parent.extensions().get::<Timer>()
+            && let Some(TickerData { key, .. }) = parent.extensions().get::<TickerData>()
         {
-            span.extensions_mut().insert(TimerItem(item.clone()));
+            span.extensions_mut().insert(TickerItem(item.clone()));
 
-            if let Some(ticker) = &*TICKER {
-                (ticker.tx).send(ProgressTick::ItemOpen { key, item }).ok();
+            if let Some(tx) = TICKER.sender() {
+                tx.send(ProgressTick::ItemOpen { key, item }).ok();
             } else {
                 derive_event!(id, span.metadata(), "message" = "started");
             }
@@ -210,19 +277,19 @@ where
         // n.b. using extensions_mut involves a RwLock write, which will cause
         // derive_event to deadlock when it tries to read from the same span
 
-        if let Some(Timer { key, .. }) = span.extensions().get::<Timer>() {
-            if let Some(ticker) = &*TICKER {
-                ticker.tx.send(ProgressTick::TimerFinish { key }).ok();
+        if let Some(TickerData { key, .. }) = span.extensions().get::<TickerData>() {
+            if let Some(tx) = TICKER.sender() {
+                tx.send(ProgressTick::TickerFinish { key }).ok();
             } else {
                 derive_event!(id, span.metadata(), "message" = "finished");
             }
         } else if let Some(parent) = span.parent()
-            && let Some(Timer { key, .. }) = parent.extensions().get::<Timer>()
-            && let Some(TimerItem(item)) = span.extensions().get::<TimerItem>()
+            && let Some(TickerData { key, .. }) = parent.extensions().get::<TickerData>()
+            && let Some(TickerItem(item)) = span.extensions().get::<TickerItem>()
         {
-            if let Some(ticker) = &*TICKER {
+            if let Some(tx) = TICKER.sender() {
                 let item = item.clone();
-                (ticker.tx).send(ProgressTick::ItemDone { key, item }).ok();
+                tx.send(ProgressTick::ItemDone { key, item }).ok();
             } else {
                 derive_event!(id, span.metadata(), "message" = "finished");
             }
@@ -234,31 +301,29 @@ where
             return;
         }
 
-        if let TimerVisitor {
+        if let TickerVisitor {
             message: Some(msg), ..
-        } = TimerVisitor::from_event(event)
+        } = TickerVisitor::from_event(event)
             && let Some(span) = (event.parent().cloned())
                 .or_else(|| ctx.current_span().id().cloned())
                 .and_then(|id| ctx.span(&id))
-            && let Some(Timer { key, .. }) = span.extensions().get::<Timer>()
+            && let Some(TickerData { key, .. }) = span.extensions().get::<TickerData>()
         {
-            if let Some(ticker) = &*TICKER {
-                (ticker.tx)
-                    .send(ProgressTick::TimerUpdate { key, msg })
-                    .ok();
+            if let Some(tx) = TICKER.sender() {
+                tx.send(ProgressTick::TickerUpdate { key, msg }).ok();
             }
         }
     }
 }
 
 #[derive(Debug, Default)]
-struct TimerVisitor {
+struct TickerVisitor {
     message: Option<String>,
     item: Option<Arc<str>>,
     count: Option<u64>,
 }
 
-impl Visit for TimerVisitor {
+impl Visit for TickerVisitor {
     fn record_str(&mut self, field: &Field, value: &str) {
         match field.name() {
             "message" => self.message = Some(value.into()),
@@ -278,7 +343,7 @@ impl Visit for TimerVisitor {
     }
 }
 
-impl TimerVisitor {
+impl TickerVisitor {
     #[inline]
     fn from_attrs(attrs: &Attributes<'_>) -> Self {
         Self::default().tap_mut(|v| attrs.values().record(v))
@@ -319,13 +384,13 @@ impl<'a, R: LookupSpan<'a>> SpanPath<'a, R> {
 }
 
 #[derive(Debug, Clone)]
-struct Timer {
+struct TickerData {
     prefix: Option<Arc<str>>,
     key: &'static str,
     count: Option<u64>,
 }
 
-impl std::fmt::Display for Timer {
+impl Display for TickerData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(ref prefix) = self.prefix {
             write!(f, "[{prefix}] {}", self.key)
@@ -336,179 +401,44 @@ impl std::fmt::Display for Timer {
 }
 
 #[derive(Debug, Clone)]
-struct TimerItem(Arc<str>);
+struct TickerItem(Arc<str>);
 
 #[derive(Debug)]
 enum ProgressTick {
-    TimerCreate(Timer),
-    TimerUpdate { key: &'static str, msg: String },
+    TickerCreate(TickerData),
+    TickerUpdate { key: &'static str, msg: String },
     ItemOpen { key: &'static str, item: Arc<str> },
     ItemDone { key: &'static str, item: Arc<str> },
-    TimerFinish { key: &'static str },
+    TickerFinish { key: &'static str },
 }
 
-#[derive(Clone)]
-struct ProgressTicker {
-    tx: mpsc::Sender<ProgressTick>,
-}
-
-static WRITER: LazyLock<Term> = LazyLock::new(Term::stderr);
-
-static TICKER: LazyLock<Option<ProgressTicker>> = LazyLock::new(|| {
-    if is_logging() {
-        None
-    } else {
-        Some(spawn_ticker())
-    }
-});
-
-fn spawn_ticker() -> ProgressTicker {
-    let (tx, rx) = mpsc::channel();
-
-    let style = ProgressStyle::with_template("{spinner:.cyan} {prefix} ... {msg}")
-        .unwrap()
-        .tick_chars("⠇⠋⠙⠸⠴⠦⠿");
-
-    thread::spawn(move || {
-        struct Bar {
-            timer: Timer,
-            bar: ProgressBar,
-        }
-
-        impl Bar {
-            fn count(&self) {
-                let Self { timer, bar } = self;
-                if let Some(length) = bar.length() {
-                    let counter = styled(format!("({}/{length})", bar.position())).dim();
-                    bar.set_prefix(format!("{timer} {counter}"))
-                }
-            }
-        }
-
-        let mut current: Option<Bar> = None;
-
-        let mut tasks = BTreeSet::new();
-        let mut task_idx = 0;
-        let mut interval = Instant::now();
-
-        loop {
-            let current_ref = |key: &str| {
-                let bar = current.as_ref()?;
-                if bar.timer.key == key {
-                    Some(bar)
-                } else {
-                    None
-                }
-            };
-
-            match rx.recv_timeout(Duration::from_millis(100)) {
-                Err(mpsc::RecvTimeoutError::Timeout) => {}
-
-                Err(mpsc::RecvTimeoutError::Disconnected) => break,
-
-                Ok(ProgressTick::TimerCreate(timer)) => {
-                    if let Some(bar) = current {
-                        bar.bar.abandon()
-                    }
-
-                    let bar = ProgressDrawTarget::term(WRITER.clone(), 20)
-                        .pipe(|target| ProgressBar::with_draw_target(timer.count, target))
-                        .with_prefix(timer.to_string())
-                        .with_style(style.clone());
-
-                    bar.enable_steady_tick(Duration::from_millis(100));
-
-                    current = Some(Bar { timer, bar });
-                }
-
-                Ok(ProgressTick::TimerUpdate { key, msg }) => {
-                    let Some(Bar { bar, .. }) = current_ref(key) else {
-                        continue;
-                    };
-
-                    bar.set_message(msg);
-                    bar.tick();
-                }
-
-                Ok(ProgressTick::TimerFinish { key }) => {
-                    let Some(Bar { bar, .. }) = current_ref(key) else {
-                        continue;
-                    };
-
-                    bar.finish_with_message(styled("done").green().to_string());
-                    current = None;
-                }
-
-                Ok(ProgressTick::ItemOpen { key, item }) => {
-                    let Some(current) = current_ref(key) else {
-                        continue;
-                    };
-
-                    current.count();
-                    current.bar.set_message(styled(&item).magenta().to_string());
-                    current.bar.tick();
-
-                    tasks.insert(item);
-                    interval = Instant::now();
-                }
-
-                Ok(ProgressTick::ItemDone { key, item }) => {
-                    let Some(current) = current_ref(key) else {
-                        continue;
-                    };
-
-                    current.bar.inc(1);
-
-                    current.count();
-                    current.bar.set_message(styled(&item).green().to_string());
-                    current.bar.tick();
-
-                    tasks.remove(&item);
-                    interval = Instant::now();
-                }
-            }
-
-            if let Some(Bar {
-                timer: Timer { key, .. },
-                ref bar,
-                ..
-            }) = current
-            {
-                let now = Instant::now();
-
-                if now - interval > Duration::from_secs(10) {
-                    interval = now;
-
-                    if task_idx >= tasks.len() {
-                        task_idx = 0
-                    }
-
-                    if let Some(task) = tasks.iter().nth(task_idx) {
-                        let elapsed = HumanDuration(bar.elapsed());
-                        // TODO: how to attach to current span
-                        // TODO: how to clear line for tracing when ticker is running
-                        warn!("task {key} - {task} has been running for more than {elapsed}");
-                        bar.set_message(styled(task).magenta().to_string());
-                        task_idx += 1;
-                    }
-                }
-            }
-        }
-    });
-
-    ProgressTicker { tx }
-}
+static TICKER: LazyLock<MultiProgressTicker> =
+    LazyLock::new(|| MultiProgressWriter::new(!is_logging()).pipe(MultiProgressTicker::new));
 
 #[inline]
-pub fn stderr() -> impl std::io::Write {
-    WRITER.clone()
+pub fn stderr() -> impl Write {
+    TICKER.writer()
 }
 
-// FIXME: ensure colors do not appear in tracing output
-// https://github.com/tokio-rs/tracing/issues/3378
+/// Configure styling for a displayable value.
+///
+/// ## Note
+///
+/// Avoid using this in tracing messages.
+///
+/// tracing-subscriber currently escapes all ANSI characters.
+/// See <https://github.com/tokio-rs/tracing/issues/3378>
+///
+/// This function disables styling if the application is in logging mode, so that
+/// messages can have styling in tickers but not in logs.
 #[inline]
 pub fn styled<D>(val: D) -> StyledObject<D> {
-    WRITER.style().apply_to(val)
+    let styled = TICKER.style().apply_to(val);
+    if TICKER.is_enabled() {
+        styled
+    } else {
+        styled.force_styling(false)
+    }
 }
 
 #[macro_export]
@@ -546,5 +476,3 @@ macro_rules! emit_warning {
         |e| ::tracing::warn!($fmt, e)
     };
 }
-
-// TODO: clean up logging messages & make use of spans/instrument
