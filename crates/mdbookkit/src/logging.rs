@@ -11,8 +11,8 @@
 //! # use tracing::Level;
 //! # use mdbookkit::ticker;
 //! #
-//! let ticker = ticker!(Level::INFO, "task-name", count = 63);
-//! // ⠋ [parent-span] task-name (0/63) ...
+//! let ticker = ticker!(Level::INFO, "task-name", count = 63, "running errands");
+//! // ⠋ [parent-span] running errands (0/63) ...
 //! ```
 //!
 //! Use [`ticker_event!`][crate::ticker_event] to flash a message in the specified ticker.
@@ -21,35 +21,35 @@
 //! ```
 //! # use tracing::Level;
 //! # use mdbookkit::{ticker, ticker_event};
-//! # let ticker = ticker!(Level::INFO, "task-name", count = 63);
+//! # let ticker = ticker!(Level::INFO, "task-name", count = 63, "running errands");
 //! #
 //! ticker_event!(&ticker, Level::INFO, "task updated");
-//! // ⠋ [parent-span] task-name (0/63) ... task updated
+//! // ⠋ [parent-span] running errands (0/63) ... task updated
 //! ```
 //!
 //! Use [`ticker_item!`][crate::ticker_item] to add a subtask to the specified ticker,
-//! backed by a [`tracing::Span`]. The `item` field provides the displayed name.
-//! When the span closes, the item count in the ticker is increased by 1.
+//! backed by a [`tracing::Span`]. When the span closes, the item count in the ticker
+//! is increased by 1.
 //!
 //! ```
 //! # use tracing::Level;
 //! # use mdbookkit::{ticker, ticker_item};
-//! # let ticker = ticker!(Level::INFO, "task-name", count = 63);
+//! # let ticker = ticker!(Level::INFO, "task-name", count = 63, "running errands");
 //! #
-//! let item = ticker_item!(&ticker, Level::INFO, "task", item = "item name");
-//! // ⠋ [parent-span] task-name (0/63) ... item name
+//! let item = ticker_item!(&ticker, Level::INFO, "task", "groceries");
+//! // ⠋ [parent-span] running errands (0/63) ... groceries
 //! drop(item);
-//! // ⠋ [parent-span] task-name (1/63) ... item name
+//! // ⠋ [parent-span] running errands (1/63) ... groceries
 //! ```
 //!
 //! If the application is configured to be in logging mode, these are emitted as regular logs.
 //!
 //! ```plaintext
-//! INFO parent-span:task-name: started
-//! INFO parent-span:task-name: task updated
-//! INFO parent-span:task-name:task{item="item name"}: started
-//! INFO parent-span:task-name:task{item="item name"}: finished
-//! INFO parent-span:task-name: finished
+//! INFO parent-span:task-name: started running errands count=63
+//! INFO parent-span:task-name: task updated running errands count=63
+//! INFO parent-span:task-name:task: started running errands count=63 groceries
+//! INFO parent-span:task-name:task: finished running errands count=63 groceries
+//! INFO parent-span:task-name: finished running errands count=63
 //! ```
 //!
 //! ### Notes
@@ -147,8 +147,9 @@ fn init_logging(options: Logging) {
         .parse_lossy(MDBOOK_LOG.as_deref().unwrap_or_default());
 
     let logger = tracing_subscriber::fmt::layer()
+        .compact()
         .without_time()
-        .with_target(filter.max_level_hint().unwrap_or(options.level) < LevelFilter::INFO)
+        .with_target(filter.max_level_hint().unwrap_or(options.level) > LevelFilter::INFO)
         .with_ansi(is_colored())
         .with_writer(|| TICKER.writer())
         .with_filter(if TICKER.is_enabled() {
@@ -180,6 +181,9 @@ macro_rules! derive_event {
             (&iter.next().unwrap(), ::core::option::Option::Some(&$value as &dyn tracing::field::Value)),
         )*];
         Event::child_of($id, metadata, &fields.value_set(&values));
+    }};
+    ( $id:expr, $metadata:expr, $format:literal $($vars:tt)* ) => {{
+        derive_event!($id, $metadata, "message" = format!($format $($vars)*))
     }};
 }
 
@@ -239,11 +243,12 @@ where
         let Some(span) = ctx.span(id) else { return };
 
         if is_branded!(span, "ticker") {
-            let TickerVisitor { count, .. } = TickerVisitor::from_attrs(attrs);
+            let TickerVisitor { count, message, .. } = TickerVisitor::from_attrs(attrs);
 
             let ticker = TickerData {
                 prefix: SpanPath::to_string(&span),
                 key: span.name(),
+                title: message,
                 count,
             };
 
@@ -252,11 +257,12 @@ where
             if let Some(tx) = TICKER.sender() {
                 tx.send(ProgressTick::TickerCreate(ticker)).ok();
             } else {
-                derive_event!(id, span.metadata(), "message" = "started");
+                derive_event!(id, span.metadata(), "started");
             }
         } else if is_branded!(span, "ticker.item")
             && let TickerVisitor {
-                item: Some(item), ..
+                message: Some(item),
+                ..
             } = TickerVisitor::from_attrs(attrs)
             && let Some(parent) = span.parent()
             && let Some(TickerData { key, .. }) = parent.extensions().get::<TickerData>()
@@ -266,7 +272,7 @@ where
             if let Some(tx) = TICKER.sender() {
                 tx.send(ProgressTick::ItemOpen { key, item }).ok();
             } else {
-                derive_event!(id, span.metadata(), "message" = "started");
+                derive_event!(id, span.metadata(), "started");
             }
         }
     }
@@ -281,7 +287,7 @@ where
             if let Some(tx) = TICKER.sender() {
                 tx.send(ProgressTick::TickerFinish { key }).ok();
             } else {
-                derive_event!(id, span.metadata(), "message" = "finished");
+                derive_event!(id, span.metadata(), "finished");
             }
         } else if let Some(parent) = span.parent()
             && let Some(TickerData { key, .. }) = parent.extensions().get::<TickerData>()
@@ -291,13 +297,13 @@ where
                 let item = item.clone();
                 tx.send(ProgressTick::ItemDone { key, item }).ok();
             } else {
-                derive_event!(id, span.metadata(), "message" = "finished");
+                derive_event!(id, span.metadata(), "finished");
             }
         }
     }
 
     fn on_event(&self, event: &Event<'_>, ctx: Context<'_, S>) {
-        if !is_branded!(event.metadata(), "timer.event") {
+        if !is_branded!(event.metadata(), "ticker.event") {
             return;
         }
 
@@ -318,17 +324,14 @@ where
 
 #[derive(Debug, Default)]
 struct TickerVisitor {
-    message: Option<String>,
-    item: Option<Arc<str>>,
+    message: Option<Arc<str>>,
     count: Option<u64>,
 }
 
 impl Visit for TickerVisitor {
     fn record_str(&mut self, field: &Field, value: &str) {
-        match field.name() {
-            "message" => self.message = Some(value.into()),
-            "item" => self.item = Some(value.into()),
-            _ => {}
+        if field.name() == "message" {
+            self.message = Some(value.into())
         }
     }
 
@@ -387,15 +390,17 @@ impl<'a, R: LookupSpan<'a>> SpanPath<'a, R> {
 struct TickerData {
     prefix: Option<Arc<str>>,
     key: &'static str,
+    title: Option<Arc<str>>,
     count: Option<u64>,
 }
 
 impl Display for TickerData {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let title = self.title.as_deref().unwrap_or(self.key);
         if let Some(ref prefix) = self.prefix {
-            write!(f, "[{prefix}] {}", self.key)
+            write!(f, "[{prefix}] {title}")
         } else {
-            write!(f, "{}", self.key)
+            write!(f, "{title}")
         }
     }
 }
@@ -406,7 +411,7 @@ struct TickerItem(Arc<str>);
 #[derive(Debug)]
 enum ProgressTick {
     TickerCreate(TickerData),
-    TickerUpdate { key: &'static str, msg: String },
+    TickerUpdate { key: &'static str, msg: Arc<str> },
     ItemOpen { key: &'static str, item: Arc<str> },
     ItemDone { key: &'static str, item: Arc<str> },
     TickerFinish { key: &'static str },

@@ -233,8 +233,6 @@ impl Server {
 
         let (sender, receiver) = mpsc::channel(16);
 
-        let ticker = ticker!(Level::INFO, "rust-analyzer");
-
         let stabilizer = EventSampling {
             buffer: Duration::from_millis(500),
             timeout: env.config.rust_analyzer_timeout(),
@@ -245,7 +243,11 @@ impl Server {
         let (background, mut server) = MainLoop::new_client(move |_| {
             let state = State {
                 sender,
-                ticker: Some(ticker),
+                ticker: Some(ticker!(
+                    Level::INFO,
+                    "rust-analyzer",
+                    "rust-analyzer indexing"
+                )),
                 percent_indexed: Some(0),
                 last_update: None,
             };

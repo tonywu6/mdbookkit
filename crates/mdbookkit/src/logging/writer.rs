@@ -73,7 +73,7 @@ fn spawn_ticker(this: &mut MultiProgressTicker) {
         }
 
         let style = ProgressStyle::with_template("{spinner:.cyan} {prefix} ... {msg}")
-            .unwrap()
+            .expect("should be a valid template")
             .tick_chars("⠇⠋⠙⠸⠴⠦⠿");
 
         let mut current = HashMap::new();
@@ -110,7 +110,7 @@ fn spawn_ticker(this: &mut MultiProgressTicker) {
                         continue;
                     };
 
-                    bar.set_message(msg);
+                    bar.set_message(String::from(&*msg));
                 }
 
                 Ok(ProgressTick::ItemOpen { key, item }) => {

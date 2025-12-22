@@ -76,14 +76,19 @@ impl Resolver for Client {
             .await?
             .pipe(Arc::new);
 
-        let ticker = ticker!(Level::INFO, "resolve-items", count = request.len());
+        let ticker = ticker!(
+            Level::INFO,
+            "resolve-items",
+            count = request.len(),
+            "resolving items"
+        );
 
         let tasks: JoinSet<Option<(String, ItemLinks)>> = request
             .into_iter()
             .map(|(key, pos)| {
                 let key = key.to_string();
                 let doc = document.clone();
-                let ticker = ticker_item!(&ticker, Level::INFO, "resolve", item = ?key);
+                let ticker = ticker_item!(&ticker, Level::INFO, "resolve", "{key:?}");
                 async move {
                     for p in pos {
                         let resolved = doc
