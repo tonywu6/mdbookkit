@@ -1,9 +1,9 @@
 ---
 source: crates/mdbook-permalinks/src/tests.rs
-assertion_line: 121
+assertion_line: 127
 expression: report
 ---
-  warning: links inaccessible
+  warning: link inaccessible
     ╭─[crates/mdbook-permalinks/src/tests/paths.md:31:1]
     │ 
     │ [](../../Cargo.lock)
@@ -31,7 +31,7 @@ expression: report
     ·         ╰── target/debug is ignored by git
     ╰────
 
-  warning: links inaccessible
+  warning: link inaccessible
     ╭─[crates/mdbook-permalinks/src/tests/urls.md:23:1]
     │ 
     │ [](https://example.org/book/tests/urls/)

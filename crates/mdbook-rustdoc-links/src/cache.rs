@@ -1,7 +1,6 @@
 use std::{
     borrow::Cow,
     collections::{BTreeSet, HashMap},
-    hash::Hash,
     iter,
 };
 
@@ -9,15 +8,19 @@ use anyhow::{Context, Result, bail};
 use lsp_types::Url;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use sha2::{Digest, Sha256};
-use tap::{Pipe, Tap, TapFallible};
+use tap::{Pipe, Tap};
 use tokio::task::JoinSet;
-use tracing::debug;
+use tracing::{debug, instrument};
 
-use mdbookkit::emit_debug;
+use mdbookkit::url::{ExpectUrl, UrlToPath};
 
-use crate::{env::Environment, link::ItemLinks, page::Pages, resolver::Resolver, url::UrlToPath};
+use crate::{
+    env::Environment,
+    link::{ItemLinks, LinkState},
+    page::{PageKey, Pages},
+    resolver::Resolver,
+};
 
-#[allow(async_fn_in_trait)]
 pub trait Cache: DeserializeOwned + Serialize {
     type Validated: Resolver;
 
@@ -25,23 +28,20 @@ pub trait Cache: DeserializeOwned + Serialize {
 
     async fn build<K>(env: &Environment, content: &Pages<'_, K>) -> Result<Self>
     where
-        K: Eq + Hash;
+        K: PageKey;
 
+    #[instrument("cache_load", skip_all)]
     async fn load(env: &Environment) -> Result<Self::Validated> {
-        env.load_temp::<Self, _>("cache.json")
-            .tap_err(emit_debug!())?
-            .reuse(env)
-            .await
-            .tap_err(emit_debug!())
+        env.load_temp::<Self, _>("cache.json")?.reuse(env).await
     }
 
+    #[instrument("cache_save", skip_all)]
     async fn save<K>(env: &Environment, content: &Pages<'_, K>) -> Result<()>
     where
-        K: Eq + Hash,
+        K: PageKey,
     {
         let this = Self::build(env, content).await?;
         env.save_temp::<Self, _>("cache.json", &this)
-            .tap_err(emit_debug!())
     }
 }
 
@@ -62,7 +62,7 @@ impl Cache for FileCache {
 
     async fn build<K>(env: &Environment, content: &Pages<'_, K>) -> Result<Self>
     where
-        K: Eq + Hash,
+        K: PageKey,
     {
         Ok(Self::V1(FileCacheV1::build(env, content).await?))
     }
@@ -87,7 +87,7 @@ impl Cache for FileCacheV1 {
         let hash = Self::hash(env, deps).await;
 
         if hash != self.hash {
-            bail!("checksum mismatch, expected {}, actual {hash}", self.hash)
+            bail!("Checksum mismatch, expected {}, actual {hash}", self.hash)
         }
 
         Ok(self.urls.into_iter().collect())
@@ -95,12 +95,16 @@ impl Cache for FileCacheV1 {
 
     async fn build<K>(env: &Environment, content: &Pages<'_, K>) -> Result<Self>
     where
-        K: Eq + Hash,
+        K: PageKey,
     {
         let urls = content
-            .links()
             .iter()
-            .map(|(k, v)| (k.to_string(), v.clone()))
+            .deduped(|link| match link.state() {
+                LinkState::Resolved(links) => Some(links),
+                _ => None,
+            })
+            .into_iter()
+            .filter_map(|(k, v)| Some((k.to_string(), v?.clone())))
             .collect::<Vec<_>>();
 
         let deps = urls
@@ -115,13 +119,14 @@ impl Cache for FileCacheV1 {
 }
 
 impl FileCacheV1 {
+    #[instrument(level = "debug", skip_all, ret)]
     async fn hash<'a, D>(env: &'a Environment, deps: D) -> String
     where
         D: Iterator<Item = Cow<'a, Url>>,
     {
         [
-            Cow::Owned(env.source_dir.join("Cargo.toml").unwrap()),
-            Cow::Owned(env.crate_dir.join("Cargo.toml").unwrap()),
+            Cow::Owned(env.source_dir.join("Cargo.toml").expect_url()),
+            Cow::Owned(env.crate_dir.join("Cargo.toml").expect_url()),
             Cow::Borrowed(&env.entrypoint),
         ]
         .into_iter()
@@ -143,11 +148,8 @@ impl FileCacheV1 {
         .await
         .into_iter()
         .filter_map(|result| {
-            // should be tolerable to skip files that we somehow can't read?
-            result
-                .context("failed to read cache dependency")
-                .tap_err(emit_debug!())
-                .ok()
+            // should be acceptable to skip files that we somehow can't read?
+            result.context("Failed to read cache dependency").ok()
         })
         .collect::<Vec<_>>()
         .tap_mut(|deps| deps.sort_by(|(k1, _), (k2, _)| k1.cmp(k2))) // order affects hashing

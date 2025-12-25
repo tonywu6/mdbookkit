@@ -6,6 +6,8 @@ use tap::{Pipe, Tap};
 use tracing::info;
 use url::Url;
 
+use crate::url::{ExpectUrl, UrlFromPath, UrlToPath};
+
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub struct TestDocument {
     pub source_path: &'static str,
@@ -28,31 +30,37 @@ impl TestDocument {
     pub fn cwd(&self) -> Url {
         CARGO_WORKSPACE_DIR
             .join(self.source_path)
-            .unwrap()
+            .expect_url()
             .join(".")
-            .unwrap()
+            .expect_url()
     }
 
     pub fn url(&self) -> Url {
-        self.cwd().join(self.target_path).unwrap()
+        self.cwd().join(self.target_path).expect_url()
     }
 
     pub fn name(&self) -> String {
         let dir = Path::new(self.source_path)
             .with_extension("")
             .file_name()
-            .unwrap()
+            .expect("source_path should have a file name")
             .to_string_lossy()
             .into_owned();
 
         let url = self.url();
-        let cwd = self.cwd().join(&format!("{dir}/")).unwrap();
-        let rel = cwd.make_relative(&url).unwrap();
+        let cwd = self.cwd().join(&format!("{dir}/")).expect_url();
+        let rel = cwd.make_relative(&url).expect("both are file: URLs");
 
         if rel.starts_with("../") {
-            let rel = CARGO_WORKSPACE_DIR.make_relative(&url).unwrap();
+            let rel = CARGO_WORKSPACE_DIR
+                .make_relative(&url)
+                .expect("both are file: URLs");
             if rel.starts_with("../") {
-                url.path_segments().unwrap().next_back().unwrap().to_owned()
+                url.path_segments()
+                    .expect("file: URL")
+                    .next_back()
+                    .expect("URL path not empty")
+                    .to_owned()
             } else {
                 rel
             }
@@ -89,10 +97,13 @@ impl PortableSnapshots {
 
         let path = source_path.with_extension("").join("snaps");
         let path = CARGO_WORKSPACE_DIR
-            .to_file_path()
-            .unwrap()
-            .join(&*path.to_string_lossy())
-            .join(name.parent().unwrap());
+            .expect_path()
+            .join(&*path.to_string_lossy());
+        let path = if let Some(parent) = name.parent() {
+            path.join(parent)
+        } else {
+            path
+        };
 
         let name = name
             .file_name()
@@ -133,15 +144,19 @@ pub fn setup_paths() -> Result<OsString> {
         cargo_run_bin::metadata::get_binary_packages()?
             .into_iter()
             .map(cargo_run_bin::binary::install)
-            .map(|path| Ok(Path::new(&path?).parent().unwrap().to_owned()))
+            .map(|path| {
+                Ok(Path::new(&path?)
+                    .parent()
+                    .expect("install path should not be root")
+                    .to_owned())
+            })
             .collect::<Result<Vec<_>>>()?,
     );
 
     path.push(
         CARGO_WORKSPACE_DIR
             .join("target")?
-            .to_file_path()
-            .unwrap()
+            .expect_path()
             .join(if cfg!(debug_assertions) {
                 "debug"
             } else {
@@ -163,13 +178,12 @@ pub static CARGO_WORKSPACE_DIR: LazyLock<Url> = LazyLock::new(|| {
         .args(["--format-version=1", "--no-deps"])
         .current_dir(env!("CARGO_MANIFEST_DIR"))
         .output()
-        .unwrap()
+        .expect("cargo metadata must not fail")
         .pipe(|output| String::from_utf8(output.stdout))
-        .unwrap()
+        .expect("cargo metadata should output in utf8")
         .pipe(|output| serde_json::from_str::<CargoManifest>(&output))
-        .unwrap()
-        .pipe(|manifest| Url::from_directory_path(manifest.workspace_root))
-        .unwrap()
+        .expect("cargo metadata format should be correct")
+        .pipe(|manifest| manifest.workspace_root.to_directory_url())
 });
 
 pub fn not_in_ci<D: std::fmt::Display>(because: D) -> bool {

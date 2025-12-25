@@ -22,6 +22,7 @@ anyhow = "1.0.95"
 assert_cmd = "2.0.16"
 cargo-run-bin = { version = "1.7.4", default-features = false }
 clap = { version = "4.5.31", features = ["derive"] }
+futures-util = { version = "0.3.31", default-features = false }
 insta = { version = "1.40.0", features = ["yaml", "filters"] }
 mdbook-markdown = { version = "0.5.1" }
 mdbook-preprocessor = { version = "0.5.1" }

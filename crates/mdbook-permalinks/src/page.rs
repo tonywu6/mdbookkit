@@ -8,15 +8,17 @@ use std::{
 
 use anyhow::{Context, Result, bail};
 use mdbook_markdown::pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
-use tap::{Pipe, TapFallible};
+use tap::Pipe;
+use tracing::{debug, info, instrument, trace};
 use url::Url;
 
 use mdbookkit::{
     emit_warning,
     markdown::{PatchStream, Spanned},
+    plural,
 };
 
-use crate::link::{ContentTypeHint, EmitLinkSpan, LinkSpan, LinkStatus, LinkText, RelativeLink};
+use crate::link::{ContentHint, EmitLinkSpan, LinkSpan, LinkStatus, LinkText, RelativeLink};
 
 pub struct Pages<'a> {
     pages: HashMap<Arc<Url>, Page<'a>>,
@@ -43,25 +45,24 @@ impl<'a> Pages<'a> {
             .collect()
     }
 
+    #[instrument(level = "debug", "page_read", skip_all)]
     pub fn insert(&mut self, url: Url, source: &'a str) -> Result<&mut Self> {
+        debug!(path = ?url.path(), "reading file");
         let stream = Parser::new_ext(source, self.markdown).into_offset_iter();
         let page = Page::read(source, stream)?;
         self.pages.insert(url.into(), page);
         Ok(self)
     }
 
-    pub fn links(&'_ self) -> impl Iterator<Item = (&'_ Arc<Url>, &'_ RelativeLink<'_>)> {
+    pub fn links(&self) -> impl Iterator<Item = (&Arc<Url>, &RelativeLink<'a>)> {
         self.pages.iter().flat_map(|(base, page)| {
-            page.links
-                .iter()
-                .flat_map(move |links| links.links().map(move |link| (base, link)))
+            (page.links.iter()).flat_map(move |links| links.links().map(move |link| (base, link)))
         })
     }
 
     pub fn links_mut(&mut self) -> impl Iterator<Item = (&Arc<Url>, &mut RelativeLink<'a>)> {
         self.pages.iter_mut().flat_map(|(base, page)| {
-            page.links
-                .iter_mut()
+            (page.links.iter_mut())
                 .flat_map(move |links| links.links_mut().map(move |link| (base, link)))
         })
     }
@@ -75,9 +76,43 @@ impl<'a> Pages<'a> {
         Arc<Url>: Borrow<Q>,
         Q: Eq + Hash + Debug + ?Sized,
     {
-        let page = self.pages.get(key);
-        let page = page.with_context(|| format!("no such document {key:?}"))?;
-        page.emit()
+        self.pages
+            .get(key)
+            .with_context(|| format!("No such document {key:?}"))
+            .inspect_err(emit_warning!())
+            .expect("should have document")
+            .emit()
+    }
+
+    pub fn log_stats(&self) {
+        let mut ignored = 0;
+        let mut unchanged = 0;
+        let mut rewritten = 0;
+        let mut permalink = 0;
+        let mut unreachable = 0;
+        let mut error = 0;
+        let mut total = 0;
+
+        for (_, link) in self.links() {
+            total += 1;
+            match link.status {
+                LinkStatus::Ignored => ignored += 1,
+                LinkStatus::Unchanged => unchanged += 1,
+                LinkStatus::Rewritten => rewritten += 1,
+                LinkStatus::Permalink => permalink += 1,
+                LinkStatus::Unreachable(_) => unreachable += 1,
+                LinkStatus::Error(_) => error += 1,
+            }
+        }
+
+        info!(
+            "Processed {total}: {permalink}; {rewritten}; {unreachable}; {unchanged}",
+            total = plural!(total, "link"),
+            permalink = plural!(permalink, "generated permalink"),
+            rewritten = plural!(rewritten, "rewritten as paths", "rewritten as paths"),
+            unreachable = plural!(unreachable, "unreachable path"),
+            unchanged = plural!(unchanged + ignored + error, "unchanged", "unchanged"),
+        );
     }
 }
 
@@ -96,23 +131,30 @@ impl<'a> Page<'a> {
         for (event, span) in stream {
             match event {
                 Event::Start(tag @ (Tag::Link { .. } | Tag::Image { .. })) => {
-                    let (usage, link, title) = match tag {
+                    let (hint, link, title) = match tag {
                         Tag::Link {
                             dest_url, title, ..
-                        } => (ContentTypeHint::Tree, dest_url, title),
+                        } => (ContentHint::Tree, dest_url, title),
                         Tag::Image {
                             dest_url, title, ..
-                        } => (ContentTypeHint::Raw, dest_url, title),
+                        } => (ContentHint::Raw, dest_url, title),
                         _ => unreachable!(),
                     };
+
+                    let parent = opened.as_ref().map(|link| link.span());
+                    trace!(?span, ?parent, ?hint, ">>>");
+                    trace!(?link, " │ ");
+                    trace!(?title, " │ ");
+
                     let link = RelativeLink {
                         status: LinkStatus::Ignored,
                         span,
                         link,
-                        hint: usage,
+                        hint,
                         title,
                     }
                     .pipe(LinkText::Link);
+
                     match opened.as_mut() {
                         Some(opened) => opened.0.push(link),
                         None => opened = Some(LinkSpan(vec![link])),
@@ -120,15 +162,15 @@ impl<'a> Page<'a> {
                 }
 
                 event @ Event::End(end @ (TagEnd::Link | TagEnd::Image)) => {
-                    let usage = match end {
-                        TagEnd::Link => ContentTypeHint::Tree,
-                        TagEnd::Image => ContentTypeHint::Raw,
-                        _ => unreachable!(),
-                    };
                     let Some(mut items) = opened.take() else {
-                        bail!("unexpected {usage:?} at {span:?}")
+                        debug!(?span, "unexpected {end:?}");
+                        bail!("Markdown stream malformed at byte position {span:?}");
                     };
+
+                    trace!(?span, "<<<");
+
                     items.0.push(LinkText::Text(event));
+
                     if &span == items.span() {
                         this.links.push(items);
                     } else {
@@ -138,6 +180,7 @@ impl<'a> Page<'a> {
 
                 event => {
                     if let Some(link) = opened.as_mut() {
+                        trace!(?span, " │ ");
                         link.0.push(LinkText::Text(event))
                     }
                 }
@@ -152,8 +195,7 @@ impl<'a> Page<'a> {
             .iter()
             .filter_map(EmitLinkSpan::new)
             .pipe(|stream| PatchStream::new(self.source, stream))
-            .into_string()
-            .tap_err(emit_warning!())?
+            .into_string()?
             .pipe(Ok)
     }
 }

@@ -1,11 +1,11 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use syn::{
-    parenthesized,
+    PathArguments, QSelf, Token, TypePath, parenthesized,
     parse::{End, Parse, ParseStream, Parser},
     spanned::Spanned,
     token::Paren,
-    PathArguments, QSelf, Token, TypePath,
 };
+use tracing::trace;
 
 /// Texts that look like Rust items.
 #[derive(Debug)]
@@ -25,16 +25,22 @@ impl Item {
     pub fn parse(path: &str) -> Result<Self> {
         let path = match path.split_once('@') {
             None => path,
-            Some((_, path)) => path,
+            Some((prefix, path)) => {
+                trace!("ignoring prefix {prefix:?}");
+                path
+            }
         };
 
-        let item = ItemName::parse.parse_str(path)?;
+        let item = ItemName::parse
+            .parse_str(path)
+            .context("could not parse as an item name")?;
 
         let (name, column) = {
             let mut name = String::new();
             let mut column = 0;
 
             let gt = if let Some(QSelf { ty, position, .. }) = item.path.qself {
+                trace!("fully qualified syntax");
                 name.push('<');
                 name.push_str(&path[ty.span().byte_range()]);
                 name.push_str(" as ");
@@ -55,6 +61,7 @@ impl Item {
 
                     PathArguments::AngleBracketed(args) => {
                         if args.colon2_token.is_none() {
+                            trace!("turbofish");
                             // make it a turbofish
                             name.push_str("::");
                         }
@@ -77,6 +84,8 @@ impl Item {
 
             (name, column)
         };
+
+        trace!(?name, kind = ?item.kind);
 
         let (stmt, cursor) = match item.kind {
             None => {

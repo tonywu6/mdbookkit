@@ -13,8 +13,8 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use glob::glob;
 use lol_html::{
-    element, html_content::ContentType, rewrite_str, text, HtmlRewriter, RewriteStrSettings,
-    Settings,
+    HtmlRewriter, RewriteStrSettings, Settings, element, html_content::ContentType, rewrite_str,
+    text,
 };
 use minijinja::Environment;
 use serde::Deserialize;
@@ -61,7 +61,7 @@ fn main() -> Result<()> {
                 let image = book_toml_path.join(&image)?;
                 let image = src_dir
                     .make_relative(&image)
-                    .context("failed to make relative path to image")?;
+                    .context("Failed to make relative path to image")?;
                 book_toml.preprocessor.link_forever.book_url.join(&image)?
             };
             let metadata = PageMetadata {
@@ -104,7 +104,7 @@ fn main() -> Result<()> {
 
         let pathname = out_dir
             .make_relative(&url)
-            .context("failed to get page pathname")?
+            .context("Failed to get page pathname")?
             .replace("index.html", "")
             .replace(".html", "")
             .pipe(|p| format!("/{p}"));
@@ -209,7 +209,7 @@ static OPEN_GRAPH: &str = r##"
     <meta name="twitter:card"           content="summary_large_image">
     <meta name="twitter:title"          content="{{ og_title }}">
     <meta name="twitter:image"          content="{{ og_image }}">
-    <meta name="twitter:image:alt"      content="toolkit for mdbook">
+    <meta name="twitter:image:alt"      content="toolkit for mdBook">
     <meta name="twitter:description"    content="{{ og_description }}">
     <meta name="theme-color"            content="#d2a6ff">
 "##;

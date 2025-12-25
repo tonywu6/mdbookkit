@@ -146,10 +146,14 @@ fn init_logging(options: Logging) {
         .with_default_directive(options.level.into())
         .parse_lossy(MDBOOK_LOG.as_deref().unwrap_or_default());
 
+    let max_level = filter.max_level_hint().unwrap_or(options.level);
+
     let logger = tracing_subscriber::fmt::layer()
         .compact()
         .without_time()
-        .with_target(filter.max_level_hint().unwrap_or(options.level) > LevelFilter::INFO)
+        .with_file(max_level > LevelFilter::DEBUG)
+        .with_line_number(max_level > LevelFilter::DEBUG)
+        .with_target(is_colored() && max_level > LevelFilter::INFO)
         .with_ansi(is_colored())
         .with_writer(|| TICKER.writer())
         .with_filter(if TICKER.is_enabled() {
@@ -449,7 +453,7 @@ pub fn styled<D>(val: D) -> StyledObject<D> {
 #[macro_export]
 macro_rules! emit_trace {
     () => {
-        |err| ::tracing::trace!("{err:?}")
+        |e| ::tracing::trace!("{:?}", e)
     };
     ($fmt:expr) => {
         |e| ::tracing::trace!($fmt, e)
@@ -459,7 +463,7 @@ macro_rules! emit_trace {
 #[macro_export]
 macro_rules! emit_debug {
     () => {
-        |err| ::tracing::debug!("{err:?}")
+        |e| ::tracing::debug!("{:?}", e)
     };
     ($fmt:expr) => {
         |e| ::tracing::debug!($fmt, e)
@@ -469,15 +473,19 @@ macro_rules! emit_debug {
 #[macro_export]
 macro_rules! emit_warning {
     () => {
-        |e| {
-            if ::tracing::enabled!(::tracing::Level::DEBUG) {
-                ::tracing::warn!("{:?}", e)
-            } else {
-                ::tracing::warn!("{}", e)
-            }
-        }
+        |e| ::tracing::warn!("{:?}", e)
     };
     ($fmt:expr) => {
         |e| ::tracing::warn!($fmt, e)
+    };
+}
+
+#[macro_export]
+macro_rules! emit_error {
+    () => {
+        |e| ::tracing::error!("{:?}", e)
+    };
+    ($fmt:expr) => {
+        |e| ::tracing::error!($fmt, e)
     };
 }

@@ -37,19 +37,16 @@ impl Issue for LinkStatus {
         match self {
             Self::Unresolved => Level::WARN,
             Self::Debug => Level::TRACE,
-            Self::Ok => Level::INFO,
+            Self::Ok => Level::DEBUG,
         }
     }
-}
 
-impl fmt::Display for LinkStatus {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let msg = match self {
-            Self::Unresolved => "failed to resolve some links",
-            Self::Ok => "successfully resolved all links",
+    fn title(&self) -> impl fmt::Display {
+        match self {
+            Self::Unresolved => "item could not be resolved",
+            Self::Ok => "link resolved",
             Self::Debug => "debug info",
-        };
-        fmt::Display::fmt(msg, f)
+        }
     }
 }
 
@@ -57,12 +54,12 @@ impl Link<'_> {
     pub fn diagnostic(&self) -> LinkDiagnostic {
         let status = match self.state {
             LinkState::Unparsed => LinkStatus::Debug,
-            LinkState::Parsed(_) => LinkStatus::Unresolved,
+            LinkState::Pending(_) => LinkStatus::Unresolved,
             LinkState::Resolved(_) => LinkStatus::Ok,
         };
         let label = match &self.state {
             LinkState::Unparsed => Some(self.url.as_ref().into()),
-            LinkState::Parsed(item) => Some(format!("failed to resolve link for {:?}", item.name)),
+            LinkState::Pending(item) => Some(format!("could not obtain a link to {:?}", item.name)),
             LinkState::Resolved(links) => Some(format!("{}", links.url())),
         };
         let label = LabeledSpan::new_with_span(label, self.span.clone());

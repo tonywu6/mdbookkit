@@ -1,4 +1,6 @@
-use anyhow::{Result, anyhow};
+use std::{fmt::Display, process::exit, sync::LockResult};
+
+use anyhow::{Context, Error, Result, anyhow};
 use serde::Deserialize;
 use tap::Pipe;
 use tracing::Level;
@@ -27,20 +29,18 @@ pub enum OnWarning {
 impl OnWarning {
     pub fn check(&self, level: Level) -> Result<()> {
         match level {
-            Level::ERROR => Err(anyhow!("preprocessor has errors")),
+            Level::ERROR => Err(anyhow!("Preprocessor has errors")),
             Level::WARN => match self {
-                Self::AlwaysFail => {
-                    anyhow!("treating warnings as errors because the `fail-on-warnings` option is set to \"always\"")
-                        .context("preprocessor has errors")
-                        .pipe(Err)
-                }
+                Self::AlwaysFail => anyhow! {"Treating warnings as errors because the \
+                `fail-on-warnings` option is set to \"always\""}
+                .pipe(Err),
                 Self::FailInCi => {
                     let Some(ci) = is_ci() else {
                         return Ok(());
                     };
-                    anyhow!("treating warnings as errors because the `fail-on-warnings` option is set to \"ci\" and CI={ci}")
-                        .context("preprocessor has errors")
-                        .pipe(Err)
+                    anyhow! {"Treating warnings as errors because CI={ci} and the \
+                    `fail-on-warnings` option is set to \"ci\""}
+                    .pipe(Err)
                 }
             },
             _ => Ok(()),
@@ -49,8 +49,100 @@ impl OnWarning {
 
     pub fn adjusted<T, E>(&self, result: Result<Result<T, E>, E>) -> Result<Result<T, E>, E> {
         match result {
+            Err(error) => Err(error),
             Ok(Err(error)) if is_ci().is_some() => Err(error),
-            result => result,
+            Ok(Err(error)) => Ok(Err(error)),
+            Ok(Ok(result)) => Ok(Ok(result)),
+        }
+    }
+}
+
+pub trait ExpectFmt {
+    fn expect_fmt(self);
+}
+
+impl ExpectFmt for std::fmt::Result {
+    #[inline(always)]
+    fn expect_fmt(self) {
+        self.expect("string formatting should not fail")
+    }
+}
+
+pub trait ExpectLock<T> {
+    fn expect_lock(self) -> T;
+}
+
+impl<T> ExpectLock<T> for LockResult<T> {
+    #[inline(always)]
+    fn expect_lock(self) -> T {
+        self.expect("lock should not be poisoned")
+    }
+}
+
+pub trait IntoAnyhow<T> {
+    fn anyhow(self) -> Result<T>;
+}
+
+impl<T, E: Into<Error>> IntoAnyhow<T> for Result<T, E> {
+    #[inline(always)]
+    fn anyhow(self) -> Result<T> {
+        self.map_err(Into::into)
+    }
+}
+
+#[allow(async_fn_in_trait)]
+pub trait FutureWithError<T> {
+    async fn context<C>(self, context: C) -> Result<T>
+    where
+        C: Display + Send + Sync + 'static;
+
+    async fn with_context<C, G>(self, context: G) -> Result<T>
+    where
+        C: Display + Send + Sync + 'static,
+        G: FnOnce() -> C;
+}
+
+impl<F, T, E> FutureWithError<T> for F
+where
+    F: Future<Output = Result<T, E>>,
+    E: Into<Error>,
+{
+    #[inline(always)]
+    async fn context<C>(self, context: C) -> Result<T>
+    where
+        C: Display + Send + Sync + 'static,
+    {
+        match self.await {
+            Ok(value) => Ok(value),
+            Err(error) => Err(error.into()).context(context),
+        }
+    }
+
+    #[inline(always)]
+    async fn with_context<C, G>(self, context: G) -> Result<T>
+    where
+        C: Display + Send + Sync + 'static,
+        G: FnOnce() -> C,
+    {
+        match self.await {
+            Ok(value) => Ok(value),
+            Err(error) => Err(error.into()).with_context(context),
+        }
+    }
+}
+
+pub trait ExitProcess {
+    fn exit(self, log: impl FnOnce(Error)) -> !;
+}
+
+impl ExitProcess for Result<()> {
+    fn exit(self, log: impl FnOnce(Error)) -> ! {
+        match self {
+            Ok(()) => exit(0),
+            Err(e) => {
+                log(e);
+                exit(1)
+            }
         }
     }
 }

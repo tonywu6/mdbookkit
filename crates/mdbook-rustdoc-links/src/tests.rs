@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 use anyhow::{Context, Result, bail};
 use lsp_types::Url;
 use rstest::*;
@@ -10,6 +12,7 @@ use mdbookkit::{logging::Logging, portable_snapshots, test_document, testing::Te
 use crate::{
     client::Client,
     env::{Config, Environment},
+    link_report,
     page::Pages,
     resolver::Resolver,
 };
@@ -34,7 +37,7 @@ fn fixture() -> Fixture {
         ..Default::default()
     }
     .pipe(Environment::new)
-    .context("failed to initialize environment")
+    .context("Failed to initialize environment")
     .unwrap()
     .pipe(Client::new);
 
@@ -44,7 +47,7 @@ fn fixture() -> Fixture {
         let stream = client.env().markdown(doc.content).into_offset_iter();
         pages
             .read(doc.url(), doc.content, stream)
-            .context("failed to parse source")
+            .context("Failed to parse source")
             .unwrap();
     }
 
@@ -56,10 +59,12 @@ fn fixture() -> Fixture {
             client
                 .resolve(&mut pages)
                 .await
-                .context("failed to resolve links")
+                .context("Failed to resolve links")
                 .unwrap();
             client.stop().await
         });
+
+    link_report(&pages);
 
     Fixture { env, pages }
 }
@@ -73,9 +78,9 @@ fn assert_output(doc: TestDocument, Fixture { pages, env }: &Fixture) -> Result<
 fn assert_report(doc: TestDocument, Fixture { pages, .. }: &Fixture) -> Result<()> {
     let report = pages
         .reporter()
-        .level(LevelFilter::INFO)
-        .named(|u| u == &doc.url())
-        .names(|_| doc.name())
+        .name_display(|_| doc.name())
+        .level_filter(LevelFilter::DEBUG)
+        .filtered(|u| u == &doc.url())
         .build()
         .to_report();
 
@@ -104,7 +109,7 @@ fn assert_whitespace_unchanged(doc: TestDocument, Fixture { pages, env }: &Fixtu
         .collect::<Vec<_>>();
 
     if !changed_lines.is_empty() {
-        bail!("unexpected whitespace change: {changed_lines:?}")
+        bail!("Unexpected whitespace change: {changed_lines:?}")
     } else {
         Ok(())
     }

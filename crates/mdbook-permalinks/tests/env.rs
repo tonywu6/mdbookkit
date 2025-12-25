@@ -96,7 +96,7 @@ fn test_minimum_env() -> Result<()> {
         .current_dir(&root)
         .assert()
         .success()
-        .stderr(predicate::str::contains("no commit found"));
+        .stderr(predicate::str::contains("No commit found"));
 
     info!("when: repo has no origin");
     Command::new("git")
@@ -119,7 +119,9 @@ fn test_minimum_env() -> Result<()> {
         .current_dir(&root)
         .assert()
         .success()
-        .stderr(predicate::str::contains("failed to determine GitHub url"));
+        .stderr(predicate::str::contains(
+            "Failed to determine the remote URL",
+        ));
 
     info!("when: repo has origin");
     Command::new("git")
@@ -142,7 +144,7 @@ fn test_minimum_env() -> Result<()> {
         .assert()
         .success()
         .stderr(predicate::str::contains("[WARN]").not())
-        .stderr(predicate::str::contains("using commit"));
+        .stderr(predicate::str::contains("Using commit hash"));
 
     info!("when: HEAD is tagged");
     Command::new("git")
@@ -160,7 +162,7 @@ fn test_minimum_env() -> Result<()> {
         .assert()
         .success()
         .stderr(predicate::str::contains("[WARN]").not())
-        .stderr(predicate::str::contains("using tag \"v0.1.0\""));
+        .stderr(predicate::str::contains("Using tag name \"v0.1.0\""));
 
     Ok(())
 }

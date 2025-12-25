@@ -8,7 +8,7 @@ use mdbookkit::{
 };
 
 fn preprocess() -> Result<()> {
-    let (ctx, mut book) = book_from_stdin().context("failed to read from mdbook")?;
+    let (ctx, mut book) = book_from_stdin().context("Failed to read from mdBook")?;
 
     book.for_each_text_mut(|_, content| {
         let stream = Parser::new(content)

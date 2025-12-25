@@ -1,22 +1,23 @@
 use std::{fmt::Debug, ops::Range};
 
 use mdbook_markdown::pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
+use tracing::{debug, trace};
 use url::Url;
 
 #[derive(Debug, Default, Clone, thiserror::Error)]
 pub enum LinkStatus {
     #[default]
-    #[error("links ignored")]
+    #[error("link ignored")]
     Ignored,
 
     #[error("linking to book page or file")]
     Unchanged,
     #[error("linking to book page or file, rewritten as paths")]
     Rewritten,
-    #[error("links converted to permalinks")]
+    #[error("link converted to permalink")]
     Permalink,
 
-    #[error("links inaccessible")]
+    #[error("link inaccessible")]
     Unreachable(Vec<(Url, PathStatus)>),
 
     #[error("error encountered: {0}")]
@@ -46,12 +47,12 @@ pub struct RelativeLink<'a> {
     pub status: LinkStatus,
     pub span: Range<usize>,
     pub link: CowStr<'a>,
-    pub hint: ContentTypeHint,
+    pub hint: ContentHint,
     pub title: CowStr<'a>,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum ContentTypeHint {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ContentHint {
     Tree,
     Raw,
 }
@@ -79,16 +80,47 @@ impl<'a> LinkSpan<'a> {
     }
 }
 
-impl RelativeLink<'_> {
-    fn emit(&self) -> Tag<'_> {
+impl<'a> RelativeLink<'a> {
+    #[inline]
+    pub fn rewritten(&mut self, link: impl Into<CowStr<'a>>) {
+        self.status = LinkStatus::Rewritten;
+        self.update(link);
+    }
+
+    #[inline]
+    pub fn permalink(&mut self, link: impl Into<CowStr<'a>>) {
+        self.status = LinkStatus::Permalink;
+        self.update(link);
+    }
+
+    #[inline]
+    fn update(&mut self, link: impl Into<CowStr<'a>>) {
+        let old = &*self.link.clone();
+        self.link = link.into();
+        debug!(status = ?self.status, ?old, new = ?&*self.link);
+    }
+
+    #[inline]
+    pub fn unchanged(&mut self) {
+        self.status = LinkStatus::Unchanged;
+        debug!(status = ?self.status, link = ?&*self.link);
+    }
+
+    #[inline]
+    pub fn unreachable(&mut self, errors: Vec<(Url, PathStatus)>) {
+        self.status = LinkStatus::Unreachable(errors);
+        debug!(status = ?self.status, link = ?&*self.link);
+    }
+
+    fn emit(&self) -> Tag<'a> {
         match self.hint {
-            ContentTypeHint::Tree => Tag::Link {
+            ContentHint::Tree => Tag::Link {
                 link_type: LinkType::Inline,
                 dest_url: self.link.clone(),
                 title: self.title.clone(),
                 id: CowStr::Borrowed(""),
             },
-            ContentTypeHint::Raw => Tag::Image {
+            ContentHint::Raw => Tag::Image {
                 link_type: LinkType::Inline,
                 dest_url: self.link.clone(),
                 title: self.title.clone(),
@@ -97,18 +129,21 @@ impl RelativeLink<'_> {
         }
     }
 
-    fn will_emit(&self) -> Option<ContentTypeHint> {
-        if matches!(self.status, LinkStatus::Permalink | LinkStatus::Rewritten) {
-            Some(self.hint)
-        } else {
-            None
+    fn will_emit(&self) -> Option<ContentHint> {
+        match self.status {
+            LinkStatus::Ignored => None,
+            LinkStatus::Unchanged => None,
+            LinkStatus::Rewritten => Some(self.hint),
+            LinkStatus::Permalink => Some(self.hint),
+            LinkStatus::Unreachable(_) => None,
+            LinkStatus::Error(_) => None,
         }
     }
 }
 
 pub struct EmitLinkSpan<'a> {
     iter: std::slice::Iter<'a, LinkText<'a>>,
-    opened: Vec<ContentTypeHint>,
+    opened: Vec<ContentHint>,
 }
 
 impl<'a> Iterator for EmitLinkSpan<'a> {
@@ -117,36 +152,42 @@ impl<'a> Iterator for EmitLinkSpan<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         for next in self.iter.by_ref() {
             match next {
-                LinkText::Text(text) => {
-                    match (text, self.opened.last()) {
-                        (Event::End(TagEnd::Link), Some(ContentTypeHint::Tree)) => {
-                            self.opened.pop();
-                            return Some(text.clone());
+                LinkText::Link(link) => {
+                    let span = &link.span;
+                    match (link.will_emit(), self.opened.is_empty()) {
+                        (Some(usage), top_level) => {
+                            self.opened.push(usage);
+                            let link = link.emit();
+                            trace!(?span, ?link, "{}", if top_level { ">" } else { ">>" });
+                            return Some(Event::Start(link));
                         }
-                        (Event::End(TagEnd::Image), Some(ContentTypeHint::Raw)) => {
-                            self.opened.pop();
-                            return Some(text.clone());
+                        (None, false) => {
+                            let link = link.emit();
+                            trace!(?span, ?link, ">│ skipped, link in link");
+                            return Some(Event::Start(link));
                         }
-                        (Event::End(TagEnd::Link | TagEnd::Image), None) => {
-                            // skip this end tag because the link was skipped
+                        (None, true) => {
+                            trace!(?span, "│ skipped");
                             continue;
-                        }
-                        _ => {
-                            return Some(text.clone());
                         }
                     };
                 }
-                LinkText::Link(link) => {
-                    match (link.will_emit(), self.opened.is_empty()) {
-                        (Some(usage), _) => {
-                            self.opened.push(usage);
-                            return Some(Event::Start(link.emit()));
+                LinkText::Text(text) => {
+                    match (text, self.opened.last()) {
+                        (Event::End(TagEnd::Link | TagEnd::Image), Some(..)) => {
+                            self.opened.pop();
+                            let top_level = self.opened.is_empty();
+                            trace!(?text, "{}", if top_level { "<" } else { "<<" });
+                            return Some(text.clone());
                         }
-                        (None, false) => {
-                            return Some(Event::Start(link.emit()));
-                        }
-                        (None, true) => {
+                        (Event::End(TagEnd::Link | TagEnd::Image), None) => {
+                            trace!("│ skipped");
                             continue;
+                        }
+                        _ => {
+                            let top_level = self.opened.len() == 1;
+                            trace!(?text, "{}", if top_level { "│" } else { " │" });
+                            return Some(text.clone());
                         }
                     };
                 }
@@ -173,14 +214,5 @@ impl<'a> EmitLinkSpan<'a> {
             opened: vec![],
         };
         Some((iter, span))
-    }
-}
-
-impl Debug for ContentTypeHint {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Tree => f.write_str("tree"),
-            Self::Raw => f.write_str("raw"),
-        }
     }
 }

@@ -2,7 +2,7 @@
 source: crates/mdbook-rustdoc-links/src/tests.rs
 expression: report
 ---
-  info: successfully resolved all links
+  info: link resolved
     ╭─[docs/src/rustdoc-links/known-issues.md:27:25]
     │ the derived trait by using the [macro syntax](supported-syntax.md#functions-and-macros),
     │ for example, by writing [`[serde::Serialize!]`][serde::Serialize] instead of

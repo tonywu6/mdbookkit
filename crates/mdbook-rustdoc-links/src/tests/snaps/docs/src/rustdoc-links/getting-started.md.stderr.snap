@@ -2,7 +2,7 @@
 source: crates/mdbook-rustdoc-links/src/tests.rs
 expression: report
 ---
-  info: successfully resolved all links
+  info: link resolved
     ╭─[docs/src/rustdoc-links/getting-started.md:55:6]
     │ 
     │ Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a

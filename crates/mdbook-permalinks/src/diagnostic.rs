@@ -14,7 +14,7 @@ use crate::{
 };
 
 impl Environment {
-    pub fn report_issues<'a, F>(&'a self, content: &'a Pages<'a>, statuses: F) -> Reporter<'a>
+    pub fn reporter<'a, F>(&'a self, content: &'a Pages<'a>, statuses: F) -> Reporter<'a>
     where
         F: Fn(&'a LinkStatus) -> bool,
     {
@@ -145,13 +145,17 @@ impl LinkDiagnostic<'_> {
 impl Issue for LinkStatus {
     fn level(&self) -> Level {
         match self {
-            Self::Ignored => Level::DEBUG,
-            Self::Unchanged => Level::DEBUG,
-            Self::Rewritten => Level::INFO,
-            Self::Permalink => Level::INFO,
+            Self::Ignored => Level::TRACE,
+            Self::Unchanged => Level::TRACE,
+            Self::Rewritten => Level::DEBUG,
+            Self::Permalink => Level::DEBUG,
             Self::Unreachable(..) => Level::WARN,
-            Self::Error(..) => Level::WARN,
+            Self::Error(..) => Level::ERROR,
         }
+    }
+
+    fn title(&self) -> impl std::fmt::Display {
+        self
     }
 }
 

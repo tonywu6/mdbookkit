@@ -1510,6 +1510,7 @@ dependencies = [
  "cargo_toml",
  "clap",
  "dirs",
+ "futures-util",
  "insta",
  "lsp-types",
  "mdbook-markdown",

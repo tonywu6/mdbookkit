@@ -5,16 +5,19 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Context, Result, anyhow};
 use cargo_toml::{Manifest, Product};
 use lsp_types::Url;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use shlex::Shlex;
-use tap::Pipe;
 use tokio::process::Command;
 use tracing::debug;
 
-use mdbookkit::{error::OnWarning, markdown::default_markdown_options};
+use mdbookkit::{
+    error::{IntoAnyhow, OnWarning},
+    markdown::default_markdown_options,
+    url::{ExpectUrl, UrlFromPath},
+};
 
 use crate::markdown;
 
@@ -119,7 +122,7 @@ impl Config {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Environment {
     pub temp_dir: TempDir,
     pub crate_dir: Url,
@@ -135,35 +138,34 @@ impl Environment {
             .clone()
             .map(Ok)
             .unwrap_or_else(std::env::current_dir)
-            .context("failed to get the current working directory")?
+            .context("Failed to get the current working directory")?
             .canonicalize()
-            .context("failed to resolve `manifest-dir` to a path")?;
+            .context("Failed to resolve `manifest-dir` to a path")?;
 
         let (crate_dir, entrypoint) = {
             let manifest_path = LocateProject::package(&cwd)
-                .context("preprocessor requires a Cargo project to run rust-analyzer")
-                .context("failed to determine the current Cargo project")?
+                .context("Preprocessor requires a Cargo project to run rust-analyzer")
+                .context("Failed to determine the current Cargo project")?
                 .root;
 
             let manifest = Manifest::from_path(&manifest_path)
                 .and_then(|mut m| m.complete_from_path(&manifest_path).and(Ok(m)))
-                .context("failed to read Cargo.toml")?;
+                .context("Failed to read from Cargo.toml")?;
 
             let crate_dir = manifest_path
                 .parent()
-                .unwrap()
-                .pipe(Url::from_directory_path)
-                .unwrap();
+                .expect("manifest_path should have a parent")
+                .to_directory_url();
 
             if let Some(Product {
                 path: Some(ref lib),
                 ..
             }) = manifest.lib
             {
-                let entry = crate_dir.join(lib)?;
+                let entry = crate_dir.join(lib).expect_url();
                 Ok((crate_dir, entry))
             } else if let Some(bin) = manifest.bin.iter().find_map(|bin| bin.path.as_ref()) {
-                let entry = crate_dir.join(bin)?;
+                let entry = crate_dir.join(bin).expect_url();
                 Ok((crate_dir, entry))
             } else {
                 let err = Err(anyhow!(
@@ -171,7 +173,10 @@ impl Environment {
                     manifest_path.display()
                 ));
                 if manifest.workspace.is_some() {
-                    err.context("help: to use in a workspace, set `manifest-dir` option to root of a member crate")
+                    err.context(
+                        "help: for usage in a workspace, set option \
+                        `manifest-dir` to the root of a member crate",
+                    )
                 } else {
                     err
                 }
@@ -180,12 +185,9 @@ impl Environment {
         }?;
 
         let source_dir = LocateProject::workspace(cwd)
-            .context("failed to locate the current Cargo project")?
-            .root
-            .parent()
-            .unwrap()
-            .pipe(Url::from_directory_path)
-            .unwrap();
+            .context("Failed to locate the current Cargo project")?
+            .directory()
+            .to_directory_url();
 
         let temp_dir = match config.cache_dir.clone() {
             Some(path) => Some(TempDir::Persistent(path)),
@@ -194,7 +196,7 @@ impl Environment {
                 .map(Arc::new)
                 .map(TempDir::Transient),
         }
-        .context("failed to obtain a temporary directory")?;
+        .context("Failed to obtain a temporary directory")?;
 
         Ok(Self {
             temp_dir,
@@ -232,7 +234,8 @@ impl Environment {
         P: AsRef<Path>,
     {
         let path = self.temp_dir.as_ref().join(path);
-        let text = std::fs::read_to_string(&path).context("failed to read from cache dir")?;
+        debug!("reading temp file from {}", path.display());
+        let text = std::fs::read_to_string(&path)?;
         Ok(serde_json::from_str(&text)?)
     }
 
@@ -242,9 +245,11 @@ impl Environment {
         P: AsRef<Path>,
     {
         let path = self.temp_dir.as_ref().join(path);
-        let text = serde_json::to_string(&temp).context("failed to serialize cache data")?;
-        std::fs::create_dir_all(path.parent().unwrap()).context("failed to create cache dir")?;
-        std::fs::write(path, text).context("failed to write to cache dir")?;
+        debug!("saving temp file to {}", path.display());
+        let text = serde_json::to_string(&temp).context("Failed to serialize cache data")?;
+        std::fs::create_dir_all(path.parent().expect("temp dir should have a parent"))
+            .context("Failed to create cache dir")?;
+        std::fs::write(path, text).context("Failed to write to cache dir")?;
         Ok(())
     }
 }
@@ -274,13 +279,19 @@ struct LocateProject {
 }
 
 impl LocateProject {
+    fn directory(&self) -> &Path {
+        self.root
+            .parent()
+            .expect("path to Cargo.toml should have a parent")
+    }
+
     fn package<P: AsRef<Path>>(cwd: P) -> Result<Self> {
         std::process::Command::new("cargo")
             .arg("locate-project")
             .arg("--message-format=json")
             .current_dir(cwd)
             .output()
-            .context("failed to run `cargo locate-project`, is cargo installed?")
+            .context("Failed to run `cargo locate-project`, is cargo installed?")
             .and_then(Self::parse)
     }
 
@@ -291,17 +302,23 @@ impl LocateProject {
             .arg("--workspace")
             .current_dir(cwd)
             .output()
-            .context("failed to run `cargo locate-project`, is cargo installed?")
+            .context("Failed to run `cargo locate-project`, is cargo installed?")
             .and_then(Self::parse)
     }
 
     fn parse(output: std::process::Output) -> Result<Self> {
-        if output.status.success() {
-            String::from_utf8(output.stdout)?
-                .pipe(|outout| serde_json::from_str::<Self>(&outout))?
-                .pipe(Ok)
+        let std::process::Output {
+            status,
+            stderr,
+            stdout,
+        } = output;
+        if status.success() {
+            (String::from_utf8(stdout).anyhow())
+                .and_then(|output| serde_json::from_str(&output).anyhow())
+                .context("Could not parse `cargo locate-project` output")
         } else {
-            bail!(String::from_utf8_lossy(&output.stderr).into_owned());
+            Err(anyhow!(String::from_utf8_lossy(&stderr).into_owned()))
+                .context("`cargo locate-project` did not run successfully")
         }
     }
 }
@@ -319,7 +336,7 @@ impl<'a> RustAnalyzer<'a> {
                 let mut words = Shlex::new(cmd);
                 let executable = words
                     .next()
-                    .context("unexpected empty string for option `rust-analyzer`")?;
+                    .context("Unexpected empty string for option `rust-analyzer`")?;
                 let mut cmd = Command::new(executable);
                 cmd.args(words);
                 Ok(cmd)
@@ -359,4 +376,23 @@ pub fn find_code_extension() -> Option<PathBuf> {
             None
         }
     })
+}
+
+impl std::fmt::Debug for Environment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Self {
+            temp_dir,
+            crate_dir,
+            source_dir,
+            entrypoint,
+            config,
+        } = self;
+        f.debug_struct("Environment")
+            .field("crate_dir", &format_args!("\"{crate_dir}\""))
+            .field("source_dir", &format_args!("\"{source_dir}\""))
+            .field("entrypoint", &format_args!("\"{entrypoint}\""))
+            .field("config", &config)
+            .field("temp_dir", &temp_dir)
+            .finish()
+    }
 }

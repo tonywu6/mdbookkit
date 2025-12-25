@@ -59,15 +59,11 @@ impl BookConfigHelper for MDBookConfig {
 
         for (idx, name) in names.iter().enumerate() {
             let name = format_name(name);
-            if let Some(value) = (self.get::<T>(&name))
-                .with_context(|| format!("error while reading [{name}] in book.toml"))?
-            {
+            if let Some(value) = self.get::<T>(&name)? {
                 if idx != 0 {
                     let recommended = format_name(names[0]);
-                    warn!(
-                        "The book.toml section [{name}] is deprecated. \
-                        Use [{recommended}] instead."
-                    );
+                    warn! { "The book.toml section [{name}] is deprecated. \
+                    Use [{recommended}] instead." };
                 }
                 return Ok(value);
             }
@@ -137,13 +133,14 @@ impl BookHelper for Book {
 
     fn to_stdout(self, ctx: &PreprocessorContext) -> Result<()> {
         let output = if ctx.mdbook_version.starts_with("0.4.") {
-            patch_mdbook_output_0_4(self)?
+            patch_mdbook_output_0_4(self)
         } else {
-            serde_json::to_string(&self).context("failed to serialize mdbook output")?
-        };
+            serde_json::to_string(&self).map_err(Into::into)
+        }
+        .context("Failed to serialize mdBook output")?;
         std::io::stdout()
             .write_all(output.as_bytes())
-            .context("failed to write mdbook output")
+            .context("Failed to write mdBook output")
     }
 }
 
@@ -156,7 +153,8 @@ fn patch_mdbook_input(
     match ctx.get("mdbook_version") {
         Some(Value::String(version)) => {
             if !version.starts_with("0.4.") && !version.starts_with("0.5.") {
-                bail!("unsupported mdbook version {version}; supported versions are 0.4, 0.5")
+                bail! { "Unsupported mdBook version {version}; \
+                supported versions are 0.4, 0.5" }
             }
         }
         _ => return Err(error)?,

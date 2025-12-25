@@ -2,37 +2,41 @@
 source: crates/mdbook-rustdoc-links/src/tests.rs
 expression: report
 ---
-  warning: failed to resolve some links
-    ╭─[ra-known-quirks.md:3:3]
-    │ 
-    │ - [u8]
-    ·   ──┬─
-    ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.u8.html
-    │ - [u32]
-    ·   ──┬──
-    ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.u32.html
-    │ - [f64]
-    ·   ──┬──
-    ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.f64.html
-    │ - [char]
-    ·   ───┬──
-    ·      ╰── https://doc.rust-lang.org/nightly/core/primitive.char.html
-    │ - [str]
-    ·   ──┬──
-    ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.str.html
-    │ 
-    │ # associated items on primitive types
-    │ 
-    │ - [str::parse]
-    ·   ──────┬─────
-    ·         ╰── failed to resolve link for "str::parse"
-    │ - [f64::MIN_POSITIVE]
-    ·   ─────────┬─────────
-    ·            ╰── failed to resolve link for "f64::MIN_POSITIVE"
-    │ 
-    │ # macro_export
+  info: link resolved
+   ╭─[ra-known-quirks.md:3:3]
+   │ 
+   │ - [u8]
+   ·   ──┬─
+   ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.u8.html
+   │ - [u32]
+   ·   ──┬──
+   ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.u32.html
+   │ - [f64]
+   ·   ──┬──
+   ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.f64.html
+   │ - [char]
+   ·   ───┬──
+   ·      ╰── https://doc.rust-lang.org/nightly/core/primitive.char.html
+   │ - [str]
+   ·   ──┬──
+   ·     ╰── https://doc.rust-lang.org/nightly/core/primitive.str.html
+   │ 
+   ╰────
+    ╭─[ra-known-quirks.md:16:3]
     │ 
     │ - [tokio::main!]
     ·   ───────┬──────
     ·          ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
+    ╰────
+
+  warning: item could not be resolved
+    ╭─[ra-known-quirks.md:11:3]
+    │ 
+    │ - [str::parse]
+    ·   ──────┬─────
+    ·         ╰── could not obtain a link to "str::parse"
+    │ - [f64::MIN_POSITIVE]
+    ·   ─────────┬─────────
+    ·            ╰── could not obtain a link to "f64::MIN_POSITIVE"
+    │ 
     ╰────

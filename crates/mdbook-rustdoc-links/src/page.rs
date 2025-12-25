@@ -1,19 +1,18 @@
-use std::{
-    borrow::Borrow,
-    collections::HashMap,
-    fmt::{self, Debug},
-    hash::Hash,
-};
+use std::{borrow::Borrow, collections::HashMap, fmt, hash::Hash};
 
 use anyhow::{Context, Result, bail};
-use mdbook_markdown::pulldown_cmark::{CowStr, Event, Tag, TagEnd};
+use mdbook_markdown::pulldown_cmark::{Event, Tag, TagEnd};
 use tap::Pipe;
+use tracing::{debug, instrument, trace, trace_span};
 
-use mdbookkit::markdown::{PatchStream, Spanned};
+use mdbookkit::{
+    emit_warning,
+    markdown::{PatchStream, Spanned},
+    plural,
+};
 
 use crate::{
     env::EmitConfig,
-    item::Item,
     link::{ItemLinks, Link, LinkState},
 };
 
@@ -31,11 +30,13 @@ struct Page<'a> {
     links: Vec<Link<'a>>,
 }
 
-impl<'a, K: Eq + Hash> Pages<'a, K> {
+impl<'a, K: PageKey> Pages<'a, K> {
+    #[instrument(level = "debug", "page_read", skip_all)]
     pub fn read<S>(&mut self, key: K, source: &'a str, stream: S) -> Result<()>
     where
         S: Iterator<Item = Spanned<Event<'a>>>,
     {
+        debug!(path = ?key, "reading file");
         self.pages.insert(key, Page::read(source, stream)?);
         Ok(())
     }
@@ -43,27 +44,14 @@ impl<'a, K: Eq + Hash> Pages<'a, K> {
     pub fn emit<Q>(&self, key: &Q, options: &EmitConfig) -> Result<String>
     where
         K: Borrow<Q>,
-        Q: Eq + Hash + fmt::Debug + ?Sized,
+        Q: PageKey + ?Sized,
     {
-        let page = self.pages.get(key);
-        let page = page.with_context(|| format!("no such document {key:?}"))?;
-        page.emit(options)
-    }
-
-    pub fn items(&self) -> HashMap<CowStr<'a>, &Item> {
         self.pages
-            .values()
-            .flat_map(|page| page.links.iter())
-            .filter_map(|link| link.item().map(|item| (link.key().clone(), item)))
-            .collect::<HashMap<_, _>>()
-    }
-
-    pub fn links(&self) -> HashMap<CowStr<'a>, ItemLinks> {
-        self.pages
-            .values()
-            .flat_map(|page| page.links.iter())
-            .filter_map(|link| link.link().map(|item| (link.key().clone(), item)))
-            .collect::<HashMap<_, _>>()
+            .get(key)
+            .with_context(|| format!("No such document {key:?}"))
+            .inspect_err(emit_warning!())
+            .expect("should have document")
+            .emit(options)
     }
 
     pub fn apply<L>(&mut self, links: &HashMap<L, ItemLinks>)
@@ -73,7 +61,7 @@ impl<'a, K: Eq + Hash> Pages<'a, K> {
         for page in self.pages.values_mut() {
             for link in page.links.iter_mut() {
                 if let Some(links) = links.get(link.key()) {
-                    *link.state() = LinkState::Resolved(links.clone());
+                    *link.state_mut() = LinkState::Resolved(links.clone());
                     self.modified = true;
                 }
             }
@@ -118,37 +106,43 @@ impl<'a> Page<'a> {
         let mut link: Option<Link<'_>> = None;
 
         for (event, span) in stream {
-            if matches!(event, Event::End(TagEnd::Link)) {
-                match link.take() {
-                    Some(link) => {
-                        if link.span() == &span {
-                            links.push(link);
-                            continue;
+            match event {
+                Event::End(TagEnd::Link) => match link.take() {
+                    Some(open) => {
+                        if open.span() == &span {
+                            trace!(?span, "link <<<");
+                            links.push(open);
                         } else {
-                            bail!("mismatching span, expected {:?}, got {span:?}", link.span())
+                            debug!(?span, "mismatching span, expected {:?}", open.span());
+                            bail!("Markdown stream malformed at {span:?}");
                         }
                     }
-                    None => bail!("unexpected `TagEnd::Link` at {span:?}"),
+                    None => {
+                        debug!(?span, "unexpected `TagEnd::Link`");
+                        bail!("Markdown stream malformed at byte position {span:?}");
+                    }
+                },
+                Event::Start(Tag::Link {
+                    dest_url: url,
+                    title,
+                    ..
+                }) => {
+                    if link.is_none() {
+                        trace!(?span, ?url, ?title, "link >>>");
+                        let _span = trace_span!("read_link", ?span, ?url).entered();
+                        link = Some(Link::new(span, url, title));
+                    } else {
+                        debug!(?span, "unexpected `Tag::Link` in `Tag::Link`");
+                        bail!("Markdown stream malformed at byte position {span:?}");
+                    }
+                }
+                event => {
+                    if let Some(link) = link.as_mut() {
+                        trace!(?span, ?event, parent = ?link.span(), "link +++");
+                        link.inner_mut().push(event);
+                    }
                 }
             }
-
-            let Event::Start(Tag::Link {
-                dest_url: url,
-                title,
-                ..
-            }) = event
-            else {
-                if let Some(link) = link.as_mut() {
-                    link.inner().push(event);
-                }
-                continue;
-            };
-
-            if link.is_some() {
-                bail!("unexpected `Tag::Link` in `Tag::Link` at {span:?}")
-            }
-
-            link = Some(Link::new(span, url, title));
         }
 
         Ok(Self { source, links })
@@ -161,5 +155,168 @@ impl<'a> Page<'a> {
             .pipe(|stream| PatchStream::new(self.source, stream))
             .into_string()?
             .pipe(Ok)
+    }
+}
+
+pub trait PageKey: Eq + Hash + fmt::Debug {}
+
+impl<T: Eq + Hash + fmt::Debug> PageKey for T {}
+
+mod iter {
+    use std::collections::{
+        HashMap,
+        hash_map::{Entry, VacantEntry},
+    };
+
+    use mdbook_markdown::pulldown_cmark::CowStr;
+
+    use crate::link::{Link, LinkState};
+
+    use super::{Pages, Statistics};
+
+    pub struct PagesIter<T> {
+        iter: T,
+        stats: Statistics,
+    }
+
+    impl<'a, K> Pages<'a, K> {
+        pub fn iter(&'_ self) -> PagesIter<impl Iterator<Item = &'_ Link<'a>>> {
+            PagesIter {
+                iter: self.pages.values().flat_map(|page| page.links.iter()),
+                stats: Default::default(),
+            }
+        }
+    }
+
+    impl<'p, 'a: 'p, T: Iterator<Item = &'p Link<'a>>> Iterator for PagesIter<T> {
+        type Item = &'p Link<'a>;
+
+        #[inline]
+        fn next(&mut self) -> Option<Self::Item> {
+            let Statistics {
+                links_pending,
+                links_resolved,
+                ..
+            } = &mut self.stats;
+
+            loop {
+                let item = self.iter.next()?;
+                match item.state() {
+                    LinkState::Pending(..) => {
+                        *links_pending += 1;
+                    }
+                    LinkState::Resolved(..) => {
+                        *links_resolved += 1;
+                    }
+                    LinkState::Unparsed => continue,
+                }
+                return Some(item);
+            }
+        }
+    }
+
+    impl<'p, 'a: 'p, T: Iterator<Item = &'p Link<'a>>> PagesIter<T> {
+        #[inline]
+        pub fn deduped<F, V>(&mut self, mut f: F) -> HashMap<CowStr<'a>, Option<V>>
+        where
+            F: FnMut(&'p Link<'a>) -> Option<V>,
+        {
+            let mut map = Default::default();
+            while let Some(link) = self.next() {
+                if let Some(entry) = self.record(&mut map, link) {
+                    entry.insert(f(link));
+                }
+            }
+            map
+        }
+
+        #[inline]
+        fn record<'m, V>(
+            &mut self,
+            map: &'m mut HashMap<CowStr<'a>, V>,
+            link: &'p Link<'a>,
+        ) -> Option<VacantEntry<'m, CowStr<'a>, V>> {
+            let Statistics {
+                items_pending,
+                items_resolved,
+                ..
+            } = &mut self.stats;
+
+            let Entry::Vacant(entry) = map.entry(link.key().clone()) else {
+                return None;
+            };
+
+            match link.state() {
+                LinkState::Pending(..) => {
+                    *items_pending += 1;
+                }
+                LinkState::Resolved(..) => {
+                    *items_resolved += 1;
+                }
+                LinkState::Unparsed => {}
+            }
+
+            Some(entry)
+        }
+
+        pub fn stats(&self) -> &Statistics {
+            &self.stats
+        }
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Statistics {
+    pub links_pending: usize,
+    pub items_pending: usize,
+    pub links_resolved: usize,
+    pub items_resolved: usize,
+}
+
+impl Statistics {
+    pub fn has_pending(&self) -> bool {
+        self.items_pending != 0
+    }
+
+    pub fn fmt_pending(&self) -> String {
+        let Self {
+            links_pending,
+            items_pending,
+            links_resolved,
+            items_resolved,
+        } = self;
+
+        let items = match (items_pending, items_resolved) {
+            (a, 0) => plural!(a, "item"),
+            (a, b) => format!("{a} out of {}", plural!(a + b, "item")),
+        };
+
+        let links = match (links_pending, links_resolved) {
+            (a, 0) => plural!(a, "link"),
+            (a, b) => format!("{a} out of {}", plural!(a + b, "link")),
+        };
+
+        format!("{links} containing {items}")
+    }
+
+    pub fn fmt_resolved(&self) -> String {
+        let Self {
+            links_pending,
+            items_pending,
+            links_resolved,
+            items_resolved,
+        } = self;
+
+        let links = match (links_pending, links_resolved) {
+            (0, b) => plural!(b, "link"),
+            (a, b) => format!("{b} out of {}", plural!(a + b, "link")),
+        };
+
+        let items = match (items_pending, items_resolved) {
+            (0, b) => plural!(b, "item"),
+            (a, b) => format!("{b} out of {}", plural!(a + b, "item")),
+        };
+
+        format!("{links} containing {items}")
     }
 }

@@ -5,19 +5,22 @@ use std::{borrow::Cow, fmt::Write, ops::Range};
 use mdbook_markdown::pulldown_cmark::{Event, Options};
 use pulldown_cmark_to_cmark::{Error, cmark};
 use tap::Pipe;
+use tracing::{debug, trace, trace_span};
+
+use crate::error::ExpectFmt;
 
 /// _Patch_ a Markdown string, instead of regenerating it entirely, in order to preserve
 /// as much of the original Markdown source as possible, especially with regard to whitespace.
 ///
 /// Currently, when using [`pulldown_cmark_to_cmark`] to generate Markdown from a
-/// [`pulldown_cmark::Event`][Event] stream, whitespace is NOT preserved. This is problematic
-/// for mdBook preprocessors, because preprocessors downstream may need to work on
+/// [`pulldown_cmark::Event`][Event] stream, whitespace is not preserved. This is problematic
+/// for mdBook preprocessors, because downstream preprocessors may need to work on
 /// syntax that is whitespace-sensitive. Normalizing all whitespace could cause such
 /// usage to no longer be recognized.
 pub struct PatchStream<'a, S> {
     source: &'a str,
     stream: S,
-    start: Option<usize>,
+    range: Option<Range<usize>>,
     patch: Option<String>,
 }
 
@@ -29,37 +32,47 @@ where
     type Item = Result<Cow<'a, str>, Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let start = self.start?;
+        let range = self.range.clone()?;
 
         if let Some(patch) = self.patch.take() {
+            trace!("- {range:?} {:?}", &self.source[range.clone()]);
+            trace!("+ {range:?} {patch:?}");
             return Some(Ok(Cow::Owned(patch)));
         }
 
         let Some((events, span)) = self.stream.next() else {
-            self.start = None;
-            return Some(Ok(Cow::Borrowed(&self.source[start..])));
+            let range = range.end..;
+            trace!("  {range:?}");
+            trace!("  EOF");
+            self.range = None;
+            return Some(Ok(Cow::Borrowed(&self.source[range])));
         };
 
-        if start > span.start {
-            panic!("span {span:?} is backwards from already yielded span ending at {start}")
+        if range.start > span.start {
+            debug!("span {span:?} is before already yielded span {range:?}");
+            return Some(Err(Error::FormatFailed(Default::default())));
         }
 
-        let patch = match String::new().pipe(|mut out| cmark(events, &mut out).and(Ok(out))) {
+        let patch = match trace_span!("chunk", ?span)
+            .in_scope(|| String::new().pipe(|mut out| cmark(events, &mut out).and(Ok(out))))
+        {
             Err(error) => return Some(Err(error)),
             Ok(patch) => patch,
         };
 
-        self.start = Some(span.end);
+        self.range = Some(span.clone());
         self.patch = Some(patch);
 
-        Some(Ok(Cow::Borrowed(&self.source[start..span.start])))
+        let range = range.end..span.start;
+        trace!("  {range:?}");
+        Some(Ok(Cow::Borrowed(&self.source[range])))
     }
 }
 
 impl<'a, S> PatchStream<'a, S> {
     /// Create a new patch stream.
     ///
-    /// `stream` should be an [`Iterator`] yielding tuples of (`events`, `range`):
+    /// `stream` should be an [`Iterator`] yielding tuples of `(events, range)`:
     ///
     /// - `events` is an [`Iterator`] yielding [`Event`]s which is the replacement
     ///   Markdown to be rendered into `source` using [`pulldown_cmark_to_cmark`].
@@ -77,7 +90,7 @@ impl<'a, S> PatchStream<'a, S> {
         Self {
             source,
             stream,
-            start: Some(0),
+            range: Some(0..0),
             patch: None,
         }
     }
@@ -91,7 +104,7 @@ where
     pub fn into_string(self) -> Result<String, Error> {
         let mut out = String::new();
         for chunk in self {
-            write!(out, "{}", chunk?).unwrap();
+            write!(out, "{}", chunk?).expect_fmt();
         }
         Ok(out)
     }

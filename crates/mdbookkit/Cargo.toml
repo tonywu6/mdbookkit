@@ -33,14 +33,14 @@ tap = { workspace = true }
 toml = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
+url = { workspace = true }
 
 cargo-run-bin = { workspace = true, optional = true }
 insta = { workspace = true, optional = true }
 minijinja = { workspace = true, optional = true }
-url = { workspace = true, optional = true }
 
 [features]
-_testing = ["dep:cargo-run-bin", "dep:insta", "dep:minijinja", "dep:url"]
+_testing = ["dep:cargo-run-bin", "dep:insta", "dep:minijinja"]
 
 [package.metadata.docs.rs]
 all-features = true

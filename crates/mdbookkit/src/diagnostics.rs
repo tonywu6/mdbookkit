@@ -2,20 +2,23 @@
 
 use std::{
     borrow::Borrow,
+    collections::BTreeMap,
     fmt::{self, Write as _},
     io::Write as _,
 };
 
 use miette::{
     Diagnostic, GraphicalReportHandler, GraphicalTheme, LabeledSpan, MietteError,
-    MietteSpanContents, ReportHandler, Severity, SourceCode, SourceSpan, SpanContents,
+    MietteSpanContents, Severity, SourceCode, SourceSpan, SpanContents,
 };
 use owo_colors::Style;
-use tap::{Pipe, Tap};
+use tap::{Pipe, Tap, TapFallible};
 use tracing::{Level, debug, error, info, level_filters::LevelFilter, trace, warn};
 
 use crate::{
+    emit_debug,
     env::{is_colored, is_logging},
+    error::ExpectFmt,
     logging::stderr,
 };
 
@@ -30,12 +33,9 @@ pub trait IssueItem: Send + Sync {
     fn label(&self) -> LabeledSpan;
 }
 
-/// Trait for diagnostics classes. This is like a specific error code.
-///
-/// **For implementors:** The [`Display`][fmt::Display] implementation, which is the
-/// title of each diagnostic message, should use plurals whenever possible, because
-/// error reporters may elect to group together multiple labels of the same [`Issue`]
-pub trait Issue: Default + fmt::Debug + fmt::Display + Clone + Send + Sync {
+/// Trait for diagnostics classes, like an error code.
+pub trait Issue: fmt::Debug + Default + Clone + Send + Sync {
+    fn title(&self) -> impl fmt::Display;
     fn level(&self) -> Level;
 }
 
@@ -79,17 +79,41 @@ where
         .pipe(GraphicalReportHandler::new_themed);
 
         let mut output = String::new();
-        handler.render_report(&mut output, self).unwrap();
+        handler.render_report(&mut output, self).expect_fmt();
         output
     }
 
-    /// Render the diagnostics as a list of log messages suitable for logging.
-    pub fn to_logs(&self) -> String {
-        let mut output = String::new();
-        LoggingReportHandler
-            .render_report(&mut output, self)
-            .unwrap();
-        output
+    pub fn to_traces(&self) {
+        for item in self.issues.iter() {
+            let issue = item.issue();
+            let label = item.label();
+            let source = self
+                .read_span(label.inner(), 0, 0)
+                .expect("self.read_span infallible");
+            let path = source.name().unwrap_or("<anonymous>");
+            let line = source.line() + 1;
+            let column = source.column() + 1;
+            let title = issue.title();
+            let level = issue.level();
+            let label = label.label().unwrap_or_default();
+            let message = format_args!("{path}:{line}:{column}: {title}");
+            let message = if label.is_empty() {
+                message
+            } else {
+                format_args!("{message}: {label}")
+            };
+            if level >= Level::TRACE {
+                trace!("{message}")
+            } else if level >= Level::DEBUG {
+                debug!("{message}")
+            } else if level >= Level::INFO {
+                info!("{message}")
+            } else if level >= Level::WARN {
+                warn!("{message}")
+            } else {
+                error!("{message}")
+            }
+        }
     }
 }
 
@@ -99,19 +123,6 @@ where
 {
     pub fn new(text: &'a str, name: K, issues: Vec<P>) -> Self {
         Self { text, name, issues }
-    }
-
-    pub fn filtered(self, level: LevelFilter) -> Option<Self> {
-        let Self { text, name, issues } = self;
-        let issues = issues
-            .into_iter()
-            .filter(|p| p.issue().level() <= level)
-            .collect::<Vec<_>>();
-        if issues.is_empty() {
-            None
-        } else {
-            Some(Self { text, name, issues })
-        }
     }
 
     pub fn name(&self) -> &K {
@@ -148,7 +159,7 @@ where
         Some(Box::new(self.issues.iter().map(|p| p.label())))
     }
 
-    fn help<'a>(&'a self) -> Option<Box<dyn fmt::Display + 'a>> {
+    fn help(&self) -> Option<Box<dyn fmt::Display + '_>> {
         // miette doesn't print the file name if there are no labels to report
         // so we print it here
         if self.issues.is_empty() {
@@ -194,7 +205,7 @@ impl<K, P: IssueItem> fmt::Debug for Diagnostics<'_, K, P> {
 
 impl<K, P: IssueItem> fmt::Display for Diagnostics<'_, K, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&self.status(), f)
+        fmt::Display::fmt(&self.status().title(), f)
     }
 }
 
@@ -203,40 +214,42 @@ impl<K, P: IssueItem> std::error::Error for Diagnostics<'_, K, P> {}
 /// Builder for printing diagnostics over multiple files.
 pub struct ReportBuilder<'a, K, P, F> {
     items: Vec<Diagnostics<'a, K, P>>,
-    print_name: F,
-    log_filter: LevelFilter,
+    name_display: F,
+    level_filter: LevelFilter,
 }
 
 impl<'a, K, P, F> ReportBuilder<'a, K, P, F> {
-    pub fn new(items: Vec<Diagnostics<'a, K, P>>, print_name: F) -> Self {
+    pub fn new(items: Vec<Diagnostics<'a, K, P>>, name_display: F) -> Self {
         Self {
             items,
-            print_name,
-            log_filter: LevelFilter::TRACE,
+            name_display,
+            level_filter: max_level(),
         }
     }
 
     /// Specify how file names should be printed.
-    pub fn names<G>(self, print_name: G) -> ReportBuilder<'a, K, P, G>
+    pub fn name_display<G>(self, name_display: G) -> ReportBuilder<'a, K, P, G>
     where
         G: for<'b> Fn(&'b K) -> String,
     {
         let Self {
-            items, log_filter, ..
+            items,
+            level_filter,
+            ..
         } = self;
         ReportBuilder {
             items,
-            print_name,
-            log_filter,
+            name_display,
+            level_filter,
         }
     }
 
-    pub fn level(mut self, level: LevelFilter) -> Self {
-        self.log_filter = level;
+    pub fn level_filter(mut self, level: LevelFilter) -> Self {
+        self.level_filter = level;
         self
     }
 
-    pub fn named<Q>(mut self, mut f: impl FnMut(&K) -> bool) -> Self
+    pub fn filtered<Q>(mut self, mut f: impl FnMut(&K) -> bool) -> Self
     where
         K: Borrow<Q>,
         Q: Eq + ?Sized,
@@ -256,28 +269,42 @@ where
     {
         let Self {
             items,
-            print_name,
-            log_filter,
+            name_display,
+            level_filter,
         } = self;
 
         let items = items
             .into_iter()
-            .filter_map(|p| {
-                if p.status().level() > log_filter {
-                    return None;
-                }
-
-                let Diagnostics { text, name, issues } = p.filtered(log_filter)?;
-
-                Some(Diagnostics {
-                    text,
-                    name: print_name(&name),
-                    issues,
-                })
+            .flat_map(|Diagnostics { text, name, issues }| {
+                Self::grouped(level_filter, issues)
+                    .into_iter()
+                    .map(|(level, issues)| {
+                        let name = name_display(&name);
+                        (level, Diagnostics { text, name, issues })
+                    })
+                    .collect::<Vec<_>>()
             })
-            .collect::<Vec<_>>();
+            .collect::<Vec<_>>()
+            .tap_mut(|items| {
+                items.sort_by(|(l1, d1), (l2, d2)| (l2, &d1.name).cmp(&(l1, &d2.name)))
+            })
+            .into_iter()
+            .map(|(_, d)| d)
+            .collect();
 
         Reporter { items }
+    }
+
+    fn grouped(max: LevelFilter, issues: Vec<P>) -> BTreeMap<Level, Vec<P>> {
+        let mut groups = BTreeMap::<_, Vec<_>>::new();
+        for item in issues {
+            let level = item.issue().level();
+            if level > max {
+                continue;
+            }
+            groups.entry(level).or_default().push(item);
+        }
+        groups
     }
 }
 
@@ -303,17 +330,11 @@ where
         }
 
         if is_logging() {
-            let logs = self.to_logs();
-            match self.to_status().level() {
-                Level::TRACE => trace!("\n\n{logs}"),
-                Level::DEBUG => debug!("\n\n{logs}"),
-                Level::INFO => info!("\n\n{logs}"),
-                Level::WARN => warn!("\n\n{logs}"),
-                Level::ERROR => error!("\n\n{logs}"),
-            }
+            self.to_traces();
         } else {
-            let report = self.to_report();
-            stderr().write_fmt(format_args!("\n\n{report}")).unwrap();
+            write!(stderr(), "\n{}", self.to_report())
+                .tap_err(emit_debug!())
+                .ok();
         };
 
         self
@@ -321,72 +342,14 @@ where
 
     pub fn to_report(&self) -> String {
         self.items.iter().fold(String::new(), |mut out, diag| {
-            writeln!(out, "{}", diag.to_report()).unwrap();
+            writeln!(out, "{}", diag.to_report()).expect_fmt();
             out
         })
     }
 
-    pub fn to_logs(&self) -> String {
-        self.items.iter().fold(String::new(), |mut out, diag| {
-            // TODO: flatten, skip heading
-            writeln!(out, "{}", diag.to_logs()).unwrap();
-            out
-        })
-    }
-}
-
-struct LoggingReportHandler;
-
-impl LoggingReportHandler {
-    fn render_report(&self, f: &mut impl fmt::Write, diagnostic: &dyn Diagnostic) -> fmt::Result {
-        let level = match diagnostic.severity() {
-            Some(Severity::Error) | None => "error",
-            Some(Severity::Warning) => "warning",
-            Some(Severity::Advice) => "info",
-        };
-        let code = if let Some(code) = diagnostic.code() {
-            format!(" [{code}] ")
-        } else {
-            ": ".to_string()
-        };
-        write!(f, "{level}{code}{diagnostic}")?;
-
-        if let Some(help) = diagnostic.help() {
-            write!(f, "\nhelp: {help}")?;
-        }
-
-        if let Some(url) = diagnostic.url() {
-            write!(f, "\nsee: {url}")?;
-        }
-
-        let (Some(labels), Some(source)) = (diagnostic.labels(), diagnostic.source_code()) else {
-            return Ok(());
-        };
-
-        for label in labels {
-            let source = source
-                .read_span(label.inner(), 0, 0)
-                .map_err(|_| fmt::Error)?;
-            let path = source.name().unwrap_or("<anonymous>");
-            let line = source.line() + 1;
-            let column = source.column() + 1;
-            if let Some(message) = label.label() {
-                write!(f, "\n  {path}:{line}:{column}: {message}")?;
-            } else {
-                write!(f, "\n  {path}:{line}:{column}")?;
-            }
-        }
-
-        Ok(())
-    }
-}
-
-impl ReportHandler for LoggingReportHandler {
-    fn debug(&self, error: &dyn Diagnostic, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if f.alternate() {
-            fmt::Debug::fmt(error, f)
-        } else {
-            self.render_report(f, error)
+    pub fn to_traces(&self) {
+        for item in self.items.iter() {
+            item.to_traces();
         }
     }
 }
@@ -394,10 +357,25 @@ impl ReportHandler for LoggingReportHandler {
 const fn level_style(level: Level) -> Style {
     match level {
         Level::TRACE => Style::new().dimmed(),
-        Level::DEBUG => Style::new().magenta(),
+        Level::DEBUG => Style::new().blue(),
         Level::INFO => Style::new().green(),
         Level::WARN => Style::new().yellow(),
         Level::ERROR => Style::new().red(),
+    }
+}
+
+/// [LevelFilter::current] always returns `TRACE` for some reason
+fn max_level() -> LevelFilter {
+    if tracing::enabled!(Level::TRACE) {
+        LevelFilter::TRACE
+    } else if tracing::enabled!(Level::DEBUG) {
+        LevelFilter::DEBUG
+    } else if tracing::enabled!(Level::INFO) {
+        LevelFilter::INFO
+    } else if tracing::enabled!(Level::WARN) {
+        LevelFilter::WARN
+    } else {
+        LevelFilter::ERROR
     }
 }
 
@@ -411,6 +389,20 @@ impl StyleCompat for Style {
     }
 }
 
-pub trait Title: Send + Sync + fmt::Display {}
+pub trait Title: fmt::Display + Send + Sync {}
 
-impl<K: Send + Sync + fmt::Display> Title for K {}
+impl<K: fmt::Display + Send + Sync> Title for K {}
+
+#[macro_export]
+macro_rules! plural {
+    ( $num:expr, $singular:expr ) => {
+        $crate::plural!($num, $singular, concat!($singular, "s"))
+    };
+    ( $num:expr, $singular:expr, $plural:expr ) => {{
+        let num = $num;
+        match num {
+            1 => format!("{num} {}", $singular),
+            _ => format!("{num} {}", $plural),
+        }
+    }};
+}

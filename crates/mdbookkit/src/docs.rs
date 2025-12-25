@@ -122,7 +122,10 @@ pub fn describe_preprocessor<C: CommandFactory>() -> Result<String> {
         .get_opts()
         .filter(|opt| !opt.is_hide_set())
         .map(|opt| {
-            let key = opt.get_long().unwrap().to_owned();
+            let key = opt
+                .get_long()
+                .expect("option should have a long name")
+                .to_owned();
 
             let help = opt.get_help().map(|h| h.to_string()).unwrap_or_default();
 
@@ -136,7 +139,7 @@ pub fn describe_preprocessor<C: CommandFactory>() -> Result<String> {
             let type_id = if cfg!(debug_assertions) {
                 let ty = format!("{:?}", opt.get_value_parser().type_id())
                     .replace("alloc::string::", "");
-                let name = ty.split("::").last().unwrap();
+                let name = ty.split("::").last().expect("split() shouldn't be empty");
                 if matches!(action, ArgAction::Append) {
                     Some((format!("Vec<{name}>"), format!("Vec<{ty}>")))
                 } else {

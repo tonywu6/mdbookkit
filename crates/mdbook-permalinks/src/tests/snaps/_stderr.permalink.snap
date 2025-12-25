@@ -1,9 +1,9 @@
 ---
 source: crates/mdbook-permalinks/src/tests.rs
-assertion_line: 121
+assertion_line: 127
 expression: report
 ---
-  info: links converted to permalinks
+  info: link converted to permalink
     ╭─[crates/mdbook-permalinks/src/tests/paths.md:3:1]
     │ 
     │ [](../../../../Cargo.toml)
@@ -52,7 +52,7 @@ expression: report
     │ 
     ╰────
 
-  info: links converted to permalinks
+  info: link converted to permalink
    ╭─[crates/mdbook-permalinks/src/tests/suffix.md:1:1]
    │ [](/docs/book.toml?branch=default)
    · ─────────────────┬────────────────
@@ -67,7 +67,7 @@ expression: report
    ·               ╰── https://example.org/git/tree/v0.0/docs/book.toml?/#/L40-44
    ╰────
 
-  info: links converted to permalinks
+  info: link converted to permalink
     ╭─[crates/mdbook-permalinks/src/tests/urls.md:15:1]
     │ 
     │ [](https://example.org/git/tree/HEAD/LICENSE-APACHE.md)

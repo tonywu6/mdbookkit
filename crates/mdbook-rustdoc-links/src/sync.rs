@@ -10,60 +10,82 @@ use tokio::{
     task::JoinHandle,
     time,
 };
+use tracing::{Instrument, trace, trace_span};
 
-pub struct EventSampling<T> {
-    pub buffer: Duration,
+use mdbookkit::error::ExpectLock;
+
+pub struct Debouncing<T> {
+    pub debounce: Duration,
     pub timeout: Duration,
     pub receiver: mpsc::Receiver<Poll<T>>,
 }
 
-impl<T> EventSampling<T>
+impl<T> Debouncing<T>
 where
     T: Clone + Send + Sync + 'static,
 {
-    pub fn build(self) -> EventSampler<T> {
+    pub fn build(self) -> Debounce<T> {
+        let state = Arc::new(RwLock::new(State::Pending));
+        let event = Arc::new(Notify::new());
+
+        let span = trace_span!("debounce", ?self);
+
         let Self {
-            buffer,
+            debounce,
             timeout,
             mut receiver,
         } = self;
 
-        let state = Arc::new(RwLock::new(State::Pending));
-        let event = Arc::new(Notify::new());
-
         tokio::spawn({
+            trace!("spawning debounce thread");
+
             let state = state.clone();
             let event = event.clone();
+            let trace = span.id();
+
             async move {
                 let mut abort: Option<JoinHandle<()>> = None;
+
                 while let Some(value) = time::timeout(timeout, receiver.recv()).await.transpose() {
+                    trace!("received new event");
+
                     if let Some(abort) = abort.take() {
+                        trace!("canceling deferred notification");
                         abort.abort();
                     }
+
                     match value {
                         Ok(Poll::Ready(value)) => {
+                            trace!("state is ready; deferring notification");
                             let event = event.clone();
                             let state = state.clone();
+                            let trace = trace.clone();
                             abort = Some(tokio::spawn(async move {
-                                time::sleep(buffer).await;
-                                *state.write().unwrap() = State::Ready(value);
+                                time::sleep(debounce).await;
+                                *state.write().expect_lock() = State::Ready(value);
+                                trace!(parent: trace, "state is ready; notifying");
                                 event.notify_waiters();
                             }));
                         }
+
                         Ok(Poll::Pending) => {
-                            *state.write().unwrap() = State::Pending;
+                            trace!("state is pending");
+                            *state.write().expect_lock() = State::Pending;
                             event.notify_waiters();
                         }
+
                         Err(_) => {
-                            *state.write().unwrap() = State::Timeout;
+                            trace!("timed out waiting for state to become ready");
+                            *state.write().expect_lock() = State::Timeout;
                             event.notify_waiters();
                         }
                     }
                 }
             }
+            .instrument(span)
         });
 
-        EventSampler { event, state }
+        Debounce { event, state }
     }
 }
 
@@ -76,7 +98,7 @@ where
 ///
 /// [debouncing]: https://developer.mozilla.org/en-US/docs/Glossary/Debounce
 #[derive(Debug, Clone)]
-pub struct EventSampler<T> {
+pub struct Debounce<T> {
     state: Arc<RwLock<State<T>>>,
     event: Arc<Notify>,
 }
@@ -88,21 +110,35 @@ enum State<T> {
     Timeout,
 }
 
-impl<T: Clone + Send + Sync + 'static> EventSampler<T> {
+impl<T: Clone + Send + Sync + 'static> Debounce<T> {
     pub async fn wait(&self) -> Result<T> {
         loop {
             {
-                match self.state.read().unwrap().clone() {
+                match self.state.read().expect_lock().clone() {
                     State::Pending => {}
                     State::Ready(value) => {
                         return Ok(value);
                     }
                     State::Timeout => {
-                        bail!("timed out waiting for ready event")
+                        bail!("Timed out waiting for ready event")
                     }
                 }
             }
             self.event.notified().await;
         }
+    }
+}
+
+impl<T> std::fmt::Debug for Debouncing<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Self {
+            debounce,
+            timeout,
+            receiver: _,
+        } = &self;
+        f.debug_struct("Debouncing")
+            .field("debounce", &debounce)
+            .field("timeout", &timeout)
+            .finish_non_exhaustive()
     }
 }

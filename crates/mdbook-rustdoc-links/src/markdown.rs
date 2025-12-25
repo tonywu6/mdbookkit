@@ -14,8 +14,8 @@ pub type MarkdownStream<'a> = Parser<'a, ItemLinks>;
 /// [`BrokenLinkCallback`] implementation that unconditionally converts all "broken"
 /// links to links to be further processed.
 ///
-/// "Broken" links are links like `[text][link::item]` that don't have associated URLs
-/// that are expected for this preprocessor.
+/// "Broken" links are links like `[text][link::item]` that don't have associated URLs.
+/// Such links are expected for this preprocessor.
 ///
 /// Links that are "broken" that aren't actually doc links won't show up in the output,
 /// because the preprocessor ignores links that cannot be parsed and is capable of
@@ -57,7 +57,7 @@ impl<'input> BrokenLinkCallback<'input> for ItemLinks {
                 .collect::<Vec<_>>();
 
             if inner.len() == 1 {
-                inner.into_iter().next().unwrap()
+                inner.into_iter().next().expect("has 1 item")
             } else {
                 inner
                     .iter()

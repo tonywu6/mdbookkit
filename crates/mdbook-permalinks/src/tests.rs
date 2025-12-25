@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 use std::sync::{Arc, Mutex};
 
 use anyhow::Result;
@@ -116,9 +118,9 @@ fn test_stderr(
     let Fixture { env, pages } = fixture;
     let env = env.lock().unwrap();
     let report = env
-        .report_issues(pages, test)
-        .level(LevelFilter::DEBUG)
-        .names(|url| env.rel_path(url))
+        .reporter(pages, test)
+        .level_filter(LevelFilter::TRACE)
+        .name_display(|url| env.rel_path(url))
         .build()
         .to_report();
     drop(env);

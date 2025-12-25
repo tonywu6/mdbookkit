@@ -4,7 +4,7 @@ use anyhow::{Result, bail};
 use lsp_types::Url;
 use mdbook_markdown::pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
 use serde::{Deserialize, Serialize};
-use tap::{Pipe, Tap, TapFallible};
+use tap::{Pipe, Tap};
 
 use mdbookkit::emit_trace;
 
@@ -24,7 +24,7 @@ pub struct Link<'a> {
 #[derive(Debug)]
 pub enum LinkState {
     Unparsed,
-    Parsed(Item),
+    Pending(Item),
     Resolved(ItemLinks),
 }
 
@@ -36,9 +36,9 @@ impl<'a> Link<'a> {
         };
 
         let state = Item::parse(path)
-            .tap_err(emit_trace!())
+            .inspect_err(emit_trace!())
             .ok()
-            .map(LinkState::Parsed)
+            .map(LinkState::Pending)
             .unwrap_or(LinkState::Unparsed);
 
         let inner = vec![];
@@ -60,28 +60,16 @@ impl<'a> Link<'a> {
         &self.url
     }
 
-    pub fn state(&mut self) -> &mut LinkState {
+    pub fn state(&self) -> &LinkState {
+        &self.state
+    }
+
+    pub fn state_mut(&mut self) -> &mut LinkState {
         &mut self.state
     }
 
-    pub fn inner(&mut self) -> &mut Vec<Event<'a>> {
+    pub fn inner_mut(&mut self) -> &mut Vec<Event<'a>> {
         &mut self.inner
-    }
-
-    pub fn item(&self) -> Option<&Item> {
-        if let LinkState::Parsed(item) = &self.state {
-            Some(item)
-        } else {
-            None
-        }
-    }
-
-    pub fn link(&self) -> Option<ItemLinks> {
-        if let LinkState::Resolved(item) = &self.state {
-            Some(item.clone())
-        } else {
-            None
-        }
     }
 
     pub fn emit(&self, options: &EmitConfig) -> Option<(__emit::EmitLink<'_>, Range<usize>)> {
@@ -149,7 +137,7 @@ impl ItemLinks {
             (None, Some(file)) => Locations::File {
                 file: Arc::new(file),
             },
-            (None, None) => bail!("neither web nor local link provided"),
+            (None, None) => bail!("Neither web nor local link provided"),
         };
         let defs = defs.into_iter().map(Into::into).collect();
         Ok(Self { refs, defs })

@@ -1,14 +1,20 @@
-use std::{borrow::Borrow, collections::HashMap, hash::Hash, sync::Arc};
+use std::{borrow::Borrow, collections::HashMap, fmt::Write, hash::Hash, sync::Arc};
 
 use anyhow::{Context, Result};
 use lsp_types::Position;
-use tap::{Pipe, TapFallible};
+use tap::Pipe;
 use tokio::task::JoinSet;
-use tracing::{Instrument, Level, debug};
+use tracing::{Instrument, Level, debug, info, instrument};
 
-use mdbookkit::{emit_debug, ticker, ticker_item};
+use mdbookkit::{ticker, ticker_item, url::UrlToPath};
 
-use crate::{UNIQUE_ID, client::Client, item::Item, link::ItemLinks, page::Pages, url::UrlToPath};
+use crate::{
+    UNIQUE_ID,
+    client::Client,
+    item::Item,
+    link::{ItemLinks, LinkState},
+    page::{PageKey, Pages},
+};
 
 /// Type that can provide links.
 ///
@@ -23,41 +29,52 @@ use crate::{UNIQUE_ID, client::Client, item::Item, link::ItemLinks, page::Pages,
 pub trait Resolver {
     async fn resolve<K>(&self, pages: &mut Pages<'_, K>) -> Result<()>
     where
-        K: Eq + Hash;
+        K: PageKey;
 }
 
 impl Resolver for Client {
+    #[instrument(level = "debug", skip_all)]
     async fn resolve<K>(&self, pages: &mut Pages<'_, K>) -> Result<()>
     where
-        K: Eq + Hash,
+        K: PageKey,
     {
-        let request = pages.items();
+        let mut iter = pages.iter();
 
-        if request.is_empty() {
+        let requests = iter.deduped(|link| match link.state() {
+            LinkState::Pending(item) => Some(item),
+            _ => None,
+        });
+
+        if iter.stats().has_pending() {
+            info!("Resolving {}", iter.stats().fmt_pending());
+        } else {
+            debug!("no more items to resolve");
             return Ok(());
         }
 
-        let main = std::fs::read_to_string(self.env().entrypoint.to_path()?)?;
+        drop(iter);
+
+        let main = self.env().entrypoint.expect_path();
+        let main = std::fs::read_to_string(&main)
+            .with_context(|| format!("Reading {}", main.display()))
+            .context("Failed to read from crate entrypoint")?;
 
         let (context, request) = {
             let mut context = format!("{main}\nfn {UNIQUE_ID} () {{\n");
 
             let line = context.chars().filter(|&c| c == '\n').count();
 
-            let request = request
-                .iter()
+            let request = requests
+                .into_iter()
+                .filter_map(|(k, v)| Some((k, v?)))
                 .scan(line, |line, (key, item)| {
                     build(&mut context, line, item).map(|cursors| (key.clone(), cursors))
                 })
                 .collect::<Vec<_>>();
 
             fn build(context: &mut String, line: &mut usize, item: &Item) -> Option<Vec<Position>> {
-                use std::fmt::Write;
                 let _ = writeln!(context, "{}", item.stmt);
-                let cursors = item
-                    .cursor
-                    .as_ref()
-                    .iter()
+                let cursors = (item.cursor.as_ref().iter())
                     .map(|&col| Position::new(*line as _, col as _))
                     .collect::<Vec<_>>();
                 *line += 1;
@@ -69,12 +86,14 @@ impl Resolver for Client {
             (context, request)
         };
 
-        debug!("request context\n\n{context}\n");
+        debug!("synthesized function\n\n{context}\n");
 
         let document = self
             .open(self.env().entrypoint.clone(), context)
             .await?
             .pipe(Arc::new);
+
+        info!("Finished indexing");
 
         let ticker = ticker!(
             Level::INFO,
@@ -86,25 +105,20 @@ impl Resolver for Client {
         let tasks: JoinSet<Option<(String, ItemLinks)>> = request
             .into_iter()
             .map(|(key, pos)| {
-                let key = key.to_string();
                 let doc = document.clone();
-                let ticker = ticker_item!(&ticker, Level::INFO, "resolve", "{key:?}");
+                let key = key.to_string();
+                let span = ticker_item!(&ticker, Level::INFO, "resolve", "{key:?}");
                 async move {
                     for p in pos {
-                        let resolved = doc
-                            .resolve(p)
-                            .await
-                            .with_context(|| format!("{p:?}"))
-                            .context("failed to resolve symbol:")
-                            .tap_err(emit_debug!())
-                            .ok();
-                        if let Some(resolved) = resolved {
+                        if let Ok(resolved) = doc.resolve(p).await {
                             return Some((key, resolved));
+                        } else {
+                            debug!("no result for {p:?}")
                         }
                     }
                     None
                 }
-                .instrument(ticker)
+                .instrument(span)
             })
             .collect();
 
@@ -128,7 +142,7 @@ where
 {
     async fn resolve<P>(&self, pages: &mut Pages<'_, P>) -> Result<()>
     where
-        P: Eq + Hash,
+        P: PageKey,
     {
         pages.apply(self);
         Ok(())
