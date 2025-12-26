@@ -18,7 +18,7 @@ use tracing::{Level, debug, error, info, level_filters::LevelFilter, trace, warn
 use crate::{
     emit_debug,
     env::{is_colored, is_logging},
-    error::ExpectFmt,
+    error::{ExpectFmt, put_severity},
     logging::stderr,
 };
 
@@ -316,12 +316,8 @@ impl<P> Reporter<'_, P>
 where
     P: IssueItem,
 {
-    pub fn to_status(&self) -> P::Kind {
-        self.items
-            .iter()
-            .map(|p| p.status())
-            .min_by_key(|s| s.level())
-            .unwrap_or_default()
+    pub fn to_level(&self) -> Option<Level> {
+        self.items.iter().map(|p| p.status().level()).min()
     }
 
     pub fn to_stderr(&self) -> &Self {
@@ -335,6 +331,11 @@ where
             write!(stderr(), "\n{}", self.to_report())
                 .tap_err(emit_debug!())
                 .ok();
+            if let Some(level) = self.to_level() {
+                // explicitly set severity because graphical reports
+                // do not go through tracing
+                put_severity(level);
+            }
         };
 
         self

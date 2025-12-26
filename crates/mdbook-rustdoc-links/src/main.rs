@@ -15,9 +15,8 @@ use tracing::{Level, debug, info, info_span, warn};
 
 use mdbookkit::{
     book::{BookConfigHelper, BookHelper, book_from_stdin, string_from_stdin},
-    diagnostics::Issue,
     emit_debug, emit_error, emit_trace, emit_warning,
-    error::{ExitProcess, FutureWithError},
+    error::{ExitProcess, FutureWithError, has_severity},
     logging::Logging,
 };
 
@@ -25,8 +24,8 @@ use self::{
     cache::{Cache, FileCache},
     client::Client,
     env::{Config, Environment, RustAnalyzer},
-    link::{LinkState, diagnostic::LinkStatus},
-    page::Pages,
+    link::LinkState,
+    page::{Pages, Statistics},
     resolver::Resolver,
 };
 
@@ -117,30 +116,20 @@ async fn mdbook() -> Result2<()> {
 
     let env = client.stop().await;
 
-    let status = content
+    content
         .reporter()
         .name_display(|path| path.display().to_string())
         .build()
-        .to_stderr()
-        .to_status();
+        .to_stderr();
 
-    link_report(&content);
-
-    match status {
-        LinkStatus::Unresolved => {
-            if env.config.cache_dir.is_some() {
-                warn! { "The `cache-dir` option is enabled, but some items could not \
-                be resolved, which will cause rust-analyzer to always run \
-                despite the cache." }
-            }
-        }
-        LinkStatus::Ok | LinkStatus::Debug => {
-            info!("Finished");
-        }
+    if link_report(&content).items_pending > 0 && env.config.cache_dir.is_some() {
+        warn! { "The `cache-dir` option is enabled, but some items could not \
+        be resolved. This will cause rust-analyzer to always run \
+        despite the cache." }
     }
 
     // bail before emitting changes
-    env.config.fail_on_warnings.check(status.level())?;
+    env.config.fail_on_warnings.check()?;
 
     if content.modified() {
         FileCache::save(&env, &content)
@@ -170,6 +159,12 @@ async fn mdbook() -> Result2<()> {
 
     book.to_stdout(&ctx)?;
 
+    if has_severity(Level::WARN) {
+        warn!("Finished with problems");
+    } else {
+        info!("Finished");
+    }
+
     Ok(())
 }
 
@@ -198,12 +193,11 @@ async fn markdown(config: Config) -> Result2<()> {
 
     let env = client.stop().await;
 
-    let status = content
+    content
         .reporter()
         .name_display(|_| "<stdin>".into())
         .build()
-        .to_stderr()
-        .to_status();
+        .to_stderr();
 
     link_report(&content);
 
@@ -214,12 +208,12 @@ async fn markdown(config: Config) -> Result2<()> {
     (content.get(&env.emit_config()).map(|emit| emit.to_string()))
         .and_then(|output| Ok(std::io::stdout().write_all(output.as_bytes())?))?;
 
-    env.config.fail_on_warnings.check(status.level())?;
+    env.config.fail_on_warnings.check()?;
 
     Ok(())
 }
 
-fn link_report<K>(content: &Pages<'_, K>) {
+fn link_report<K>(content: &Pages<'_, K>) -> Statistics {
     let mut iter = content.iter();
 
     let result = iter.deduped(|link| match link.state() {
@@ -228,7 +222,9 @@ fn link_report<K>(content: &Pages<'_, K>) {
         LinkState::Unparsed => None,
     });
 
-    info!("Converted {}", iter.stats().fmt_resolved());
+    let stats = iter.stats();
+
+    info!("Converted {}", stats.fmt_resolved());
 
     if tracing::enabled!(target: "link-report", Level::DEBUG) {
         for (item, link) in result
@@ -246,6 +242,8 @@ fn link_report<K>(content: &Pages<'_, K>) {
             }
         }
     }
+
+    stats.clone()
 }
 
 fn config(ctx: &PreprocessorContext) -> Result2<Config> {

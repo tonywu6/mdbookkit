@@ -1,11 +1,53 @@
-use std::{fmt::Display, process::exit, sync::LockResult};
+use std::{
+    fmt::Display,
+    process::exit,
+    sync::{
+        LockResult,
+        atomic::{AtomicU8, Ordering},
+    },
+};
 
 use anyhow::{Context, Error, Result, anyhow};
 use serde::Deserialize;
 use tap::Pipe;
-use tracing::Level;
+use tracing::{Event, Level, Subscriber};
+use tracing_subscriber::{Layer, layer};
 
 use crate::env::is_ci;
+
+static MAX_SEVERITY: AtomicU8 = AtomicU8::new(0);
+
+pub fn has_severity(level: Level) -> bool {
+    MAX_SEVERITY.load(Ordering::Relaxed) >= level_to_severity(level)
+}
+
+#[inline]
+pub fn put_severity(level: Level) {
+    let severity = level_to_severity(level);
+    MAX_SEVERITY.fetch_max(severity, Ordering::Relaxed);
+}
+
+pub struct EventLevelLayer;
+
+impl<S: Subscriber> Layer<S> for EventLevelLayer {
+    fn on_event(&self, event: &Event<'_>, _ctx: layer::Context<'_, S>) {
+        put_severity(*event.metadata().level());
+    }
+}
+
+fn level_to_severity(level: Level) -> u8 {
+    if level <= Level::ERROR {
+        50
+    } else if level <= Level::WARN {
+        40
+    } else if level <= Level::INFO {
+        30
+    } else if level <= Level::DEBUG {
+        20
+    } else {
+        10
+    }
+}
 
 /// Flag indicating how the program should proceed when there are warnings.
 ///
@@ -27,31 +69,34 @@ pub enum OnWarning {
 }
 
 impl OnWarning {
-    pub fn check(&self, level: Level) -> Result<()> {
-        match level {
-            Level::ERROR => Err(anyhow!("Preprocessor has errors")),
-            Level::WARN => match self {
-                Self::AlwaysFail => anyhow! {"Treating warnings as errors because the \
-                `fail-on-warnings` option is set to \"always\""}
+    pub fn check(&self) -> Result<()> {
+        if has_severity(Level::ERROR) {
+            Err(anyhow!("Preprocessor has errors"))
+        } else if has_severity(Level::WARN) {
+            match (self, is_ci()) {
+                (Self::AlwaysFail, _) => anyhow! { "Treating warnings as errors because the \
+                `fail-on-warnings` option is set to \"always\"" }
                 .pipe(Err),
-                Self::FailInCi => {
-                    let Some(ci) = is_ci() else {
-                        return Ok(());
-                    };
-                    anyhow! {"Treating warnings as errors because CI={ci} and the \
-                    `fail-on-warnings` option is set to \"ci\""}
+                (Self::FailInCi, Some(ci)) => {
+                    anyhow! { "Treating warnings as errors because CI={ci} and the \
+                    `fail-on-warnings` option is set to \"ci\"" }
                     .pipe(Err)
                 }
-            },
-            _ => Ok(()),
+                (Self::FailInCi, None) => Ok(()),
+            }
+        } else {
+            Ok(())
         }
     }
 
     pub fn adjusted<T, E>(&self, result: Result<Result<T, E>, E>) -> Result<Result<T, E>, E> {
         match result {
             Err(error) => Err(error),
-            Ok(Err(error)) if is_ci().is_some() => Err(error),
-            Ok(Err(error)) => Ok(Err(error)),
+            Ok(Err(error)) => match (self, is_ci()) {
+                (Self::AlwaysFail, _) => Err(error),
+                (Self::FailInCi, Some(_)) => Err(error),
+                (Self::FailInCi, None) => Ok(Err(error)),
+            },
             Ok(Ok(result)) => Ok(Ok(result)),
         }
     }

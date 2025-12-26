@@ -17,9 +17,8 @@ use url::Url;
 
 use mdbookkit::{
     book::{BookConfigHelper, BookHelper, book_from_stdin},
-    diagnostics::Issue,
     emit_debug, emit_error,
-    error::{ExitProcess, OnWarning},
+    error::{ExitProcess, OnWarning, has_severity},
     logging::Logging,
     ticker, ticker_item,
     url::{ExpectUrl, UrlFromPath},
@@ -130,17 +129,15 @@ impl Preprocessor for Environment {
 
         self.resolve(&mut content);
 
-        let status = self
-            .reporter(&content, |_| true)
+        self.reporter(&content, |_| true)
             .name_display(|url| self.rel_path(url))
             .build()
-            .to_stderr()
-            .to_status();
+            .to_stderr();
 
         content.log_stats();
 
         // bail before emitting changes
-        self.config.fail_on_warnings.check(status.level())?;
+        self.config.fail_on_warnings.check()?;
 
         let mut result = book
             .iter_chapters()
@@ -160,7 +157,7 @@ impl Preprocessor for Environment {
             }
         });
 
-        if status.level() <= Level::WARN {
+        if has_severity(Level::WARN) {
             warn!("Finished with problems");
         } else {
             info!("Finished");

@@ -86,7 +86,10 @@ use tracing_subscriber::{
     util::SubscriberInitExt,
 };
 
-use crate::env::{MDBOOK_LOG, is_colored, is_logging, set_colored, set_logging};
+use crate::{
+    env::{MDBOOK_LOG, is_colored, is_logging, set_colored, set_logging},
+    error::EventLevelLayer,
+};
 
 use self::writer::{MultiProgressTicker, MultiProgressWriter};
 
@@ -169,6 +172,7 @@ fn init_logging(options: Logging) {
     });
 
     tracing_subscriber::registry()
+        .with(EventLevelLayer)
         .with(filter)
         .with(logger)
         .with(ticker)

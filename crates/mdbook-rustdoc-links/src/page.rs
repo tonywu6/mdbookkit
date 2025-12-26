@@ -265,7 +265,7 @@ mod iter {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Statistics {
     pub links_pending: usize,
     pub items_pending: usize,
