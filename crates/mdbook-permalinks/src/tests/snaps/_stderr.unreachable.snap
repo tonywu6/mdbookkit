@@ -1,10 +1,9 @@
 ---
 source: crates/mdbook-permalinks/src/tests.rs
-assertion_line: 127
 expression: report
 ---
   warning: link inaccessible
-    ╭─[crates/mdbook-permalinks/src/tests/paths.md:31:1]
+    ╭─[crates/mdbook-permalinks/src/tests/paths.md:33:1]
     │ 
     │ [](../../Cargo.lock)
     · ──────────┬─────────

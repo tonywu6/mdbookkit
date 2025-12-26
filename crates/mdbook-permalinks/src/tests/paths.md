@@ -26,6 +26,8 @@
 
 [banner-image]: /docs/src/media/banner.webp
 
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
+
 # not found
 
 [](../../Cargo.lock)

@@ -174,7 +174,8 @@ impl<'a> Iterator for EmitLinkSpan<'a> {
                 }
                 LinkText::Text(text) => {
                     match (text, self.opened.last()) {
-                        (Event::End(TagEnd::Link | TagEnd::Image), Some(..)) => {
+                        (Event::End(TagEnd::Link), Some(ContentHint::Tree))
+                        | (Event::End(TagEnd::Image), Some(ContentHint::Raw)) => {
                             self.opened.pop();
                             let top_level = self.opened.is_empty();
                             trace!(?text, "{}", if top_level { "<" } else { "<<" });
