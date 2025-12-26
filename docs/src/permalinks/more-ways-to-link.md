@@ -20,8 +20,8 @@ stateDiagram-v2
     external       : The link points to ...
     relativePath   : Use a relative path
     absolutePath   : Use an absolute path
-    bookUrl        : Hardcode the URL to your <br>book's website
-    repoUrl        : Hardcode the URL to your <br>Git remote
+    bookUrl        : Hard-code the URL to your <br>book's website
+    repoUrl        : Hard-code the URL to your <br>Git remote
 
     start --> included: Yes
     start --> relativePath: No

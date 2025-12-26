@@ -1,11 +1,11 @@
 - [ ] mdbookkit install compat
-  - [ ] lib.rs docstring
+  - [x] lib.rs docstring
 
-- [ ] package readme
-  - [ ] permalinks
-  - [ ] rustdoc-links
-  - [ ] mdbookkit
-  - [ ] link check
+- [x] package readme
+  - [x] permalinks
+  - [x] rustdoc-links
+  - [x] mdbookkit
+  - [x] link check
 
 - [ ] images
   - [ ] permalinks

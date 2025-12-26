@@ -31,3 +31,6 @@
 ---
 
 [CHANGELOG](CHANGELOG.md)
+
+[](_internal/mdbook-rustdoc-links-README.md) [](_internal/mdbook-permalinks-README.md)
+[](_internal/mdbookkit-README.md)
