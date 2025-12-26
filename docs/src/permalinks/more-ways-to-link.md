@@ -50,12 +50,10 @@ Instead of using relative paths, you may use paths that **start with a `/`**. Pa
 start with a `/` are resolved **relative to the root of your repository**:
 
 > ```md
-> The [home page](index.md) simply embeds the package
-> [README](/crates/mdbook-permalinks/README.md).
+> The [home page](/docs/src/index.md) simply embeds the project [README](/README.md).
 > ```
 >
-> The [home page](index.md) simply embeds the package
-> [README](/crates/mdbook-permalinks/README.md).
+> The [home page](/docs/src/index.md) simply embeds the project [README](/README.md).
 
 ## Using URLs
 

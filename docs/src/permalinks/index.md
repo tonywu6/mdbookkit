@@ -1,6 +1,6 @@
 # mdbook-permalinks
 
-Create permalinks to files in your Git repository just by using their paths.
+Create permalinks to files in your Git repository using paths.
 
 Link to source code, examples, configuration files, etc., in your [mdBook]
 documentation, without having to hardcode URLs or worry about broken links. You simply
