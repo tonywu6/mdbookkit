@@ -12,6 +12,7 @@
   - [Workspace layout](rustdoc-links/workspace-layout.md)
   - [Caching](rustdoc-links/caching.md)
   - [Standalone usage](rustdoc-links/standalone-usage.md)
+  - [Logging](rustdoc-links/logging.md)
   - [Continuous integration](rustdoc-links/continuous-integration.md)
   - [Configuration](rustdoc-links/configuration.md)
   - [Known issues](rustdoc-links/known-issues.md)
@@ -22,6 +23,7 @@
   - [Getting started](permalinks/getting-started.md)
   - [Features](permalinks/features.md)
   - [More ways to link](permalinks/more-ways-to-link.md)
+  - [Logging](permalinks/logging.md)
   - [Continuous integration](permalinks/continuous-integration.md)
   - [Configuration](permalinks/configuration.md)
   - [Known issues](permalinks/known-issues.md)
@@ -29,5 +31,3 @@
 ---
 
 [CHANGELOG](CHANGELOG.md)
-
-[INTERNAL: Repo README](./_internal/README.md)

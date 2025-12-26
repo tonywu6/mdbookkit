@@ -236,7 +236,7 @@ fn link_report<K>(content: &Pages<'_, K>) -> Statistics {
             })
         {
             if let Some(link) = link {
-                info!(target: "link-report", "{item} => {link}")
+                debug!(target: "link-report", "{item} => {link}")
             } else {
                 warn!(target: "link-report", "{item} => (unresolved)")
             }

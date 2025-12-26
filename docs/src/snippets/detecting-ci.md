@@ -13,7 +13,7 @@ this variable configured by default.
 
 <!-- prettier-ignore-start -->
 
-[github-actions-ci]: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#default-environment-variables
-[gitlab-ci]: https://docs.gitlab.com/ci/variables/predefined_variables/
+[github-actions-ci]: https://docs.github.com/en/actions/reference/workflows-and-actions/variables#default-environment-variables
+[gitlab-ci]: https://docs.gitlab.com/ci/variables/predefined_variables/#predefined-variables
 
 <!-- prettier-ignore-end -->

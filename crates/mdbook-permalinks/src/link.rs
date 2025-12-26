@@ -1,7 +1,7 @@
 use std::{fmt::Debug, ops::Range};
 
 use mdbook_markdown::pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
-use tracing::{debug, trace};
+use tracing::trace;
 use url::Url;
 
 #[derive(Debug, Default, Clone, thiserror::Error)]
@@ -97,19 +97,19 @@ impl<'a> RelativeLink<'a> {
     fn update(&mut self, link: impl Into<CowStr<'a>>) {
         let old = &*self.link.clone();
         self.link = link.into();
-        debug!(status = ?self.status, ?old, new = ?&*self.link);
+        trace!(status = ?self.status, ?old, new = ?&*self.link);
     }
 
     #[inline]
     pub fn unchanged(&mut self) {
         self.status = LinkStatus::Unchanged;
-        debug!(status = ?self.status, link = ?&*self.link);
+        trace!(status = ?self.status, link = ?&*self.link);
     }
 
     #[inline]
     pub fn unreachable(&mut self, errors: Vec<(Url, PathStatus)>) {
         self.status = LinkStatus::Unreachable(errors);
-        debug!(status = ?self.status, link = ?&*self.link);
+        trace!(status = ?self.status, link = ?&*self.link);
     }
 
     fn emit(&self) -> Tag<'a> {

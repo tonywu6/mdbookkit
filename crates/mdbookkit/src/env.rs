@@ -10,8 +10,12 @@ use console::{colors_enabled_stderr, set_colors_enabled_stderr};
 
 static CI: LazyLock<String> = LazyLock::new(|| std::env::var("CI").unwrap_or("".into()));
 
-pub(crate) static MDBOOK_LOG: LazyLock<Option<String>> =
-    LazyLock::new(|| std::env::var("MDBOOK_LOG").ok());
+pub(crate) static MDBOOK_LOG: LazyLock<Option<String>> = LazyLock::new(|| {
+    std::env::var("MDBOOK_LOG")
+        // mdBook v0.4.x
+        .or_else(|_| std::env::var("RUST_LOG"))
+        .ok()
+});
 
 #[inline]
 pub fn is_ci() -> Option<&'static str> {

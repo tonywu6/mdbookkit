@@ -108,9 +108,9 @@ impl<'a> Pages<'a> {
         info!(
             "Processed {total}: {permalink}; {rewritten}; {unreachable}; {unchanged}",
             total = plural!(total, "link"),
-            permalink = plural!(permalink, "generated permalink"),
-            rewritten = plural!(rewritten, "rewritten as paths", "rewritten as paths"),
-            unreachable = plural!(unreachable, "unreachable path"),
+            permalink = plural!(permalink, "permalink"),
+            rewritten = plural!(rewritten, "book link"),
+            unreachable = plural!(unreachable, "inaccessible path"),
             unchanged = plural!(unchanged + ignored + error, "unchanged", "unchanged"),
         );
     }
