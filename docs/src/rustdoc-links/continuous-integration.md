@@ -26,6 +26,10 @@ steps:
 > rust-analyzer from rustup follows Rust's release schedule, which may lag behind the
 > version bundled with the VS Code extension.
 
+## Logging
+
+See [Logging](logging.md).
+
 ## Error handling
 
 {{#include ../snippets/ci/error-handling.md}}

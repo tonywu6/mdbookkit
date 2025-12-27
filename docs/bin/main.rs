@@ -4,7 +4,7 @@ use anyhow::Result;
 
 use tracing::info_span;
 
-use mdbookkit::logging::Logging;
+use mdbookkit::{emit_error, error::ExitProcess, logging::Logging};
 
 mod postprocess;
 mod preprocess;
@@ -20,6 +20,8 @@ fn main() -> Result<()> {
             command: Some(Preprocess::Supports { .. }),
         } => Ok(()),
     }
+    .exit(emit_error!());
+    Ok(())
 }
 
 #[derive(clap::Parser, Debug, Clone)]

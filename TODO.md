@@ -22,7 +22,7 @@
   - [x] describe
 
 - [x] postprocess
-  - [ ] ~~anchors~~
+  - [x] anchors
   - [x] external links
   - [x] socials
 

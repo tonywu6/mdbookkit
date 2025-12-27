@@ -10,7 +10,7 @@ license.workspace = true
 repository.workspace = true
 
 categories = ["text-processing", "development-tools", "command-line-utilities"]
-description = "Generate permalinks using paths in mdBook"
+description = "Generate permalinks in mdBook using paths"
 documentation = "https://tonywu6.github.io/mdbookkit/permalinks"
 keywords = ["mdbook", "markdown", "documentation", "git", "permalink"]
 readme = "README.md"

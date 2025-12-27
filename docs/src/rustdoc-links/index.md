@@ -48,7 +48,7 @@ For **writing documentation** —
 - [Supported syntax](supported-syntax.md): Full list of link syntax with examples. Know
   how to link to additional items such as
   [functions, macros](supported-syntax.md#functions-and-macros), and
-  [implementors](supported-syntax.md#implementors-and-fully-qualified-syntax).
+  [implementors](supported-syntax.md#fully-qualified-paths).
 
 - [Name resolution](name-resolution.md): Understand how the preprocessor finds Rust
   items, including

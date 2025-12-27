@@ -26,6 +26,10 @@ steps:
       fetch-depth: 0 # https://github.com/actions/checkout/issues/1471#issuecomment-1771231294
 ```
 
+## Logging
+
+See [Logging](logging.md).
+
 ## Error handling
 
 {{#include ../snippets/ci/error-handling.md}}

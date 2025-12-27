@@ -1,4 +1,8 @@
-use std::{collections::HashMap, fmt::Write, path::PathBuf};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt::Write,
+    path::PathBuf,
+};
 
 use anyhow::{Context, Result};
 use glob::glob;
@@ -6,13 +10,14 @@ use lol_html::{
     HtmlRewriter, RewriteStrSettings, Settings, element, html_content::ContentType, rewrite_str,
     text,
 };
-use mdbookkit::url::UrlFromPath;
 use minijinja::Environment;
 use serde::Deserialize;
 use serde_json::json;
 use tap::{Pipe, Tap};
-use tracing::{debug, info, info_span};
+use tracing::{debug, error, info, info_span};
 use url::Url;
+
+use mdbookkit::{error::OnWarning, url::UrlFromPath};
 
 pub fn run(root_dir: PathBuf) -> Result<()> {
     let jinja =
@@ -71,13 +76,16 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
 
     debug!("{metadata:#?}");
 
+    let mut fragments: HashSet<Url> = HashSet::new();
+    let mut book_links: HashMap<Url, HashSet<Url>> = HashMap::new();
+
     for path in glob(out_dir.join("**/*.html")?.path())? {
-        let url = path?.to_file_url();
-        let html = std::fs::read_to_string(url.path())?;
+        let file_url = path?.to_file_url();
+        let html = std::fs::read_to_string(file_url.path())?;
 
         let _span = info_span!("html").entered();
 
-        info!(%url);
+        info!(%file_url);
 
         let (og_title, og_description) = {
             let mut title = String::new();
@@ -93,6 +101,13 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
                         description.push_str(text.as_str());
                         Ok(())
                     }),
+                    element!("[id]", |elem| {
+                        if let Some(id) = elem.get_attribute("id") {
+                            let url = file_url.clone().tap_mut(|u| u.set_fragment(Some(&id)));
+                            fragments.insert(url);
+                        }
+                        Ok(())
+                    }),
                 ],
                 ..Default::default()
             }
@@ -104,7 +119,7 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
         };
 
         let pathname = out_dir
-            .make_relative(&url)
+            .make_relative(&file_url)
             .context("Failed to get page pathname")?
             .replace("index.html", "")
             .replace(".html", "")
@@ -159,7 +174,7 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
                 }),
                 element!(r#"img[src]"#, |elem| {
                     let src = elem.get_attribute("src").unwrap();
-                    let src = url.join(&src)?;
+                    let src = file_url.join(&src)?;
                     let src = match src.scheme() {
                         "file" => src,
                         _ => return Ok(()),
@@ -199,11 +214,19 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
                 element!(r#"a"#, |elem| {
                     let Some(href) = elem
                         .get_attribute("href")
-                        .and_then(|u| u.parse::<Url>().ok())
+                        .and_then(|href| file_url.join(&href).ok())
                     else {
                         return Ok(());
                     };
-                    if href.origin() != book_url.origin() {
+                    if href.scheme() == "file" && href.fragment().is_some() {
+                        if let Some(set) = book_links.get_mut(&file_url) {
+                            set.insert(href);
+                        } else {
+                            let mut set = HashSet::default();
+                            set.insert(href);
+                            book_links.insert(file_url.clone(), set);
+                        }
+                    } else if href.origin() != book_url.origin() {
                         elem.set_attribute("target", "_blank").unwrap();
                         elem.set_attribute("rel", "noreferrer").unwrap();
                     }
@@ -215,10 +238,30 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
         }
         .pipe(|settings| rewrite_str(&html, settings))?;
 
-        std::fs::write(url.path(), html)?;
+        std::fs::write(file_url.path(), html)?;
     }
 
-    Ok(())
+    for (file_url, links) in book_links {
+        for mut link in links {
+            if !fragments.contains(&link)
+                && let Some(id) = link.fragment()
+            {
+                let id = format!("#{id}");
+                link.set_fragment(None);
+                let src = out_dir
+                    .make_relative(&file_url)
+                    .unwrap()
+                    .replace(".html", ".md");
+                let dst = out_dir
+                    .make_relative(&link)
+                    .unwrap()
+                    .replace(".html", ".md");
+                error!("{src} references non-existent {id:?} in {dst}");
+            }
+        }
+    }
+
+    OnWarning::FailInCi.check()
 }
 
 #[derive(Deserialize, Debug)]
