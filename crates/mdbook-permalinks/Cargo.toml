@@ -4,17 +4,16 @@ publish = true
 version = "1.1.2"
 
 edition.workspace = true
-rust-version.workspace = true
 
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
 
-# categories = ["command-line-utilities"]
-# description = "toolkit for mdBook 📖"
-# documentation = "https://tonywu6.github.io/mdbookkit/"
-# keywords = ["mdbook", "documentation", "rust-analyzer", "lsp", "permalink"]
-# readme = "README.md"
+categories = ["text-processing", "development-tools", "command-line-utilities"]
+description = "Generate permalinks using paths in mdBook"
+documentation = "https://tonywu6.github.io/mdbookkit/permalinks"
+keywords = ["mdbook", "markdown", "documentation", "git", "permalink"]
+readme = "README.md"
 
 [dependencies]
 anyhow = { workspace = true }

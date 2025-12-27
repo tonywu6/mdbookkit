@@ -315,17 +315,16 @@ where
             return;
         }
 
-        if let TickerVisitor {
-            message: Some(msg), ..
-        } = TickerVisitor::from_event(event)
+        if let Some(tx) = TICKER.sender()
+            && let TickerVisitor {
+                message: Some(msg), ..
+            } = TickerVisitor::from_event(event)
             && let Some(span) = (event.parent().cloned())
                 .or_else(|| ctx.current_span().id().cloned())
                 .and_then(|id| ctx.span(&id))
             && let Some(TickerData { key, .. }) = span.extensions().get::<TickerData>()
         {
-            if let Some(tx) = TICKER.sender() {
-                tx.send(ProgressTick::TickerUpdate { key, msg }).ok();
-            }
+            tx.send(ProgressTick::TickerUpdate { key, msg }).ok();
         }
     }
 }

@@ -12,10 +12,10 @@
   - [x] rustdoc-links
   - [x] mdbookkit
 
-- [ ] package metadata
-  - [ ] permalinks
-  - [ ] rustdoc-links
-  - [ ] mdbookkit
+- [x] package metadata
+  - [x] permalinks
+  - [x] rustdoc-links
+  - [x] mdbookkit
 
 - [ ] preprocess
   - [ ] ra-version
@@ -26,8 +26,11 @@
   - [ ] external links
   - [ ] socials
 
+- [ ] msrv
+
 - [ ] changelog
 - [ ] binstall
 
 - [ ] CI
 - [ ] cloudflare
+  - [ ] URLs
