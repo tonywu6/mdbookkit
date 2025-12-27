@@ -18,13 +18,13 @@ readme = "README.md"
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true }
-git2 = { version = "0.20.1", default-features = false }
-gix-url = { version = "0.30.0" }
+git2 = { version = "0.20.3", default-features = false }
+gix-url = { version = "0.34.0" }
 mdbook-markdown = { workspace = true }
 mdbook-preprocessor = { workspace = true }
 mdbookkit = { workspace = true }
 miette = { workspace = true }
-percent-encoding = { version = "2.3.1" }
+percent-encoding = { version = "2.3.2" }
 serde = { workspace = true }
 tap = { workspace = true }
 thiserror = { workspace = true }

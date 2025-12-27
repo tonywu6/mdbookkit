@@ -26,7 +26,7 @@
   - [x] external links
   - [x] socials
 
-- [ ] upgrade deps
+- [x] upgrade deps
 - [ ] msrv
 
 - [ ] CI
