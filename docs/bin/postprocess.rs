@@ -14,7 +14,7 @@ use minijinja::Environment;
 use serde::Deserialize;
 use serde_json::json;
 use tap::{Pipe, Tap};
-use tracing::{debug, error, info, info_span};
+use tracing::{debug, error, info, info_span, trace};
 use url::Url;
 
 use mdbookkit::{error::OnWarning, url::UrlFromPath};
@@ -168,7 +168,7 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
                     let title = suffix.iter().fold(og_title.clone(), |mut out, suffix| {
                         write!(&mut out, " | {suffix}").and(Ok(out)).unwrap()
                     });
-                    debug!(title);
+                    trace!(title);
                     elem.set_inner_content(&title, ContentType::Text);
                     Ok(())
                 }),
@@ -186,13 +186,13 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
                     let img = image::open(src)?;
                     elem.set_attribute("width", &img.width().to_string())?;
                     elem.set_attribute("height", &img.height().to_string())?;
-                    debug!(?elem);
+                    trace!(?elem);
                     Ok(())
                 }),
                 element!(r#"img[src^="https://img.shields.io/"]"#, |elem| {
                     elem.set_attribute("height", "20")?;
                     elem.set_attribute("fetchpriority", "low")?;
-                    debug!(?elem);
+                    trace!(?elem);
                     Ok(())
                 }),
                 element!(r#"meta[property^="og:"]"#, |elem| {
@@ -230,7 +230,7 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
                         elem.set_attribute("target", "_blank").unwrap();
                         elem.set_attribute("rel", "noreferrer").unwrap();
                     }
-                    debug!(?elem);
+                    trace!(?elem);
                     Ok(())
                 }),
             ],

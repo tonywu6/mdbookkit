@@ -19,9 +19,9 @@ on:
   workflow_dispatch:
 
 env:
-  CARGO_TERM_COLOR: "always"
+  CARGO_TERM_COLOR: always
+  MDBOOK_LOG: debug
   RUST_BACKTRACE: "1"
-  RUST_LOG: "info"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
@@ -61,6 +61,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+          components: rust-src # speeds up rust-analyzer indexing
 
       - uses: cargo-bins/cargo-binstall@b9bf4400702f721d469eec4d280125f650c85638
 
@@ -92,51 +93,15 @@ jobs:
           cargo run --package util-rust-analyzer -- download
 
       - name: Build tests
-        run: cargo test --all-features --no-run
+        run: cargo test --no-run
 
       - name: Test
-        run: cargo test --all-features --no-fail-fast -- --include-ignored
+        run: cargo test --no-fail-fast -- --include-ignored
 
     outputs:
       cache-primary-key: ${{steps.cache.outputs.primary-key}}
       cache-restore-key: ${{steps.cache.outputs.restore-key}}
       cache-path: ${{steps.cache.outputs.path}}
-
-  build_features:
-    name: Build features
-
-    needs:
-      - test
-
-    strategy:
-      matrix:
-        features:
-          - rustdoc-link
-          - lib-rustdoc-link,common-logger
-          - lib-rustdoc-link
-          - link-forever
-          - lib-link-forever,common-logger
-          - lib-link-forever
-      fail-fast: false
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-
-      - uses: actions/cache/restore@v4
-        with:
-          path: ${{needs.test.outputs.cache-path}}
-          key: ${{ needs.test.outputs.cache-primary-key }}
-          restore-keys: ${{ needs.test.outputs.cache-restore-key }}
-
-      - run: cargo build --features ${{ matrix.features }}
 
   test_rustdoc_link_ra:
     name: (rustdoc-link) Test RA
@@ -173,4 +138,4 @@ jobs:
           RA_VERSION: ${{ matrix.ra-version }}
 
       - name: Test
-        run: cargo test --features rustdoc-link
+        run: cargo test --package mdbook-rustdoc-links --no-fail-fast -- --include-ignored

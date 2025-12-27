@@ -116,6 +116,7 @@ impl PortableSnapshots {
             .tap_mut(|s| {
                 s.set_filters(vec![
                     (r"file:///[A-Z]:/", "file:///"), // windows paths
+                    (r"[A-Z]:\\", "/"),               // windows paths
                     (r"(?m)^(\s+)\d{1} ", "$1  "),    // miette line numbers
                     (r"(?m)^(\s+)\d{2} ", "$1   "),
                     (r"(?m)^(\s+)\d{3} ", "$1    "),

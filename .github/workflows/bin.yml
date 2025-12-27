@@ -87,13 +87,22 @@ jobs:
             .bin/
             target/
 
-      - name: Build binaries
+      - name: Build mdbook-rustdoc-links
         uses: taiki-e/upload-rust-binary-action@v1
         with:
           target: ${{ matrix.target }}
-          bin: mdbook-rustdoc-link,mdbook-link-forever
-          features: rustdoc-link,link-forever
-          archive: mdbookkit-$target
+          bin: mdbook-rustdoc-links
+          tar: unix
+          zip: windows
+          codesign: "-"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          dry-run: ${{ github.event_name != 'release' }}
+
+      - name: Build mdbook-permalinks
+        uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          target: ${{ matrix.target }}
+          bin: mdbook-permalinks
           tar: unix
           zip: windows
           codesign: "-"
@@ -103,10 +112,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: |
-            target/${{ matrix.target }}/release/mdbook-rustdoc-link
-            target/${{ matrix.target }}/release/mdbook-link-forever
-            target/${{ matrix.target }}/release/mdbook-rustdoc-link.exe
-            target/${{ matrix.target }}/release/mdbook-link-forever.exe
+            target/${{ matrix.target }}/release/mdbook-rustdoc-links
+            target/${{ matrix.target }}/release/mdbook-rustdoc-links.exe
+            target/${{ matrix.target }}/release/mdbook-permalinks
+            target/${{ matrix.target }}/release/mdbook-permalinks.exe
           name: ${{ matrix.target }}
           if-no-files-found: warn
           retention-days: 1
