@@ -1,6 +1,5 @@
 use std::{
     sync::{Arc, RwLock},
-    task::Poll,
     time::Duration,
 };
 
@@ -17,7 +16,13 @@ use mdbookkit::error::ExpectLock;
 pub struct Debouncing<T> {
     pub debounce: Duration,
     pub timeout: Duration,
-    pub receiver: mpsc::Receiver<Poll<T>>,
+    pub receiver: mpsc::Receiver<DebounceUpdate<T>>,
+}
+
+pub enum DebounceUpdate<T> {
+    Reset,
+    Alive,
+    Ready(T),
 }
 
 impl<T> Debouncing<T>
@@ -55,7 +60,7 @@ where
                     }
 
                     match value {
-                        Ok(Poll::Ready(value)) => {
+                        Ok(DebounceUpdate::Ready(value)) => {
                             trace!("state is ready; deferring notification");
                             let event = event.clone();
                             let state = state.clone();
@@ -68,10 +73,15 @@ where
                             }));
                         }
 
-                        Ok(Poll::Pending) => {
-                            trace!("state is pending");
+                        Ok(DebounceUpdate::Reset) => {
+                            trace!("state has been reset");
                             *state.write().expect_lock() = State::Pending;
                             event.notify_waiters();
+                        }
+
+                        Ok(DebounceUpdate::Alive) => {
+                            trace!("sender is alive");
+                            // allows rx to not time out
                         }
 
                         Err(_) => {

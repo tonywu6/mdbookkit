@@ -3,7 +3,6 @@ use std::{
     ops::ControlFlow,
     process::Stdio,
     sync::{Arc, RwLock},
-    task::Poll,
     time::Duration,
 };
 
@@ -16,7 +15,8 @@ use lsp_types::{
     InitializeResult, InitializedParams, LogMessageParams, MessageType, NumberOrString, Position,
     PositionEncodingKind, ProgressParams, ProgressParamsValue, ServerInfo, ShowMessageParams,
     TextDocumentIdentifier, TextDocumentItem, TextDocumentPositionParams, Url,
-    WindowClientCapabilities, WorkDoneProgress, WorkspaceFolder,
+    WindowClientCapabilities, WorkDoneProgress, WorkDoneProgressBegin, WorkDoneProgressEnd,
+    WorkDoneProgressReport, WorkspaceFolder,
     notification::{LogMessage, Progress, PublishDiagnostics, ShowMessage},
     request::Request,
 };
@@ -33,7 +33,9 @@ use tracing::{Instrument, Level, debug, debug_span, instrument, trace, warn, war
 
 use mdbookkit::{
     emit_debug,
+    env::is_logging,
     error::{ExpectLock, FutureWithError},
+    logging::styled,
     ticker, ticker_event,
     url::UrlToPath,
 };
@@ -41,7 +43,7 @@ use mdbookkit::{
 use crate::{
     env::Environment,
     link::ItemLinks,
-    sync::{Debounce, Debouncing},
+    sync::{Debounce, DebounceUpdate, Debouncing},
 };
 
 /// LSP client to talk to rust-analyzer.
@@ -125,7 +127,7 @@ impl Server {
     #[instrument("spawn_lsp", level = "debug", skip_all)]
     async fn spawn(env: &Environment) -> Result<Self> {
         struct State {
-            sender: mpsc::Sender<Poll<()>>,
+            sender: mpsc::Sender<DebounceUpdate<()>>,
             ticker: Option<tracing::Span>,
             // this span is never entered, ticker/timing is updated on span close
             percent_indexed: Option<u32>,
@@ -177,17 +179,17 @@ impl Server {
         #[instrument(level = "trace", skip(state))]
         fn probe_progress(state: &mut State, progress: ProgressParams) {
             match indexing_progress(&progress) {
-                Some(WorkDoneProgress::Begin(begin)) => {
+                Some(IndexingProgress::CachePriming(WorkDoneProgress::Begin(begin))) => {
                     state.percent_indexed = Some(0);
 
                     let msg = begin.message.as_deref().unwrap_or_default();
                     ticker_event!(state.ticker(), Level::INFO, "{msg}");
 
                     let tx = state.sender.clone();
-                    tokio::spawn(async move { tx.send(Poll::Pending).await.ok() });
+                    tokio::spawn(async move { tx.send(DebounceUpdate::Reset).await.ok() });
                 }
 
-                Some(WorkDoneProgress::Report(report)) => {
+                Some(IndexingProgress::CachePriming(WorkDoneProgress::Report(report))) => {
                     if let Some(msg) = report.message.as_deref()
                         && (state.last_update.as_deref())
                             .map(|last| last != msg)
@@ -226,7 +228,7 @@ impl Server {
                     }
                 }
 
-                Some(WorkDoneProgress::End(_)) => {
+                Some(IndexingProgress::CachePriming(WorkDoneProgress::End(_))) => {
                     let Some(indexed) = state.percent_indexed else {
                         trace!("progress was considered spurious");
                         return;
@@ -241,12 +243,22 @@ impl Server {
                     state.ticker.take();
 
                     let tx = state.sender.clone();
-                    tokio::spawn(async move { tx.send(Poll::Ready(())).await.ok() });
+                    tokio::spawn(async move { tx.send(DebounceUpdate::Ready(())).await.ok() });
                 }
 
-                None => {
-                    trace!("ignoring unsupported workDoneProgress")
+                Some(IndexingProgress::Other(message)) => {
+                    if let Some(ticker) = state.ticker() {
+                        if is_logging() {
+                            ticker_event!(ticker, Level::DEBUG, "{message}");
+                        } else {
+                            ticker_event!(ticker, Level::INFO, "{}", styled(message).dim());
+                        }
+                        let tx = state.sender.clone();
+                        tokio::spawn(async move { tx.send(DebounceUpdate::Alive).await.ok() });
+                    }
                 }
+
+                None => {}
             }
         }
 
@@ -567,17 +579,39 @@ fn document_position(uri: Url, position: Position) -> TextDocumentPositionParams
     }
 }
 
-fn indexing_progress(progress: &ProgressParams) -> Option<&WorkDoneProgress> {
+enum IndexingProgress<'a> {
+    CachePriming(&'a WorkDoneProgress),
+    Other(&'a String),
+}
+
+fn indexing_progress(progress: &ProgressParams) -> Option<IndexingProgress<'_>> {
     match progress {
         ProgressParams {
             token: NumberOrString::String(token),
             value: ProgressParamsValue::WorkDone(progress),
-        } if matches!(
-            token.as_ref(),
-            "rustAnalyzer/Indexing" | "rustAnalyzer/cachePriming"
-        ) =>
-        {
-            Some(progress)
+        } => {
+            if matches!(
+                token.as_ref(),
+                "rustAnalyzer/Indexing" | "rustAnalyzer/cachePriming"
+            ) {
+                Some(IndexingProgress::CachePriming(progress))
+            } else if let WorkDoneProgress::Begin(WorkDoneProgressBegin {
+                message: Some(message),
+                ..
+            })
+            | WorkDoneProgress::Report(WorkDoneProgressReport {
+                message: Some(message),
+                ..
+            })
+            | WorkDoneProgress::End(WorkDoneProgressEnd {
+                message: Some(message),
+                ..
+            }) = progress
+            {
+                Some(IndexingProgress::Other(message))
+            } else {
+                None
+            }
         }
         _ => None,
     }

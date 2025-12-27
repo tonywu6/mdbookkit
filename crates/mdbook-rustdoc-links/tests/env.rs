@@ -24,14 +24,7 @@ fn test_minimum_env() -> Result<()> {
 
     info!("setup: compile self");
     Command::new("cargo")
-        .args([
-            "build",
-            "--package",
-            env!("CARGO_PKG_NAME"),
-            "--all-features",
-            "--bin",
-            "mdbook-rustdoc-link",
-        ])
+        .args(["build", "--package", env!("CARGO_PKG_NAME")])
         .arg(if cfg!(debug_assertions) {
             "--profile=dev"
         } else {
@@ -59,7 +52,7 @@ fn test_minimum_env() -> Result<()> {
     std::fs::File::options()
         .append(true)
         .open(root.path().join("book.toml"))?
-        .pipe(|mut file| file.write_all("[preprocessor.rustdoc-link]\n".as_bytes()))?;
+        .pipe(|mut file| file.write_all("[preprocessor.rustdoc-links]\n".as_bytes()))?;
 
     info!("when: book is not a Cargo project");
     info!("then: preprocessor fails");
@@ -70,7 +63,7 @@ fn test_minimum_env() -> Result<()> {
         .assert()
         .failure()
         .stderr(predicate::str::contains(
-            "failed to determine the current Cargo project",
+            "Failed to determine the current Cargo project",
         ));
 
     info!("given: book is a Cargo project");
@@ -82,7 +75,7 @@ fn test_minimum_env() -> Result<()> {
         .assert()
         .success();
 
-    if Command::new("mdbook-rustdoc-link")
+    if Command::new("mdbook-rustdoc-links")
         .arg("rust-analyzer")
         .env("PATH", &path)
         .current_dir(&root)
