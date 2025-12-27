@@ -117,12 +117,6 @@ file path is accessible:
   processes it as usual).
 - For other sites, the link remains functional and will link to your book's website.
 
-<figure>
-
-![warnings emitted for broken canonical links](media/error-reporting-canonical-urls.png)
-
-</figure>
-
 <!-- prettier-ignore-start -->
 
 [mdbook-include]: https://rust-lang.github.io/mdBook/format/mdbook.html#including-files

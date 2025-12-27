@@ -87,7 +87,7 @@ When the preprocessor fails to resolve some items, it emits warnings that look l
 
 <figure>
 
-![warning emitted that has the wrong line numbers](media/error-reporting-wrong-line.png)
+![emitted warning](media/error-reporting.png)
 
 </figure>
 

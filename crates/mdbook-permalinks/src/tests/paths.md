@@ -20,11 +20,11 @@
 
 ![](Minato_City,_Tokyo,_Japan.jpg)
 
-![](/docs/src/media/banner.webp)
+![](/docs/src/media/social.webp)
 
-[![Banner image][banner-image]][banner-image]
+[![Social image][social-image]][social-image]
 
-[banner-image]: /docs/src/media/banner.webp
+[social-image]: /docs/src/media/social.webp
 
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
 

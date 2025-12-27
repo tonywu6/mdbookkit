@@ -7,10 +7,10 @@
   - [x] mdbookkit
   - [x] link check
 
-- [ ] images
-  - [ ] permalinks
-  - [ ] rustdoc-links
-  - [ ] mdbookkit
+- [x] images
+  - [x] permalinks
+  - [x] rustdoc-links
+  - [x] mdbookkit
 
 - [ ] package metadata
   - [ ] permalinks

@@ -253,7 +253,7 @@ impl Server {
         let (sender, receiver) = mpsc::channel(16);
 
         let debounce = Debouncing {
-            debounce: Duration::from_millis(500),
+            debounce: Duration::from_millis(300),
             timeout: env.config.rust_analyzer_timeout(),
             receiver,
         }

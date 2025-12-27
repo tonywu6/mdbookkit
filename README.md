@@ -1,5 +1,3 @@
-[![mdbookkit hero image](/docs/src/media/banner.webp)](https://tonywu6.github.io/mdbookkit/)
-
 # mdbookkit
 
 Quality-of-life plugins for your [mdBook] project.
@@ -13,9 +11,7 @@ Quality-of-life plugins for your [mdBook] project.
 
 </div>
 
-## Quick access
-
-### [mdbook-rustdoc-links](https://tonywu6.github.io/mdbookkit/rustdoc-links)
+## [mdbook-rustdoc-links](https://tonywu6.github.io/mdbookkit/rustdoc-links)
 
 Link to Rust API docs by name, [_rustdoc_-style][rustdoc].
 
@@ -32,7 +28,7 @@ Link to Rust API docs by name, [_rustdoc_-style][rustdoc].
 cargo install mdbook-rustdoc-links
 ```
 
-### [mdbook-permalinks](https://tonywu6.github.io/mdbookkit/permalinks)
+## [mdbook-permalinks](https://tonywu6.github.io/mdbookkit/permalinks)
 
 Link to files in your Git repository using paths.
 
