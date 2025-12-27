@@ -552,6 +552,7 @@ struct Config {
     #[arg(long, value_name("FORMAT"), verbatim_doc_comment)]
     repo_url_template: Option<String>,
 
+    // TODO: cannot use `output.html.site-url` because it is always `/` during `mdbook serve`
     /// Specify the canonical URL at which you deploy your book.
     ///
     /// For example:

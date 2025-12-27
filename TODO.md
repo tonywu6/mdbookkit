@@ -28,9 +28,11 @@
 
 - [x] upgrade deps
 - [ ] msrv
+- [x] mdbook v0.4 warnings
 
 - [ ] CI
-  - [ ] changelog
+  - [x] changelog
+  - [ ] release-plz template
   - [ ] binstall
 
 - [ ] cloudflare

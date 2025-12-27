@@ -5,7 +5,6 @@
 You will need to:
 
 1. Have [rust-analyzer].:
-
    - If you already use the [VS Code extension][ra-extension], no setup is required: the
      preprocessor automatically uses the server binary packaged with it.
    - Otherwise, [install][ra-install] rust-analyzer (e.g. via `rustup`) and make sure it
@@ -21,6 +20,8 @@ You will need to:
    releases][gh-releases].
 
    <!-- TODO: cargo binstall -->
+
+{{#include ../snippets/mdbook-0.4.md}}
 
 ## Configure
 

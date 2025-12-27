@@ -5,7 +5,7 @@ src = "src"
 title = "mdbookkit"
 
 [build]
-build-dir = "dist"
+build-dir = "dist/mdbookkit"
 create-missing = false
 extra-watch-dirs = ["app", "bin", "../crates", "Cargo.toml", "../README.md"]
 
@@ -17,7 +17,7 @@ git-repository-icon = "fab-github"
 git-repository-url = "https://github.com/tonywu6/mdbookkit"
 hash-files = true
 preferred-dark-theme = "ayu"
-site-url = "/"
+site-url = "https://tonywu6.github.io/mdbookkit/"
 
 [output.html.playground]
 runnable = false
