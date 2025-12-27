@@ -21,17 +21,18 @@
   - [x] ra-version
   - [x] describe
 
-- [ ] postprocess
-  - [ ] anchors
-  - [ ] external links
-  - [ ] socials
+- [x] postprocess
+  - [ ] ~~anchors~~
+  - [x] external links
+  - [x] socials
 
 - [ ] upgrade deps
 - [ ] msrv
 
-- [ ] changelog
-- [ ] binstall
-
 - [ ] CI
+  - [ ] changelog
+  - [ ] binstall
+
 - [ ] cloudflare
   - [ ] URLs
+  - [ ] socials

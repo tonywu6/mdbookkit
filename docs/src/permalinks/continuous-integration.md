@@ -5,7 +5,7 @@ in terms of error handling, logging, etc.
 
 ## Detecting CI
 
-{{#include ../snippets/detecting-ci.md}}
+{{#include ../snippets/ci/detecting-ci.md}}
 
 ## Linking to Git tags
 
@@ -26,13 +26,9 @@ steps:
       fetch-depth: 0 # https://github.com/actions/checkout/issues/1471#issuecomment-1771231294
 ```
 
-## Logging
-
-{{#include ../snippets/logging.md}}
-
 ## Error handling
 
-{{#include ../snippets/error-handling.md}}
+{{#include ../snippets/ci/error-handling.md}}
 
 <!-- prettier-ignore-start -->
 

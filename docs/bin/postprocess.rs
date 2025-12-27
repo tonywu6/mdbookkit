@@ -1,36 +1,24 @@
-//! Postprocess mdBook HTML output.
-//!
-//! Currently does the following:
-//!
-//! - Add OpenGraph metadata and link to images for social.
-//! - Add explicit widths and heights to images: <https://web.dev/articles/optimize-cls#images-without-dimensions>
-//!
-//! mdBook doesn't support frontmatters yet, so this cannot be a preprocessor.
-
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, fmt::Write, path::PathBuf};
 
 use anyhow::{Context, Result};
-use clap::Parser;
 use glob::glob;
 use lol_html::{
     HtmlRewriter, RewriteStrSettings, Settings, element, html_content::ContentType, rewrite_str,
     text,
 };
+use mdbookkit::url::UrlFromPath;
 use minijinja::Environment;
 use serde::Deserialize;
 use serde_json::json;
 use tap::{Pipe, Tap};
+use tracing::{debug, info, info_span};
 use url::Url;
 
-fn main() -> Result<()> {
-    let Program { root_dir } = Program::parse();
-
+pub fn run(root_dir: PathBuf) -> Result<()> {
     let jinja =
         Environment::new().tap_mut(|env| env.add_template("index.html", OPEN_GRAPH).unwrap());
 
-    let root_dir = std::fs::canonicalize(root_dir)?
-        .pipe(Url::from_directory_path)
-        .unwrap();
+    let root_dir = std::fs::canonicalize(root_dir)?.to_directory_url();
 
     let book_toml_path = root_dir.join("book.toml")?;
 
@@ -39,16 +27,24 @@ fn main() -> Result<()> {
         .pipe(std::fs::read_to_string)?
         .pipe_deref(toml::from_str::<BookToml>)?;
 
+    debug!("{book_toml:#?}");
+
     let src_dir = book_toml.book.src.as_deref().unwrap_or("src");
     let src_dir = root_dir.join(&format!("{src_dir}/"))?;
 
     let out_dir = book_toml.build.build_dir.as_deref().unwrap_or("book");
     let out_dir = root_dir.join(&format!("{out_dir}/"))?;
 
-    let metadata = book_toml
-        .metadata
-        .socials
-        .0
+    let BookToml {
+        preprocessor:
+            PreprocessorConfig {
+                permalinks: PermalinksConfig { book_url },
+                ..
+            },
+        ..
+    } = book_toml;
+
+    let metadata = (book_toml.preprocessor.doc.socials.0)
         .into_iter()
         .map(|(prefix, metadata)| -> Result<(_, PageMetadata)> {
             let image = match metadata.image {
@@ -62,7 +58,7 @@ fn main() -> Result<()> {
                 let image = src_dir
                     .make_relative(&image)
                     .context("Failed to make relative path to image")?;
-                book_toml.preprocessor.link_forever.book_url.join(&image)?
+                book_url.join(&image)?
             };
             let metadata = PageMetadata {
                 title: metadata.title,
@@ -73,10 +69,15 @@ fn main() -> Result<()> {
         .collect::<Result<Vec<_>>>()?
         .tap_mut(|metadata| metadata.sort_by(|(p1, _), (p2, _)| p1.cmp(p2)));
 
-    for path in glob(out_dir.join("**/*.html")?.path())? {
-        let url = Url::from_file_path(path?).unwrap();
+    debug!("{metadata:#?}");
 
+    for path in glob(out_dir.join("**/*.html")?.path())? {
+        let url = path?.to_file_url();
         let html = std::fs::read_to_string(url.path())?;
+
+        let _span = info_span!("html").entered();
+
+        info!(%url);
 
         let (og_title, og_description) = {
             let mut title = String::new();
@@ -109,23 +110,20 @@ fn main() -> Result<()> {
             .replace(".html", "")
             .pipe(|p| format!("/{p}"));
 
-        let title = metadata
+        let suffix = metadata
             .iter()
             .filter_map(|(prefix, metadata)| {
                 let title = metadata.title.as_ref()?;
-                if pathname.starts_with(prefix) && &pathname != prefix
                 // pathname != prefix because subroute index page
                 // should already have a sensible title
-                {
+                if pathname.starts_with(prefix) && &pathname != prefix {
                     Some(title.as_str())
                 } else {
                     None
                 }
             })
-            .chain(std::iter::once(og_title.as_str()))
             .rev()
-            .collect::<Vec<_>>()
-            .join(" | ");
+            .collect::<Vec<_>>();
 
         let og_image = metadata.iter().rev().find_map(|(prefix, metadata)| {
             if !pathname.starts_with(prefix) {
@@ -135,11 +133,7 @@ fn main() -> Result<()> {
             }
         });
 
-        let og_url = book_toml
-            .preprocessor
-            .link_forever
-            .book_url
-            .join(&pathname[1..])?;
+        let og_url = book_url.join(&pathname[1..])?;
 
         let og_site_name = book_toml.book.title.as_deref();
 
@@ -151,14 +145,16 @@ fn main() -> Result<()> {
             "og_site_name": og_site_name,
         });
 
+        debug!(?ctx);
+
         let html = RewriteStrSettings {
             element_content_handlers: vec![
                 element!("title", |elem| {
+                    let title = suffix.iter().fold(og_title.clone(), |mut out, suffix| {
+                        write!(&mut out, " | {suffix}").and(Ok(out)).unwrap()
+                    });
+                    debug!(title);
                     elem.set_inner_content(&title, ContentType::Text);
-                    Ok(())
-                }),
-                element!(r#"meta[property^="og:"]"#, |elem| {
-                    elem.remove();
                     Ok(())
                 }),
                 element!(r#"img[src]"#, |elem| {
@@ -175,17 +171,43 @@ fn main() -> Result<()> {
                     let img = image::open(src)?;
                     elem.set_attribute("width", &img.width().to_string())?;
                     elem.set_attribute("height", &img.height().to_string())?;
+                    debug!(?elem);
                     Ok(())
                 }),
                 element!(r#"img[src^="https://img.shields.io/"]"#, |elem| {
                     elem.set_attribute("height", "20")?;
                     elem.set_attribute("fetchpriority", "low")?;
+                    debug!(?elem);
+                    Ok(())
+                }),
+                element!(r#"meta[property^="og:"]"#, |elem| {
+                    elem.remove();
                     Ok(())
                 }),
                 element!(r#"meta[name="description"]"#, |elem| {
                     let meta = jinja.get_template("index.html").unwrap().render(&ctx)?;
                     elem.set_attribute("content", &og_description)?;
                     elem.before(&meta, ContentType::Html);
+                    Ok(())
+                }),
+                element!(r#"h1.menu-title"#, |elem| {
+                    if let Some(suffix) = suffix.iter().nth_back(1) {
+                        elem.set_inner_content(suffix, ContentType::Text);
+                    }
+                    Ok(())
+                }),
+                element!(r#"a"#, |elem| {
+                    let Some(href) = elem
+                        .get_attribute("href")
+                        .and_then(|u| u.parse::<Url>().ok())
+                    else {
+                        return Ok(());
+                    };
+                    if href.origin() != book_url.origin() {
+                        elem.set_attribute("target", "_blank").unwrap();
+                        elem.set_attribute("rel", "noreferrer").unwrap();
+                    }
+                    debug!(?elem);
                     Ok(())
                 }),
             ],
@@ -197,6 +219,60 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
+struct BookToml {
+    book: BookConfig,
+    build: BuildConfig,
+    preprocessor: PreprocessorConfig,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
+struct BookConfig {
+    #[serde(default)]
+    title: Option<String>,
+    #[serde(default)]
+    src: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
+struct BuildConfig {
+    #[serde(default)]
+    build_dir: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
+struct PreprocessorConfig {
+    permalinks: PermalinksConfig,
+    doc: MetadataConfig,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
+struct PermalinksConfig {
+    book_url: Url,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
+struct MetadataConfig {
+    #[serde(default)]
+    socials: Socials,
+}
+
+#[derive(Deserialize, Default, Debug)]
+struct Socials(HashMap<String, PageMetadata>);
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
+struct PageMetadata {
+    title: Option<String>,
+    image: Option<String>,
 }
 
 static OPEN_GRAPH: &str = r##"
@@ -213,66 +289,6 @@ static OPEN_GRAPH: &str = r##"
     <meta name="twitter:description"    content="{{ og_description }}">
     <meta name="theme-color"            content="#d2a6ff">
 "##;
-
-#[derive(Parser)]
-struct Program {
-    root_dir: PathBuf,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "kebab-case")]
-struct BookToml {
-    book: BookConfig,
-    build: BuildConfig,
-    #[serde(rename = "_metadata")]
-    metadata: MetadataConfig,
-    preprocessor: PreprocessorConfig,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "kebab-case")]
-struct BookConfig {
-    #[serde(default)]
-    title: Option<String>,
-    #[serde(default)]
-    src: Option<String>,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "kebab-case")]
-struct PreprocessorConfig {
-    link_forever: LinkConfig,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "kebab-case")]
-struct LinkConfig {
-    book_url: Url,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "kebab-case")]
-struct BuildConfig {
-    #[serde(default)]
-    build_dir: Option<String>,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "kebab-case")]
-struct MetadataConfig {
-    #[serde(default)]
-    socials: Socials,
-}
-
-#[derive(Deserialize, Default)]
-struct Socials(HashMap<String, PageMetadata>);
-
-#[derive(Deserialize)]
-#[serde(rename_all = "kebab-case")]
-struct PageMetadata {
-    title: Option<String>,
-    image: Option<String>,
-}
 
 fn collapse_whitespace(src: String) -> String {
     src.chars()

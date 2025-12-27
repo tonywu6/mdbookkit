@@ -5,7 +5,7 @@ in terms of error handling, logging, etc.
 
 ## Detecting CI
 
-{{#include ../snippets/detecting-ci.md}}
+{{#include ../snippets/ci/detecting-ci.md}}
 
 ## Installing rust-analyzer
 
@@ -26,13 +26,9 @@ steps:
 > rust-analyzer from rustup follows Rust's release schedule, which may lag behind the
 > version bundled with the VS Code extension.
 
-## Logging
-
-{{#include ../snippets/logging.md}}
-
 ## Error handling
 
-{{#include ../snippets/error-handling.md}}
+{{#include ../snippets/ci/error-handling.md}}
 
 [^ra-on-path]:
     You may alternatively specify a command to use for rust-analyzer via the

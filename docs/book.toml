@@ -38,18 +38,18 @@ command = "cargo run --package mdbook-permalinks"
 [preprocessor.app]
 command = "deno run --allow-all app/build/preprocessor.ts"
 
-[preprocessor.preprocess]
+[preprocessor.doc]
 after = ["links"]
 command = "cargo run -- preprocess"
 
-# [_metadata.socials."/"]
-# image = "src/media/social.webp"
-# title = "mdbookkit"
+[preprocessor.doc.socials."/"]
+image = "src/media/social.webp"
+title = "mdbookkit"
 
-# [_metadata.socials."/rustdoc-link"]
-# image = "src/rustdoc-link/media/social.webp"
-# title = "mdbook-rustdoc-link"
+[preprocessor.doc.socials."/rustdoc-links/"]
+image = "src/rustdoc-links/media/social.webp"
+title = "mdbook-rustdoc-links"
 
-# [_metadata.socials."/link-forever"]
-# image = "src/link-forever/media/social.webp"
-# title = "mdbook-link-forever"
+[preprocessor.doc.socials."/permalinks/"]
+image = "src/permalinks/media/social.webp"
+title = "mdbook-permalinks"
