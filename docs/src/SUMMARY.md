@@ -16,6 +16,7 @@
   - [Continuous integration](rustdoc-links/continuous-integration.md)
   - [Configuration](rustdoc-links/configuration.md)
   - [Known issues](rustdoc-links/known-issues.md)
+  - [CHANGELOG](rustdoc-links/CHANGELOG.md)
 
 ---
 
@@ -27,10 +28,9 @@
   - [Continuous integration](permalinks/continuous-integration.md)
   - [Configuration](permalinks/configuration.md)
   - [Known issues](permalinks/known-issues.md)
+  - [CHANGELOG](permalinks/CHANGELOG.md)
 
 ---
-
-[CHANGELOG](CHANGELOG.md)
 
 [](_internal/mdbook-rustdoc-links-README.md) [](_internal/mdbook-permalinks-README.md)
 [](_internal/mdbookkit-README.md)
