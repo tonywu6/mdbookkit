@@ -1,4 +1,4 @@
-- [ ] mdbookkit install compat
+- [x] mdbookkit install compat
   - [x] lib.rs docstring
 
 - [x] package readme
@@ -30,3 +30,4 @@
 - [ ] binstall
 
 - [ ] CI
+- [ ] cloudflare

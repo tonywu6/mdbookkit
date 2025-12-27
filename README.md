@@ -19,10 +19,6 @@ Quality-of-life plugins for your [mdBook] project.
 
 Link to Rust API docs by name, [_rustdoc_-style][rustdoc].
 
-```sh
-cargo install mdbook-rustdoc-links
-```
-
 <!-- prettier-ignore-start -->
 
 [Install](https://tonywu6.github.io/mdbookkit/rustdoc-links/getting-started#install)
@@ -32,13 +28,13 @@ cargo install mdbook-rustdoc-links
 
 <!-- prettier-ignore-end -->
 
+```sh
+cargo install mdbook-rustdoc-links
+```
+
 ### [mdbook-permalinks](https://tonywu6.github.io/mdbookkit/permalinks)
 
 Link to files in your Git repository using paths.
-
-```sh
-cargo install mdbook-permalinks
-```
 
 <!-- prettier-ignore-start -->
 
@@ -48,6 +44,10 @@ cargo install mdbook-permalinks
 | [Options](https://tonywu6.github.io/mdbookkit/permalinks/configuration)
 
 <!-- prettier-ignore-end -->
+
+```sh
+cargo install mdbook-permalinks
+```
 
 ## License
 

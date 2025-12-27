@@ -42,8 +42,14 @@ minijinja = { workspace = true, optional = true }
 [features]
 _testing = ["dep:cargo-run-bin", "dep:insta", "dep:minijinja"]
 
-[package.metadata.docs.rs]
-all-features = true
-
-[package.metadata.binstall]
-pkg-url = "{ repo }/releases/download/{ name }-v{ version }/{ name }-{ target }{ archive-suffix }"
+# defunct features
+link-forever = []
+rustdoc-link = []
+[[bin]]
+name = "mdbook-rustdoc-link"
+path = "src/_bin/rustdoc_link.rs"
+required-features = ["rustdoc-link"]
+[[bin]]
+name = "mdbook-link-forever"
+path = "src/_bin/link_forever.rs"
+required-features = ["link-forever"]
