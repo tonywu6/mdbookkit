@@ -9,3 +9,5 @@ example:
 [preprocessor.permalinks]
 always-link = [".rs"]
 ```
+
+<permalinks-options>(auto-generated)</permalinks-options>

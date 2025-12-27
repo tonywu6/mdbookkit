@@ -176,14 +176,14 @@ where
     }
 }
 
-pub trait ExitProcess {
-    fn exit(self, log: impl FnOnce(Error)) -> !;
+pub trait ExitProcess<T> {
+    fn exit(self, log: impl FnOnce(Error)) -> T;
 }
 
-impl ExitProcess for Result<()> {
-    fn exit(self, log: impl FnOnce(Error)) -> ! {
+impl<T> ExitProcess<T> for Result<T> {
+    fn exit(self, log: impl FnOnce(Error)) -> T {
         match self {
-            Ok(()) => exit(0),
+            Ok(v) => v,
             Err(e) => {
                 log(e);
                 exit(1)

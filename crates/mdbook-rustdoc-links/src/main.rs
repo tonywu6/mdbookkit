@@ -280,7 +280,8 @@ fn which() -> Result2<()> {
 
 #[cfg(feature = "_testing")]
 fn describe() -> Result2<()> {
-    print!("{}", mdbookkit::docs::describe_preprocessor::<Config>()?);
+    let desc = mdbookkit::docs::Reflect::default().describe::<Config>()?;
+    print!("{desc}");
     Ok(())
 }
 

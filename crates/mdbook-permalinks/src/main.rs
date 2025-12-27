@@ -43,13 +43,16 @@ fn main() -> Result<()> {
     let Program { command } = clap::Parser::parse();
     match command {
         None => mdbook().exit(emit_error!()),
-        Some(Command::Supports { .. }) => Ok(()),
+        Some(Command::Supports { .. }) => {}
         #[cfg(feature = "_testing")]
         Some(Command::Describe) => {
-            print!("{}", mdbookkit::docs::describe_preprocessor::<Config>()?);
-            Ok(())
+            let desc = mdbookkit::docs::Reflect::default()
+                .map_type::<UrlPrefix>("String")
+                .describe::<Config>()?;
+            print!("{desc}")
         }
     }
+    Ok(())
 }
 
 fn mdbook() -> Result<()> {
@@ -532,13 +535,15 @@ struct Config {
     /// Should be a string that contains the following placeholders that will be
     /// filled in at build time:
     ///
+    /// - `{tree}` — will be `tree` if the generated URL is for a clickable link, or
+    ///   `raw` if the URL is for a Markdown image
     /// - `{ref}` — the Git reference (tag or commit ID) resolved at build time
     /// - `{path}` — path to the linked file relative to repo root, without a leading `/`
     ///
     /// For example, the following configures generated links to use GitLab's format:
     ///
     /// ```toml
-    /// repo-url-template = "https://gitlab.haskell.org/ghc/ghc/-/tree/{ref}/{path}"
+    /// repo-url-template = "https://gitlab.haskell.org/ghc/ghc/-/{tree}/{ref}/{path}"
     /// ```
     ///
     /// Note that information such as repo owner or name will not be filled in. If URLs to
@@ -549,25 +554,22 @@ struct Config {
 
     /// Specify the canonical URL at which you deploy your book.
     ///
-    /// Should be a qualified URL. For example:
+    /// For example:
     ///
     /// ```toml
     /// book-url = "https://me.github.io/my-awesome-crate/"
     /// ```
     ///
     /// Enables validation of hard-coded links to book pages. The preprocessor will
-    /// warn you about links that are no longer valid (file not found) at build time.
-    ///
-    /// This is mainly used with mdBook's `{{#include}}` feature, where sometimes you
-    /// have to specify full URLs because path-based links are not supported.
+    /// warn you about links that are no longer valid at build time.
     #[serde(default)]
     #[arg(long, value_name("URL"), verbatim_doc_comment)]
     book_url: Option<UrlPrefix>,
 
     /// Convert some paths to permalinks even if they are under `src/`.
     ///
-    /// By default, links to files in your book's `src/` directory will not be transformed,
-    /// since they are already copied to build output as static files. If you want such files
+    /// By default, links to files in your book's `src/` directory will not be converted,
+    /// since they are already copied to the output directory. If you want such files
     /// to always be rendered as permalinks, specify their file extensions here.
     ///
     /// For example, to use permalinks for Rust source files even if they are in the book's
@@ -586,8 +588,6 @@ struct Config {
     always_link: Vec<String>,
 
     /// Exit with a non-zero status code when there are warnings.
-    ///
-    /// Warnings are always printed to the console regardless of this option.
     #[serde(default)]
     #[arg(long, value_enum, value_name("MODE"), default_value_t = Default::default())]
     fail_on_warnings: OnWarning,

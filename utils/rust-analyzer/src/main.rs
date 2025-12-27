@@ -137,6 +137,7 @@ enum Command {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true, hide = true)]
         args: Vec<String>,
     },
+    Version,
 }
 
 #[derive(clap::Subcommand, Debug)]
@@ -164,6 +165,10 @@ fn main() -> Result<()> {
     match program.command {
         Command::Download => download.download(),
         Command::Analyzer { args } => analyzer(&download, args),
+        Command::Version => {
+            print!("{}", download.release);
+            Ok(())
+        }
     }
 }
 

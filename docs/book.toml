@@ -22,14 +22,6 @@ site-url = "/"
 [output.html.playground]
 runnable = false
 
-# [preprocessor.rustdoc-link-options]
-# before = ["rustdoc-link"]
-# command = "cargo run --package util-clap-reflect -- --reflect rustdoc-link-options"
-
-# [preprocessor.link-forever-options]
-# before = ["rustdoc-link"]
-# command = "cargo run --package util-clap-reflect -- --reflect link-forever-options"
-
 [preprocessor.rustdoc-links]
 after = ["links"]
 cache-dir = "build"
@@ -43,18 +35,11 @@ always-link = [".rs"]
 book-url = "https://tonywu6.github.io/mdbookkit/"
 command = "cargo run --package mdbook-permalinks"
 
-# [preprocessor.rust-analyzer-version]
-# after = ["rustdoc-link"]
-# command = "cargo run --package util-rust-analyzer --all-features -- version"
-
-# [preprocessor.alerts]
-# after = ["rustdoc-link"]
-# command = "cargo bin mdbook-alerts"
-
 [preprocessor.app]
 command = "deno run --allow-all app/build/preprocessor.ts"
 
 [preprocessor.preprocess]
+after = ["links"]
 command = "cargo run -- preprocess"
 
 # [_metadata.socials."/"]

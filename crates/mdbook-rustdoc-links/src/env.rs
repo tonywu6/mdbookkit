@@ -70,14 +70,13 @@ pub struct Config {
 
     /// Directory in which to persist build cache.
     ///
-    /// Setting this will enable caching. Will skip rust-analyzer if cache hits.
+    /// Setting this will enable caching. The preprocessor will skip running
+    /// rust-analyzer if cache hits.
     #[serde(default)]
     #[arg(long, value_name("PATH"), value_hint(clap::ValueHint::DirPath))]
     pub cache_dir: Option<PathBuf>,
 
     /// Exit with a non-zero status code when some links fail to resolve.
-    ///
-    /// Warnings are always printed to the console regardless of this option.
     #[serde(default)]
     #[arg(long, value_enum, value_name("MODE"), default_value_t = Default::default())]
     pub fail_on_warnings: OnWarning,

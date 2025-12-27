@@ -17,15 +17,16 @@
   - [x] rustdoc-links
   - [x] mdbookkit
 
-- [ ] preprocess
-  - [ ] ra-version
-  - [ ] describe
+- [x] preprocess
+  - [x] ra-version
+  - [x] describe
 
 - [ ] postprocess
   - [ ] anchors
   - [ ] external links
   - [ ] socials
 
+- [ ] upgrade deps
 - [ ] msrv
 
 - [ ] changelog

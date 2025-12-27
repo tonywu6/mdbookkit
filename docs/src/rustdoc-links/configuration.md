@@ -16,3 +16,5 @@ example:
 ```bash
 mdbook-rustdoc-links markdown --rust-analyzer "..."
 ```
+
+<rustdoc-links-options>(auto-generated)</rustdoc-links-options>
