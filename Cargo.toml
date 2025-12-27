@@ -6,6 +6,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/tonywu6/mdbookkit"
 
 edition = "2024"
+rust-version = "1.89"
 
 [profile.dev.package]
 insta.opt-level = 3

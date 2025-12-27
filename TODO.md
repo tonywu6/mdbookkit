@@ -27,7 +27,7 @@
   - [x] socials
 
 - [x] upgrade deps
-- [ ] msrv
+- [x] msrv
 - [x] mdbook v0.4 warnings
 
 - [ ] CI
