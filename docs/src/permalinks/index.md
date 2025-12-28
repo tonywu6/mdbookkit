@@ -34,7 +34,5 @@ This project is released under the [Apache 2.0 License](/LICENSE-APACHE.md) and 
 [MIT License](/LICENSE-MIT.md).
 
 <!-- prettier-ignore-start -->
-
 [mdBook]: https://rust-lang.github.io/mdBook/
-
 <!-- prettier-ignore-end -->

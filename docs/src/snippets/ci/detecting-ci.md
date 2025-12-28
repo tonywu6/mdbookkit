@@ -12,8 +12,6 @@ this variable configured by default.
     is encapsulated in the [`is_ci`][crate::env::is_ci] function.
 
 <!-- prettier-ignore-start -->
-
 [github-actions-ci]: https://docs.github.com/en/actions/reference/workflows-and-actions/variables#default-environment-variables
 [gitlab-ci]: https://docs.gitlab.com/ci/variables/predefined_variables/#predefined-variables
-
 <!-- prettier-ignore-end -->

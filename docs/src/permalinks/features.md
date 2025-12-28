@@ -105,14 +105,12 @@ Formatting of diagnostics powered by [miette]
 </figure>
 
 <!-- prettier-ignore-start -->
-
 [`output.html.git-repository-url`]: https://rust-lang.github.io/mdBook/format/configuration/renderers.html#html-renderer-options
 [esbuild]: https://esbuild.github.io
 [github-relative-links]: https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#relative-links
 [link-validation]: https://code.visualstudio.com/docs/languages/markdown#_link-validation
 [mdbook-src-build]: https://rust-lang.github.io/mdBook/guide/creating.html#source-files
 [vscode-path-completions]: https://code.visualstudio.com/docs/languages/markdown#_path-completions
-
 <!-- prettier-ignore-end -->
 
 [^1]: The remote must be exactly named `origin`. No other name is recognized.

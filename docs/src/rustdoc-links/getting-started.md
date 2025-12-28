@@ -19,8 +19,6 @@ You will need to:
    Alternatively, you may obtain precompiled binaries from [GitHub
    releases][gh-releases].
 
-   <!-- TODO: cargo binstall -->
-
 {{#include ../snippets/mdbook-0.4.md}}
 
 ## Configure
@@ -89,12 +87,10 @@ The preprocessor runs in both `mdbook build` and `mdbook serve`.
 - Learn about [known issues and limitations](known-issues.md).
 
 <!-- prettier-ignore-start -->
-
 [gh-releases]: https://github.com/tonywu6/mdbookkit/releases
 [open-docs]: https://rust-analyzer.github.io/book/features.html#open-docs
 [preprocessor]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
 [ra-extension]: https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer
 [ra-install]: https://rust-analyzer.github.io/book/rust_analyzer_binary.html
 [rust-analyzer]: https://rust-analyzer.github.io/
-
 <!-- prettier-ignore-end -->

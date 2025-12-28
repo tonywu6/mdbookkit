@@ -134,8 +134,6 @@ my-book/
 ```
 
 <!-- prettier-ignore-start -->
-
 [locate-project]: https://doc.rust-lang.org/cargo/commands/cargo-locate-project.html
 [workspaces]: https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html
-
 <!-- prettier-ignore-end -->

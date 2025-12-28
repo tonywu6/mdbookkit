@@ -30,9 +30,7 @@ and good practice — choose all three!_
 > [original RFC][intra-doc-link].
 
 <!-- prettier-ignore-start -->
-
 [intra-doc-link]: https://rust-lang.github.io/rfcs/1946-intra-rustdoc-links.html
 [rustdoc]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
 [uv-brackets]: https://github.com/astral-sh/uv/pull/12076/files
-
 <!-- prettier-ignore-end -->

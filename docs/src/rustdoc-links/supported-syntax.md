@@ -236,11 +236,9 @@ rustdoc.
     first.
 
 <!-- prettier-ignore-start -->
-
 [disambiguator]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html#namespaces-and-disambiguators
 [gh-issues]: https://github.com/tonywu6/mdbookkit/issues
 [namespaces]: https://doc.rust-lang.org/reference/names/namespaces.html
 [rust-types]: https://doc.rust-lang.org/reference/types.html#r-type.kinds
 [rustdoc-linking]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
-
 <!-- prettier-ignore-end -->

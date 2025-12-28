@@ -9,8 +9,6 @@ You may be looking for:
 - [`mdbook-permalinks`](https://tonywu6.github.io/mdbookkit/permalinks/)
 
 <!-- prettier-ignore-start -->
-
 [mdBook]: https://rust-lang.github.io/mdBook/
 [preprocessors]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
-
 <!-- prettier-ignore-end -->

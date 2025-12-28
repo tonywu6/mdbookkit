@@ -54,9 +54,7 @@ See [`book.toml`](../../book.toml) for an example config.
 - Learn about [known issues and limitations](known-issues.md).
 
 <!-- prettier-ignore-start -->
-
 [gh-releases]: https://github.com/tonywu6/mdbookkit/releases
 [git-repository-url]: https://rust-lang.github.io/mdBook/format/configuration/renderers.html#html-renderer-options
 [preprocessor]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
-
 <!-- prettier-ignore-end -->

@@ -137,7 +137,6 @@ live-reload scenario.
     things, so hopefully bigger changes are coming!
 
 <!-- prettier-ignore-start -->
-
 [`ra-multiplex`]: https://github.com/pr2502/ra-multiplex
 [gh-issues]: https://github.com/tonywu6/mdbookkit/issues
 [lsp-work-done-progress]: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workDoneProgress
@@ -146,5 +145,4 @@ live-reload scenario.
 [ra-persistent-cache]: https://github.com/rust-lang/rust-analyzer/issues/4712
 [salsa]: https://rust-analyzer.github.io/thisweek/2025/03/17/changelog-277.html
 [specify-exclude-patterns]: https://rust-lang.github.io/mdBook/cli/serve.html#specify-exclude-patterns
-
 <!-- prettier-ignore-end -->

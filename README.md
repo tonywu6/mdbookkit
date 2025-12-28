@@ -52,8 +52,6 @@ This project is released under the
 and the [MIT License](https://github.com/tonywu6/mdbookkit/tree/HEAD/LICENSE-MIT.md).
 
 <!-- prettier-ignore-start -->
-
 [mdBook]: https://rust-lang.github.io/mdBook/
 [rustdoc]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
-
 <!-- prettier-ignore-end -->

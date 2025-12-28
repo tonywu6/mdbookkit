@@ -44,11 +44,9 @@ cargo install mdbook-rustdoc-links
 [^1]: Text adapted from [<cite>A Tour of Tokio</cite>][tour]
 
 <!-- prettier-ignore-start -->
-
 [mdBook]: https://rust-lang.github.io/mdBook/
 [preprocessor]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
 [rustdoc]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
 [book]: https://tonywu6.github.io/mdbookkit/rustdoc-links
 [tour]: https://docs.rs/tokio/1.44.2/tokio/index.html#working-with-tasks
-
 <!-- prettier-ignore-end -->

@@ -19,8 +19,6 @@ The variable is supported by `tracing-subscriber`. See
 > `MDBOOK_LOG`. This preprocessor supports both, with `MDBOOK_LOG` taking precedence.
 
 <!-- prettier-ignore-start -->
-
 [mdbook-init-logger]: https://github.com/rust-lang/mdBook/blob/v0.5.2/src/main.rs#L94-L97
 [mdbook-init-logger-v0.4]: https://github.com/rust-lang/mdBook/blob/v0.4.52/src/main.rs#L111-L112
-
 <!-- prettier-ignore-end -->

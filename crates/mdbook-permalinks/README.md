@@ -30,9 +30,7 @@ cargo install mdbook-permalinks
 ```
 
 <!-- prettier-ignore-start -->
-
 [mdBook]: https://rust-lang.github.io/mdBook/
 [preprocessor]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
 [book]: https://tonywu6.github.io/mdbookkit/permalinks
-
 <!-- prettier-ignore-end -->

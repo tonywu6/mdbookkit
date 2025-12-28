@@ -35,11 +35,9 @@ See [Logging](logging.md).
 {{#include ../snippets/ci/error-handling.md}}
 
 <!-- prettier-ignore-start -->
-
 [`RUST_LOG`]: https://docs.rs/env_logger/latest/env_logger/#enabling-logging
 [actions/checkout]: https://github.com/actions/checkout
 [github-actions-ci]: https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#default-environment-variables
 [gitlab-ci]: https://docs.gitlab.com/ci/variables/predefined_variables/
 [rustup-ra]: https://rust-analyzer.github.io/book/rust_analyzer_binary.html#rustup
-
 <!-- prettier-ignore-end -->

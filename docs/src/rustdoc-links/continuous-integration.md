@@ -39,8 +39,6 @@ See [Logging](logging.md).
     [`rust-analyzer`](configuration.md#rust-analyzer) configuration option.
 
 <!-- prettier-ignore-start -->
-
 [dtolnay/rust-toolchain]: https://github.com/dtolnay/rust-toolchain
 [rustup-ra]: https://rust-analyzer.github.io/book/rust_analyzer_binary.html#rustup
-
 <!-- prettier-ignore-end -->
