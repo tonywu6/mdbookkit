@@ -23,10 +23,10 @@ You may be looking for:
 > your `book.toml` as well:
 >
 > ```diff
-> - [preprocessors.rustdoc-link]
-> + [preprocessors.rustdoc-links]
-> - [preprocessors.link-forever]
-> + [preprocessors.permalinks]
+> - [preprocessor.rustdoc-link]
+> + [preprocessor.rustdoc-links]
+> - [preprocessor.link-forever]
+> + [preprocessor.permalinks]
 > ```
 
 <!-- prettier-ignore-start -->

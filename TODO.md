@@ -39,8 +39,9 @@
   - [ ] URLs
   - [ ] socials
   - [x] cache-control
+  - [ ] .html compat
 
 - [ ] versions
-- [ ] changelog
+- [x] changelog
 
 - [ ] tokens
