@@ -117,9 +117,14 @@ file path is accessible:
   processes it as usual).
 - For other sites, the link remains functional and will link to your book's website.
 
-<!-- prettier-ignore-start -->
+> [!NOTE]
+>
+> You may notice that the `book-url` option is repeating mdBook's builtin
+> [`output.html.site-url`] option. There is currently an issue that prevents
+> preprocessors from properly reusing the builtin option during `mdbook serve`.
 
+<!-- prettier-ignore-start -->
+[`output.html.site-url`]: https://rust-lang.github.io/mdBook/format/configuration/renderers.html#html-renderer-options
 [mdbook-include]: https://rust-lang.github.io/mdBook/format/mdbook.html#including-files
 [trailing-slash]: https://github.com/slorber/trailing-slash-guide?tab=readme-ov-file#trailing-slash-guide
-
 <!-- prettier-ignore-end -->
