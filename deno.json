@@ -19,10 +19,19 @@
     "prettier": "npm:prettier@^3.7.4",
     "stylelint": "npm:stylelint@^16.26.1",
     "stylelint-config-recess-order": "npm:stylelint-config-recess-order@^6.1.0",
-    "stylelint-config-standard": "npm:stylelint-config-standard@^38.0.0"
+    "stylelint-config-standard": "npm:stylelint-config-standard@^38.0.0",
+    "wrangler": "npm:wrangler@^4.54.0"
   },
   "nodeModulesDir": "auto",
   "tasks": {
     "format": "deno run -A npm:prettier --write docs/app docs/src"
-  }
+  },
+  "allowScripts": [
+    "npm:esbuild@0.25.12",
+    "npm:esbuild@0.25.2",
+    "npm:esbuild@0.27.0",
+    "npm:fsevents@2.3.3",
+    "npm:sharp@0.33.5",
+    "npm:workerd@1.20251210.0"
+  ]
 }

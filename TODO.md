@@ -38,3 +38,9 @@
 - [ ] cloudflare
   - [ ] URLs
   - [ ] socials
+  - [x] cache-control
+
+- [ ] versions
+- [ ] changelog
+
+- [ ] tokens

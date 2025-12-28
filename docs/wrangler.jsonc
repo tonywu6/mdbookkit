@@ -1,0 +1,17 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "docs-mdbookkit",
+  "compatibility_date": "2025-12-25",
+  "assets": {
+    "directory": "./dist",
+  },
+  "observability": {
+    "enabled": true,
+  },
+  "routes": [
+    {
+      "pattern": "docs.tonywu.dev/mdbookkit/*",
+      "zone_name": "tonywu.dev",
+    },
+  ],
+}

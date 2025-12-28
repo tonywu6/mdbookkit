@@ -218,13 +218,15 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
                     else {
                         return Ok(());
                     };
-                    if href.scheme() == "file" && href.fragment().is_some() {
-                        if let Some(set) = book_links.get_mut(&file_url) {
-                            set.insert(href);
-                        } else {
-                            let mut set = HashSet::default();
-                            set.insert(href);
-                            book_links.insert(file_url.clone(), set);
+                    if href.scheme() == "file" {
+                        if href.fragment().is_some() {
+                            if let Some(set) = book_links.get_mut(&file_url) {
+                                set.insert(href);
+                            } else {
+                                let mut set = HashSet::default();
+                                set.insert(href);
+                                book_links.insert(file_url.clone(), set);
+                            }
                         }
                     } else if href.origin() != book_url.origin() {
                         elem.set_attribute("target", "_blank").unwrap();
