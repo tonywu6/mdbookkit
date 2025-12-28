@@ -41,6 +41,7 @@ jobs:
         # only linux builds unless release
         release:
           - ${{github.event_name == 'release' || github.event_name == 'workflow_dispatch'}}
+
         exclude:
           - release: false
             target: aarch64-apple-darwin
@@ -57,18 +58,6 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - name: Which package?
-        run: |
-          case "${{ github.event.release.tag_name }}" in
-            mdbook-rustdoc-links*)
-              echo "mdbook-rustdoc-links=true" >> "$GITHUB_OUTPUT"
-              ;;
-            mdbook-permalinks*)
-              echo "mdbook-permalinks=true" >> "$GITHUB_OUTPUT"
-              ;;
-          esac
-        id: bins
-
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         id: rustup
@@ -94,6 +83,10 @@ jobs:
           path: |
             .bin/
             target/
+
+      - name: Which package?
+        run: cargo xtask which-package ${{ github.event.release.tag_name }}
+        id: bins
 
       - name: Build mdbook-rustdoc-links
         uses: taiki-e/upload-rust-binary-action@v1

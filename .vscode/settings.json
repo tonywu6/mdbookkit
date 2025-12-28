@@ -7,7 +7,7 @@
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "cSpell.words": ["cmark", "mdbookkit", "Minato", "rstest", "unmark"],
+  "cSpell.words": ["cmark", "mdbookkit", "Minato", "rstest", "unmark", "xtask"],
   "deno.enable": false,
   "editor.codeActionsOnSave": {
     "source.sortImports": "explicit"

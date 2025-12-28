@@ -1,2 +1,3 @@
 [alias]
 bin = ["run", "--quiet", "--package", "cargo-bin", "--"]
+xtask = ["run", "--package", "cargo-xtask", "--"]
