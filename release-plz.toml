@@ -62,7 +62,7 @@ body = """
 link_parsers = [{ pattern = "#(\\d+)", href = "{{ remote.link }}/issues/$1" }]
 
 postprocessors = [
-  { pattern = ".*", replace_command = "deno run -A prettier --parser markdown" },
+  { pattern = ".*", replace_command = "pnpm exec prettier --parser markdown" },
 ]
 
 [[changelog.commit_preprocessors]]

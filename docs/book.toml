@@ -7,11 +7,18 @@ title = "mdbookkit"
 [build]
 build-dir = "dist/mdbookkit"
 create-missing = false
-extra-watch-dirs = ["app", "bin", "../crates", "Cargo.toml", "../README.md"]
+extra-watch-dirs = [
+  "bin",
+  "scripts",
+  "web",
+  "Cargo.toml",
+  "../crates",
+  "../README.md",
+]
 
 [output.html]
-additional-css = ["app/dist.css"]
-additional-js = ["app/dist.js"]
+additional-css = ["web/loader.css"]
+additional-js = ["web/loader.js"]
 default-theme = "ayu"
 git-repository-icon = "fab-github"
 git-repository-url = "https://github.com/tonywu6/mdbookkit"
@@ -36,7 +43,7 @@ book-url = "https://docs.tonywu.dev/mdbookkit/"
 command = "cargo run --package mdbook-permalinks"
 
 [preprocessor.app]
-command = "deno run --allow-all app/build/preprocessor.ts"
+command = "node scripts/preprocessor.ts"
 
 [preprocessor.doc]
 after = ["links"]

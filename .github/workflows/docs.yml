@@ -29,9 +29,12 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
       - uses: cargo-bins/cargo-binstall@b9bf4400702f721d469eec4d280125f650c85638
-      - uses: denoland/setup-deno@v2
+      - uses: actions/setup-node@v6
         with:
-          deno-version: v2.x
+          node-version: 24
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: Get Cargo version
         run: echo "cargo-version=$(cargo --version)" >> "$GITHUB_OUTPUT"
@@ -49,8 +52,8 @@ jobs:
             ${{steps.cargo-version.outputs.cargo-version}}
             ${{hashFiles('**/Cargo.toml')}}
             ${{hashFiles('**/Cargo.lock')}}
-            ${{hashFiles('**/deno.json')}}
-            ${{hashFiles('**/deno.lock')}}
+            ${{hashFiles('**/package.json')}}
+            ${{hashFiles('**/pnpm-lock.yaml')}}
             ${{github.workflow}}
             ${{github.run_id}}
           path: |
@@ -58,6 +61,7 @@ jobs:
             target/
             node_modules/
 
+      - run: pnpm install
       - run: cargo bin --install
       - run: cargo run --package util-rust-analyzer -- download
 

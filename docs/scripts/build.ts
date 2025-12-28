@@ -1,14 +1,12 @@
 import { encodeHex } from "@std/encoding/hex";
 import * as pathlib from "@std/path";
 import * as esbuild from "esbuild";
+import fs from "node:fs/promises";
+import process from "node:process";
 
 const relpath = (path: string) => new URL(path, import.meta.url).pathname;
 
-try {
-  await Deno.remove(relpath("../../src/app"), { recursive: true });
-} catch {
-  // recursive: true is supposed to make it not throw ...
-}
+await fs.rm(relpath("../src/web"), { recursive: true, force: true });
 
 const built = await esbuild.build({
   bundle: true,
@@ -17,20 +15,18 @@ const built = await esbuild.build({
   target: ["chrome93", "firefox93", "safari15", "es2020"],
   platform: "browser",
   plugins: [remoteCSS()],
-  entryPoints: [relpath("../main.js"), relpath("../main.css")],
-  outdir: relpath("../../src/app"),
+  entryPoints: [relpath("../web/main.ts"), relpath("../web/main.css")],
+  outdir: relpath("../src/web"),
   entryNames: "[name]-[hash]",
   metafile: true,
-  logLevel: Deno.env.get("CI") ? "info" : undefined,
+  logLevel: "CI" in process.env ? "info" : undefined,
 });
-
-// generate `app/dist.css` and `app/dist.js` for mdBook that actually import the bundle
 
 const css: string[] = [];
 const esm: string[] = [];
 
 for (const [path, file] of Object.entries(built.metafile.outputs)) {
-  if (file.entryPoint?.startsWith("app/")) {
+  if (file.entryPoint?.startsWith("web/")) {
     const name = JSON.stringify(`./${pathlib.basename(path)}`);
     switch (path.split(".").pop()) {
       case "css":
@@ -45,18 +41,19 @@ for (const [path, file] of Object.entries(built.metafile.outputs)) {
   }
 }
 
-await Deno.writeTextFile(relpath("../dist.css"), css.join("\n") + "\n");
+await fs.writeFile(relpath("../web/loader.css"), css.join("\n") + "\n", "utf-8");
 
-await Deno.writeTextFile(
-  relpath("../dist.js"),
+await fs.writeFile(
+  relpath("../web/loader.js"),
   `document.addEventListener("DOMContentLoaded", () => { ${esm.join("\n")} });`,
+  "utf-8",
 );
 
 function remoteCSS(): esbuild.Plugin {
   return {
     name: "remote-css",
     setup: (build) => {
-      const cacheDir = relpath("../../build/css");
+      const cacheDir = relpath("../build/css");
 
       build.onResolve(
         {
@@ -139,7 +136,7 @@ function remoteCSS(): esbuild.Plugin {
         const cachePath = pathlib.join(cacheDir, key);
 
         try {
-          return await Deno.readFile(cachePath);
+          return await fs.readFile(cachePath);
         } catch {
           // ignored
         }
@@ -154,8 +151,8 @@ function remoteCSS(): esbuild.Plugin {
           })
           .then((res) => res.bytes());
 
-        await Deno.mkdir(cacheDir, { recursive: true });
-        await Deno.writeFile(cachePath, contents);
+        await fs.mkdir(cacheDir, { recursive: true });
+        await fs.writeFile(cachePath, contents, "utf-8");
 
         return contents;
       }

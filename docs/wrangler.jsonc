@@ -2,8 +2,13 @@
   "$schema": "../node_modules/wrangler/config-schema.json",
   "name": "docs-mdbookkit",
   "compatibility_date": "2025-12-25",
+  "main": "main.ts",
   "assets": {
     "directory": "./dist",
+    "run_worker_first": true,
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+    "binding": "ASSETS",
   },
   "observability": {
     "enabled": true,

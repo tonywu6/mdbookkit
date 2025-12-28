@@ -81,8 +81,8 @@ jobs:
             ${{steps.cargo-version.outputs.cargo-version}}
             ${{hashFiles('**/Cargo.toml')}}
             ${{hashFiles('**/Cargo.lock')}}
-            ${{hashFiles('**/deno.json')}}
-            ${{hashFiles('**/deno.lock')}}
+            ${{hashFiles('**/package.json')}}
+            ${{hashFiles('**/pnpm-lock.yaml')}}
             ${{github.workflow}}
             ${{github.run_id}}
           path: |

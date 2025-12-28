@@ -36,10 +36,10 @@
   - [ ] binstall
 
 - [ ] cloudflare
-  - [ ] URLs
+  - [x] URLs
   - [ ] socials
   - [x] cache-control
-  - [ ] .html compat
+  - [x] .html compat
 
 - [ ] versions
 - [x] changelog

@@ -1,0 +1,27 @@
+{
+  "name": "mdbookkit",
+  "private": true,
+  "devDependencies": {
+    "@std/encoding": "jsr:^1.0.10",
+    "@std/path": "jsr:^1.1.4",
+    "@types/node": "^25.0.3",
+    "esbuild": "^0.27.2",
+    "mermaid": "^11.12.2",
+    "prettier": "^3.7.4",
+    "stylelint": "^16.26.1",
+    "stylelint-config-recess-order": "^6.1.0",
+    "stylelint-config-standard": "^38.0.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.54.0"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "prettier": "prettier --write docs/app docs/src",
+    "wrangler:dev": "wrangler dev --cwd docs",
+    "wrangler:upload": "wrangler versions upload --cwd docs",
+    "wrangler:types": "wrangler types --cwd docs worker-configuration.d.ts"
+  }
+}

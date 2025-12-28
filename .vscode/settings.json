@@ -8,18 +8,19 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "cSpell.words": ["cmark", "mdbookkit", "Minato", "rstest", "unmark"],
-  "deno.enable": true,
+  "deno.enable": false,
+  "editor.codeActionsOnSave": {
+    "source.sortImports": "explicit"
+  },
   "editor.formatOnSave": true,
   "files.associations": {
     "**/*.md.snap": "markdown",
     "**/*.md.snap.new": "markdown"
   },
-  "javascript.validate.enable": false,
   "markdown.extension.toc.levels": "2..6",
   "markdown.extension.toc.updateOnSave": true,
   "markdown.validate.enabled": false,
   "rust-analyzer.cargo.features": "all",
   "rust-analyzer.check.command": "clippy",
-  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
-  "typescript.validate.enable": false
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true
 }

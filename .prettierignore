@@ -1,5 +1,8 @@
 **/*.snap
 **/*.snap.new
 
-docs/app/dist.css
-docs/src/app/**/*
+docs/build
+docs/dist
+docs/src/web
+docs/web/*.loader.*
+docs/web/worker-configuration.d.ts

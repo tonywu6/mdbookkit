@@ -1,5 +1,4 @@
 /build
-/app/dist.css
-/app/dist.js
-/src/app
 /dist/mdbookkit
+/src/web
+/web/loader.*

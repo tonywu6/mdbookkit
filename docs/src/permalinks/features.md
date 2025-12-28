@@ -27,11 +27,11 @@ lines, if your Git forge supports it:
 
 > ```md
 > This book uses [esbuild] to
-> [preprocess its style sheet](../../app/build/build.ts#L13-25).
+> [preprocess its style sheet](../../scripts/build.ts#L11-23).
 > ```
 >
 > This book uses [esbuild] to
-> [preprocess its style sheet](../../app/build/build.ts#L13-25).
+> [preprocess its style sheet](../../scripts/build.ts#L11-23).
 
 By default, links to files under your book's `src/` directory are not converted, since
 mdBook already [copies them to build output][mdbook-src-build]. This is configurable
