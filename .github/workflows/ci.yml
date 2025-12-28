@@ -81,11 +81,14 @@ jobs:
             ${{steps.cargo-version.outputs.cargo-version}}
             ${{hashFiles('**/Cargo.toml')}}
             ${{hashFiles('**/Cargo.lock')}}
+            ${{hashFiles('**/deno.json')}}
+            ${{hashFiles('**/deno.lock')}}
             ${{github.workflow}}
             ${{github.run_id}}
           path: |
             .bin/
             target/
+            node_modules/
 
       - name: Prepare binaries
         run: |
