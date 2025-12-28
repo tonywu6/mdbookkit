@@ -37,7 +37,7 @@
 
 - [ ] cloudflare
   - [x] URLs
-  - [ ] socials
+  - [x] socials
   - [x] cache-control
   - [x] .html compat
 
@@ -45,3 +45,6 @@
 - [x] changelog
 
 - [ ] tokens
+  - [ ] GitHub
+  - [ ] crates.io
+  - [ ] Cloudflare
