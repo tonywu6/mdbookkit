@@ -122,12 +122,27 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+          components: rust-src # speeds up rust-analyzer indexing
+        id: rustup
 
-      - uses: actions/cache/restore@v4
+      - uses: cargo-bins/cargo-binstall@v1.16.6
+
+      - uses: tonywu6/cache-hit-please@v1.1.0
+        id: cache
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
-          path: ${{needs.test.outputs.cache-path}}
-          key: ${{ needs.test.outputs.cache-primary-key }}
-          restore-keys: ${{ needs.test.outputs.cache-restore-key }}
+          deps: |
+            ${{runner.os}}
+            ${{runner.arch}}
+            ${{steps.rustup.outputs.cachekey}}
+            ${{hashFiles('**/Cargo.toml')}}
+            ${{hashFiles('**/Cargo.lock')}}
+            ${{github.workflow}}
+            ${{github.run_id}}
+          path: |
+            .bin/
+            target/
 
       - run: cargo run --package util-rust-analyzer -- download
         env:
