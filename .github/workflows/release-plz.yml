@@ -36,7 +36,7 @@ jobs:
           # otherwise CI will not run
           token: ${{ secrets.RELEASE_PLZ_GITHUB_TOKEN }}
       - uses: dtolnay/rust-toolchain@stable
-      - uses: release-plz/action@7419a2cb1535b9c0e852b4dec626967baf65c022
+      - uses: release-plz/action@v0.5.120
         with:
           command: release-pr
         env:
@@ -57,7 +57,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
-      - uses: release-plz/action@7419a2cb1535b9c0e852b4dec626967baf65c022
+      - uses: release-plz/action@v0.5.120
         with:
           command: release
         env:
