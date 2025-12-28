@@ -94,6 +94,7 @@ jobs:
         name: wrangler versions upload
         with:
           command: versions upload --cwd docs
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         if: ${{ github.event_name == 'workflow_dispatch' }}
 
@@ -101,5 +102,6 @@ jobs:
         name: wrangler deploy
         with:
           command: deploy --cwd docs
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         if: ${{ github.event_name == 'release' }}
