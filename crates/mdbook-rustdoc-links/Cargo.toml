@@ -1,6 +1,6 @@
 [package]
 name = "mdbook-rustdoc-links"
-publish = true
+publish = false
 version = "1.1.2"
 
 edition.workspace = true
