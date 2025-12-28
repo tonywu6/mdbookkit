@@ -1,5 +1,6 @@
 [workspace]
 git_release_name = "{{ package }} {{ version }}"
+git_tag_name = "{{ package }}-v{{ version }}"
 release_always = true
 
 [[package]]

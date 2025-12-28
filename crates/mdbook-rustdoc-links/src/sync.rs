@@ -101,9 +101,9 @@ where
 
 /// Some kind of [debouncing].
 ///
-/// Listens to events over an [`mpsc::Receiver<Poll<T>>`] and [notifies][Notify]
-/// subscribers of [`Poll::Ready`], but only if they are not "immediately"
-/// followed by more [`Poll::Pending`], the timing of which is determined by a
+/// Listens to events over an [`mpsc::Receiver<DebounceUpdate<T>>`] and [notifies][Notify]
+/// subscribers of [`DebounceUpdate::Ready`], but only if they are not "immediately"
+/// followed by more [`DebounceUpdate::Reset`], the timing of which is determined by a
 /// configured [buffering time][Debouncing::debounce].
 ///
 /// [debouncing]: https://developer.mozilla.org/en-US/docs/Glossary/Debounce

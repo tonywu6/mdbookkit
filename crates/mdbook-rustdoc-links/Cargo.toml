@@ -59,3 +59,11 @@ tempfile = { workspace = true }
 
 [features]
 _testing = ["mdbookkit/_testing"]
+
+[package.metadata.binstall]
+pkg-fmt = "tgz"
+pkg-url = "{ repo }/releases/download/{ name }-v{ version }/{ name }-{ target }{ archive-suffix }"
+[package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-fmt = "zip"
+[package.metadata.binstall.overrides.aarch64-pc-windows-msvc]
+pkg-fmt = "zip"

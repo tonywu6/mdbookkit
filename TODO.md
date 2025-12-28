@@ -33,7 +33,7 @@
 - [ ] CI
   - [x] changelog
   - [x] release-plz template
-  - [ ] binstall
+  - [x] binstall
 
 - [ ] cloudflare
   - [x] URLs

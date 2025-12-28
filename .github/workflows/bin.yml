@@ -95,6 +95,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           bin: mdbook-rustdoc-links
+          archive: $bin-$target
           tar: unix
           zip: windows
           codesign: "-"
@@ -106,6 +107,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           bin: mdbook-permalinks
+          archive: $bin-$target
           tar: unix
           zip: windows
           codesign: "-"
