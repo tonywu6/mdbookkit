@@ -32,7 +32,7 @@ rust-analyzer = "cargo run --package util-rust-analyzer -- analyzer"
 [preprocessor.permalinks]
 after = ["rustdoc-links"]
 always-link = [".rs"]
-book-url = "https://tonywu6.github.io/mdbookkit/"
+book-url = "https://docs.tonywu.dev/mdbookkit/"
 command = "cargo run --package mdbook-permalinks"
 
 [preprocessor.app]

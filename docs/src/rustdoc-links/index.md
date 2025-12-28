@@ -3,7 +3,7 @@
 <div class="hidden">
 
 **For best results, view this page at
-<https://tonywu6.github.io/mdbookkit/rustdoc-links>.**
+<https://docs.tonywu.dev/mdbookkit/rustdoc-links>.**
 
 </div>
 

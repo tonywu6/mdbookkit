@@ -11,7 +11,7 @@ license.workspace = true
 repository.workspace = true
 
 description = "Support library for mdBook preprocessors in the mdbookkit project"
-documentation = "https://tonywu6.github.io/mdbookkit/"
+documentation = "https://docs.tonywu.dev/mdbookkit/"
 readme = "README.md"
 
 [dependencies]

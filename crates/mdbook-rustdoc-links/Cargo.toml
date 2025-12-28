@@ -12,7 +12,7 @@ repository.workspace = true
 
 categories = ["text-processing", "development-tools", "command-line-utilities"]
 description = "Link to Rust API docs by name in mdBook"
-documentation = "https://tonywu6.github.io/mdbookkit/rustdoc-links"
+documentation = "https://docs.tonywu.dev/mdbookkit/rustdoc-links"
 keywords = ["mdbook", "markdown", "documentation", "rust-analyzer", "rustdoc"]
 readme = "README.md"
 

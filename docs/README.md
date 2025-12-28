@@ -1,3 +1,3 @@
 # mdbookkit docs
 
-For best results, see <https://tonywu6.github.io/mdbookkit/>.
+For best results, see <https://docs.tonywu.dev/mdbookkit/>.

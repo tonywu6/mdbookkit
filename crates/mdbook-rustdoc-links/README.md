@@ -30,10 +30,10 @@ an interval](https://docs.rs/tokio/1.44.2/tokio/time/interval/fn.interval.html "
 <!-- prettier-ignore-start -->
 
 **Quick access**
-| [Install](https://tonywu6.github.io/mdbookkit/rustdoc-links/getting-started#install)
-| [Quickstart](https://tonywu6.github.io/mdbookkit/rustdoc-links/getting-started#configure)
-| [Features](https://tonywu6.github.io/mdbookkit/rustdoc-links/supported-syntax)
-| [Options](https://tonywu6.github.io/mdbookkit/rustdoc-links/configuration)
+| [Install](https://docs.tonywu.dev/mdbookkit/rustdoc-links/getting-started#install)
+| [Quickstart](https://docs.tonywu.dev/mdbookkit/rustdoc-links/getting-started#configure)
+| [Features](https://docs.tonywu.dev/mdbookkit/rustdoc-links/supported-syntax)
+| [Options](https://docs.tonywu.dev/mdbookkit/rustdoc-links/configuration)
 
 <!-- prettier-ignore-end -->
 
@@ -47,6 +47,6 @@ cargo install mdbook-rustdoc-links
 [mdBook]: https://rust-lang.github.io/mdBook/
 [preprocessor]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
 [rustdoc]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
-[book]: https://tonywu6.github.io/mdbookkit/rustdoc-links
+[book]: https://docs.tonywu.dev/mdbookkit/rustdoc-links
 [tour]: https://docs.rs/tokio/1.44.2/tokio/index.html#working-with-tasks
 <!-- prettier-ignore-end -->
