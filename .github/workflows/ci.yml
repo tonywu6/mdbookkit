@@ -64,7 +64,7 @@ jobs:
           components: rust-src # speeds up rust-analyzer indexing
         id: rustup
 
-      - uses: cargo-bins/cargo-binstall@b9bf4400702f721d469eec4d280125f650c85638
+      - uses: cargo-bins/cargo-binstall@v1.16.6
 
       - uses: tonywu6/cache-hit-please@v1.1.0
         id: cache

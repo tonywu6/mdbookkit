@@ -5,12 +5,6 @@ Quality-of-life plugins for your [mdBook] project.
 [![documentation](https://img.shields.io/github/actions/workflow/status/tonywu6/mdbookkit/docs.yml?event=release&style=flat-square&label=docs)](https://docs.tonywu.dev/mdbookkit/)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
 
-<div class="hidden">
-
-## [For best results, read the book!](https://docs.tonywu.dev/mdbookkit/)
-
-</div>
-
 ## [mdbook-rustdoc-links](https://docs.tonywu.dev/mdbookkit/rustdoc-links)
 
 Link to Rust API docs by name, [_rustdoc_-style][rustdoc].
