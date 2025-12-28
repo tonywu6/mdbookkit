@@ -1,0 +1,4 @@
+onlyBuiltDependencies:
+  - esbuild
+  - workerd
+  - sharp # miniflare

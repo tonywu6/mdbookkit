@@ -28,18 +28,17 @@ jobs:
           fetch-tags: true
 
       - uses: dtolnay/rust-toolchain@stable
-      - uses: cargo-bins/cargo-binstall@b9bf4400702f721d469eec4d280125f650c85638
-      - uses: actions/setup-node@v6
         with:
-          node-version: 24
+          components: rust-src # speeds up rust-analyzer indexing
+        id: rustup
+      - uses: cargo-bins/cargo-binstall@b9bf4400702f721d469eec4d280125f650c85638
       - uses: pnpm/action-setup@v4
         with:
           version: 10
-
-      - name: Get Cargo version
-        run: echo "cargo-version=$(cargo --version)" >> "$GITHUB_OUTPUT"
-        shell: bash
-        id: cargo-version
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
 
       - uses: tonywu6/cache-hit-please@v1.1.0
         id: cache
@@ -49,7 +48,7 @@ jobs:
           deps: |
             ${{runner.os}}
             ${{runner.arch}}
-            ${{steps.cargo-version.outputs.cargo-version}}
+            ${{steps.rustup.outputs.cachekey}}
             ${{hashFiles('**/Cargo.toml')}}
             ${{hashFiles('**/Cargo.lock')}}
             ${{hashFiles('**/package.json')}}
@@ -59,6 +58,21 @@ jobs:
           path: |
             .bin/
             target/
+
+      - uses: tonywu6/cache-hit-please@v1.1.0
+        id: cache2
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          deps: |
+            ${{runner.os}}
+            ${{runner.arch}}
+            ${{hashFiles('**/package.json')}}
+            ${{hashFiles('**/pnpm-lock.yaml')}}
+            ${{github.workflow}}
+            ${{github.run_id}}
+          path: |
+            .pnpm-store/
             node_modules/
 
       - run: pnpm install
@@ -67,10 +81,25 @@ jobs:
 
       - run: cargo bin mdbook build
         working-directory: docs
-
       - run: cargo run -- postprocess
         working-directory: docs
 
-      - uses: actions/upload-pages-artifact@v3
+      # - uses: actions/upload-artifact@v4
+      #   with:
+      #     path: docs/dist
+      #     retention-days: 1
+      #     if-no-files-found: warn
+
+      - uses: cloudflare/wrangler-action@v3
+        name: wrangler versions upload
         with:
-          path: docs/dist
+          command: versions upload --cwd docs
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+
+      - uses: cloudflare/wrangler-action@v3
+        name: wrangler deploy
+        with:
+          command: deploy --cwd docs
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        if: ${{ github.event_name == 'release' }}
