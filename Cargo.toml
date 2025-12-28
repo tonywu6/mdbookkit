@@ -26,7 +26,7 @@ futures-util = { version = "0.3.31", default-features = false }
 insta = { version = "1.45.0", features = ["yaml", "filters"] }
 mdbook-markdown = { version = "0.5.2" }
 mdbook-preprocessor = { version = "0.5.2" }
-mdbookkit = { path = "crates/mdbookkit" }
+mdbookkit = { path = "crates/mdbookkit", version = "2" }
 miette = { version = "7.6.0", features = [
   "fancy-no-backtrace",
 ], default-features = false }
