@@ -63,7 +63,7 @@ body = """
 link_parsers = [{ pattern = "#(\\d+)", href = "{{ remote.link }}/issues/$1" }]
 
 postprocessors = [
-  { pattern = ".*", replace_command = "pnpm exec prettier --parser markdown" },
+  { pattern = ".*", replace_command = "pnpm exec prettier --parser markdown --prose-wrap never" },
 ]
 
 [[changelog.commit_preprocessors]]
