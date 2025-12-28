@@ -38,18 +38,22 @@ jobs:
           - aarch64-pc-windows-msvc
           - x86_64-pc-windows-msvc
 
-        # only linux builds unless release
         release:
-          - ${{github.event_name == 'release' || github.event_name == 'workflow_dispatch'}}
+          - ${{github.event_name == 'release'}}
+        manual:
+          - ${{github.event_name == 'workflow_dispatch'}}
 
         exclude:
           - release: false
             target: aarch64-apple-darwin
           - release: false
             target: x86_64-apple-darwin
+
           - release: false
+            manual: false
             target: aarch64-pc-windows-msvc
           - release: false
+            manual: false
             target: x86_64-pc-windows-msvc
 
     runs-on: ${{ contains(matrix.target, '-linux-') && 'ubuntu-latest' || contains(matrix.target, '-apple-') && 'macos-latest' || 'windows-latest' }}

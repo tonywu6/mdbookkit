@@ -94,16 +94,13 @@ jobs:
       - name: Test
         run: cargo test --no-fail-fast -- --include-ignored
 
-    outputs:
-      cache-primary-key: ${{steps.cache.outputs.primary-key}}
-      cache-restore-key: ${{steps.cache.outputs.restore-key}}
-      cache-path: ${{steps.cache.outputs.path}}
-
   test_rustdoc_link_ra:
     name: (rustdoc-link) Test RA
 
     needs:
       - test
+
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
 
     strategy:
       matrix:
