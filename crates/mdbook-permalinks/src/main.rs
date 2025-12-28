@@ -530,7 +530,7 @@ impl<'a, 'r> ResolveBook<'a, 'r> {
 #[derive(clap::Parser, Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 struct Config {
-    /// Use a custom link format for platforms other than GitHub.
+    /// Use a custom link format for forges other than GitHub.
     ///
     /// Should be a string that contains the following placeholders that will be
     /// filled in at build time:
@@ -547,7 +547,7 @@ struct Config {
     /// ```
     ///
     /// Note that information such as repo owner or name will not be filled in. If URLs to
-    /// your Git hosting service require such items, you should hard-code them in the pattern.
+    /// your Git forge require such items, you should hard-code them in the pattern.
     #[serde(default)]
     #[arg(long, value_name("FORMAT"), verbatim_doc_comment)]
     repo_url_template: Option<String>,

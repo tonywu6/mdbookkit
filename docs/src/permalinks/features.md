@@ -17,13 +17,13 @@ preprocessor will convert them to permalinks.
 
 > [!TIP]
 >
-> Not only is linking by paths well-supported by platforms such as
+> Not only is linking by paths well-supported by forges such as
 > [GitHub][github-relative-links], but editors like VS Code also provide smart features
 > like [path completions][vscode-path-completions] and [link
 > validation][link-validation].
 
 **URL fragments** are preserved. For example, you may use fragments to link to specific
-lines, if your Git hosting provider supports it:
+lines, if your Git forge supports it:
 
 > ```md
 > This book uses [esbuild] to
@@ -56,7 +56,7 @@ following places and uses the first one it finds:
 > For Git remotes, both HTTP URLs and "scp-like" URIs (`git@github.com:org/repo.git`)
 > are supported.
 
-Currently, the preprocessor automatically uses repo URLs from the following providers:
+Currently, the preprocessor automatically uses repo URLs from the following forges:
 
 - GitHub, `https://github.com/*`
 
@@ -65,7 +65,7 @@ Alternatively, you may configure a custom URL format using the
 
 ## Markdown images
 
-Providers such as GitHub support two types of permalinks:
+Forges such as GitHub support two types of permalinks:
 
 - a `tree` or `blob` URL that opens the file's webpage for viewing
 - a `raw` URL that directly serves the file's content, suitable for embedding or
