@@ -34,7 +34,7 @@ after = ["links"]
 cache-dir = "build"
 command = "cargo run --package mdbook-rustdoc-links --all-features"
 manifest-dir = "."
-rust-analyzer = "cargo run --package util-rust-analyzer -- analyzer"
+rust-analyzer = "cargo xtask rust-analyzer analyzer"
 
 [preprocessor.permalinks]
 after = ["rustdoc-links"]

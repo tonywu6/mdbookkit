@@ -153,7 +153,7 @@ fn test_minimum_env() -> Result<()> {
             .join("server/rust-analyzer");
 
         Command::new("cargo")
-            .args(["run", "--package", "util-rust-analyzer", "--"])
+            .args(["xtask", "rust-analyzer"])
             .arg("--ra-path")
             .arg(ra_executable)
             .arg("download")

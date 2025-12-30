@@ -10,11 +10,72 @@ use std::{
 
 use anyhow::Result;
 use cargo_run_bin::metadata::get_project_root;
-use clap::Parser;
 use flate2::write::GzDecoder;
 use indicatif::{ProgressBar, ProgressStyle};
 use tap::{Pipe, Tap};
 use tempfile::tempfile;
+
+#[derive(clap::Parser, Debug)]
+pub struct Program {
+    #[arg(long)]
+    ra_version: Option<String>,
+    #[arg(long)]
+    ra_path: Option<PathBuf>,
+    #[clap(subcommand)]
+    command: Command,
+}
+
+#[derive(clap::Subcommand, Debug)]
+enum Command {
+    Download,
+    Analyzer {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true, hide = true)]
+        args: Vec<String>,
+    },
+    Version,
+}
+
+impl Program {
+    pub fn run(self) -> Result<()> {
+        let release = std::env::var("RA_VERSION")
+            .ok()
+            .unwrap_or("2025-12-01".into());
+
+        let path = match self.ra_path {
+            Some(path) => path,
+            None => get_project_root()?
+                .join(".bin/rust-analyzer")
+                .join(&release)
+                .join("rust-analyzer"),
+        };
+
+        let download = Download { release, path };
+
+        match self.command {
+            Command::Download => download.download(),
+            Command::Analyzer { args } => analyzer(&download, args),
+            Command::Version => {
+                print!("{}", download.release);
+                Ok(())
+            }
+        }
+    }
+}
+
+fn analyzer(download: &Download, args: Vec<String>) -> Result<()> {
+    if !download.path.exists() {
+        download.download()?;
+    }
+    process::Command::new(&download.path)
+        .args(args)
+        .stdin(Stdio::inherit())
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
+        .status()?
+        .code()
+        .unwrap_or_default()
+        .pipe(std::process::exit);
+}
 
 #[derive(Debug)]
 struct Download {
@@ -115,73 +176,6 @@ impl Download {
         )
         .tap(|b| b.enable_steady_tick(Duration::from_millis(100)))
     }
-}
-
-#[derive(clap::Parser, Debug)]
-struct Program {
-    #[arg(long)]
-    ra_version: Option<String>,
-    #[arg(long)]
-    ra_path: Option<PathBuf>,
-    #[clap(subcommand)]
-    command: Command,
-}
-
-#[derive(clap::Subcommand, Debug)]
-enum Command {
-    Download,
-    Analyzer {
-        #[arg(trailing_var_arg = true, allow_hyphen_values = true, hide = true)]
-        args: Vec<String>,
-    },
-    Version,
-}
-
-#[derive(clap::Subcommand, Debug)]
-enum Version {
-    Supports { renderer: String },
-}
-
-fn main() -> Result<()> {
-    let program = Program::parse();
-
-    let release = std::env::var("RA_VERSION")
-        .ok()
-        .unwrap_or("2025-12-01".into());
-
-    let path = match program.ra_path {
-        Some(path) => path,
-        None => get_project_root()?
-            .join(".bin/rust-analyzer")
-            .join(&release)
-            .join("rust-analyzer"),
-    };
-
-    let download = Download { release, path };
-
-    match program.command {
-        Command::Download => download.download(),
-        Command::Analyzer { args } => analyzer(&download, args),
-        Command::Version => {
-            print!("{}", download.release);
-            Ok(())
-        }
-    }
-}
-
-fn analyzer(download: &Download, args: Vec<String>) -> Result<()> {
-    if !download.path.exists() {
-        download.download()?;
-    }
-    process::Command::new(&download.path)
-        .args(args)
-        .stdin(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .status()?
-        .code()
-        .unwrap_or_default()
-        .pipe(std::process::exit);
 }
 
 struct Progress<W>(W, ProgressBar);

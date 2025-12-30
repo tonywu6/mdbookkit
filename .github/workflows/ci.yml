@@ -86,7 +86,7 @@ jobs:
       - name: Prepare binaries
         run: |
           cargo bin --install
-          cargo run --package util-rust-analyzer -- download
+          cargo xtask rust-analyzer download
 
       - name: Build tests
         run: cargo test --no-run
@@ -141,7 +141,7 @@ jobs:
             .bin/
             target/
 
-      - run: cargo run --package util-rust-analyzer -- download
+      - run: cargo xtask rust-analyzer download
         env:
           RA_VERSION: ${{ matrix.ra-version }}
 

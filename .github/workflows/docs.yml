@@ -77,7 +77,7 @@ jobs:
 
       - run: pnpm install
       - run: cargo bin --install
-      - run: cargo run --package util-rust-analyzer -- download
+      - run: cargo xtask rust-analyzer download
 
       - run: cargo bin mdbook build
         working-directory: docs

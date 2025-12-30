@@ -33,7 +33,7 @@ fn fixture() -> Fixture {
     .init();
 
     let client = Config {
-        rust_analyzer: Some("cargo run --package util-rust-analyzer -- analyzer".into()),
+        rust_analyzer: Some("cargo xtask rust-analyzer analyzer".into()),
         ..Default::default()
     }
     .pipe(Environment::new)

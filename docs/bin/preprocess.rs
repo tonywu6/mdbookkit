@@ -100,10 +100,10 @@ pub fn run() -> Result<()> {
                 Replace::RustAnalyzerVersion { span } => {
                     static RA_VERSION: LazyLock<String> = LazyLock::new(|| {
                         std::process::Command::new(env!("CARGO"))
-                            .args(["run", "--package", "util-rust-analyzer", "--", "version"])
+                            .args(["xtask", "rust-analyzer", "version"])
                             .stdout(Stdio::piped())
                             .output()
-                            .context("failed to run util-rust-analyzer")
+                            .context("failed to run xtask rust-analyzer")
                             .exit(emit_error!())
                             .stdout
                             .pipe(String::from_utf8)
