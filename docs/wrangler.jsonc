@@ -18,5 +18,9 @@
       "pattern": "docs.tonywu.dev/mdbookkit/*",
       "zone_name": "tonywu.dev",
     },
+    {
+      "pattern": "docs.tonywu.dev/mdbookkit",
+      "zone_name": "tonywu.dev",
+    },
   ],
 }
