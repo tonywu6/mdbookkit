@@ -4,6 +4,7 @@ git_tag_name = "{{ package }}-v{{ version }}"
 release_always = true
 
 [[package]]
+git_release_enable = false
 name = "mdbookkit"
 semver_check = false
 
@@ -65,10 +66,6 @@ link_parsers = [{ pattern = "#(\\d+)", href = "{{ remote.link }}/issues/$1" }]
 postprocessors = [
   { pattern = ".*", replace_command = "pnpm exec prettier --parser markdown --prose-wrap never" },
 ]
-
-[[changelog.commit_preprocessors]]
-pattern = "^chore\\(ci\\):"
-replace = "ci:"
 
 [[changelog.commit_parsers]]
 group = "<!-- 0 --> Added"

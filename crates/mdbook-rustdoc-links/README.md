@@ -18,10 +18,10 @@ an interval][tokio::time::interval].
 
 <!-- prettier-ignore-start -->
 
-> The [`tokio::time`](https://docs.rs/tokio/1.44.2/tokio/time/index.html "tokio::time") module provides utilities for tracking time and scheduling work.
-> This includes functions for setting [timeouts](https://docs.rs/tokio/1.44.2/tokio/time/timeout/fn.timeout.html "tokio::time::timeout") for tasks,
-> [sleeping](https://docs.rs/tokio/1.44.2/tokio/time/sleep/fn.sleep.html "tokio::time::sleep") work to run in the future, or [repeating an operation at
-an interval](https://docs.rs/tokio/1.44.2/tokio/time/interval/fn.interval.html "tokio::time::interval"). [^1]
+> The [`tokio::time`](https://docs.rs/tokio/1.48.0/tokio/time/index.html "tokio::time") module provides utilities for tracking time and scheduling work.
+> This includes functions for setting [timeouts](https://docs.rs/tokio/1.48.0/tokio/time/timeout/fn.timeout.html "tokio::time::timeout") for tasks,
+> [sleeping](https://docs.rs/tokio/1.48.0/tokio/time/sleep/fn.sleep.html "tokio::time::sleep") work to run in the future, or [repeating an operation at
+an interval](https://docs.rs/tokio/1.48.0/tokio/time/interval/fn.interval.html "tokio::time::interval"). [^1]
 
 <!-- prettier-ignore-end -->
 

@@ -26,7 +26,7 @@ expression: report
     │ 
     │ - [tokio::main!]
     ·   ───────┬──────
-    ·          ╰── https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html
+    ·          ╰── https://docs.rs/tokio-macros/2.6.0/tokio_macros/macro.main.html
     ╰────
 
   warning: item could not be resolved

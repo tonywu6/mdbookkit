@@ -23,7 +23,8 @@ assert_cmd = "2.1.1"
 cargo-run-bin = { version = "1.7.5", default-features = false }
 clap = { version = "4.5.53", features = ["derive"] }
 futures-util = { version = "0.3.31", default-features = false }
-insta = { version = "1.45.0", features = ["yaml", "filters"] }
+indicatif = "0.18.3"
+insta = { version = "1.45.1", features = ["yaml", "filters"] }
 mdbook-markdown = { version = "0.5.2" }
 mdbook-preprocessor = { version = "0.5.2" }
 mdbookkit = { path = "crates/mdbookkit", version = "2" }

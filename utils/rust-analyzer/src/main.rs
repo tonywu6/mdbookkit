@@ -25,13 +25,10 @@ struct Download {
 impl Download {
     fn download(&self) -> Result<()> {
         #[cfg(not(target_os = "windows"))]
-        {
-            self.download_gzip()
-        }
+        self.download_gzip()?;
         #[cfg(target_os = "windows")] // ugh
-        {
-            self.download_zip()
-        }
+        self.download_zip()?;
+        Ok(())
     }
 
     #[cfg_attr(target_os = "windows", allow(unused))]
@@ -43,7 +40,7 @@ impl Download {
             "https://github.com/rust-lang/rust-analyzer/releases/download/{release}/rust-analyzer-{platform}.gz"
         );
 
-        let mut res = reqwest::blocking::get(url)?;
+        let mut res = reqwest::blocking::get(url)?.error_for_status()?;
 
         fs::create_dir_all(path.parent().unwrap())?;
 
@@ -78,7 +75,7 @@ impl Download {
             "https://github.com/rust-lang/rust-analyzer/releases/download/{release}/rust-analyzer-{platform}.zip"
         );
 
-        let mut res = reqwest::blocking::get(url)?;
+        let mut res = reqwest::blocking::get(url)?.error_for_status()?;
 
         let temp = temp
             .pipe(io::BufWriter::new)

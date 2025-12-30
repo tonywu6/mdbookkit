@@ -17,4 +17,4 @@ expression: output
 
 # macro_export
 
-- [tokio::main!](https://docs.rs/tokio-macros/2.5.0/tokio_macros/macro.main.html "tokio::main!")
+- [tokio::main!](https://docs.rs/tokio-macros/2.6.0/tokio_macros/macro.main.html "tokio::main!")

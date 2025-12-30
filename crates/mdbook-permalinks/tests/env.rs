@@ -5,9 +5,9 @@ use assert_cmd::{Command, prelude::*};
 use predicates::prelude::*;
 use tap::Pipe;
 use tempfile::TempDir;
+use tracing::{debug, info, level_filters::LevelFilter};
 
 use mdbookkit::{logging::Logging, testing::setup_paths};
-use tracing::{debug, info, level_filters::LevelFilter};
 
 #[test]
 fn test_minimum_env() -> Result<()> {

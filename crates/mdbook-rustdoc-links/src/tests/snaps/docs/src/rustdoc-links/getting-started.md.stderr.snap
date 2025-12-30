@@ -7,10 +7,10 @@ expression: report
     │ 
     │ Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a
     ·      ───────────┬──────────  ───────────┬──────────
-    ·                 │                       ╰── https://docs.rs/tokio/1.44.2/tokio/task/spawn/fn.spawn.html
+    ·                 │                       ╰── https://docs.rs/tokio/1.48.0/tokio/task/spawn/fn.spawn.html
     ·                 ╰── https://doc.rust-lang.org/stable/std/thread/fn.spawn.html
     │ [`JoinHandle`][tokio::task::JoinHandle] struct.
     · ───────────────────┬───────────────────
-    ·                    ╰── https://docs.rs/tokio/1.44.2/tokio/runtime/task/join/struct.JoinHandle.html
+    ·                    ╰── https://docs.rs/tokio/1.48.0/tokio/runtime/task/join/struct.JoinHandle.html
     │ 
     ╰────
