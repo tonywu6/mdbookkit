@@ -16,6 +16,8 @@ documentation = "https://docs.tonywu.dev/mdbookkit/permalinks"
 keywords = ["mdbook", "markdown", "documentation", "git", "permalink"]
 readme = "README.md"
 
+exclude = ["src/tests", "tests"]
+
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true }
