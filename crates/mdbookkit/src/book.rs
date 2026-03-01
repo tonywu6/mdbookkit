@@ -59,14 +59,26 @@ impl BookConfigHelper for MDBookConfig {
 
         for (idx, name) in names.iter().enumerate() {
             let name = format_name(name);
-            if let Some(value) = self.get::<T>(&name)? {
-                if idx != 0 {
-                    let recommended = format_name(names[0]);
-                    warn! { "The book.toml section [{name}] is deprecated. \
-                    Use [{recommended}] instead." };
-                }
-                return Ok(value);
+            let Some(mut table) = self.get::<toml::Table>(&name)? else {
+                continue;
+            };
+            // remove mdbook's builtin preprocessor options from table before deserializing
+            // so that they don't interfere with `deny_unknown_fields`
+            // keep in-sync with:
+            // - https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
+            // - https://github.com/rust-lang/mdBook/blob/v0.5.2/crates/mdbook-driver/src/mdbook.rs#L434-L443
+            table.remove("command");
+            table.remove("before");
+            table.remove("after");
+            table.remove("optional");
+            table.remove("renderers");
+            let value = T::deserialize(table)?;
+            if idx != 0 {
+                let recommended = format_name(names[0]);
+                warn! { "The book.toml section [{name}] is deprecated. \
+                Use [{recommended}] instead." };
             }
+            return Ok(value);
         }
 
         Ok(Default::default())

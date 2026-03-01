@@ -592,26 +592,6 @@ struct Config {
     #[serde(default)]
     #[arg(long, value_enum, value_name("MODE"), default_value_t = Default::default())]
     fail_on_warnings: OnWarning,
-
-    #[allow(unused)]
-    #[serde(default)]
-    #[doc(hidden)]
-    after: Option<Vec<String>>,
-
-    #[allow(unused)]
-    #[serde(default)]
-    #[doc(hidden)]
-    before: Option<Vec<String>>,
-
-    #[allow(unused)]
-    #[serde(default)]
-    #[doc(hidden)]
-    renderers: Option<Vec<String>>,
-
-    #[allow(unused)]
-    #[serde(default)]
-    #[doc(hidden)]
-    command: Option<String>,
 }
 
 #[derive(Clone)]

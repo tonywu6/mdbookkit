@@ -89,30 +89,6 @@ pub struct Config {
     #[serde(default)]
     #[arg(long, value_name("SECONDS"), default_value("60"))]
     pub rust_analyzer_timeout: Option<u64>,
-
-    #[allow(unused)]
-    #[serde(default)]
-    #[doc(hidden)]
-    #[arg(skip)]
-    pub after: Option<Vec<String>>,
-
-    #[allow(unused)]
-    #[serde(default)]
-    #[doc(hidden)]
-    #[arg(skip)]
-    pub before: Option<Vec<String>>,
-
-    #[allow(unused)]
-    #[serde(default)]
-    #[doc(hidden)]
-    #[arg(skip)]
-    pub renderers: Option<Vec<String>>,
-
-    #[allow(unused)]
-    #[serde(default)]
-    #[doc(hidden)]
-    #[arg(skip)]
-    pub command: Option<String>,
 }
 
 impl Config {
