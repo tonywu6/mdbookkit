@@ -63,8 +63,8 @@ jobs:
 
     runs-on: |
       ${{
-        contains(matrix.target, 'x86_64-linux-') && 'ubuntu-24.04' ||
-        contains(matrix.target, 'aarch64-linux-') && 'ubuntu-24.04-arm' ||
+        contains(matrix.target, 'x86_64-unknown-linux-') && 'ubuntu-24.04' ||
+        contains(matrix.target, 'aarch64-unknown-linux-') && 'ubuntu-24.04-arm' ||
         contains(matrix.target, '-apple-') && 'macos-latest' ||
         'windows-latest'
       }}
