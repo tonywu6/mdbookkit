@@ -21,7 +21,7 @@ exclude = ["src/tests", "tests"]
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true }
-git2 = { version = "0.20.3", default-features = false }
+git2 = { version = "0.20.4", default-features = false }
 gix-url = { version = "0.34.0" }
 mdbook-markdown = { workspace = true }
 mdbook-preprocessor = { workspace = true }

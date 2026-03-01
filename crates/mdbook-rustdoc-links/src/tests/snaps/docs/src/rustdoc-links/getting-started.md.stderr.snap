@@ -1,6 +1,5 @@
 ---
 source: crates/mdbook-rustdoc-links/src/tests.rs
-assertion_line: 88
 expression: report
 ---
   info: link resolved
@@ -8,10 +7,10 @@ expression: report
     │ 
     │ Like [`std::thread::spawn`], [`tokio::task::spawn`] returns a
     ·      ───────────┬──────────  ───────────┬──────────
-    ·                 │                       ╰── https://docs.rs/tokio/1.48.0/tokio/task/spawn/fn.spawn.html
+    ·                 │                       ╰── https://docs.rs/tokio/1.49.0/tokio/task/spawn/fn.spawn.html
     ·                 ╰── https://doc.rust-lang.org/stable/std/thread/functions/fn.spawn.html
     │ [`JoinHandle`][tokio::task::JoinHandle] struct.
     · ───────────────────┬───────────────────
-    ·                    ╰── https://docs.rs/tokio/1.48.0/tokio/runtime/task/join/struct.JoinHandle.html
+    ·                    ╰── https://docs.rs/tokio/1.49.0/tokio/runtime/task/join/struct.JoinHandle.html
     │ 
     ╰────

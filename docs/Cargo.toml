@@ -17,7 +17,7 @@ image = { version = "0.25.9", features = [
   "png",
   "webp",
 ], default-features = false }
-lol_html = "2.7.0"
+lol_html = "2.7.2"
 mdbook-markdown = { workspace = true }
 mdbookkit = { workspace = true }
 miette = { workspace = true }
