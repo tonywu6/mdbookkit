@@ -9,6 +9,13 @@ on:
       - published
 
   workflow_dispatch:
+    inputs:
+      windows:
+        default: false
+        type: boolean
+      macos:
+        default: false
+        type: boolean
 
 env:
   CARGO_INCREMENTAL: 0
@@ -38,25 +45,29 @@ jobs:
           - aarch64-pc-windows-msvc
           - x86_64-pc-windows-msvc
 
-        release:
-          - ${{ github.event_name == 'release' }}
-        manual:
-          - ${{ github.event_name == 'workflow_dispatch' }}
+        windows:
+          - ${{ github.event_name == 'release' || inputs.windows }}
+        macos:
+          - ${{ github.event_name == 'release' || inputs.macos }}
 
         exclude:
-          - release: false
+          - macos: false
             target: aarch64-apple-darwin
-          - release: false
+          - macos: false
             target: x86_64-apple-darwin
 
-          - release: false
-            manual: false
+          - windows: false
             target: aarch64-pc-windows-msvc
-          - release: false
-            manual: false
+          - windows: false
             target: x86_64-pc-windows-msvc
 
-    runs-on: ${{ contains(matrix.target, '-linux-') && 'ubuntu-latest' || contains(matrix.target, '-apple-') && 'macos-latest' || 'windows-latest' }}
+    runs-on: |
+      ${{
+        contains(matrix.target, 'x86_64-linux-') && 'ubuntu-24.04' ||
+        contains(matrix.target, 'aarch64-linux-') && 'ubuntu-24.04-arm' ||
+        contains(matrix.target, '-apple-') && 'macos-latest' ||
+        'windows-latest'
+      }}
 
     if: ${{ github.repository_owner == 'tonywu6' }}
     timeout-minutes: 60
@@ -65,11 +76,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         id: rustup
-
-      - uses: taiki-e/setup-cross-toolchain-action@v1
-        with:
-          target: ${{ matrix.target }}
-        if: runner.os == 'Linux'
 
       - uses: tonywu6/cache-hit-please@v1.1.0
         id: cache
@@ -89,7 +95,7 @@ jobs:
             target/
 
       - name: Which package?
-        run: cargo xtask which-package ${{ github.event.release.tag_name }}
+        run: cargo xtask github which-package ${{ github.event.release.tag_name }}
         id: bins
 
       - name: Build mdbook-rustdoc-links
