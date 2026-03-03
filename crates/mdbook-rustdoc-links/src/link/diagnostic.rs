@@ -59,7 +59,9 @@ impl Link<'_> {
         };
         let label = match &self.state {
             LinkState::Unparsed => Some(self.url.as_ref().into()),
-            LinkState::Pending(item) => Some(format!("could not obtain a link to {:?}", item.name)),
+            LinkState::Pending(item) => {
+                Some(format!("could not obtain a link to {:?}", item.qualified))
+            }
             LinkState::Resolved(links) => Some(format!("{}", links.url())),
         };
         let label = LabeledSpan::new_with_span(label, self.span.clone());

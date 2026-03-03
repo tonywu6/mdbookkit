@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use lsp_types::Position;
 use tap::Pipe;
 use tokio::task::JoinSet;
-use tracing::{Instrument, Level, debug, info, instrument};
+use tracing::{Instrument, Level, debug, info, instrument, trace};
 
 use mdbookkit::{ticker, ticker_item, url::UrlToPath};
 
@@ -73,8 +73,8 @@ impl Resolver for Client {
                 .collect::<Vec<_>>();
 
             fn build(context: &mut String, line: &mut usize, item: &Item) -> Option<Vec<Position>> {
-                let _ = writeln!(context, "{}", item.stmt);
-                let cursors = (item.cursor.as_ref().iter())
+                let _ = writeln!(context, "{}", item.statement);
+                let cursors = (item.cursors.as_ref().iter())
                     .map(|&col| Position::new(*line as _, col as _))
                     .collect::<Vec<_>>();
                 *line += 1;
@@ -111,9 +111,10 @@ impl Resolver for Client {
                 async move {
                     for p in pos {
                         if let Ok(resolved) = doc.resolve(p).await {
+                            trace!("   {p:?}");
                             return Some((key, resolved));
                         } else {
-                            debug!("no result for {p:?}")
+                            debug!("!! {p:?}")
                         }
                     }
                     None

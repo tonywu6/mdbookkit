@@ -7,54 +7,45 @@ use syn::{
 };
 use tracing::trace;
 
-/// Texts that look like Rust items.
+/// Text that look like Rust items.
 #[derive(Debug)]
 pub struct Item {
     /// The parsed item name, which may be different from the source text (e.g.
-    /// turbofish are expanded.)
-    pub name: String,
-    /// The synthesized, syntactically valid statement that rust-analyzer can parse.
-    pub stmt: String,
-    /// "Points of interest" in [`stmt`][Self::stmt] that can be used to construct
+    /// turbofish are expanded).
+    pub qualified: String,
+    /// Syntactically valid statement that rust-analyzer can understand.
+    pub statement: String,
+    /// "Points of interest" in [`stmt`][Self::stmt] that can be used to construct.
     /// [`TextDocumentPositionParams`][lsp_types::TextDocumentPositionParams].
-    pub cursor: Cursor,
+    pub cursors: Cursors,
 }
 
 impl Item {
-    /// Try to parse a link url as a Rust item. See [`ItemName`].
-    pub fn parse(path: &str) -> Result<Self> {
-        let path = match path.split_once('@') {
-            None => path,
-            Some((prefix, path)) => {
-                trace!("ignoring prefix {prefix:?}");
-                path
-            }
-        };
-
-        let item = ItemName::parse
-            .parse_str(path)
+    pub fn new(source: &str) -> Result<Self> {
+        let syntax = ItemName::parse
+            .parse_str(source)
             .context("could not parse as an item name")?;
 
-        let (name, column) = {
-            let mut name = String::new();
+        let (qualified, column) = {
+            let mut qualified = String::new();
             let mut column = 0;
 
-            let gt = if let Some(QSelf { ty, position, .. }) = item.path.qself {
+            let gt = if let Some(QSelf { ty, position, .. }) = syntax.path.qself {
                 trace!("fully qualified syntax");
-                name.push('<');
-                name.push_str(&path[ty.span().byte_range()]);
-                name.push_str(" as ");
+                qualified.push('<');
+                qualified.push_str(&source[ty.span().byte_range()]);
+                qualified.push_str(" as ");
                 Some(position - 1)
             } else {
                 None
             };
 
-            for (idx, chunk) in item.path.path.segments.pairs().enumerate() {
-                column = name.len();
+            for (idx, chunk) in syntax.path.path.segments.pairs().enumerate() {
+                column = qualified.len();
 
                 let leading = &chunk.value().ident.span();
 
-                name.push_str(&path[leading.span().byte_range()]);
+                qualified.push_str(&source[leading.span().byte_range()]);
 
                 match &chunk.value().arguments {
                     PathArguments::None => {}
@@ -63,57 +54,61 @@ impl Item {
                         if args.colon2_token.is_none() {
                             trace!("turbofish");
                             // make it a turbofish
-                            name.push_str("::");
+                            qualified.push_str("::");
                         }
-                        name.push_str(&path[args.span().byte_range()])
+                        qualified.push_str(&source[args.span().byte_range()])
                     }
 
                     PathArguments::Parenthesized(args) => {
-                        name.push_str(&path[args.span().byte_range()])
+                        qualified.push_str(&source[args.span().byte_range()])
                     }
                 }
 
                 if gt == Some(idx) {
-                    name.push('>');
+                    qualified.push('>');
                 }
 
                 if let Some(punct) = chunk.punct() {
-                    name.push_str(&path[punct.span().byte_range()]);
+                    qualified.push_str(&source[punct.span().byte_range()]);
                 }
             }
 
-            (name, column)
+            (qualified, column)
         };
 
-        trace!(?name, kind = ?item.kind);
+        trace!(?qualified, kind = ?syntax.kind);
 
-        let (stmt, cursor) = match item.kind {
+        let (statement, cursors) = match syntax.kind {
             None => {
                 let pattern = "let _: ";
                 let assign = " = ";
-                let stmt = format!("{pattern}{name}{assign}{name};");
+                let text = format!("{pattern}{qualified}{assign}{qualified};");
 
                 let c1 = pattern.len() + column;
-                let c2 = pattern.len() + name.len() + assign.len() + column;
-                let cursor = Cursor::Decl([c1, c2]);
+                let c2 = pattern.len() + qualified.len() + assign.len() + column;
+                let cursors = Cursors::Decl([c1, c2]);
 
-                (stmt, cursor)
+                (text, cursors)
             }
-            Some(ItemKind::Call) => (format!("{name}();"), Cursor::Expr([column])),
-            Some(ItemKind::Macro) => (format!("{name}!();"), Cursor::Expr([column])),
+            Some(ItemKind::Call) => (format!("{qualified}();"), Cursors::Expr([column])),
+            Some(ItemKind::Macro) => (format!("{qualified}!();"), Cursors::Expr([column])),
         };
 
-        Ok(Self { name, stmt, cursor })
+        Ok(Self {
+            qualified,
+            statement,
+            cursors,
+        })
     }
 }
 
 #[derive(Debug)]
-pub enum Cursor {
+pub enum Cursors {
     Decl([usize; 2]),
     Expr([usize; 1]),
 }
 
-impl AsRef<[usize]> for Cursor {
+impl AsRef<[usize]> for Cursors {
     fn as_ref(&self) -> &[usize] {
         match self {
             Self::Decl(c) => c,

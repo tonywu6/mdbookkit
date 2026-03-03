@@ -76,3 +76,30 @@ impl<'input> BrokenLinkCallback<'input> for ItemLinks {
         }
     }
 }
+
+pub fn split_once<'a>(text: CowStr<'a>, pat: char) -> (CowStr<'a>, Option<CowStr<'a>>) {
+    return match text {
+        CowStr::Borrowed(url) => match url.split_once(pat) {
+            Some((head, tail)) => (CowStr::Borrowed(head), Some(CowStr::Borrowed(tail))),
+            None => (CowStr::Borrowed(url), None),
+        },
+        CowStr::Inlined(url) => match url.split_once(pat) {
+            Some((head, tail)) => (into_static(head), Some(into_static(tail))),
+            None => (CowStr::Inlined(url), None),
+        },
+        CowStr::Boxed(url) => {
+            let mut head = url.into_string();
+            let tail = head
+                .find(pat)
+                .map(|idx| head.split_off(idx).split_off(pat.len_utf8()));
+            (head.into(), tail.map(<_>::into))
+        }
+    };
+    #[inline]
+    fn into_static(s: &str) -> CowStr<'static> {
+        match s.try_into() {
+            Ok(s) => CowStr::Inlined(s),
+            Err(_) => s.to_owned().into(),
+        }
+    }
+}

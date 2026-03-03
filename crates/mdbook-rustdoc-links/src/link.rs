@@ -5,10 +5,11 @@ use lsp_types::Url;
 use mdbook_markdown::pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
 use serde::{Deserialize, Serialize};
 use tap::{Pipe, Tap};
+use tracing::trace;
 
-use mdbookkit::emit_trace;
+use mdbookkit::markdown::Spanned;
 
-use crate::{env::EmitConfig, item::Item};
+use crate::{env::EmitConfig, item::Item, markdown::split_once};
 
 pub mod diagnostic;
 
@@ -30,16 +31,22 @@ pub enum LinkState {
 
 impl<'a> Link<'a> {
     pub fn new(span: Range<usize>, url: CowStr<'a>, title: CowStr<'a>) -> Self {
-        let path = match url.split_once('#') {
-            None => &url,
-            Some((path, _)) => path,
-        };
+        let state = {
+            let name = split_fragment(url.clone()).0;
 
-        let state = Item::parse(path)
-            .inspect_err(emit_trace!())
-            .ok()
-            .map(LinkState::Pending)
-            .unwrap_or(LinkState::Unparsed);
+            let name = match split_once(name, '@') {
+                (_, Some(name)) => name,
+                (name, None) => name,
+            };
+
+            match Item::new(&name) {
+                Ok(item) => LinkState::Pending(item),
+                Err(err) => {
+                    trace!("{err:?}");
+                    LinkState::Unparsed
+                }
+            }
+        };
 
         let inner = vec![];
 
@@ -72,7 +79,7 @@ impl<'a> Link<'a> {
         &mut self.inner
     }
 
-    pub fn emit(&self, options: &EmitConfig) -> Option<(__emit::EmitLink<'_>, Range<usize>)> {
+    pub fn emit(&self, options: &EmitConfig) -> Option<Spanned<impl Iterator<Item = Event<'_>>>> {
         Tag::Link {
             dest_url: self.url(options)?.to_string().into(),
             link_type: LinkType::Inline,
@@ -94,18 +101,14 @@ impl<'a> Link<'a> {
         } else {
             refs.web()
         }?;
-        if let Some(frag) = self.fragment() {
+        if let Some(frag) = split_fragment(self.url.clone()).1 {
             url.clone()
-                .tap_mut(|u| u.set_fragment(Some(frag)))
+                .tap_mut(|u| u.set_fragment(Some(&*frag)))
                 .pipe(Cow::<Url>::Owned)
                 .pipe(Some)
         } else {
             Some(Cow::Borrowed(url))
         }
-    }
-
-    fn fragment(&self) -> Option<&str> {
-        self.url.split_once('#').map(|split| split.1)
     }
 }
 
@@ -172,14 +175,11 @@ impl ItemLinks {
     }
 }
 
-mod __emit {
-    use std::{
-        iter::{Chain, Cloned, Once},
-        slice::Iter,
-    };
-
-    use mdbook_markdown::pulldown_cmark::Event;
-
-    pub type EmitLink<'a> =
-        Chain<Chain<Once<Event<'a>>, Cloned<Iter<'a, Event<'a>>>>, Once<Event<'a>>>;
+/// Split fragment from `url` by finding the '#' character.
+///
+/// This function does not handle raw identifiers like `r#type` correctly, but it turns out
+/// rustdoc doesn't correctly parse raw identifiers either, and authors should simply
+/// write the identifier without the `r#` part.
+fn split_fragment<'a>(url: CowStr<'a>) -> (CowStr<'a>, Option<CowStr<'a>>) {
+    split_once(url, '#')
 }
