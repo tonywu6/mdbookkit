@@ -1,7 +1,6 @@
 #![allow(clippy::unwrap_used)]
 
 use anyhow::{Context, Result, bail};
-use lsp_types::Url;
 use rstest::*;
 use similar::{ChangeTag, TextDiff};
 use tap::Pipe;
@@ -18,7 +17,7 @@ use crate::{
 };
 
 struct Fixture {
-    pages: Pages<'static, Url>,
+    pages: Pages<'static, String>,
     env: Environment,
 }
 
@@ -46,7 +45,7 @@ fn fixture() -> Fixture {
     for doc in TEST_DOCUMENTS {
         let stream = client.env().markdown(doc.content).into_offset_iter();
         pages
-            .read(doc.url(), doc.content, stream)
+            .read(doc.url().to_string(), doc.content, stream)
             .context("Failed to parse source")
             .unwrap();
     }
@@ -70,7 +69,7 @@ fn fixture() -> Fixture {
 }
 
 fn assert_output(doc: TestDocument, Fixture { pages, env }: &Fixture) -> Result<()> {
-    let output = pages.emit(&doc.url(), &env.emit_config())?;
+    let output = pages.emit(&doc.url().to_string(), &env.emit_config())?;
     portable_snapshots!().test(doc.name(), |name| insta::assert_snapshot!(name, output))?;
     Ok(())
 }
@@ -80,7 +79,7 @@ fn assert_report(doc: TestDocument, Fixture { pages, .. }: &Fixture) -> Result<(
         .reporter()
         .name_display(|_| doc.name())
         .level_filter(LevelFilter::DEBUG)
-        .filtered(|u| u == &doc.url())
+        .filtered::<str>(|u| u == &doc.url().to_string())
         .build()
         .to_report();
 
@@ -92,7 +91,7 @@ fn assert_report(doc: TestDocument, Fixture { pages, .. }: &Fixture) -> Result<(
 }
 
 fn assert_whitespace_unchanged(doc: TestDocument, Fixture { pages, env }: &Fixture) -> Result<()> {
-    let output = pages.emit(&doc.url(), &env.emit_config())?;
+    let output = pages.emit(&doc.url().to_string(), &env.emit_config())?;
 
     let changed_lines = TextDiff::from_words(doc.content, &output)
         .iter_all_changes()

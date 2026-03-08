@@ -97,9 +97,9 @@ impl<'a> Link<'a> {
             return None;
         };
         let url = if options.prefer_local_links {
-            refs.local().or(refs.web())
+            refs.file_url().or(refs.http_url())
         } else {
-            refs.web()
+            refs.http_url()
         }?;
         if let Some(frag) = split_fragment(self.url.clone()).1 {
             url.clone()
@@ -115,8 +115,8 @@ impl<'a> Link<'a> {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub struct ItemLinks {
-    refs: Locations,
-    defs: Vec<Arc<Url>>,
+    docs: Locations,
+    deps: Vec<Arc<Url>>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -128,8 +128,8 @@ enum Locations {
 }
 
 impl ItemLinks {
-    pub fn new(http: Option<Url>, file: Option<Url>, defs: Vec<Url>) -> Result<Self> {
-        let refs = match (http, file) {
+    pub fn new(http: Option<Url>, file: Option<Url>) -> Result<Self> {
+        let docs = match (http, file) {
             (Some(http), Some(file)) => Locations::Multiple {
                 http: Arc::new(http),
                 file: Arc::new(file),
@@ -142,36 +142,40 @@ impl ItemLinks {
             },
             (None, None) => bail!("Neither web nor local link provided"),
         };
-        let defs = defs.into_iter().map(Into::into).collect();
-        Ok(Self { refs, defs })
+        let deps = Default::default();
+        Ok(Self { docs, deps })
     }
 
     pub fn url(&self) -> &Url {
-        match &self.refs {
+        match &self.docs {
             Locations::Http { http } => http,
             Locations::File { file } => file,
             Locations::Multiple { http, .. } => http,
         }
     }
 
-    pub fn web(&self) -> Option<&Url> {
-        match &self.refs {
+    pub fn http_url(&self) -> Option<&Url> {
+        match &self.docs {
             Locations::Http { http } => Some(http),
             Locations::File { .. } => None,
             Locations::Multiple { http, .. } => Some(http),
         }
     }
 
-    pub fn local(&self) -> Option<&Url> {
-        match &self.refs {
+    pub fn file_url(&self) -> Option<&Url> {
+        match &self.docs {
             Locations::Http { .. } => None,
             Locations::File { file } => Some(file),
             Locations::Multiple { file, .. } => Some(file),
         }
     }
 
-    pub fn deps(&self) -> impl Iterator<Item = &'_ Url> {
-        self.defs.iter().map(|u| u.as_ref())
+    pub fn dependencies(&self) -> impl Iterator<Item = &Url> {
+        self.deps.iter().map(|u| u.as_ref())
+    }
+
+    pub fn set_dependencies(&mut self, deps: Vec<Url>) {
+        self.deps = deps.into_iter().map(Arc::new).collect();
     }
 }
 

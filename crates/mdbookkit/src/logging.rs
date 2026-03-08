@@ -139,6 +139,7 @@ fn init_logging(options: Logging) {
     if let Some(logging) = options.logging {
         set_logging(logging);
     }
+
     if let Some(colored) = options.colored {
         set_colored(colored);
     }

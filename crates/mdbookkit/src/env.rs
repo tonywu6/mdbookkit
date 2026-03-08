@@ -31,14 +31,10 @@ static IS_LOGGING: AtomicBool = AtomicBool::new(false);
 
 #[inline]
 pub fn is_logging() -> bool {
-    if cfg!(feature = "_testing") {
-        IS_LOGGING.load(Ordering::Relaxed)
-    } else {
-        IS_LOGGING.load(Ordering::Relaxed)
-            || is_ci().is_some()
-            || MDBOOK_LOG.is_some()
-            || !std::io::stderr().is_terminal()
-    }
+    IS_LOGGING.load(Ordering::Relaxed)
+        || MDBOOK_LOG.is_some()
+        || is_ci().is_some()
+        || !std::io::stderr().is_terminal()
 }
 
 pub(crate) fn set_logging(enabled: bool) {

@@ -11,12 +11,13 @@ use async_lsp::{LanguageServer, MainLoop, ServerSocket, router::Router};
 use futures_util::TryFutureExt;
 use lsp_types::{
     ClientCapabilities, ClientInfo, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
-    GeneralClientCapabilities, GotoDefinitionParams, GotoDefinitionResponse, InitializeParams,
-    InitializeResult, InitializedParams, LogMessageParams, MessageType, NumberOrString, Position,
-    PositionEncodingKind, ProgressParams, ProgressParamsValue, ServerInfo, ShowMessageParams,
-    TextDocumentIdentifier, TextDocumentItem, TextDocumentPositionParams, Url,
-    WindowClientCapabilities, WorkDoneProgress, WorkDoneProgressBegin, WorkDoneProgressEnd,
-    WorkDoneProgressReport, WorkspaceFolder,
+    GeneralClientCapabilities, GotoDefinitionParams, GotoDefinitionResponse,
+    HoverClientCapabilities, HoverContents, HoverParams, InitializeParams, InitializeResult,
+    InitializedParams, LogMessageParams, MarkupContent, MarkupKind, MessageType, NumberOrString,
+    Position, PositionEncodingKind, ProgressParams, ProgressParamsValue, ServerInfo,
+    ShowMessageParams, TextDocumentClientCapabilities, TextDocumentIdentifier, TextDocumentItem,
+    TextDocumentPositionParams, Url, WindowClientCapabilities, WorkDoneProgress,
+    WorkDoneProgressBegin, WorkDoneProgressEnd, WorkDoneProgressReport, WorkspaceFolder,
     notification::{LogMessage, Progress, PublishDiagnostics, ShowMessage},
     request::Request,
 };
@@ -394,6 +395,14 @@ impl Server {
                         position_encodings: Some(vec![PositionEncodingKind::UTF8]),
                         ..Default::default()
                     }),
+                    text_document: Some(TextDocumentClientCapabilities {
+                        hover: Some(HoverClientCapabilities {
+                            content_format: Some(vec![MarkupKind::Markdown]),
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }),
+
                     ..Default::default()
                 },
 
@@ -401,6 +410,11 @@ impl Server {
                     "cachePriming": {
                         "enable": true,
                         "numThreads": "physical",
+                    },
+                    "hover": {
+                        "links": {
+                            "enable": true,
+                        }
                     },
                     "cargo": {
                         "features": features,
@@ -507,9 +521,47 @@ pub struct OpenDocument {
 
 impl OpenDocument {
     #[instrument(level = "debug", skip(self))]
-    pub async fn resolve(&self, position: Position) -> Result<ItemLinks> {
-        let defs = self
-            .server
+    pub async fn hover(&self, position: Position) -> Result<String> {
+        self.server
+            .clone()
+            .hover(HoverParams {
+                text_document_position_params: TextDocumentPositionParams {
+                    text_document: TextDocumentIdentifier {
+                        uri: self.uri.clone(),
+                    },
+                    position,
+                },
+                work_done_progress_params: Default::default(),
+            })
+            .context("Failed to request hover tooltip")
+            .await?
+            .and_then(|hover| {
+                let HoverContents::Markup(MarkupContent {
+                    kind: MarkupKind::Markdown,
+                    value: content,
+                }) = hover.contents
+                else {
+                    debug!("unsupported hover result {hover:#?}");
+                    return None;
+                };
+                Some(content)
+            })
+            .context("Server returned no hover content")
+    }
+
+    #[instrument(level = "debug", skip(self))]
+    pub async fn external_docs(&self, position: Position) -> Result<ItemLinks> {
+        self.server
+            .request::<ExternalDocs>(document_position(self.uri.clone(), position))
+            .context("Failed to request external docs")
+            .await?
+            .context("Server returned no external docs")
+            .and_then(|ExternalDocLinks { web, local }| ItemLinks::new(web, local))
+    }
+
+    #[instrument(level = "debug", skip(self))]
+    pub async fn definitions(&self, position: Position) -> Result<Vec<Url>> {
+        self.server
             .clone()
             .definition(GotoDefinitionParams {
                 text_document_position_params: document_position(self.uri.clone(), position),
@@ -517,9 +569,7 @@ impl OpenDocument {
                 partial_result_params: Default::default(),
             })
             .context("Failed to request source definition")
-            .inspect_err(emit_debug!())
-            .await
-            .unwrap_or_default()
+            .await?
             .map(|defs| match defs {
                 GotoDefinitionResponse::Scalar(loc) => vec![loc.uri],
                 GotoDefinitionResponse::Array(locs) => {
@@ -529,18 +579,7 @@ impl OpenDocument {
                     links.into_iter().map(|link| link.target_uri).collect()
                 }
             })
-            .unwrap_or_default();
-
-        let ExternalDocLinks { web, local } = self
-            .server
-            .request::<ExternalDocs>(document_position(self.uri.clone(), position))
-            .context("Failed to request external docs")
-            .inspect_err(emit_debug!())
-            .await
-            .unwrap_or_default()
-            .context("Server returned no result for external docs")?;
-
-        ItemLinks::new(web, local, defs)
+            .context("Server returned no source definitions")
     }
 }
 

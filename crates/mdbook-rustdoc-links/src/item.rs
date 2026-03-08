@@ -7,6 +7,10 @@ use syn::{
 };
 use tracing::trace;
 
+use mdbookkit::write_str;
+
+use crate::markup::AttributedString;
+
 /// Text that look like Rust items.
 #[derive(Debug)]
 pub struct Item {
@@ -14,10 +18,7 @@ pub struct Item {
     /// turbofish are expanded).
     pub qualified: String,
     /// Syntactically valid statement that rust-analyzer can understand.
-    pub statement: String,
-    /// "Points of interest" in [`stmt`][Self::stmt] that can be used to construct.
-    /// [`TextDocumentPositionParams`][lsp_types::TextDocumentPositionParams].
-    pub cursors: Cursors,
+    pub statement: AttributedString<()>,
 }
 
 impl Item {
@@ -26,26 +27,27 @@ impl Item {
             .parse_str(source)
             .context("could not parse as an item name")?;
 
-        let (qualified, column) = {
-            let mut qualified = String::new();
-            let mut column = 0;
+        let qualified = {
+            let mut qualified = AttributedString::new();
 
             let gt = if let Some(QSelf { ty, position, .. }) = syntax.path.qself {
                 trace!("fully qualified syntax");
-                qualified.push('<');
-                qualified.push_str(&source[ty.span().byte_range()]);
-                qualified.push_str(" as ");
+                write_str!(qualified, "<");
+                write_str!(qualified, "{}", &source[ty.span().byte_range()]);
+                write_str!(qualified, " as ");
                 Some(position - 1)
             } else {
                 None
             };
 
             for (idx, chunk) in syntax.path.path.segments.pairs().enumerate() {
-                column = qualified.len();
+                if idx == syntax.path.path.segments.pairs().len() - 1 {
+                    qualified.markup(());
+                }
 
                 let leading = &chunk.value().ident.span();
 
-                qualified.push_str(&source[leading.span().byte_range()]);
+                write_str!(qualified, "{}", &source[leading.span().byte_range()]);
 
                 match &chunk.value().arguments {
                     PathArguments::None => {}
@@ -54,66 +56,56 @@ impl Item {
                         if args.colon2_token.is_none() {
                             trace!("turbofish");
                             // make it a turbofish
-                            qualified.push_str("::");
+                            write_str!(qualified, "::");
                         }
-                        qualified.push_str(&source[args.span().byte_range()])
+                        write_str!(qualified, "{}", &source[args.span().byte_range()]);
                     }
 
                     PathArguments::Parenthesized(args) => {
-                        qualified.push_str(&source[args.span().byte_range()])
+                        write_str!(qualified, "{}", &source[args.span().byte_range()]);
                     }
                 }
 
                 if gt == Some(idx) {
-                    qualified.push('>');
+                    write_str!(qualified, ">");
                 }
 
                 if let Some(punct) = chunk.punct() {
-                    qualified.push_str(&source[punct.span().byte_range()]);
+                    write_str!(qualified, "{}", &source[punct.span().byte_range()]);
                 }
             }
 
-            (qualified, column)
+            qualified
         };
 
-        trace!(?qualified, kind = ?syntax.kind);
+        trace!(qualified = ?qualified.text(), kind = ?syntax.kind);
 
-        let (statement, cursors) = match syntax.kind {
+        let statement = match syntax.kind {
             None => {
-                let pattern = "let _: ";
-                let assign = " = ";
-                let text = format!("{pattern}{qualified}{assign}{qualified};");
-
-                let c1 = pattern.len() + column;
-                let c2 = pattern.len() + qualified.len() + assign.len() + column;
-                let cursors = Cursors::Decl([c1, c2]);
-
-                (text, cursors)
+                let mut statement = AttributedString::new();
+                write_str!(statement, "let _: ");
+                statement.append(qualified.clone());
+                write_str!(statement, " = ");
+                statement.append(qualified.clone());
+                write_str!(statement, ";");
+                statement
             }
-            Some(ItemKind::Call) => (format!("{qualified}();"), Cursors::Expr([column])),
-            Some(ItemKind::Macro) => (format!("{qualified}!();"), Cursors::Expr([column])),
+            Some(ItemKind::Call) => {
+                let mut statement = qualified.clone();
+                write_str!(statement, "();");
+                statement
+            }
+            Some(ItemKind::Macro) => {
+                let mut statement = qualified.clone();
+                write_str!(statement, "!();");
+                statement
+            }
         };
 
         Ok(Self {
-            qualified,
+            qualified: qualified.text().to_owned(),
             statement,
-            cursors,
         })
-    }
-}
-
-#[derive(Debug)]
-pub enum Cursors {
-    Decl([usize; 2]),
-    Expr([usize; 1]),
-}
-
-impl AsRef<[usize]> for Cursors {
-    fn as_ref(&self) -> &[usize] {
-        match self {
-            Self::Decl(c) => c,
-            Self::Expr(c) => c,
-        }
     }
 }
 

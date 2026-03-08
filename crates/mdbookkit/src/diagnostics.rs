@@ -1,11 +1,6 @@
 //! Error reporting for preprocessors.
 
-use std::{
-    borrow::Borrow,
-    collections::BTreeMap,
-    fmt::{self, Write as _},
-    io::Write as _,
-};
+use std::{borrow::Borrow, collections::BTreeMap, fmt, io::Write as _};
 
 use miette::{
     Diagnostic, GraphicalReportHandler, GraphicalTheme, LabeledSpan, MietteError,
@@ -20,6 +15,7 @@ use crate::{
     env::{is_colored, is_logging},
     error::{ExpectFmt, put_severity},
     logging::stderr,
+    write_str,
 };
 
 /// Trait for Markdown diagnostics. This will eventually be printed to stderr.
@@ -343,7 +339,7 @@ where
 
     pub fn to_report(&self) -> String {
         self.items.iter().fold(String::new(), |mut out, diag| {
-            writeln!(out, "{}", diag.to_report()).expect_fmt();
+            write_str!(out, "{}\n", diag.to_report());
             out
         })
     }

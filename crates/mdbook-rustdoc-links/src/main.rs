@@ -35,6 +35,7 @@ mod env;
 mod item;
 mod link;
 mod markdown;
+mod markup;
 mod page;
 mod resolver;
 mod sync;

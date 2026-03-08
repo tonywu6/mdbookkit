@@ -1,13 +1,13 @@
 //! Markdown-related utilities.
 
-use std::{borrow::Cow, fmt::Write, ops::Range};
+use std::{borrow::Cow, ops::Range};
 
 use mdbook_markdown::pulldown_cmark::{Event, Options};
 use pulldown_cmark_to_cmark::{Error, cmark};
 use tap::Pipe;
 use tracing::{debug, trace, trace_span};
 
-use crate::error::ExpectFmt;
+use crate::write_str;
 
 /// _Patch_ a Markdown string, instead of regenerating it entirely, in order to preserve
 /// as much of the original Markdown source as possible, especially with regard to whitespace.
@@ -104,7 +104,7 @@ where
     pub fn into_string(self) -> Result<String, Error> {
         let mut out = String::new();
         for chunk in self {
-            write!(out, "{}", chunk?).expect_fmt();
+            write_str!(out, "{}", chunk?);
         }
         Ok(out)
     }

@@ -113,6 +113,15 @@ impl ExpectFmt for std::fmt::Result {
     }
 }
 
+#[macro_export]
+macro_rules! write_str {
+    ( $($tt:tt)+ ) => {{
+        use std::fmt::Write;
+        use $crate::error::ExpectFmt;
+        write!( $($tt)+ ).expect_fmt();
+    }};
+}
+
 pub trait ExpectLock<T> {
     fn expect_lock(self) -> T;
 }

@@ -81,7 +81,7 @@ impl Cache for FileCacheV1 {
         let deps = self
             .urls
             .iter()
-            .flat_map(|(_, links)| links.deps())
+            .flat_map(|(_, links)| links.dependencies())
             .map(Cow::Borrowed);
 
         let hash = Self::hash(env, deps).await;
@@ -109,7 +109,7 @@ impl Cache for FileCacheV1 {
 
         let deps = urls
             .iter()
-            .flat_map(|(_, links)| links.deps())
+            .flat_map(|(_, links)| links.dependencies())
             .map(Cow::Borrowed);
 
         let hash = Self::hash(env, deps).await;

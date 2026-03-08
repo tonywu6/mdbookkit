@@ -5,10 +5,6 @@ use tap::Pipe;
 
 use mdbookkit::markdown::default_markdown_options;
 
-pub fn stream(text: &str, options: Options) -> MarkdownStream<'_> {
-    Parser::new_with_broken_link_callback(text, options, Some(ItemLinks))
-}
-
 pub type MarkdownStream<'a> = Parser<'a, ItemLinks>;
 
 /// [`BrokenLinkCallback`] implementation that unconditionally converts all "broken"
@@ -36,6 +32,7 @@ impl<'input> BrokenLinkCallback<'input> for ItemLinks {
     ) -> Option<(CowStr<'input>, CowStr<'input>)> {
         // try to strip away inline markups in order to support stylized shorthand links
         // for example, this extracts "std" from [`std`], removing the `inline code` markup
+
         let inner = if let CowStr::Borrowed(inner) = link.reference {
             // this is currently done by manually parsing the inner text, filtering
             // the event stream, and then re-emitting it as text
@@ -46,7 +43,7 @@ impl<'input> BrokenLinkCallback<'input> for ItemLinks {
             // this should be okay in usage, because this is only called by the Parser,
             // which should only provide borrowed text.
 
-            let parse = stream(inner, Self::OPTIONS);
+            let parse = Parser::new_ext(inner, Self::OPTIONS);
 
             let inner = parse
                 .filter_map(|event| match event {

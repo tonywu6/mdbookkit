@@ -8,6 +8,7 @@ use std::{
 use anyhow::{Context, Result, anyhow};
 use cargo_toml::{Manifest, Product};
 use lsp_types::Url;
+use mdbook_markdown::pulldown_cmark::Parser;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use shlex::Shlex;
 use tokio::process::Command;
@@ -193,7 +194,11 @@ impl Environment {
     }
 
     pub fn markdown<'a>(&self, source: &'a str) -> markdown::MarkdownStream<'a> {
-        markdown::stream(source, default_markdown_options())
+        Parser::new_with_broken_link_callback(
+            source,
+            default_markdown_options(),
+            Some(markdown::ItemLinks),
+        )
     }
 
     pub fn emit_config(&self) -> EmitConfig {
