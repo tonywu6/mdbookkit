@@ -78,7 +78,7 @@ group = "<!-- 1 --> Fixes"
 message = "^fix"
 
 [[changelog.commit_parsers]]
-group = "<!-- 2 --> Other changes"
+group = "<!-- 2 --> Changes"
 message = "^refactor|^perf"
 
 [[changelog.commit_parsers]]
