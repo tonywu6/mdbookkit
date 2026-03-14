@@ -19,7 +19,6 @@
     "node": ">=24"
   },
   "scripts": {
-    "prettier": "prettier --write docs/app docs/src",
     "wrangler:dev": "wrangler dev --cwd docs",
     "wrangler:upload": "wrangler versions upload --cwd docs",
     "wrangler:types": "wrangler types --cwd docs worker-configuration.d.ts"

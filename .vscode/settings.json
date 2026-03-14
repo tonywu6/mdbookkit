@@ -22,5 +22,5 @@
   "markdown.validate.enabled": false,
   "rust-analyzer.cargo.features": "all",
   "rust-analyzer.check.command": "clippy",
-  "typescript.tsserver.experimental.enableProjectDiagnostics": true
+  "js/ts.tsserver.experimental.enableProjectDiagnostics": true
 }

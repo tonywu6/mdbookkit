@@ -13,5 +13,12 @@ export default {
         proseWrap: "preserve",
       },
     },
+    {
+      files: ["**/CHANGELOG.md"],
+      options: {
+        proseWrap: "never",
+        // does not play nice with GitHub releases
+      },
+    },
   ],
 };

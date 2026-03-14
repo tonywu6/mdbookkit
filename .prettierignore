@@ -4,5 +4,7 @@
 docs/build
 docs/dist
 docs/src/web
-docs/web/*.loader.*
-docs/web/worker-configuration.d.ts
+docs/web/loader.*
+docs/worker-configuration.d.ts
+
+pnpm-lock.yaml
