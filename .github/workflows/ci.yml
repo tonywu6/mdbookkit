@@ -18,6 +18,10 @@ on:
     - cron: "32 21 * * 0" # nightly test for RA
 
   workflow_dispatch:
+    inputs:
+      windows:
+        default: false
+        type: boolean
 
 env:
   CARGO_TERM_COLOR: always
@@ -43,8 +47,7 @@ jobs:
           - windows-latest
 
         windows:
-          - ${{ github.event_name == 'workflow_dispatch' }}
-          # run on windows only on request
+          - ${{ inputs.windows }}
 
         exclude:
           - platform: windows-latest
