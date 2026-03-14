@@ -520,6 +520,7 @@ pub struct OpenDocument {
 }
 
 impl OpenDocument {
+    #[allow(unused)]
     #[instrument(level = "debug", skip(self))]
     pub async fn hover(&self, position: Position) -> Result<String> {
         self.server

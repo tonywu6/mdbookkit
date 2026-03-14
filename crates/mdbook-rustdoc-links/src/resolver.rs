@@ -2,14 +2,13 @@ use std::{borrow::Borrow, collections::HashMap, hash::Hash, sync::Arc};
 
 use anyhow::{Context, Result};
 use futures_util::TryFutureExt;
-use lsp_types::Url;
-use mdbook_markdown::pulldown_cmark::{CowStr, Event, Parser, Tag};
+use mdbook_markdown::pulldown_cmark::CowStr;
 use tap::Pipe;
 use tracing::{Level, debug, info, instrument};
 
 use mdbookkit::{
-    emit_debug, error::FutureWithError, markdown::default_markdown_options, ticker, ticker_event,
-    ticker_item, url::UrlToPath, write_str,
+    emit_debug, error::FutureWithError, ticker, ticker_event, ticker_item, url::UrlToPath,
+    write_str,
 };
 
 use crate::{
@@ -121,50 +120,12 @@ impl Resolver for Client {
         )
         .entered();
 
-        let docstring = markups
-            .get(&Cursor::DocString)
-            .and_then(|pos| pos.first())
-            .unwrap_or_else(|| unreachable!());
-
-        let docstring = (document.hover(*docstring))
-            .context("Error while rendering docstring")
-            .inspect_ok(emit_debug!("rendered docstring\n{}"))
-            .inspect_err(emit_debug!())
-            .await
-            .unwrap_or_default();
-
-        let mut resolved = Parser::new_ext(&docstring, default_markdown_options())
-            .scan(None, |state, event| match event {
-                Event::Start(Tag::Link { dest_url, .. }) => {
-                    *state = dest_url.parse::<Url>().ok();
-                    Some(None)
-                }
-                Event::Text(key) => {
-                    if let Some(url) = state.take()
-                        && let Ok(link) = ItemLinks::new(Some(url), None)
-                    {
-                        let _span = ticker_item!(&ticker, Level::INFO, "docs", item = &*key);
-                        Some(Some((key.to_string(), link)))
-                    } else {
-                        Some(None)
-                    }
-                }
-                _ => Some(None),
-            })
-            .flatten()
-            .collect::<HashMap<_, _>>();
+        let mut resolved = HashMap::<String, ItemLinks>::new();
 
         for (key, pos) in markups.iter() {
             let Cursor::ExternalDocs(key) = key else {
                 continue;
             };
-            if let Some(link) = resolved.get(&**key)
-            // TODO: despite https://github.com/rust-lang/rust-analyzer/pull/20384 links
-            // generated for macros via hover are still wrong, hence we fallback to `externalDocs`
-                && !link.url().path().contains("/macro.")
-            {
-                continue;
-            }
             let _span = ticker_item!(&ticker, Level::INFO, "docs", item = &**key);
             for p in pos {
                 if let Ok(link) = (document.external_docs(*p))

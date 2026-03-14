@@ -25,11 +25,11 @@ use crate::markdown;
 /// Configuration for the preprocessor.
 ///
 /// This is both deserialized from book.toml and parsed from the command line.
-///
-/// Doc comments for attributes populate the `configuration.md` page in the docs.
 #[derive(clap::Parser, Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Config {
+    // Doc comments on attributes populate the `configuration.md` page in the docs.
+    //
     /// Command to use for spawning rust-analyzer.
     ///
     /// By default, prebuilt binary from the VS Code extension is tried. If that doesn't
