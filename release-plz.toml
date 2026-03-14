@@ -28,39 +28,53 @@ body = """
 
 {%- macro print_commit(commit) -%}
 
-  - {% if commit.remote.pr_number -%}\
-      [`#{{ commit.remote.pr_number }}`]({{ remote.link }}/pull/{{ commit.remote.pr_number }})\
-    {%- endif %} \
-    {% if commit.breaking %}**\\[BREAKING\\]** {% endif %}\
+  - {{ self::mention_pr(commit=commit) }} \
+    {% if commit.breaking %}**\\[BREAKING\\]** {% endif %} \
     {{ commit.message }} \
-    [`{{ commit.id | truncate(length=7, end="") }}`]({{ remote.link }}/commit/{{ commit.id }})\
-    {%- raw %}\n\n{% endraw -%}
+    [`{{ commit.id | truncate(length=7, end="") }}`]({{ remote.link }}/commit/{{ commit.id }}) \
+    {{ self::mention_username(commit=commit) }}
 
 {%- endmacro -%}
 
-{%- if version -%}
+{%- macro mention_pr(commit) -%}
+
+  {% if commit.remote.pr_number %} \
+    [#{{ commit.remote.pr_number }}]({{ remote.link }}/pull/{{ commit.remote.pr_number }}) \
+  {% endif %}
+
+{%- endmacro -%}
+
+{%- macro mention_username(commit) -%}
+
+  {% if commit.remote.username %} \
+      (by @{{ commit.remote.username }}) \
+  {% endif %}
+
+{%- endmacro -%}
+
+{% if version %}
+
   ## {{ version | trim_start_matches(pat="v") }}
 
-  {%- if previous.version -%}
-    {%- raw %}\n\n{% endraw -%}
+  {% if previous.version %}
     [v{{ previous.version }}..v{{ version }}]({{ release_link }})
-  {%- endif -%}
+  {% endif %}
 
-  {%- raw %}\n\n{% endraw -%}
-{%- endif -%}
+{% endif %}
 
-{%- raw %}\n\n{% endraw -%}
+{% for group, commits in commits | group_by(attribute="group") %}
 
-{%- for group, commits in commits | group_by(attribute="group") -%}
-  ### {{ group }} {%- raw %}\n\n{% endraw -%}
+  ### {{ group }}
 
-  {%- for commit in commits
+  {% for commit in commits
     | filter(attribute="merge_commit", value=false)
-    | unique(attribute="message") -%}
-    {{- self::print_commit(commit=commit) -}}
-  {%- endfor -%}
+    | unique(attribute="message") %}
 
-{%- endfor -%}
+    {{ self::print_commit(commit=commit) }}
+
+  {% endfor %}
+
+{% endfor %}
 """
 
 link_parsers = [{ pattern = "#(\\d+)", href = "{{ remote.link }}/issues/$1" }]
