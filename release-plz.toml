@@ -29,7 +29,10 @@ body = """
 
 {%- macro print_commit(commit) -%}
 
-  - {% if commit.breaking %}**\\[BREAKING\\]** {% endif %}\
+  - {% if commit.remote.pr_number -%}\
+      [`#{{ commit.remote.pr_number }}`]({{ remote.link }}/pull/{{ commit.remote.pr_number }})\
+    {%- endif %} \
+    {% if commit.breaking %}**\\[BREAKING\\]** {% endif %}\
     {{ commit.message }} \
     [`{{ commit.id | truncate(length=7, end="") }}`]({{ remote.link }}/commit/{{ commit.id }})\
     {%- raw %}\n\n{% endraw -%}
@@ -64,7 +67,7 @@ body = """
 link_parsers = [{ pattern = "#(\\d+)", href = "{{ remote.link }}/issues/$1" }]
 
 postprocessors = [
-  { pattern = ".*", replace_command = "pnpm dlx prettier@3 --parser markdown --prose-wrap never" },
+  { pattern = ".*", replace_command = "pnpm dlx prettier@3 --parser markdown --stdin-filepath CHANGELOG.md" },
 ]
 
 [[changelog.commit_parsers]]
