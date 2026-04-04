@@ -1,11 +1,13 @@
 use mdbook_markdown::pulldown_cmark::{
-    BrokenLink, BrokenLinkCallback, CowStr, Event, Options, Parser,
+    BrokenLink, BrokenLinkCallback, CowStr, Event, LinkType, Options, Parser,
 };
 use tap::Pipe;
 
 use mdbookkit::markdown::default_markdown_options;
 
-pub type MarkdownStream<'a> = Parser<'a, ItemLinks>;
+pub fn markdown(source: &str) -> Parser<'_, KeepBrokenLinks> {
+    Parser::new_with_broken_link_callback(source, default_markdown_options(), Some(KeepBrokenLinks))
+}
 
 /// [`BrokenLinkCallback`] implementation that unconditionally converts all "broken"
 /// links to links to be further processed.
@@ -16,87 +18,59 @@ pub type MarkdownStream<'a> = Parser<'a, ItemLinks>;
 /// Links that are "broken" that aren't actually doc links won't show up in the output,
 /// because the preprocessor ignores links that cannot be parsed and is capable of
 /// emitting only changed links, see [`PatchStream`][mdbookkit::markdown::PatchStream].
-pub struct ItemLinks;
+pub struct KeepBrokenLinks;
 
-impl ItemLinks {
-    // Explicitly disable smart punctuation to prevent quotes from being changed
-    // or else things like lifetimes may become invalid
+impl KeepBrokenLinks {
     const OPTIONS: Options =
         default_markdown_options().intersection(Options::ENABLE_SMART_PUNCTUATION.complement());
 }
 
-impl<'input> BrokenLinkCallback<'input> for ItemLinks {
-    fn handle_broken_link(
-        &mut self,
-        link: BrokenLink<'input>,
-    ) -> Option<(CowStr<'input>, CowStr<'input>)> {
+impl<'a> BrokenLinkCallback<'a> for KeepBrokenLinks {
+    fn handle_broken_link(&mut self, link: BrokenLink<'a>) -> Option<(CowStr<'a>, CowStr<'a>)> {
         // try to strip away inline markups in order to support stylized shorthand links
         // for example, this extracts "std" from [`std`], removing the `inline code` markup
 
-        let inner = if let CowStr::Borrowed(inner) = link.reference {
+        let dest = if matches!(link.link_type, LinkType::Collapsed | LinkType::Shortcut)
+            && let CowStr::Borrowed(dest) = link.reference
+        {
             // this is currently done by manually parsing the inner text, filtering
             // the event stream, and then re-emitting it as text
             //
-            // because of the 'input lifetime, this can only be done on CowStr::Borrowed,
+            // because of the input lifetime, this can only be done on CowStr::Borrowed,
             // otherwise the re-emitted text "may not live long enough."
             //
             // this should be okay in usage, because this is only called by the Parser,
             // which should only provide borrowed text.
 
-            let parse = Parser::new_ext(inner, Self::OPTIONS);
-
-            let inner = parse
+            let elements = Parser::new_ext(dest, Self::OPTIONS)
                 .filter_map(|event| match event {
                     Event::Text(inner) => Some(inner),
                     Event::Code(inner) => Some(inner),
+                    Event::InlineHtml(inner) => Some(inner),
                     _ => None,
                 })
                 .collect::<Vec<_>>();
 
-            if inner.len() == 1 {
-                inner.into_iter().next().expect("has 1 item")
+            if elements.len() == 1 {
+                (elements.into_iter()).next().expect("has 1 item")
             } else {
-                inner
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Box<str>>()
+                (elements.iter())
+                    .fold(String::with_capacity(dest.len()), |mut out, elem| {
+                        out.push_str(elem);
+                        out
+                    })
+                    .into_boxed_str()
                     .pipe(CowStr::Boxed)
             }
         } else {
             link.reference.clone()
         };
-        if inner.is_empty() {
+
+        if dest.is_empty() {
             None
         } else {
-            let title = inner.clone();
-            Some((inner, title))
-        }
-    }
-}
-
-pub fn split_once<'a>(text: CowStr<'a>, pat: char) -> (CowStr<'a>, Option<CowStr<'a>>) {
-    return match text {
-        CowStr::Borrowed(url) => match url.split_once(pat) {
-            Some((head, tail)) => (CowStr::Borrowed(head), Some(CowStr::Borrowed(tail))),
-            None => (CowStr::Borrowed(url), None),
-        },
-        CowStr::Inlined(url) => match url.split_once(pat) {
-            Some((head, tail)) => (into_static(head), Some(into_static(tail))),
-            None => (CowStr::Inlined(url), None),
-        },
-        CowStr::Boxed(url) => {
-            let mut head = url.into_string();
-            let tail = head
-                .find(pat)
-                .map(|idx| head.split_off(idx).split_off(pat.len_utf8()));
-            (head.into(), tail.map(<_>::into))
-        }
-    };
-    #[inline]
-    fn into_static(s: &str) -> CowStr<'static> {
-        match s.try_into() {
-            Ok(s) => CowStr::Inlined(s),
-            Err(_) => s.to_owned().into(),
+            let title = dest.clone();
+            Some((dest, title))
         }
     }
 }

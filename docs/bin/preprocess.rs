@@ -36,7 +36,7 @@ pub fn run() -> Result<()> {
         },
     }
 
-    book.for_each_text_mut(|_, content| {
+    book.for_each_page_mut(|_, content| {
         let stream = Parser::new(content)
             .into_offset_iter()
             .scan(State::default(), |state, (event, span)| {
@@ -140,11 +140,11 @@ pub fn run() -> Result<()> {
             .collect::<Vec<_>>();
 
         if !stream.is_empty() {
-            *content = PatchStream::new(content, stream.into_iter())
-                .into_string()
-                .unwrap();
+            *content = PatchStream::new(content, stream.into_iter()).into_string()?;
         }
-    });
+
+        Ok(())
+    })?;
 
     book.to_stdout(&ctx)
 }

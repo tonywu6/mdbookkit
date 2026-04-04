@@ -120,14 +120,15 @@ impl Preprocessor for Environment {
         let mut content = Pages::new(self.markdown);
 
         for (path, ch) in book.iter_chapters() {
-            let path = path
-                .to_str()
-                .context("only Unicode characters are supported")
-                .with_context(|| format!("{path:?} contains unsupported characters"))?;
+            let path = (path.to_str())
+                .with_context(|| path.display().to_string())
+                .context("File contains non-Unicode characters:")?;
+
             let url = self.root_dir.join(path).expect_url();
-            content
-                .insert(url, &ch.content)
-                .with_context(|| format!("Failed to parse {path:?}"))?;
+
+            (content.insert(url, &ch.content))
+                .with_context(|| path.to_owned())
+                .context("Failed to parse file as Markdown:")?;
         }
 
         self.resolve(&mut content);
@@ -154,11 +155,12 @@ impl Preprocessor for Environment {
             })
             .collect::<Result<HashMap<_, _>>>()?;
 
-        book.for_each_text_mut(|path, content| {
+        book.for_each_page_mut(|path, content| {
             if let Some(output) = result.remove(path) {
                 *content = output;
             }
-        });
+            Ok(())
+        })?;
 
         if has_severity(Level::WARN) {
             warn!("Finished with problems");
