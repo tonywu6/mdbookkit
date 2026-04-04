@@ -2,7 +2,8 @@ use std::{
     borrow::Cow,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     ffi::OsStr,
-    io::{BufReader, Write},
+    fmt::Debug,
+    io::{BufRead, BufReader, Write},
     path::Path,
     process::{Command, Output, Stdio},
     sync::Arc,
@@ -17,8 +18,9 @@ use cargo_metadata::{
 use serde::Deserialize;
 use tap::{Pipe, Tap};
 use tempfile::TempDir;
+use tracing::Level;
 
-use mdbookkit::{emit_warning, error::IntoAnyhow};
+use mdbookkit::{emit_warning, env::is_logging, error::IntoAnyhow, ticker, ticker_event};
 
 use crate::{
     options::{
@@ -182,7 +184,9 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
 
     let mut artifacts = CompilerOutput::new(path_mapper);
 
-    let proc = cargo
+    let progress = CargoProgress::new();
+
+    let mut proc = cargo
         .command("doc")
         .options("--message-format", ["json"])
         .options("--target", &targets)
@@ -193,16 +197,20 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
         .flag("--no-default-features", no_default_features)
         .options("--config", &rustc_args)
         .options("--config", &rustdoc_args)
+        .options("--config", progress.cargo_options)
         .runner(&runner)
         .current_dir(&workspace.workspace_root)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
-        .stderr(Stdio::inherit())
+        .stderr(Stdio::piped())
         .spawn()?;
+
+    let ticker = ticker!(Level::INFO, "cargo-doc", "running cargo doc");
+    progress.ticker(ticker, &mut proc);
 
     artifacts.update(proc)?;
 
-    let proc = cargo
+    let mut proc = cargo
         .command("check")
         .options("--message-format", ["json"])
         .options("--target", &targets)
@@ -212,12 +220,16 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
         .flag("--no-default-features", no_default_features)
         .options("--config", &rustc_args)
         .options("--config", &rustdoc_args)
+        .options("--config", progress.cargo_options)
         .runner(&runner)
         .current_dir(&workspace.workspace_root)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
-        .stderr(Stdio::inherit())
+        .stderr(Stdio::piped())
         .spawn()?;
+
+    let ticker = ticker!(Level::INFO, "cargo-check", "running cargo check");
+    progress.ticker(ticker, &mut proc);
 
     artifacts.update(proc)?;
 
@@ -654,6 +666,44 @@ impl LocateProject {
     }
 }
 
+struct CargoProgress {
+    cargo_options: &'static [&'static str],
+    line_ending: u8,
+}
+
+impl CargoProgress {
+    fn new() -> Self {
+        if is_logging() {
+            Self {
+                cargo_options: &["term.color = 'never'", "term.progress.when = 'never'"],
+                line_ending: b'\n',
+            }
+        } else {
+            Self {
+                cargo_options: &[
+                    "term.quiet = true",
+                    "term.progress.when = 'always'",
+                    "term.progress.width = 1024",
+                ],
+                line_ending: b'\r',
+            }
+        }
+    }
+
+    fn ticker(&self, ticker: tracing::Span, proc: &mut std::process::Child) {
+        let stderr = proc.stderr.take().expect("should have stdio");
+        let line_ending = self.line_ending;
+        std::thread::spawn(move || {
+            for line in BufReader::new(stderr).split(line_ending) {
+                let Ok(line) = line else { continue };
+                let line = String::from_utf8_lossy(&line);
+                let line = line.trim();
+                ticker_event!(&ticker, Level::INFO, "{line}");
+            }
+        });
+    }
+}
+
 trait CommandUtil {
     fn values<I, S>(self, values: I) -> Self
     where
@@ -788,7 +838,7 @@ fn symlink_dir(existing: impl AsRef<Path>, link: impl AsRef<Path>) -> std::io::R
     return std::os::windows::fs::symlink_dir(existing, link);
 }
 
-impl std::fmt::Debug for CompilerOutput {
+impl Debug for CompilerOutput {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut f = f.debug_struct("CompilerOutput");
 
@@ -822,7 +872,7 @@ impl std::fmt::Debug for CompilerOutput {
             }
         }
 
-        impl std::fmt::Debug for SortedArtifacts<'_> {
+        impl Debug for SortedArtifacts<'_> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 let mut f = f.debug_map();
                 for (name, target, path) in self.0.iter() {
@@ -835,7 +885,7 @@ impl std::fmt::Debug for CompilerOutput {
     }
 }
 
-impl std::fmt::Debug for PathMapper {
+impl Debug for PathMapper {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut f = f.debug_struct("PathMapper");
         if let Some(build) = &self.build {

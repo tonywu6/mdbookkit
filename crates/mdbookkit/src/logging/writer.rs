@@ -72,7 +72,7 @@ fn spawn_ticker(this: &mut MultiProgressTicker) {
             }
         }
 
-        let style = ProgressStyle::with_template("{spinner:.cyan} {prefix} ... {msg}")
+        let style = ProgressStyle::with_template("{spinner:.cyan} {prefix} ... {wide_msg}")
             .expect("should be a valid template")
             .tick_chars("⠇⠋⠙⠸⠴⠦⠿");
 
