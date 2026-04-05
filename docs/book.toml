@@ -33,27 +33,29 @@ runnable = false
 after = ["links"]
 command = "cargo run --package mdbook-rustdoc-links --all-features"
 
-[preprocessor.permalinks]
-after = ["rustdoc-links"]
-always-link = [".rs"]
-book-url = "https://docs.tonywu.dev/mdbookkit/"
-command = "cargo run --package mdbook-permalinks --all-features"
+[preprocessor.rustdoc-links.build]
+
+# [preprocessor.permalinks]
+# after = ["rustdoc-links"]
+# always-link = [".rs"]
+# book-url = "https://docs.tonywu.dev/mdbookkit/"
+# command = "cargo run --package mdbook-permalinks --all-features"
 
 [preprocessor.app]
 command = "node scripts/preprocessor.ts"
 
-[preprocessor.doc]
-after = ["links"]
-command = "cargo run -- preprocess"
+# [preprocessor.doc]
+# after = ["links"]
+# command = "cargo run -- preprocess"
 
-[preprocessor.doc.socials."/"]
-image = "src/media/social.webp"
-title = "mdbookkit"
+# [preprocessor.doc.socials."/"]
+# image = "src/media/social.webp"
+# title = "mdbookkit"
 
-[preprocessor.doc.socials."/rustdoc-links/"]
-image = "src/rustdoc-links/media/social.webp"
-title = "mdbook-rustdoc-links"
+# [preprocessor.doc.socials."/rustdoc-links/"]
+# image = "src/rustdoc-links/media/social.webp"
+# title = "mdbook-rustdoc-links"
 
-[preprocessor.doc.socials."/permalinks/"]
-image = "src/permalinks/media/social.webp"
-title = "mdbook-permalinks"
+# [preprocessor.doc.socials."/permalinks/"]
+# image = "src/permalinks/media/social.webp"
+# title = "mdbook-permalinks"

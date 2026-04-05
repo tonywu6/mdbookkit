@@ -2,11 +2,12 @@ use std::{
     borrow::Cow,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     ffi::OsStr,
-    fmt::Debug,
-    io::{BufRead, BufReader, Write},
+    fmt::{Debug, Write as _},
+    io::{BufRead, BufReader, Write as _},
     path::Path,
-    process::{Command, Output, Stdio},
+    process::{self, Command, Stdio},
     sync::Arc,
+    thread::JoinHandle,
 };
 
 use anyhow::{Context, Result, anyhow, bail};
@@ -18,9 +19,14 @@ use cargo_metadata::{
 use serde::Deserialize;
 use tap::{Pipe, Tap};
 use tempfile::TempDir;
-use tracing::Level;
+use tracing::{Level, error};
 
-use mdbookkit::{emit_warning, env::is_logging, error::IntoAnyhow, ticker, ticker_event};
+use mdbookkit::{
+    emit_warning,
+    env::is_logging,
+    error::{ExpectFmt, IntoAnyhow},
+    ticker, ticker_event,
+};
 
 use crate::{
     options::{
@@ -182,11 +188,9 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
         None
     };
 
-    let mut artifacts = CompilerOutput::new(path_mapper);
+    let mut artifacts = CargoRecorder::new(path_mapper);
 
-    let progress = CargoProgress::new();
-
-    let mut proc = cargo
+    let proc = cargo
         .command("doc")
         .options("--message-format", ["json"])
         .options("--target", &targets)
@@ -197,7 +201,7 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
         .flag("--no-default-features", no_default_features)
         .options("--config", &rustc_args)
         .options("--config", &rustdoc_args)
-        .options("--config", progress.cargo_options)
+        .options("--config", artifacts.term.cargo_options)
         .runner(&runner)
         .current_dir(&workspace.workspace_root)
         .stdin(Stdio::null())
@@ -205,12 +209,9 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
         .stderr(Stdio::piped())
         .spawn()?;
 
-    let ticker = ticker!(Level::INFO, "cargo-doc", "running cargo doc");
-    progress.ticker(ticker, &mut proc);
+    artifacts.record(proc, ticker!(Level::INFO, "cargo-doc", "cargo doc"))?;
 
-    artifacts.update(proc)?;
-
-    let mut proc = cargo
+    let proc = cargo
         .command("check")
         .options("--message-format", ["json"])
         .options("--target", &targets)
@@ -220,7 +221,7 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
         .flag("--no-default-features", no_default_features)
         .options("--config", &rustc_args)
         .options("--config", &rustdoc_args)
-        .options("--config", progress.cargo_options)
+        .options("--config", artifacts.term.cargo_options)
         .runner(&runner)
         .current_dir(&workspace.workspace_root)
         .stdin(Stdio::null())
@@ -228,10 +229,7 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
         .stderr(Stdio::piped())
         .spawn()?;
 
-    let ticker = ticker!(Level::INFO, "cargo-check", "running cargo check");
-    progress.ticker(ticker, &mut proc);
-
-    artifacts.update(proc)?;
+    artifacts.record(proc, ticker!(Level::INFO, "cargo-check", "cargo check"))?;
 
     for target in artifacts.targets() {
         let Some(docstring) = tracker.rustdoc_input() else {
@@ -332,18 +330,19 @@ pub struct BuildOutput<'a> {
     pub stderr: String,
 }
 
-struct CompilerOutput {
+struct CargoRecorder {
     paths: PathMapper,
     targets: BTreeSet<Arc<str>>,
     crates: BTreeMap<Arc<str>, PackageId>,
     libs: ArtifactMap,
     docs: ArtifactMap,
+    term: CargoProgress,
 }
 
 #[derive(Default)]
 struct ArtifactMap(HashMap<Arc<str>, HashMap<Option<Arc<str>>, Utf8PathBuf>>);
 
-impl CompilerOutput {
+impl CargoRecorder {
     fn new(paths: PathMapper) -> Self {
         Self {
             paths,
@@ -351,11 +350,15 @@ impl CompilerOutput {
             crates: Default::default(),
             libs: Default::default(),
             docs: Default::default(),
+            term: Default::default(),
         }
     }
 
-    fn update(&mut self, mut proc: std::process::Child) -> Result<()> {
+    fn record(&mut self, mut proc: process::Child, ticker: tracing::Span) -> Result<()> {
+        let stderr = self.term.ticker(ticker, &mut proc);
+
         let mut success = false;
+        let mut rustc_errors = vec![];
 
         for msg in (proc.stdout.take())
             .expect("should have stdio")
@@ -369,17 +372,40 @@ impl CompilerOutput {
                 cargo_metadata::Message::BuildFinished(finished) => {
                     success = finished.success;
                 }
+                cargo_metadata::Message::CompilerMessage(message) => {
+                    let message = (message.message.rendered)
+                        .unwrap_or_else(|| format!("{}\n", message.message.message));
+                    rustc_errors.push(message);
+                }
                 _ => {}
             }
         }
 
-        proc.wait_with_output().checked()?;
+        let io_error = match proc.wait_with_output() {
+            Ok(output) => {
+                success = output.status.success();
+                anyhow!("command exited with code {}", output.status)
+            }
+            Err(error) => anyhow!(error),
+        };
 
-        if !success {
-            bail!("cargo process did not succeed")
+        if success {
+            return Ok(());
         }
 
-        Ok(())
+        let cargo_errors = stderr.join().unwrap_or_default().join("\n");
+        let cargo_errors = cargo_errors.trim();
+        if !cargo_errors.is_empty() {
+            error!("-- cargo stderr --\n\n{cargo_errors}\n")
+        }
+
+        let rustc_errors = rustc_errors.join("");
+        let rustc_errors = rustc_errors.trim();
+        if !rustc_errors.is_empty() {
+            error!("-- rustc stderr --\n\n{rustc_errors}\n")
+        }
+
+        Err(io_error)
     }
 
     fn update_unit(&mut self, artifact: cargo_metadata::Artifact) {
@@ -630,7 +656,7 @@ trait CargoMetadataUtil {
     fn into_cargo_metadata(self) -> Result<cargo_metadata::Metadata>;
 }
 
-impl CargoMetadataUtil for Output {
+impl CargoMetadataUtil for process::Output {
     fn into_cargo_metadata(self) -> Result<cargo_metadata::Metadata> {
         let stdout = String::from_utf8(self.stdout)?;
         Ok(cargo_metadata::MetadataCommand::parse(stdout)?)
@@ -658,8 +684,8 @@ impl LocateProject {
             .pipe(Self::parse)
     }
 
-    fn parse(output: Output) -> Result<Self> {
-        let Output { stdout, .. } = output;
+    fn parse(output: process::Output) -> Result<Self> {
+        let process::Output { stdout, .. } = output;
         (String::from_utf8(stdout).anyhow())
             .and_then(|output| serde_json::from_str(&output).anyhow())
             .context("Could not parse `cargo locate-project` output")
@@ -672,7 +698,37 @@ struct CargoProgress {
 }
 
 impl CargoProgress {
-    fn new() -> Self {
+    #[must_use]
+    fn ticker(&self, ticker: tracing::Span, proc: &mut process::Child) -> JoinHandle<Vec<String>> {
+        let stderr = proc.stderr.take().expect("should have stdio");
+        let delim = self.line_ending;
+        std::thread::spawn(move || {
+            let mut buffer = vec![];
+            let mut reader = BufReader::new(stderr);
+            loop {
+                let mut buf = vec![];
+                let Ok(1..) = reader.read_until(delim, &mut buf) else {
+                    break;
+                };
+                let buf = String::from_utf8_lossy(&buf);
+                for line in buf.lines() {
+                    match (delim, line.as_bytes().last()) {
+                        (b'\r', Some(b'\r')) | (b'\n', _) => {
+                            ticker_event!(&ticker, Level::INFO, "{}", line.trim());
+                        }
+                        _ => {
+                            buffer.push(line.trim().to_owned());
+                        }
+                    }
+                }
+            }
+            buffer
+        })
+    }
+}
+
+impl Default for CargoProgress {
+    fn default() -> Self {
         if is_logging() {
             Self {
                 cargo_options: &["term.color = 'never'", "term.progress.when = 'never'"],
@@ -689,19 +745,30 @@ impl CargoProgress {
             }
         }
     }
+}
 
-    fn ticker(&self, ticker: tracing::Span, proc: &mut std::process::Child) {
-        let stderr = proc.stderr.take().expect("should have stdio");
-        let line_ending = self.line_ending;
-        std::thread::spawn(move || {
-            for line in BufReader::new(stderr).split(line_ending) {
-                let Ok(line) = line else { continue };
-                let line = String::from_utf8_lossy(&line);
-                let line = line.trim();
-                ticker_event!(&ticker, Level::INFO, "{line}");
-            }
-        });
+fn rustc_json_error(output: process::Output) -> anyhow::Error {
+    let stderr =
+        String::from_utf8_lossy(&output.stderr)
+            .lines()
+            .fold(String::new(), |mut error, line| {
+                if let Ok(diag) = serde_json::from_str::<Diagnostic>(line) {
+                    if let Some(rendered) = diag.rendered {
+                        write!(&mut error, "{}", rendered)
+                    } else {
+                        writeln!(&mut error, "{}", diag.message.trim())
+                    }
+                } else {
+                    writeln!(&mut error, "{line}")
+                }
+                .expect_fmt();
+                error
+            });
+    let stderr = stderr.trim();
+    if !stderr.is_empty() {
+        error!("-- rustdoc stderr --\n\n{stderr}\n")
     }
+    anyhow!("command exited with code {}", output.status)
 }
 
 trait CommandUtil {
@@ -769,11 +836,11 @@ impl CommandUtil for Command {
 }
 
 trait CheckCommand {
-    fn checked(self) -> Result<Output>;
+    fn checked(self) -> Result<process::Output>;
 }
 
-impl CheckCommand for std::io::Result<Output> {
-    fn checked(self) -> Result<Output> {
+impl CheckCommand for std::io::Result<process::Output> {
+    fn checked(self) -> Result<process::Output> {
         let output = self?;
         if output.status.success() {
             Ok(output)
@@ -787,36 +854,6 @@ impl CheckCommand for std::io::Result<Output> {
             };
             Err(error)
         }
-    }
-}
-
-fn rustc_json_error(output: Output) -> anyhow::Error {
-    let status = anyhow!("command exited with code {}", output.status);
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    if let Some(stderr) = stderr
-        .lines()
-        .fold(None, |error, line| -> Option<anyhow::Error> {
-            let text = if let Ok(diag) = serde_json::from_str::<Diagnostic>(line) {
-                if let Some(rendered) = diag.rendered {
-                    rendered
-                } else {
-                    diag.message
-                }
-                .trim()
-                .to_owned()
-            } else {
-                line.to_owned()
-            };
-            if let Some(error) = error {
-                Some(error.context(text))
-            } else {
-                Some(anyhow!(text))
-            }
-        })
-    {
-        stderr.context(status)
-    } else {
-        status
     }
 }
 
@@ -838,7 +875,7 @@ fn symlink_dir(existing: impl AsRef<Path>, link: impl AsRef<Path>) -> std::io::R
     return std::os::windows::fs::symlink_dir(existing, link);
 }
 
-impl Debug for CompilerOutput {
+impl Debug for CargoRecorder {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut f = f.debug_struct("CompilerOutput");
 
@@ -848,6 +885,7 @@ impl Debug for CompilerOutput {
             crates,
             libs,
             docs,
+            term: _,
         } = self;
 
         return f
@@ -856,7 +894,7 @@ impl Debug for CompilerOutput {
             .field("libs", &SortedArtifacts::new(libs))
             .field("docs", &SortedArtifacts::new(docs))
             .field("paths", paths)
-            .finish();
+            .finish_non_exhaustive();
 
         struct SortedArtifacts<'a>(Vec<(&'a str, Option<&'a str>, &'a Utf8PathBuf)>);
 

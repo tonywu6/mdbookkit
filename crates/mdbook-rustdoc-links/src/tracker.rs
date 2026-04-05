@@ -532,7 +532,7 @@ impl<'a> Link<'a> {
                 } {
                     let help = format! {
                         "the `{prefix}...` usage is not supported with this preprocessor\n\
-                        specify the crate name or use the `build.preludes` option to \
+                        specify the crate name, or use the `build.preludes` option to \
                         introduce this item into scope"
                     };
                     issue.note(Note::level(IssueLevel::Note).message(help).build());
