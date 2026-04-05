@@ -286,7 +286,7 @@ impl Clone for CustomCommand {
     }
 }
 
-mod _serde {
+pub mod _serde {
     use std::{marker::PhantomData, process::Command};
 
     use anyhow::Context;
@@ -489,9 +489,37 @@ mod _serde {
         deserializer.deserialize_any(Visitor(PhantomData))
     }
 
+    pub trait FieldDocs {
+        fn field_docs() -> Vec<FieldDescription>;
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    pub struct FieldDescription {
+        pub name: &'static str,
+        pub ty: &'static str,
+        pub doc: &'static [&'static str],
+    }
+
     #[macro_export]
     macro_rules! de_struct {
         (@derive $(#[$struct_att_:meta])* [$(($(#[$struct_attr:meta])* $name:ident ($($body:tt)*)))*] []) => {$(
+            de_struct!(@field_docs $name [$($body)*] [] [$($body)*]);
+            de_struct!(@deserialize $(#[$struct_attr])* $name ($($body)*));
+        )*};
+        (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$(#[$field_attr:meta])* $field:ident $(as $type:ty)?]) => {
+            de_struct!(@derive $(#[$struct_attr])* [$($item)*] []);
+        };
+        (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$(#[$field_attr:meta])* $field:ident $(as $type:ty)?, $($rest:tt)*]) => {
+            de_struct!(@derive $(#[$struct_attr])* [$($item)*] [$($rest)*]);
+        };
+        (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$_:ident ($inner:ident ($($body:tt)*))]) => {
+            de_struct!(@derive $(#[$struct_attr])* [$($item)* ($(#[$struct_attr])* $inner($($body)*))] [$($body)*]);
+        };
+        (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$_:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
+            de_struct!(@derive $(#[$struct_attr])* [$($item)* ($(#[$struct_attr])* $inner($($body)*))] [$($body)*, $($rest)*]);
+        };
+
+        (@deserialize $(#[$struct_attr:meta])* $name:ident ($($body:tt)*)) => {
             #[automatically_derived]
             #[allow(non_camel_case_types)]
             impl<'de> ::serde::Deserialize<'de> for $name {
@@ -505,18 +533,6 @@ mod _serde {
                     Ok(de_struct!(@result Self [] [$($body)*]))
                 }
             }
-        )*};
-        (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$(#[$field_attr:meta])* $field:ident $(as $type:ty)?]) => {
-            de_struct!(@derive $(#[$struct_attr])* [$($item)*] []);
-        };
-        (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$(#[$field_attr:meta])* $field:ident $(as $type:ty)?, $($rest:tt)*]) => {
-            de_struct!(@derive $(#[$struct_attr])* [$($item)*] [$($rest)*]);
-        };
-        (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$_:ident ($inner:ident ($($body:tt)*))]) => {
-            de_struct!(@derive $(#[$struct_attr])* [$($item)* ($(#[$struct_attr])* $inner($($body)*))] [$($body)*]);
-        };
-        (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$_:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
-            de_struct!(@derive $(#[$struct_attr])* [$($item)* ($(#[$struct_attr])* $inner($($body)*))] [$($body)*, $($rest)*]);
         };
 
         (@define $(#[$struct_attr:meta])* $name:ident [$(($(#[$field_attr:meta])* $field:ident $type:ty))*] [$($infer:ident)*] []) => {
@@ -548,10 +564,10 @@ mod _serde {
         (@unpack $name:ident [$($field:ident)*] []) => {
             $name { $($field),* }
         };
-        (@unpack $name:ident [$($field:ident)*] [$(#[$field_attr:meta])* $next:ident $(as $type:ty)?]) => {
+        (@unpack $name:ident [$($field:ident)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?]) => {
             de_struct!(@unpack $name [$($field)* $next] [])
         };
-        (@unpack $name:ident [$($field:ident)*] [$(#[$field_attr:meta])* $next:ident $(as $type:ty)?, $($rest:tt)*]) => {
+        (@unpack $name:ident [$($field:ident)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?, $($rest:tt)*]) => {
             de_struct!(@unpack $name [$($field)* $next] [$($rest)*])
         };
         (@unpack $name:ident [$($field:ident)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
@@ -566,10 +582,10 @@ mod _serde {
                 $($field: $($value)*),*
             }
         };
-        (@result $name:ident [$($item:tt)*] [$(#[$field_attr:meta])* $next:ident $(as $type:ty)?]) => {
+        (@result $name:ident [$($item:tt)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?]) => {
             de_struct!(@result $name [$($item)* ($next: $next)] [])
         };
-        (@result $name:ident [$($item:tt)*] [$(#[$field_attr:meta])* $next:ident $(as $type:ty)?, $($rest:tt)*]) => {
+        (@result $name:ident [$($item:tt)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?, $($rest:tt)*]) => {
             de_struct!(@result $name [$($item)* ($next: $next)] [$($rest)*])
         };
         (@result $name:ident [$($item:tt)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
@@ -577,6 +593,49 @@ mod _serde {
         };
         (@result $name:ident [$($item:tt)*] [$next:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
             de_struct!(@result $name [$($item)* ($next: de_struct!(@result $inner [] [$($body)*]))] [$($rest)*])
+        };
+
+        (@field_docs $name:ident [$($orig:tt)*] [$(($field:ident, [$($attr:tt)*]))*] []) => {
+            #[automatically_derived]
+            impl $crate::options::_serde::FieldDocs for $name {
+                fn field_docs() -> Vec<$crate::options::_serde::FieldDescription> {
+                    fn type_name<T>(_: Option<T>) -> &'static str {
+                        ::std::any::type_name::<T>()
+                    }
+                    let ($($field),*) = if let Some(de_struct!(@result Self [] [$($orig)*])) = None {
+                        ($(Some($field)),*)
+                    } else {
+                        ($({let $field = None; $field}),*)
+                    };
+                    vec![$($crate::options::_serde::FieldDescription {
+                        name: stringify!($field),
+                        ty: type_name($field),
+                        doc: de_struct!(@doc_string [] [$($attr)*]),
+                    }),*]
+                }
+            }
+        };
+        (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$(#[$($attr:tt)*])* $next:ident $(as $type:ty)?]) => {
+            de_struct!(@field_docs $name [$($orig)*] [$($field)* ($next, [$([$($attr)*])*])] []);
+        };
+        (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$(#[$($attr:tt)*])* $next:ident $(as $type:ty)?, $($rest:tt)*]) => {
+            de_struct!(@field_docs $name [$($orig)*] [$($field)* ($next, [$([$($attr)*])*])] [$($rest)*]);
+        };
+        (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
+            de_struct!(@field_docs $name [$($orig)*] [$($field)*] [$($body)*]);
+        };
+        (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$next:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
+            de_struct!(@field_docs $name [$($orig)*] [$($field)*] [$($body)*, $($rest)*]);
+        };
+
+        (@doc_string [$($doc:expr)*] []) => {
+            &[$($doc),*]
+        };
+        (@doc_string [$($doc:expr)*] [[doc = $next:expr] $([$($rest:tt)*])*]) => {
+            de_struct!(@doc_string [$($doc)* $next] [$([$($rest)*])*])
+        };
+        (@doc_string [$($doc:expr)*] [[$attr:meta] $([$($rest:tt)*])*]) => {
+            de_struct!(@doc_string [$($doc)*] [$([$($rest)*])*])
         };
 
         ($(#[$struct_attr:meta])* $name:ident ($($body:tt)*)) => {

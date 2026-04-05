@@ -23,8 +23,7 @@ mod options;
 // mod tests;
 mod tracker;
 
-#[tokio::main]
-async fn main() {
+fn main() {
     Logging::default().init();
     let _span = info_span!({ env!("CARGO_PKG_NAME") }).entered();
     match Program::parse().command {
