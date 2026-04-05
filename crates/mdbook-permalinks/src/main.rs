@@ -16,7 +16,7 @@ use tracing::{Level, debug, info, info_span, span::EnteredSpan, trace, warn};
 use url::Url;
 
 use mdbookkit::{
-    book::{BookConfigHelper, BookHelper, book_from_stdin},
+    book::{BookHelper, PreprocessorHelper, book_from_stdin},
     emit_debug, emit_error,
     error::{ExitProcess, OnWarning, has_severity},
     logging::Logging,
@@ -432,7 +432,7 @@ impl Environment {
     }
 
     fn new(book: &PreprocessorContext) -> Result<Result<Self>> {
-        let config = (book.config)
+        let config = book
             .preprocessor(&[PREPROCESSOR_NAME, "mdbook-link-forever"])
             .inspect(emit_debug!("{:#?}"))
             .context("Failed to read preprocessor config from book.toml")?;
@@ -443,7 +443,7 @@ impl Environment {
             Err(err) => return Err(err),
         };
 
-        let markdown = book.config.markdown_options();
+        let markdown = book.markdown_options();
 
         let root_dir = (book.root)
             .canonicalize()

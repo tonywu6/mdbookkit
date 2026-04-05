@@ -7,7 +7,7 @@ use clap::{Parser, Subcommand};
 use tracing::{Level, info, info_span, warn};
 
 use mdbookkit::{
-    book::{BookConfigHelper, BookHelper, book_from_stdin},
+    book::{BookHelper, PreprocessorHelper, book_from_stdin},
     emit_error,
     error::{ExitProcess, has_severity},
     logging::Logging,
@@ -54,7 +54,7 @@ fn mdbook() -> Result<()> {
     let Config {
         build,
         fail_on_warnings,
-    } = (ctx.config)
+    } = ctx
         .preprocessor(&[PREPROCESSOR_NAME, "mdbook-rustdoc-link"])
         .context("Failed to read preprocessor config from book.toml")?;
 

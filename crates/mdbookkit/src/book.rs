@@ -1,4 +1,6 @@
 use std::{
+    borrow::Borrow,
+    hash::Hash,
     io::{Read, Write},
     path::PathBuf,
 };
@@ -8,11 +10,11 @@ use mdbook_markdown::pulldown_cmark::Options as MarkdownOptions;
 use mdbook_preprocessor::{
     PreprocessorContext,
     book::{Book, BookItem, Chapter},
-    config::{Config as MDBookConfig, HtmlConfig},
+    config::HtmlConfig,
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
-use tap::Pipe;
+use tap::{Pipe, Tap};
 use tracing::warn;
 
 use crate::markdown::default_markdown_options;
@@ -39,48 +41,41 @@ pub fn book_from_stdin() -> Result<(PreprocessorContext, Book)> {
     }
 }
 
-pub trait BookConfigHelper {
-    fn preprocessor<'de, T>(&self, names: &[&str]) -> Result<T>
+pub trait PreprocessorHelper {
+    fn preprocessor<T>(&self, names: &[&str]) -> Result<T>
     where
-        T: Deserialize<'de> + Default;
+        T: for<'de> Deserialize<'de> + Default;
 
     fn markdown_options(&self) -> MarkdownOptions;
 }
 
-impl BookConfigHelper for MDBookConfig {
-    fn preprocessor<'de, T>(&self, names: &[&str]) -> Result<T>
+macro_rules! preprocessor_table {
+    (preprocessor.$name:expr) => {
+        format!("preprocessor.{}", preprocessor_table!($name))
+    };
+    ($name:expr) => {
+        $name.strip_prefix("mdbook-").unwrap_or($name)
+    };
+}
+
+impl PreprocessorHelper for PreprocessorContext {
+    fn preprocessor<T>(&self, names: &[&str]) -> Result<T>
     where
-        T: Deserialize<'de> + Default,
+        T: for<'de> Deserialize<'de> + Default,
     {
-        fn format_name(name: &str) -> String {
-            let name = name.strip_prefix("mdbook-").unwrap_or(name);
-            format!("preprocessor.{name}")
-        }
-
         for (idx, name) in names.iter().enumerate() {
-            let name = format_name(name);
-            let Some(mut table) = self.get::<toml::Table>(&name)? else {
-                continue;
-            };
-            // remove mdbook's builtin preprocessor options from table before deserializing
-            // so that they don't interfere with `deny_unknown_fields`
-            // keep in-sync with:
-            // - https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
-            // - https://github.com/rust-lang/mdBook/blob/v0.5.2/crates/mdbook-driver/src/mdbook.rs#L434-L443
-            table.remove("command");
-            table.remove("before");
-            table.remove("after");
-            table.remove("optional");
-            table.remove("renderers");
-            let value = T::deserialize(table)?;
-            if idx != 0 {
-                let recommended = format_name(names[0]);
-                warn! { "The book.toml section [{name}] is deprecated. \
-                Use [{recommended}] instead." };
+            if let Some(value) = try_get_options(self, name)? {
+                if idx != 0 {
+                    warn! {
+                        "The book.toml section [{deprecated}] is deprecated. \
+                        Use [{recommended}] instead.",
+                        deprecated  = preprocessor_table!(preprocessor.name),
+                        recommended = preprocessor_table!(preprocessor.names[0])
+                    };
+                }
+                return Ok(value);
             }
-            return Ok(value);
         }
-
         Ok(Default::default())
     }
 
@@ -91,6 +86,7 @@ impl BookConfigHelper for MDBookConfig {
             admonitions,
             ..
         } = self
+            .config
             .get::<HtmlConfig>("output.html")
             .unwrap_or_default()
             .unwrap_or_default();
@@ -106,6 +102,73 @@ impl BookConfigHelper for MDBookConfig {
         }
         options
     }
+}
+
+fn try_get_options<T>(ctx: &PreprocessorContext, name: &str) -> Result<Option<T>>
+where
+    T: for<'de> Deserialize<'de>,
+{
+    let path = preprocessor_table!(preprocessor.name);
+
+    let table = match ctx.config.get::<toml::Table>(&path)? {
+        None => return Ok(None),
+        Some(table) => table,
+    }
+    .tap_mut(remove_builtin_options);
+
+    let error = match T::deserialize(table) {
+        Ok(options) => return Ok(Some(options)),
+        Err(error) => error,
+    };
+
+    Err(recover_toml_error::<T>(ctx, name).unwrap_or(error))?
+}
+
+fn recover_toml_error<T>(ctx: &PreprocessorContext, name: &str) -> Result<toml::de::Error>
+where
+    T: for<'de> Deserialize<'de>,
+{
+    let source = std::fs::read_to_string(ctx.root.join("book.toml"))?;
+
+    let table = toml::de::DeTable::parse(&source)?;
+    let table = (|| {
+        table
+            .into_inner()
+            .remove("preprocessor")?
+            .into_inner()
+            .into_table()?
+            .remove(preprocessor_table!(name))
+    })()
+    .context("no such table")?
+    .tap_mut(|table| {
+        if let Some(table) = table.get_mut().as_mut_table() {
+            remove_builtin_options(table);
+        }
+    });
+
+    let table = toml::de::ValueDeserializer::from(table);
+    if let Err(mut error) = T::deserialize(table) {
+        error.set_input(Some(&source));
+        Ok(error)
+    } else {
+        bail!("parsing from book.toml did not error")
+    }
+}
+
+/// Remove mdbook's builtin preprocessor options from table before deserializing
+/// so that they don't interfere with `deny_unknown_fields`. Keep in-sync with:
+///
+/// - <https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html>
+/// - <https://github.com/rust-lang/mdBook/blob/v0.5.2/crates/mdbook-driver/src/mdbook.rs#L434-L443>
+fn remove_builtin_options<K, V>(table: &mut toml::map::Map<K, V>)
+where
+    K: Borrow<str> + Ord + Hash,
+{
+    table.remove("command");
+    table.remove("before");
+    table.remove("after");
+    table.remove("optional");
+    table.remove("renderers");
 }
 
 pub trait BookHelper {
@@ -211,4 +274,30 @@ fn patch_mdbook_output_0_4(book: Book) -> Result<String> {
     }
 
     Ok(serde_json::to_string(&book)?)
+}
+
+trait TomlTableHelper {
+    type TableType;
+    fn into_table(self) -> Option<Self::TableType>;
+    fn as_mut_table(&mut self) -> Option<&mut Self::TableType>;
+}
+
+impl<'de> TomlTableHelper for toml::de::DeValue<'de> {
+    type TableType = toml::de::DeTable<'de>;
+
+    fn into_table(self) -> Option<Self::TableType> {
+        if let Self::Table(table) = self {
+            Some(table)
+        } else {
+            None
+        }
+    }
+
+    fn as_mut_table(&mut self) -> Option<&mut Self::TableType> {
+        if let Self::Table(table) = self {
+            Some(table)
+        } else {
+            None
+        }
+    }
 }

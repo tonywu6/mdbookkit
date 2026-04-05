@@ -2,6 +2,7 @@
 #![doc = include_str!("../README.md")]
 
 pub mod book;
+pub mod config;
 pub mod diagnostics;
 #[cfg(feature = "_testing")]
 pub mod docs;
