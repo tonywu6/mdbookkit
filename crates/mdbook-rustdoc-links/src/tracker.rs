@@ -25,17 +25,18 @@ use tap::{Conv, Pipe};
 use tracing::{debug, trace};
 use url::Url;
 
-use mdbookkit::{error::ExpectFmt, markdown::PatchStream, plural};
+use mdbookkit::{
+    diagnostics::{Highlight, IssueLevel, IssueReport, Note, Suggestion},
+    error::ExpectFmt,
+    markdown::PatchStream,
+    plural,
+};
 
 use crate::{
     builder::BuildOutput,
-    diagnostic::{Highlight, IssueLevel, IssueReport, Note, Suggestion},
+    diagnostics::{RustcDiagnostic, SourceMap},
     markdown::markdown,
 };
-
-use self::diagnostic::{RustcDiagnostic, SourceMap};
-
-mod diagnostic;
 
 #[derive(Debug, Default)]
 pub struct LinkTracker<'a> {

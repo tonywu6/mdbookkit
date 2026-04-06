@@ -493,3 +493,17 @@ macro_rules! emit_error {
         |e| ::tracing::error!($fmt, e)
     };
 }
+
+#[macro_export]
+macro_rules! plural {
+    ( $num:expr, $singular:expr ) => {
+        $crate::plural!($num, $singular, concat!($singular, "s"))
+    };
+    ( $num:expr, $singular:expr, $plural:expr ) => {{
+        let num = $num;
+        match num {
+            1 => format!("{num} {}", $singular),
+            _ => format!("{num} {}", $plural),
+        }
+    }};
+}

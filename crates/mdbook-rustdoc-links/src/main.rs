@@ -9,19 +9,20 @@ use tracing::{Level, info, info_span, warn};
 
 use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin},
-    emit_error,
+    diagnostics::IssueReporter,
+    emit_error, emit_issue,
     error::{ExitProcess, has_severity},
     logging::Logging,
 };
 
-use self::{builder::build_docs, diagnostic::Reporter, options::Config, tracker::LinkTracker};
+use self::{builder::build_docs, options::Config, tracker::LinkTracker};
 
 mod builder;
-mod diagnostic;
 mod markdown;
 mod options;
 // #[cfg(test)]
 // mod tests;
+mod diagnostics;
 mod tracker;
 
 fn main() {
@@ -76,13 +77,13 @@ fn mdbook() -> Result<()> {
     let results = contents.export()?;
 
     let issues = (book.iter_chapters().zip(results.issues))
-        .map(|((path, chapter), issues)| Reporter {
+        .map(|((path, chapter), issues)| IssueReporter {
             issues,
-            source: (&*chapter.content, path.display().to_string()),
+            source: (&*chapter.content, path.display()).into(),
             tracer: emit_issue!(),
         })
         .collect::<Vec<_>>()
-        .pipe(Reporter::sorted);
+        .pipe(IssueReporter::sorted);
 
     for issues in issues {
         issues.emit();

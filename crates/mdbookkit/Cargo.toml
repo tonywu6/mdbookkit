@@ -15,7 +15,9 @@ documentation = "https://docs.tonywu.dev/mdbookkit/"
 readme = "README.md"
 
 [dependencies]
+annotate-snippets = "0.12.13"
 anyhow = { workspace = true }
+bon = "3.9.1"
 clap = { workspace = true }
 console = { version = "0.16.2" }
 indicatif = { workspace = true }

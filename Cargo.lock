@@ -1542,7 +1542,9 @@ dependencies = [
 name = "mdbookkit"
 version = "2.0.1"
 dependencies = [
+ "annotate-snippets",
  "anyhow",
+ "bon",
  "cargo-run-bin",
  "clap",
  "console 0.16.2",

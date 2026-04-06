@@ -25,7 +25,7 @@ pub struct Pages<'a> {
     markdown: Options,
 }
 
-struct Page<'a> {
+pub struct Page<'a> {
     source: &'a str,
     links: Vec<LinkSpan<'a>>,
 }
@@ -54,6 +54,10 @@ impl<'a> Pages<'a> {
         Ok(self)
     }
 
+    pub fn pages(&self) -> impl Iterator<Item = (&Arc<Url>, &Page<'a>)> {
+        self.pages.iter()
+    }
+
     pub fn links(&self) -> impl Iterator<Item = (&Arc<Url>, &RelativeLink<'a>)> {
         self.pages.iter().flat_map(|(base, page)| {
             (page.links.iter()).flat_map(move |links| links.links().map(move |link| (base, link)))
@@ -65,10 +69,6 @@ impl<'a> Pages<'a> {
             (page.links.iter_mut())
                 .flat_map(move |links| links.links_mut().map(move |link| (base, link)))
         })
-    }
-
-    pub fn get_text(&self, url: &Url) -> Option<&str> {
-        self.pages.get(url).map(|page| page.source)
     }
 
     pub fn emit<Q>(&self, key: &Q) -> Result<String>
@@ -197,5 +197,13 @@ impl<'a> Page<'a> {
             .pipe(|stream| PatchStream::new(self.source, stream))
             .into_string()?
             .pipe(Ok)
+    }
+
+    pub fn source(&self) -> &'a str {
+        self.source
+    }
+
+    pub fn links(&self) -> impl Iterator<Item = &RelativeLink<'a>> {
+        self.links.iter().flat_map(|span| span.links())
     }
 }

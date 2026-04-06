@@ -8,7 +8,7 @@ use cargo_metadata::diagnostic::{
 };
 use tap::Pipe;
 
-use crate::diagnostic::{Highlight, IssueLevel, IssueReport, Note, Suggestion};
+use mdbookkit::diagnostics::{Highlight, IssueLevel, IssueReport, Note, Suggestion};
 
 pub struct RustcDiagnostic<'a, 'r> {
     pub diagnostic: &'a Diagnostic,

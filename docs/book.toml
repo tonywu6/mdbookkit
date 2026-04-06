@@ -33,11 +33,11 @@ runnable = false
 after = ["links"]
 command = "cargo run --package mdbook-rustdoc-links --all-features"
 
-# [preprocessor.permalinks]
-# after = ["rustdoc-links"]
-# always-link = [".rs"]
-# book-url = "https://docs.tonywu.dev/mdbookkit/"
-# command = "cargo run --package mdbook-permalinks --all-features"
+[preprocessor.permalinks]
+after = ["rustdoc-links"]
+always-link = [".rs"]
+book-url = "https://docs.tonywu.dev/mdbookkit/"
+command = "cargo run --package mdbook-permalinks --all-features"
 
 [preprocessor.app]
 command = "node scripts/preprocessor.ts"

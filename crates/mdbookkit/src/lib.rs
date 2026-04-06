@@ -13,7 +13,3 @@ pub mod markdown;
 #[cfg(feature = "_testing")]
 pub mod testing;
 pub mod url;
-
-// referenced in docs
-#[doc(hidden)]
-pub use diagnostics::Diagnostics;
