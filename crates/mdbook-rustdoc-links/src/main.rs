@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
+use tap::Pipe;
 use tracing::{Level, info, info_span, warn};
 
 use mdbookkit::{
@@ -74,13 +75,17 @@ fn mdbook() -> Result<()> {
 
     let results = contents.export()?;
 
-    for ((path, chapter), issues) in book.iter_chapters().zip(results.issues) {
-        Reporter {
+    let issues = (book.iter_chapters().zip(results.issues))
+        .map(|((path, chapter), issues)| Reporter {
             issues,
-            source: (&*chapter.content, path.display()),
+            source: (&*chapter.content, path.display().to_string()),
             tracer: emit_issue!(),
-        }
-        .emit();
+        })
+        .collect::<Vec<_>>()
+        .pipe(Reporter::sorted);
+
+    for issues in issues {
+        issues.emit();
     }
 
     fail_on_warnings.check()?;

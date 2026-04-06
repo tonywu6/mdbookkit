@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    collections::BTreeMap,
     fmt::{Arguments, Debug, Display},
     io::Write,
     ops::Range,
@@ -35,8 +36,8 @@ pub enum IssueLevel {
     Error,
     Warning,
     Info,
-    Note,
     Help,
+    Note,
 }
 
 #[derive(Builder, Debug)]
@@ -68,8 +69,9 @@ pub struct Note<'a> {
 }
 
 pub trait SourceCode<'a> {
+    type Path: Display;
     fn source_code(&self) -> &'a str;
-    fn source_path(&self) -> impl Display;
+    fn source_path(&self) -> Self::Path;
 }
 
 pub struct Reporter<'a, S, F> {
@@ -195,13 +197,70 @@ impl<'a> IssueReport<'a> {
     }
 }
 
+impl<'a> IssueReport<'a> {
+    fn sort_key(&self) -> impl Ord + use<> {
+        let span = self
+            .annotations
+            .iter()
+            .map(|anno| (anno.span.start, anno.span.end))
+            .next();
+        (self.level, span)
+    }
+}
+
+impl<'a, S, F> Reporter<'a, S, F>
+where
+    S: Clone + SourceCode<'a, Path: Ord>,
+    F: Clone,
+{
+    pub fn sorted(issues: Vec<Self>) -> Vec<Self> {
+        let mut sorted = vec![];
+
+        for Self {
+            issues,
+            source,
+            tracer,
+        } in issues
+        {
+            let mut levels = BTreeMap::<_, Vec<_>>::new();
+            for issue in issues {
+                let level = tracing::Level::from(issue.level);
+                levels.entry(level).or_default().push(issue);
+            }
+            for (level, mut issues) in levels {
+                issues.sort_by_key(|issue| issue.sort_key());
+                sorted.push((
+                    level,
+                    source.source_path(),
+                    issues,
+                    source.clone(),
+                    tracer.clone(),
+                ));
+            }
+        }
+
+        sorted.sort_by(|(l1, p1, _, _, _), (l2, p2, _, _, _)| (l2, p1).cmp(&(l1, p2)));
+
+        sorted
+            .into_iter()
+            .map(|(_, _, issues, source, tracer)| Self {
+                issues,
+                source,
+                tracer,
+            })
+            .collect()
+    }
+}
+
 impl<'a, P: Display> SourceCode<'a> for (&'a str, P) {
+    type Path = String;
+
     fn source_code(&self) -> &'a str {
         self.0
     }
 
-    fn source_path(&self) -> impl Display {
-        &self.1
+    fn source_path(&self) -> Self::Path {
+        self.1.to_string()
     }
 }
 
@@ -289,11 +348,13 @@ fn tracing_level_enabled(level: tracing::Level) -> bool {
 }
 
 impl<'a, S: SourceCode<'a>> SourceCode<'a> for &S {
+    type Path = S::Path;
+
     fn source_code(&self) -> &'a str {
         (*self).source_code()
     }
 
-    fn source_path(&self) -> impl Display {
+    fn source_path(&self) -> Self::Path {
         (*self).source_path()
     }
 }
