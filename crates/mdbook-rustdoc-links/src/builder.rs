@@ -18,7 +18,7 @@ use cargo_metadata::{
 use serde::Deserialize;
 use tap::{Pipe, Tap};
 use tempfile::TempDir;
-use tracing::{Level, error};
+use tracing::{Level, error, info};
 
 use mdbookkit::{
     emit_warning,
@@ -72,38 +72,24 @@ pub fn build_docs(config: BuildConfig, tracker: &mut LinkTracker) -> Result<()> 
     };
 
     for builder in build {
-        let ctx = BuildContext {
-            manifest_dir: &manifest_dir,
-            builder,
-            tracker,
-        };
-        run_builder(ctx)?;
+        run_builder(&manifest_dir, builder, tracker)?;
     }
 
     Ok(())
 }
 
-struct BuildContext<'a, 'r> {
-    manifest_dir: &'a Utf8Path,
+fn run_builder(
+    manifest_dir: &Utf8Path,
     builder: Builder,
-    tracker: &'a mut LinkTracker<'r>,
-}
-
-fn run_builder(ctx: BuildContext) -> Result<()> {
-    let BuildContext {
-        manifest_dir,
-        builder: Builder { targets, options },
-        tracker,
-    } = ctx;
-
+    tracker: &mut LinkTracker<'_>,
+) -> Result<()> {
     let BuildOptions {
         ref packages,
-        preludes: _,
         ref features,
-        rustc_args: _,
-        rustdoc_args: _,
         ref cargo,
-    } = options;
+        docs_rs,
+        ..
+    } = builder.options;
 
     let metadata = cargo
         .command("metadata")
@@ -119,9 +105,15 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
     let packages = if packages.is_empty() {
         Default::default()
     } else {
-        resolve_packages(&metadata, &options, manifest_dir)?
+        resolve_packages(&metadata, &builder.options, manifest_dir)?
     };
 
+    let mut builder = builder;
+    if docs_rs == Some(true) {
+        load_docs_rs_options(&mut builder, &metadata, &packages)?;
+    }
+
+    let Builder { targets, options } = builder;
     let BuildOptions {
         packages: _,
         preludes,
@@ -129,6 +121,7 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
         rustc_args,
         rustdoc_args,
         cargo,
+        docs_rs: _,
     } = options;
 
     let preludes = if let Some(preludes) = preludes {
@@ -658,6 +651,81 @@ fn resolve_packages(
         })
         .collect::<BTreeSet<_>>()
         .pipe(Ok)
+}
+
+fn load_docs_rs_options(
+    builder: &mut Builder,
+    metadata: &cargo_metadata::Metadata,
+    packages: &BTreeSet<String>,
+) -> Result<()> {
+    let selected = if packages.is_empty() {
+        metadata.workspace_default_packages()
+    } else {
+        (metadata.workspace_members)
+            .iter()
+            .filter_map(|id| {
+                let pkg = &metadata[id];
+                let spec = format!("{}@{}", pkg.name, pkg.version);
+                if packages.contains(&spec) {
+                    Some(pkg)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
+    };
+
+    if selected.is_empty() {
+        bail!("build config did not select any workspace package to read config from")
+    }
+    if selected.len() > 1 {
+        bail!("build config selected multiple workspace packages to read config from")
+    }
+
+    let package_name = || format!("the selected workspace package is {:?}", &*selected[0].name);
+
+    let metadata = &selected[0].metadata;
+    let metadata = (|| metadata.get("docs")?.get("rs")?.as_object())()
+        .with_context(package_name)
+        .context("package has no [package.metadata.docs.rs] table")?
+        .clone();
+
+    let mut metadata = metadata;
+    let default_target = metadata.remove("default-target");
+    let targets = metadata.remove("targets");
+    let additional_targets = metadata.remove("additional-targets");
+
+    let options = serde_json::from_value::<BuildOptions>(metadata.into())
+        .with_context(package_name)
+        .context("failed to deserialize config from the [package.metadata.docs.rs] table")?;
+
+    builder.options.assign(&options);
+
+    if builder.targets.is_empty() {
+        if let Some(target) = default_target {
+            let target = serde_json::from_value::<String>(target)
+                .with_context(package_name)
+                .context("could not read `default-target` as a string")?;
+            builder.targets.push(target);
+        }
+        if let Some(targets) = targets {
+            let targets = serde_json::from_value::<Vec<String>>(targets)
+                .with_context(package_name)
+                .context("could not read `targets` as a list of strings")?;
+            builder.targets.extend(targets);
+        }
+        if let Some(targets) = additional_targets {
+            let targets = serde_json::from_value::<Vec<String>>(targets)
+                .with_context(package_name)
+                .context("could not read `additional-targets` as a list of strings")?;
+            builder.targets.extend(targets);
+        }
+    } else {
+        info! { "ignoring target-related options in [package.metadata.docs.rs] since \
+        `targets` has been defined in build config" }
+    }
+
+    Ok(())
 }
 
 struct CargoProgress {

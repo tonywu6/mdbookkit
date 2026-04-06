@@ -53,6 +53,8 @@ de_struct!(
                 #[serde(default)]
                 runner
             )),
+            #[serde(default)]
+            docs_rs
         ))
     )
 );
@@ -87,6 +89,7 @@ pub struct BuildOptions {
     pub rustdoc_args: Vec<String>,
 
     pub cargo: CargoOptions,
+    pub docs_rs: Option<bool>,
 }
 
 #[derive(Debug, Default)]
@@ -134,11 +137,13 @@ impl BuildOptions {
                 rustc_args,
                 rustdoc_args,
                 cargo: _,
+                docs_rs,
             } = other;
             extend!(self, packages);
             extend!(self, preludes?);
             extend!(self, rustc_args);
             extend!(self, rustdoc_args);
+            assign_if!(self, docs_rs, is_none);
         }
         {
             let FeatureSelection {

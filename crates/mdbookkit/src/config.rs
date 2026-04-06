@@ -94,17 +94,17 @@ macro_rules! de_struct {
         de_struct!(@field_docs $name [$($body)*] [] [$($body)*]);
         de_struct!(@deserialize $(#[$struct_attr])* $name ($($body)*));
     )*};
-    (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$(#[$field_attr:meta])* $field:ident $(as $type:ty)?]) => {
-        de_struct!(@derive $(#[$struct_attr])* [$($item)*] []);
-    };
     (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$(#[$field_attr:meta])* $field:ident $(as $type:ty)?, $($rest:tt)*]) => {
         de_struct!(@derive $(#[$struct_attr])* [$($item)*] [$($rest)*]);
     };
-    (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$_:ident ($inner:ident ($($body:tt)*))]) => {
-        de_struct!(@derive $(#[$struct_attr])* [$($item)* ($(#[$struct_attr])* $inner($($body)*))] [$($body)*]);
+    (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$(#[$field_attr:meta])* $field:ident $(as $type:ty)?]) => {
+        de_struct!(@derive $(#[$struct_attr])* [$($item)*] []);
     };
     (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$_:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
         de_struct!(@derive $(#[$struct_attr])* [$($item)* ($(#[$struct_attr])* $inner($($body)*))] [$($body)*, $($rest)*]);
+    };
+    (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$_:ident ($inner:ident ($($body:tt)*))]) => {
+        de_struct!(@derive $(#[$struct_attr])* [$($item)* ($(#[$struct_attr])* $inner($($body)*))] [$($body)*]);
     };
 
     (@deserialize $(#[$struct_attr:meta])* $name:ident ($($body:tt)*)) => {
@@ -130,39 +130,39 @@ macro_rules! de_struct {
             $($(#[$field_attr])* $field: $type),*
         }
     };
-    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident]) => {
-        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $next)] [$($infer)* $next] []);
-    };
     (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident, $($rest:tt)*]) => {
         de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $next)] [$($infer)* $next] [$($rest)*]);
     };
-    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident as $type:ty]) => {
-        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $type)] [$($infer)*] []);
+    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident]) => {
+        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $next)] [$($infer)* $next] []);
     };
     (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident as $type:ty, $($rest:tt)*]) => {
         de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $type)] [$($infer)*] [$($rest)*]);
     };
-    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
-        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))*] [$($infer)*]  [$($body)*]);
+    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident as $type:ty]) => {
+        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $type)] [$($infer)*] []);
     };
     (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$next:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
         de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))*] [$($infer)*]  [$($body)*, $($rest)*]);
+    };
+    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
+        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))*] [$($infer)*]  [$($body)*]);
     };
 
     (@unpack $name:ident [$($field:ident)*] []) => {
         $name { $($field),* }
     };
-    (@unpack $name:ident [$($field:ident)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?]) => {
-        de_struct!(@unpack $name [$($field)* $next] [])
-    };
     (@unpack $name:ident [$($field:ident)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?, $($rest:tt)*]) => {
         de_struct!(@unpack $name [$($field)* $next] [$($rest)*])
     };
-    (@unpack $name:ident [$($field:ident)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
-        de_struct!(@unpack $name [$($field)*] [$($body)*])
+    (@unpack $name:ident [$($field:ident)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?]) => {
+        de_struct!(@unpack $name [$($field)* $next] [])
     };
     (@unpack $name:ident [$($field:ident)*] [$next:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
         de_struct!(@unpack $name [$($field)*] [$($body)*, $($rest)*])
+    };
+    (@unpack $name:ident [$($field:ident)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
+        de_struct!(@unpack $name [$($field)*] [$($body)*])
     };
 
     (@result $name:ident [$(($field:ident: $($value:tt)*))*] []) => {
@@ -170,17 +170,17 @@ macro_rules! de_struct {
             $($field: $($value)*),*
         }
     };
-    (@result $name:ident [$($item:tt)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?]) => {
-        de_struct!(@result $name [$($item)* ($next: $next)] [])
-    };
     (@result $name:ident [$($item:tt)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?, $($rest:tt)*]) => {
         de_struct!(@result $name [$($item)* ($next: $next)] [$($rest)*])
     };
-    (@result $name:ident [$($item:tt)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
-        de_struct!(@result $name [$($item)* ($next: de_struct!(@result $inner [] [$($body)*]))] [])
+    (@result $name:ident [$($item:tt)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?]) => {
+        de_struct!(@result $name [$($item)* ($next: $next)] [])
     };
     (@result $name:ident [$($item:tt)*] [$next:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
         de_struct!(@result $name [$($item)* ($next: de_struct!(@result $inner [] [$($body)*]))] [$($rest)*])
+    };
+    (@result $name:ident [$($item:tt)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
+        de_struct!(@result $name [$($item)* ($next: de_struct!(@result $inner [] [$($body)*]))] [])
     };
 
     (@field_docs $name:ident [$($orig:tt)*] [$(($field:ident, [$($attr:tt)*]))*] []) => {
@@ -203,17 +203,17 @@ macro_rules! de_struct {
             }
         }
     };
-    (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$(#[$($attr:tt)*])* $next:ident $(as $type:ty)?]) => {
-        de_struct!(@field_docs $name [$($orig)*] [$($field)* ($next, [$([$($attr)*])*])] []);
-    };
     (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$(#[$($attr:tt)*])* $next:ident $(as $type:ty)?, $($rest:tt)*]) => {
         de_struct!(@field_docs $name [$($orig)*] [$($field)* ($next, [$([$($attr)*])*])] [$($rest)*]);
     };
-    (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
-        de_struct!(@field_docs $name [$($orig)*] [$($field)*] [$($body)*]);
+    (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$(#[$($attr:tt)*])* $next:ident $(as $type:ty)?]) => {
+        de_struct!(@field_docs $name [$($orig)*] [$($field)* ($next, [$([$($attr)*])*])] []);
     };
     (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$next:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
         de_struct!(@field_docs $name [$($orig)*] [$($field)*] [$($body)*, $($rest)*]);
+    };
+    (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
+        de_struct!(@field_docs $name [$($orig)*] [$($field)*] [$($body)*]);
     };
 
     (@doc_string [$($doc:expr)*] []) => {
