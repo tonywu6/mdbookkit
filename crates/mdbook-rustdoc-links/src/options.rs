@@ -1,6 +1,6 @@
 use std::{borrow::Cow, process::Command};
 
-use anyhow::Context;
+use anyhow::{Context, Result};
 use cargo_metadata::camino::Utf8PathBuf;
 use serde::{Deserialize, Deserializer, de::value::MapAccessDeserializer};
 use shlex::Shlex;
@@ -33,12 +33,14 @@ de_struct!(
             packages as Vec<PackageSpec>,
             #[serde(default)]
             preludes,
-            #[serde(default)]
-            features,
-            #[serde(default)]
-            all_features,
-            #[serde(default)]
-            no_default_features,
+            features(FeatureSelection(
+                #[serde(default)]
+                features,
+                #[serde(default)]
+                all_features,
+                #[serde(default)]
+                no_default_features
+            )),
             #[serde(default, deserialize_with = "command_line_args")]
             rustc_args as Vec<String>,
             #[serde(default, deserialize_with = "command_line_args")]
@@ -47,10 +49,10 @@ de_struct!(
                 #[serde(default)]
                 toolchain,
                 #[serde(default, deserialize_with = "command_line_args")]
-                cargo_args as Vec<String>
+                cargo_args as Vec<String>,
+                #[serde(default)]
+                runner
             )),
-            #[serde(default)]
-            runner
         ))
     )
 );
@@ -79,43 +81,29 @@ pub struct Builder {
 pub struct BuildOptions {
     pub packages: Vec<PackageSpec>,
     pub preludes: Option<Vec<String>>,
-
-    pub features: Vec<String>,
-    pub all_features: Option<bool>,
-    pub no_default_features: Option<bool>,
+    pub features: FeatureSelection,
 
     pub rustc_args: Vec<String>,
     pub rustdoc_args: Vec<String>,
 
     pub cargo: CargoOptions,
-    pub runner: CommandRunner,
+}
+
+#[derive(Debug, Default)]
+pub struct FeatureSelection {
+    pub features: Vec<String>,
+    pub all_features: Option<bool>,
+    pub no_default_features: Option<bool>,
 }
 
 #[derive(Debug, Default)]
 pub struct CargoOptions {
     pub toolchain: Option<String>,
     pub cargo_args: Vec<String>,
+    pub runner: CommandRunner,
 }
 
 impl BuildOptions {
-    pub fn vary(&self) -> bool {
-        let Self {
-            packages: _,
-            preludes: _,
-            features,
-            all_features,
-            no_default_features,
-            rustc_args: _,
-            rustdoc_args: _,
-            cargo: _,
-            runner,
-        } = &self;
-        !features.is_empty()
-            || all_features.is_some()
-            || no_default_features.is_some()
-            || !runner.is_undefined()
-    }
-
     pub fn assign(&mut self, other: &Self) {
         macro_rules! assign_if {
             ( $lhs:expr, $value:ident, $empty:ident ) => {
@@ -142,46 +130,50 @@ impl BuildOptions {
             let Self {
                 packages,
                 preludes,
-                features,
-                all_features,
-                no_default_features,
+                features: _,
                 rustc_args,
                 rustdoc_args,
                 cargo: _,
-                runner,
             } = other;
-            assign_if!(self, all_features, is_none);
-            assign_if!(self, no_default_features, is_none);
             extend!(self, packages);
             extend!(self, preludes?);
-            extend!(self, features);
             extend!(self, rustc_args);
             extend!(self, rustdoc_args);
-            assign_if!(self, runner, is_undefined);
+        }
+        {
+            let FeatureSelection {
+                features,
+                all_features,
+                no_default_features,
+            } = &other.features;
+            assign_if!(self.features, all_features, is_none);
+            assign_if!(self.features, no_default_features, is_none);
+            extend!(self.features, features);
         }
         {
             let CargoOptions {
                 toolchain,
                 cargo_args,
+                runner,
             } = &other.cargo;
             assign_if!(self.cargo, toolchain, is_none);
             extend!(self.cargo, cargo_args);
+            assign_if!(self.cargo, runner, is_undefined);
         }
     }
 }
 
-impl CargoOptions {
-    pub fn command(&self, subcommand: &str) -> Command {
-        let mut command = Command::new("cargo");
-        command
-            .args(self.toolchain())
-            .arg(subcommand)
-            .args(&self.cargo_args);
-        command
+impl FeatureSelection {
+    pub fn list(&self) -> &[String] {
+        &self.features
     }
 
-    pub fn toolchain(&self) -> Option<String> {
-        self.toolchain.as_ref().map(|t| format!("+{t}"))
+    pub fn all_features(&self) -> bool {
+        self.all_features.unwrap_or(false)
+    }
+
+    pub fn no_default_features(&self) -> bool {
+        self.no_default_features.unwrap_or(false)
     }
 }
 

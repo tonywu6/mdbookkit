@@ -33,8 +33,6 @@ runnable = false
 after = ["links"]
 command = "cargo run --package mdbook-rustdoc-links --all-features"
 
-[preprocessor.rustdoc-links.build]
-
 # [preprocessor.permalinks]
 # after = ["rustdoc-links"]
 # always-link = [".rs"]

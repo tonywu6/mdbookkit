@@ -297,7 +297,7 @@ fn resolve_url(output: &BuildOutput<'_>, href: &str) -> Result<Url> {
         && let Some((lib, _)) = href.split_once('/')
         && let Some(package) = output.crates.get(lib)
     {
-        let Package { name, version, .. } = &output.workspace[package];
+        let Package { name, version, .. } = &output.metadata[package];
         format!("/{name}/{version}/{href}")
     } else {
         bail!("unsupported link format {href:?}")
@@ -324,6 +324,12 @@ macro_rules! data_attr {
 static OUTER_SELECTOR: &str = concat!("span[", data_attr!(), "]");
 static COMMENT_PREFIX: &str = concat!("//! - <span ", data_attr!(), ">");
 static COMMENT_SUFFIX: &str = "</span>";
+
+macro_rules! has_link_dest {
+    () => {
+        Inline | Reference | Collapsed | Shortcut
+    };
+}
 
 impl<'a> Link<'a> {
     fn try_open(text: &'a str, event: Event<'a>, span: Range<usize>) -> Option<Self> {
@@ -431,7 +437,7 @@ impl<'a> Link<'a> {
         let mut text = String::with_capacity(normalized.as_ref().len());
 
         let link = match kind {
-            Inline | Reference | Collapsed | Shortcut => Tag::Link {
+            has_link_dest!() => Tag::Link {
                 link_type: Inline,
                 dest_url: dest.clone(),
                 title: "".into(),
@@ -498,7 +504,11 @@ impl<'a> Link<'a> {
                         .message("rustdoc may not support the syntax of this item")
                         .build(),
                 ])
-                .secondary(vec![suggest_path_prefix(span.clone())])
+                .secondary(if matches!(self.kind, has_link_dest!()) {
+                    vec![suggest_path_prefix(span.clone())]
+                } else {
+                    vec![]
+                })
                 .build();
 
             issues.push(issue);
@@ -516,7 +526,7 @@ impl<'a> Link<'a> {
             .conv::<IssueReport>();
 
             if has_error_code(diagnostic, "rustdoc::broken_intra_doc_links") {
-                if matches!(self.kind, LinkType::Inline | LinkType::Reference)
+                if matches!(self.kind, has_link_dest!())
                     && diagnostic.message.starts_with("unresolved link to")
                 {
                     issue.secondary(suggest_path_prefix(self.span.dest.clone()));

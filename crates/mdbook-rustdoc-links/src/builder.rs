@@ -1,5 +1,4 @@
 use std::{
-    borrow::Cow,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
     ffi::OsStr,
     fmt::{Debug, Write as _},
@@ -30,8 +29,8 @@ use mdbookkit::{
 
 use crate::{
     options::{
-        BuildConfig, BuildOptions, Builder, CommandRunner, PackageSelector, PackageSpec,
-        WorkspaceMember,
+        BuildConfig, BuildOptions, Builder, CargoOptions, CommandRunner, PackageSelector,
+        PackageSpec, WorkspaceMember,
     },
     tracker::LinkTracker,
 };
@@ -43,26 +42,7 @@ pub fn build_docs(config: BuildConfig, tracker: &mut LinkTracker) -> Result<()> 
         build_options,
     } = config;
 
-    // https://github.com/rust-lang/cargo/issues/16834
-    let manifest_dir = if let Some(dir) = manifest_dir {
-        Some(dir)
-    } else if let Ok(workspace) = LocateProject::workspace()
-        .context("Could not determine the current workspace root")
-        .inspect_err(emit_warning!())
-    {
-        Some(workspace.directory().to_owned())
-    } else {
-        None
-    };
-
-    let workspace = (build_options.cargo)
-        .command("metadata")
-        .cwd(manifest_dir.as_ref())
-        .output()
-        .checked()?
-        .into_cargo_metadata()?;
-
-    let builds = if build.is_empty() {
+    let build = if build.is_empty() {
         vec![Default::default()]
     } else {
         build
@@ -74,9 +54,26 @@ pub fn build_docs(config: BuildConfig, tracker: &mut LinkTracker) -> Result<()> 
     })
     .collect::<Vec<_>>();
 
-    for builder in builds {
+    let default_cargo = if build.len() == 1 {
+        &build[0].options.cargo
+    } else {
+        &build_options.cargo
+    };
+
+    // https://github.com/rust-lang/cargo/issues/16834
+    let manifest_dir = if let Some(dir) = manifest_dir {
+        dir
+    } else {
+        default_cargo
+            .workspace()
+            .context("Could not determine the current workspace root")?
+            .directory()
+            .to_owned()
+    };
+
+    for builder in build {
         let ctx = BuildContext {
-            workspace: &workspace,
+            manifest_dir: &manifest_dir,
             builder,
             tracker,
         };
@@ -87,71 +84,57 @@ pub fn build_docs(config: BuildConfig, tracker: &mut LinkTracker) -> Result<()> 
 }
 
 struct BuildContext<'a, 'r> {
-    workspace: &'a cargo_metadata::Metadata,
+    manifest_dir: &'a Utf8Path,
     builder: Builder,
     tracker: &'a mut LinkTracker<'r>,
 }
 
 fn run_builder(ctx: BuildContext) -> Result<()> {
     let BuildContext {
-        workspace,
+        manifest_dir,
         builder: Builder { targets, options },
         tracker,
     } = ctx;
 
     let BuildOptions {
-        all_features,
-        no_default_features,
-        ..
+        ref packages,
+        preludes: _,
+        ref features,
+        rustc_args: _,
+        rustdoc_args: _,
+        ref cargo,
     } = options;
 
-    let all_features = all_features.unwrap_or(false);
-    let no_default_features = no_default_features.unwrap_or(false);
+    let metadata = cargo
+        .command("metadata")
+        .options("--format-version", ["1"])
+        .options("--features", features.list())
+        .flag("--all-features", features.all_features())
+        .flag("--no-default-features", features.no_default_features())
+        .current_dir(manifest_dir)
+        .output()
+        .checked()?
+        .into_cargo_metadata()?;
 
-    let build_workspace = if options.vary() {
-        let BuildOptions {
-            ref features,
-            ref cargo,
-            ref runner,
-            ..
-        } = options;
-        cargo
-            .command("metadata")
-            .options("--format-version", ["1"])
-            .options("--features", features)
-            .flag("--all-features", all_features)
-            .flag("--no-default-features", no_default_features)
-            .runner(runner)
-            .current_dir(&workspace.workspace_root)
-            .output()
-            .checked()?
-            .into_cargo_metadata()?
-            .pipe(Cow::Owned)
+    let packages = if packages.is_empty() {
+        Default::default()
     } else {
-        Cow::Borrowed(workspace)
+        resolve_packages(&metadata, &options, manifest_dir)?
     };
 
     let BuildOptions {
-        packages,
+        packages: _,
         preludes,
         features,
         rustc_args,
         rustdoc_args,
         cargo,
-        runner,
-        all_features: _,
-        no_default_features: _,
     } = options;
-
-    let packages = packages
-        .into_iter()
-        .flat_map(|spec| resolve_packages(spec, &build_workspace))
-        .collect::<Vec<_>>();
 
     let preludes = if let Some(preludes) = preludes {
         preludes
-    } else if build_workspace.workspace_default_packages().len() == 1
-        && let Some(pkg) = build_workspace.workspace_default_packages().first()
+    } else if metadata.workspace_default_packages().len() == 1
+        && let Some(pkg) = metadata.workspace_default_packages().first()
         && let Some(lib) = pkg.targets.iter().find_map(|t| {
             if t.is_lib() || t.is_dylib() || t.is_proc_macro() || t.is_rlib() {
                 Some(format!("{}::*", t.name))
@@ -164,15 +147,6 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
     } else {
         vec![]
     };
-
-    let path_mapper = PathMapper::new(
-        workspace,
-        if runner.is_undefined() {
-            None
-        } else {
-            Some(&build_workspace)
-        },
-    );
 
     let rustc_args = if !rustc_args.is_empty() {
         let flags = toml::Value::from(rustc_args);
@@ -188,6 +162,20 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
         None
     };
 
+    let path_mapper = if cargo.runner.is_undefined() {
+        PathMapper::new(&metadata, None)
+    } else {
+        let build_metadata = cargo
+            .command("metadata")
+            .options("--format-version", ["1"])
+            .runner(&cargo.runner)
+            .current_dir(manifest_dir)
+            .output()
+            .checked()?
+            .into_cargo_metadata()?;
+        PathMapper::new(&metadata, Some(&build_metadata))
+    };
+
     let mut artifacts = CargoRecorder::new(path_mapper);
 
     let proc = cargo
@@ -196,14 +184,14 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
         .options("--target", &targets)
         .flag("--no-deps", !packages.is_empty())
         .options("--package", &packages)
-        .options("--features", &features)
-        .flag("--all-features", all_features)
-        .flag("--no-default-features", no_default_features)
+        .options("--features", features.list())
+        .flag("--all-features", features.all_features())
+        .flag("--no-default-features", features.no_default_features())
         .options("--config", &rustc_args)
         .options("--config", &rustdoc_args)
         .options("--config", artifacts.term.cargo_options)
-        .runner(&runner)
-        .current_dir(&workspace.workspace_root)
+        .runner(&cargo.runner)
+        .current_dir(manifest_dir)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -216,14 +204,14 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
         .options("--message-format", ["json"])
         .options("--target", &targets)
         .options("--package", &packages)
-        .options("--features", &features)
-        .flag("--all-features", all_features)
-        .flag("--no-default-features", no_default_features)
+        .options("--features", features.list())
+        .flag("--all-features", features.all_features())
+        .flag("--no-default-features", features.no_default_features())
         .options("--config", &rustc_args)
         .options("--config", &rustdoc_args)
         .options("--config", artifacts.term.cargo_options)
-        .runner(&runner)
-        .current_dir(&workspace.workspace_root)
+        .runner(&cargo.runner)
+        .current_dir(manifest_dir)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -236,7 +224,7 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
             break;
         };
 
-        let tempdir = TempDir::new_in(&workspace.target_directory)?;
+        let tempdir = TempDir::new_in(&metadata.target_directory)?;
 
         let mut rustdoc = Command::new("rustdoc")
             .values(cargo.toolchain())
@@ -261,18 +249,15 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
                 crate_name += 1;
             }
 
-            if let Some(source) = (artifacts.get_doc(name, &target))
+            if let Some(doc) = (artifacts.get_doc(name, &target))
                 .as_ref()
                 .and_then(|dir| dir.parent())
+                && let Some(lib) = artifacts.get_lib(name, &target)
             {
-                let target = tempdir.path().join(name);
-                symlink_dir_all(source, target)?;
-            }
+                symlink_dir_all(doc, tempdir.path().join(name))?;
+                rustdoc.arg("--extern").arg(format!("{name}={lib}"));
 
-            if let Some(file) = artifacts.get_lib(name, &target) {
-                rustdoc.arg("--extern").arg(format!("{name}={file}"));
-
-                if let Some(parent) = file.parent()
+                if let Some(parent) = lib.parent()
                     && !library_paths.contains(parent)
                 {
                     library_paths.insert(parent.to_owned());
@@ -286,8 +271,8 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
 
         let mut rustdoc = rustdoc
             .options("--crate-name", [crate_name!()])
-            .runner(&runner)
-            .current_dir(&workspace.workspace_root)
+            .runner(&cargo.runner)
+            .current_dir(manifest_dir)
             .stdin(Stdio::piped())
             .stdout(Stdio::null())
             .stderr(Stdio::piped())
@@ -308,7 +293,7 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
         }
 
         let output = BuildOutput {
-            workspace,
+            metadata: &metadata,
             crates: &artifacts.crates,
             stdout: {
                 let path = tempdir.path().join(crate_name!()).join("index.html");
@@ -324,7 +309,7 @@ fn run_builder(ctx: BuildContext) -> Result<()> {
 }
 
 pub struct BuildOutput<'a> {
-    pub workspace: &'a cargo_metadata::Metadata,
+    pub metadata: &'a cargo_metadata::Metadata,
     pub crates: &'a BTreeMap<Arc<str>, PackageId>,
     pub stdout: String,
     pub stderr: String,
@@ -584,112 +569,95 @@ impl PathMapper {
     }
 }
 
-fn resolve_packages(spec: PackageSpec, metadata: &cargo_metadata::Metadata) -> Vec<&String> {
-    let pkg = match spec {
-        PackageSpec::Name(name) => PackageSelector {
-            name: Some(name),
-            workspace: WorkspaceMember::None,
-            dependencies: Default::default(),
-        },
-        PackageSpec::Selector(pkg) => pkg,
-    };
+fn resolve_packages(
+    metadata: &cargo_metadata::Metadata,
+    options: &BuildOptions,
+    manifest_dir: &Utf8Path,
+) -> Result<BTreeSet<String>> {
+    let BuildOptions {
+        packages,
+        features,
+        cargo,
+        ..
+    } = options;
 
-    let (pkgs, deps) = match pkg {
-        PackageSelector {
+    let pkgs = packages.iter().flat_map(|spec| match spec {
+        PackageSpec::Name(name) => vec![(name, false)],
+        PackageSpec::Selector(PackageSelector {
             name: Some(name),
             dependencies,
             ..
-        } => {
-            let pkgs = (metadata.packages.iter())
-                .filter(|p| p.name == name)
-                .collect::<Vec<_>>();
-            (pkgs, dependencies)
+        }) => {
+            vec![(name, *dependencies)]
         }
-        PackageSelector {
+        PackageSpec::Selector(PackageSelector {
             workspace,
             dependencies,
             ..
-        } => {
-            let pkgs = match workspace {
-                WorkspaceMember::None => vec![],
-                WorkspaceMember::Default => {
-                    if metadata.workspace_default_members.is_available() {
-                        metadata.workspace_default_packages()
-                    } else {
-                        metadata.workspace_packages()
-                    }
-                }
-                WorkspaceMember::All => metadata.workspace_packages(),
-            };
-            (pkgs, dependencies)
-        }
-    };
-
-    let tree = metadata.resolve.as_ref().expect("should have deps tree");
-
-    let deps = if deps {
-        pkgs.iter()
-            .flat_map(|p| &tree[&p.id].deps)
-            .filter_map(|p| {
-                if let Some(cargo_metadata::DepKindInfo {
-                    kind: cargo_metadata::DependencyKind::Normal,
-                    ..
-                }) = p.dep_kinds.first()
-                {
-                    Some(&*metadata[&p.pkg].name)
+        }) => match workspace {
+            WorkspaceMember::None => vec![],
+            WorkspaceMember::Default => {
+                if metadata.workspace_default_members.is_available() {
+                    metadata.workspace_default_packages()
                 } else {
-                    None
+                    metadata.workspace_packages()
                 }
-            })
-            .collect()
-    } else {
-        vec![]
+            }
+            WorkspaceMember::All => metadata.workspace_packages(),
+        }
+        .iter()
+        .map(|pkg| (&pkg.id.repr, *dependencies))
+        .collect(),
+    });
+
+    let mut trees = HashMap::<_, Vec<_>>::new();
+    for (pkg, dep) in pkgs {
+        let depth = if dep { "1" } else { "0" };
+        trees.entry(depth).or_default().push(pkg);
+    }
+
+    let command = || {
+        cargo
+            .command("tree")
+            .options("--features", features.list())
+            .flag("--all-features", features.all_features())
+            .flag("--no-default-features", features.no_default_features())
+            .flag("--no-dedupe", true)
+            .options("--format", ["{p}"])
+            .options("--prefix", ["none"])
+            .options("--edges", ["normal"])
     };
 
-    pkgs.iter()
-        .map(|p| &*p.name)
-        .chain(deps.iter().copied())
-        .collect()
-}
-
-trait CargoMetadataUtil {
-    fn into_cargo_metadata(self) -> Result<cargo_metadata::Metadata>;
-}
-
-impl CargoMetadataUtil for process::Output {
-    fn into_cargo_metadata(self) -> Result<cargo_metadata::Metadata> {
-        let stdout = String::from_utf8(self.stdout)?;
-        Ok(cargo_metadata::MetadataCommand::parse(stdout)?)
-    }
-}
-
-#[derive(Deserialize)]
-struct LocateProject {
-    root: Utf8PathBuf,
-}
-
-impl LocateProject {
-    fn directory(&self) -> &Utf8Path {
-        (self.root.parent()).expect("path to Cargo.toml should have a parent")
-    }
-
-    fn workspace() -> Result<Self> {
-        std::process::Command::new("cargo")
-            .arg("locate-project")
-            .arg("--message-format=json")
-            .arg("--workspace")
-            .output()
-            .checked()
-            .context("`cargo locate-project` did not run successfully")?
-            .pipe(Self::parse)
-    }
-
-    fn parse(output: process::Output) -> Result<Self> {
-        let process::Output { stdout, .. } = output;
-        (String::from_utf8(stdout).anyhow())
-            .and_then(|output| serde_json::from_str(&output).anyhow())
-            .context("Could not parse `cargo locate-project` output")
-    }
+    trees
+        .into_iter()
+        .map(|(depth, packages)| {
+            command()
+                .options("--package", packages)
+                .options("--depth", [depth])
+                .runner(&cargo.runner)
+                .current_dir(manifest_dir)
+                .stdin(Stdio::null())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .output()
+                .checked()?
+                .stdout
+                .pipe(String::from_utf8)
+                .anyhow()
+        })
+        .collect::<Result<Vec<_>>>()?
+        .iter()
+        .flat_map(|output| {
+            output.lines().filter_map(|line| {
+                let mut iter = line.split(' ');
+                let name = iter.next()?;
+                let version = iter.next()?;
+                let version = version.strip_prefix('v')?;
+                Some(format!("{name}@{version}"))
+            })
+        })
+        .collect::<BTreeSet<_>>()
+        .pipe(Ok)
 }
 
 struct CargoProgress {
@@ -714,10 +682,10 @@ impl CargoProgress {
                 for line in buf.lines() {
                     match (delim, line.as_bytes().last()) {
                         (b'\r', Some(b'\r')) | (b'\n', _) => {
-                            ticker_event!(&ticker, Level::INFO, "{}", line.trim());
+                            ticker_event!(&ticker, Level::INFO, "{}", line.trim_end());
                         }
                         _ => {
-                            buffer.push(line.trim().to_owned());
+                            buffer.push(line.trim_end().to_owned());
                         }
                     }
                 }
@@ -771,6 +739,60 @@ fn rustc_json_error(output: process::Output) -> anyhow::Error {
     anyhow!("command exited with code {}", output.status)
 }
 
+trait CargoMetadataUtil {
+    fn into_cargo_metadata(self) -> Result<cargo_metadata::Metadata>;
+}
+
+impl CargoMetadataUtil for process::Output {
+    fn into_cargo_metadata(self) -> Result<cargo_metadata::Metadata> {
+        let stdout = String::from_utf8(self.stdout)?;
+        Ok(cargo_metadata::MetadataCommand::parse(stdout)?)
+    }
+}
+
+impl CargoOptions {
+    fn command(&self, subcommand: &str) -> Command {
+        let mut command = Command::new("cargo");
+        command
+            .args(self.toolchain())
+            .arg(subcommand)
+            .args(&self.cargo_args);
+        command
+    }
+
+    fn workspace(&self) -> Result<LocateProject> {
+        self.command("locate-project")
+            .arg("--message-format=json")
+            .arg("--workspace")
+            .output()
+            .checked()
+            .context("`cargo locate-project` did not run successfully")?
+            .pipe(LocateProject::parse)
+    }
+
+    fn toolchain(&self) -> Option<String> {
+        self.toolchain.as_ref().map(|t| format!("+{t}"))
+    }
+}
+
+#[derive(Deserialize)]
+struct LocateProject {
+    root: Utf8PathBuf,
+}
+
+impl LocateProject {
+    fn directory(&self) -> &Utf8Path {
+        (self.root.parent()).expect("path to Cargo.toml should have a parent")
+    }
+
+    fn parse(output: process::Output) -> Result<Self> {
+        let process::Output { stdout, .. } = output;
+        (String::from_utf8(stdout).anyhow())
+            .and_then(|output| serde_json::from_str(&output).anyhow())
+            .context("Could not parse `cargo locate-project` output")
+    }
+}
+
 trait CommandUtil {
     fn values<I, S>(self, values: I) -> Self
     where
@@ -784,8 +806,6 @@ trait CommandUtil {
         S: AsRef<OsStr>;
 
     fn flag(self, flag: &str, enabled: bool) -> Self;
-
-    fn cwd<P: AsRef<Path>>(self, dir: Option<P>) -> Self;
 
     fn runner(self, runner: &CommandRunner) -> Self;
 }
@@ -819,13 +839,6 @@ impl CommandUtil for Command {
     fn flag(mut self, flag: &str, enabled: bool) -> Self {
         if enabled {
             self.arg(flag);
-        }
-        self
-    }
-
-    fn cwd<P: AsRef<Path>>(mut self, dir: Option<P>) -> Self {
-        if let Some(dir) = dir {
-            self.current_dir(dir);
         }
         self
     }
