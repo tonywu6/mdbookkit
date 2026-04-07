@@ -22,28 +22,16 @@ exclude = ["src/tests", "tests"]
 anyhow = { workspace = true }
 clap = { workspace = true }
 git2 = { version = "0.20.4", default-features = false }
-gix-url = { version = "0.34.0" }
+gix-url = { version = "0.35.2" }
 mdbook-markdown = { workspace = true }
 mdbook-preprocessor = { workspace = true }
 mdbookkit = { workspace = true }
-miette = { workspace = true }
-percent-encoding = { version = "2.3.2" }
+percent-encoding = { workspace = true }
 serde = { workspace = true }
 tap = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true, features = ["serde"] }
-
-[dev-dependencies]
-assert_cmd = { workspace = true }
-insta = { workspace = true }
-mdbookkit = { workspace = true, features = ["_testing"] }
-predicates = { workspace = true }
-rstest = { workspace = true }
-tempfile = { workspace = true }
-
-[features]
-_testing = ["mdbookkit/_testing"]
 
 [package.metadata.binstall]
 pkg-fmt = "tgz"

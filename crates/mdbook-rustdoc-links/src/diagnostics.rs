@@ -1,6 +1,5 @@
 use std::ops::Range;
 
-use annotate_snippets::AnnotationKind;
 use cargo_metadata::diagnostic::{
     Diagnostic,
     DiagnosticLevel::{self, *},
@@ -8,7 +7,9 @@ use cargo_metadata::diagnostic::{
 };
 use tap::Pipe;
 
-use mdbookkit::diagnostics::{Highlight, IssueLevel, IssueReport, Note, Suggestion};
+use mdbookkit::diagnostics::{
+    Highlight, IssueLevel, IssueReport, Note, Suggestion, annotate_snippets::AnnotationKind,
+};
 
 pub struct RustcDiagnostic<'a, 'r> {
     pub diagnostic: &'a Diagnostic,

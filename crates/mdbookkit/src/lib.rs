@@ -4,12 +4,8 @@
 pub mod book;
 pub mod config;
 pub mod diagnostics;
-#[cfg(feature = "_testing")]
-pub mod docs;
 pub mod env;
 pub mod error;
 pub mod logging;
 pub mod markdown;
-#[cfg(feature = "_testing")]
-pub mod testing;
 pub mod url;

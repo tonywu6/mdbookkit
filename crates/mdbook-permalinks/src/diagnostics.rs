@@ -4,7 +4,9 @@ use tap::{Pipe, TapOptional};
 use url::Url;
 
 use mdbookkit::{
-    diagnostics::{AnnotationKind, Highlight, IssueLevel, IssueReport, IssueReporter},
+    diagnostics::{
+        Highlight, IssueLevel, IssueReport, IssueReporter, annotate_snippets::AnnotationKind,
+    },
     emit_issue,
 };
 

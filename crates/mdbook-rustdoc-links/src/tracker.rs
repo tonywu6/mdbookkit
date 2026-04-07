@@ -6,7 +6,6 @@ use std::{
     ops::{ControlFlow, Range},
 };
 
-use annotate_snippets::AnnotationKind;
 use anyhow::{Result, bail};
 use cargo_metadata::{
     Package,
@@ -26,7 +25,9 @@ use tracing::{debug, trace};
 use url::Url;
 
 use mdbookkit::{
-    diagnostics::{Highlight, IssueLevel, IssueReport, Note, Suggestion},
+    diagnostics::{
+        Highlight, IssueLevel, IssueReport, Note, Suggestion, annotate_snippets::AnnotationKind,
+    },
     error::ExpectFmt,
     markdown::PatchStream,
     plural,

@@ -19,57 +19,24 @@ readme = "README.md"
 exclude = ["src/tests", "tests"]
 
 [dependencies]
-annotate-snippets = "0.12.13"
 anyhow = { workspace = true }
-async-lsp = { version = "0.2.2" }
-bon = "3.9.1"
 cargo_metadata = "0.23.1"
-cargo_toml = { version = "0.22.3" }
 clap = { workspace = true }
-dirs = { version = "6.0.0" }
-futures-util = { workspace = true }
 html-escape = "0.2.13"
-lol_html = "2.7.2"
-lsp-types = { version = "0.95.1" } # https://github.com/gluon-lang/lsp-types/issues/284
+lol_html = { workspace = true }
 mdbook-markdown = { workspace = true }
 mdbook-preprocessor = { workspace = true }
 mdbookkit = { workspace = true }
-miette = { workspace = true }
 percent-encoding = { workspace = true }
-proc-macro2 = { version = "1.0.106", features = ["span-locations"] }
 pulldown-cmark-to-cmark = { workspace = true }
-serde = { workspace = true, features = ["rc"] }
+serde = { workspace = true }
 serde_json = { workspace = true }
-sha2 = { version = "0.10.9" }
 shlex = { workspace = true }
-syn = { version = "2.0.117" }
 tap = { workspace = true }
 tempfile = { workspace = true }
-tokio = { workspace = true, features = [
-  "fs",
-  "io-util",
-  "macros",
-  "process",
-  "rt-multi-thread",
-  "time",
-] }
-tokio-util = { version = "0.7.18", features = ["compat"] }
 toml = { workspace = true }
-tower = { version = "0.5.3" }
 tracing = { workspace = true }
 url = { workspace = true }
-
-[dev-dependencies]
-assert_cmd = { workspace = true }
-insta = { workspace = true }
-mdbookkit = { workspace = true, features = ["_testing"] }
-predicates = { workspace = true }
-rstest = { workspace = true }
-similar = { workspace = true }
-tempfile = { workspace = true }
-
-[features]
-_testing = ["mdbookkit/_testing"]
 
 [package.metadata.binstall]
 pkg-fmt = "tgz"

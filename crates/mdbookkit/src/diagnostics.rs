@@ -6,9 +6,9 @@ use std::{
     ops::Range,
 };
 
-pub use annotate_snippets::AnnotationKind;
+pub use annotate_snippets;
 use annotate_snippets::{
-    Annotation, Group, Message, Patch, Renderer, Snippet, renderer::DecorStyle,
+    Annotation, AnnotationKind, Group, Message, Patch, Renderer, Snippet, renderer::DecorStyle,
 };
 use bon::Builder;
 use tap::{Pipe, TapFallible};

@@ -34,8 +34,6 @@ use self::{
 mod diagnostics;
 mod link;
 mod page;
-// #[cfg(test)]
-// mod tests;
 mod vcs;
 
 fn main() -> Result<()> {
@@ -45,13 +43,6 @@ fn main() -> Result<()> {
     match command {
         None => mdbook().exit(emit_error!()),
         Some(Command::Supports { .. }) => {}
-        #[cfg(feature = "_testing")]
-        Some(Command::Describe) => {
-            let desc = mdbookkit::docs::Reflect::default()
-                .map_type::<UrlPrefix>("String")
-                .describe::<Config>()?;
-            print!("{desc}")
-        }
     }
     Ok(())
 }
@@ -72,9 +63,6 @@ struct Program {
 enum Command {
     #[clap(hide = true)]
     Supports { renderer: String },
-    #[cfg(feature = "_testing")]
-    #[clap(hide = true)]
-    Describe,
 }
 
 struct Permalinks;
