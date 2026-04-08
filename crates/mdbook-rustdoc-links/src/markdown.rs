@@ -46,6 +46,8 @@ impl<'a> BrokenLinkCallback<'a> for KeepBrokenLinks {
                 .filter_map(|event| match event {
                     Event::Text(inner) => Some(inner),
                     Event::Code(inner) => Some(inner),
+                    // names with generics like `Vec<T>` will have `<T>` identified as
+                    // inline HTML if the text is not marked as `code`
                     Event::InlineHtml(inner) => Some(inner),
                     _ => None,
                 })

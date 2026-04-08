@@ -13,7 +13,12 @@ use annotate_snippets::{
 use bon::Builder;
 use tap::{Pipe, TapFallible};
 
-use crate::{emit_debug, env::is_logging, error::put_severity, logging::stderr};
+use crate::{
+    emit_debug,
+    env::{is_colored, is_logging},
+    error::put_severity,
+    logging::stderr,
+};
 
 #[derive(Builder, Debug)]
 #[builder(start_fn = level)]
@@ -88,18 +93,27 @@ impl<'a> IssueReporter<'a> {
                 issue_to_traces(issue, self.source.clone(), self.tracer);
             }
         } else {
-            let renderer = Renderer::styled().decor_style(DecorStyle::Unicode);
-            for issue in (self.issues)
-                .into_iter()
-                .filter(|issue| tracing_level_enabled(issue.level.into()))
-            {
-                put_severity(issue.level.into());
-                let report = issue_to_report(issue, self.source.clone());
+            let renderer = if is_colored() {
+                Renderer::styled()
+            } else {
+                Renderer::plain()
+            }
+            .decor_style(DecorStyle::Unicode);
+            for report in self.emit_reports() {
                 writeln!(stderr(), "{}\n", renderer.render(&report))
                     .tap_err(emit_debug!())
                     .ok();
             }
         }
+    }
+
+    pub fn emit_reports(self) -> Vec<Vec<Group<'a>>> {
+        self.issues
+            .into_iter()
+            .filter(|issue| tracing_level_enabled(issue.level.into()))
+            .inspect(|issue| put_severity(issue.level.into()))
+            .map(|issue| issue_to_report(issue, self.source.clone()))
+            .collect::<Vec<_>>()
     }
 }
 

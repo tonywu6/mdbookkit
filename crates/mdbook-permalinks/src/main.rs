@@ -151,7 +151,7 @@ impl Preprocessor for Environment {
         })?;
 
         if has_severity(Level::WARN) {
-            warn!("Finished with problems");
+            warn!("Finished with warnings");
         } else {
             info!("Finished");
         }

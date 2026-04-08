@@ -15,7 +15,11 @@ use mdbookkit::{
     logging::Logging,
 };
 
-use self::{builder::build_docs, options::Config, tracker::LinkTracker};
+use self::{
+    builder::build_docs,
+    options::Config,
+    tracker::{ExportedPages, LinkTracker},
+};
 
 mod builder;
 mod markdown;
@@ -74,36 +78,43 @@ fn mdbook() -> Result<()> {
 
     build_docs(build, &mut contents)?;
 
-    let results = contents.export()?;
+    let ExportedPages {
+        contents,
+        issues,
+        stats,
+    } = contents.export()?;
 
-    let issues = (book.iter_chapters().zip(results.issues))
-        .map(|((path, chapter), issues)| IssueReporter {
-            issues,
-            source: (&*chapter.content, path.display()).into(),
-            tracer: emit_issue!(),
-        })
-        .collect::<Vec<_>>()
-        .pipe(IssueReporter::sorted);
+    {
+        let issues = (book.iter_chapters().zip(issues))
+            .map(|((path, chapter), issues)| IssueReporter {
+                issues,
+                source: (&*chapter.content, path.display()).into(),
+                tracer: emit_issue!(),
+            })
+            .collect::<Vec<_>>()
+            .pipe(IssueReporter::sorted);
 
-    for issues in issues {
-        issues.emit();
+        for issues in issues {
+            issues.emit();
+        }
     }
 
     fail_on_warnings.check()?;
 
-    let mut contents = keys
-        .into_iter()
-        .zip(results.contents)
-        .collect::<HashMap<_, _>>();
+    {
+        let mut contents = keys.into_iter().zip(contents).collect::<HashMap<_, _>>();
 
-    book.for_each_page_mut(|path, content| {
-        if let Some(rendered) = contents.remove(path) {
-            *content = rendered
-        }
-        Ok(())
-    })?;
+        book.for_each_page_mut(|path, content| {
+            if let Some(rendered) = contents.remove(path) {
+                *content = rendered
+            }
+            Ok(())
+        })?;
+    }
 
     book.to_stdout(&ctx)?;
+
+    info!("{stats}");
 
     if has_severity(Level::WARN) {
         warn!("Finished with warnings");

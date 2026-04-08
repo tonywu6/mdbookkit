@@ -1,7 +1,7 @@
 use std::{
     cell::Cell,
     collections::HashSet,
-    fmt::{Debug, Write},
+    fmt::{Debug, Display, Write},
     hash::Hash,
     ops::{ControlFlow, Range},
 };
@@ -185,9 +185,12 @@ impl<'a> LinkTracker<'a> {
             Some((page, links))
         });
 
+        let mut stats = Statistics::default();
+
         for (page, links) in links {
             let page_issues = links
                 .iter()
+                .inspect(|link| stats.count(link))
                 .flat_map(|link| link.diagnose(self))
                 .chain(self.link_summary(links))
                 .collect();
@@ -205,7 +208,11 @@ impl<'a> LinkTracker<'a> {
             contents.push(text);
         }
 
-        Ok(ExportedPages { contents, issues })
+        Ok(ExportedPages {
+            contents,
+            issues,
+            stats,
+        })
     }
 
     fn link_summary(&self, links: &'a [Link<'a>]) -> Option<IssueReport<'a>> {
@@ -235,6 +242,7 @@ impl<'a> LinkTracker<'a> {
 pub struct ExportedPages<'a> {
     pub contents: Vec<String>,
     pub issues: Vec<Vec<IssueReport<'a>>>,
+    pub stats: Statistics,
 }
 
 fn could_be_item_link(kind: LinkType, url: &str) -> bool {
@@ -706,5 +714,57 @@ impl Hash for DiagnosticKey<'_> {
         for span in self.spans() {
             span.hash(state);
         }
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Statistics {
+    processed: usize,
+    resolved: usize,
+    unresolved: usize,
+    has_warnings: usize,
+    unsupported: usize,
+}
+
+impl Statistics {
+    fn count(&mut self, link: &Link<'_>) {
+        self.processed += 1;
+        if link.href.is_some() {
+            self.resolved += 1
+        } else {
+            self.unresolved += 1;
+        }
+        if !link.diagnostics.is_empty() {
+            self.has_warnings += 1
+        } else if link.href.is_none() {
+            self.unresolved += 1;
+        }
+    }
+}
+
+impl Display for Statistics {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Self {
+            processed,
+            resolved,
+            unresolved,
+            has_warnings,
+            unsupported,
+        } = self;
+        write! { f,
+            "Processed {processed}: \
+            {resolved} resolved; \
+            {unresolved} unresolved;",
+            processed = plural!(processed, "link"),
+        }?;
+        if has_warnings > &0 {
+            write! { f, " {};",
+                plural!(has_warnings, "has warnings", "have warnings")
+            }?
+        }
+        if unsupported > &0 {
+            write!(f, " {unsupported} may be unsupported;")?
+        }
+        Ok(())
     }
 }
