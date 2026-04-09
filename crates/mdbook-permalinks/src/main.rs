@@ -11,7 +11,7 @@ use git2::Repository;
 use mdbook_markdown::pulldown_cmark;
 use mdbook_preprocessor::{Preprocessor, PreprocessorContext, book::Book};
 use serde::Deserialize;
-use tap::Tap;
+use tap::{Pipe, Tap};
 use tracing::{Level, debug, info, info_span, span::EnteredSpan, trace, warn};
 use url::Url;
 
@@ -122,7 +122,7 @@ impl Preprocessor for Environment {
 
         self.resolve(&mut contents);
 
-        for issues in IssueReporter::sorted(self.issues(&contents, |_| true)) {
+        for issues in self.issues(&contents, |_| true).pipe(IssueReporter::sorted) {
             issues.emit();
         }
 

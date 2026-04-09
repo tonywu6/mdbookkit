@@ -7,7 +7,10 @@ use tap::{Pipe, Tap};
 use tracing::{debug, info, instrument, trace};
 use url::{Url, form_urlencoded::Serializer as SearchParams};
 
-use mdbookkit::{emit_debug, emit_trace, url::UrlFromPath};
+use mdbookkit::{
+    emit_debug, emit_trace,
+    url::{ExpectUrl, UrlFromPath},
+};
 
 use crate::{
     Config, VersionControl,
@@ -66,8 +69,8 @@ impl VersionControl {
                 let (owner, repo) = match remote_as_github(repo.as_ref()) {
                     Ok(result) => result,
                     Err(err) => {
-                        return anyhow! {"help: use the `repo-url-template` option \
-                        to define a custom URL scheme"}
+                        return anyhow! { "help: use the `repo-url-template` option \
+                        to define a custom URL scheme" }
                         .context(err)
                         .context(match repo {
                             RepoSource::Config(..) => "In `output.html.git-repository-url`:",
@@ -138,7 +141,7 @@ impl Permalink {
     pub fn github(owner: &str, repo: &str, reference: &str) -> Self {
         let template = format!("https://github.com/{owner}/{repo}/{{tree}}/{{ref}}/{{path}}")
             .parse()
-            .expect("should be a valid url");
+            .expect_url();
         let reference = reference.into();
         Self {
             template,
