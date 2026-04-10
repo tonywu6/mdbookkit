@@ -69,6 +69,7 @@ fn mdbook() -> Result<()> {
     let keys = book
         .iter_chapters()
         .map(|(path, chapter)| {
+            let _span = info_span!("page_read", path = %path.display()).entered();
             (contents.read(&chapter.content))
                 .with_context(|| path.display().to_string())
                 .context("Failed to parse file as Markdown:")?;

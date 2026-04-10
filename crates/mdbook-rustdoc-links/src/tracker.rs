@@ -6,7 +6,7 @@ use std::{
     ops::{ControlFlow, Range},
 };
 
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use cargo_metadata::{
     Package,
     diagnostic::{Diagnostic, DiagnosticSpan},
@@ -21,13 +21,14 @@ use mdbook_markdown::pulldown_cmark::{
 use percent_encoding::percent_decode_str;
 use pulldown_cmark_to_cmark::cmark_resume;
 use tap::{Conv, Pipe};
-use tracing::{debug, trace};
+use tracing::{debug, instrument, trace, warn};
 use url::Url;
 
 use mdbookkit::{
     diagnostics::{
         Highlight, IssueLevel, IssueReport, Note, Suggestion, annotate_snippets::AnnotationKind,
     },
+    emit_debug,
     error::ExpectFmt,
     markdown::PatchStream,
     plural,
@@ -90,8 +91,14 @@ impl<'a> LinkTracker<'a> {
                         state = Some(link);
                     }
                     ControlFlow::Break(()) => {
-                        link.normalize()?;
-                        self.links.push(link);
+                        if let Ok(()) = link.normalize() {
+                            self.links.push(link);
+                        } else {
+                            warn! {
+                                "Internal error while parsing link {:?} at {:?}; \
+                                the link will be ignored", &*link.dest, link.span.full
+                            }
+                        }
                     }
                 },
             }
@@ -414,6 +421,7 @@ impl<'a> Link<'a> {
         }
     }
 
+    #[instrument(level = "debug", skip_all, fields(dest = ?&*self.dest, span = ?self.span.full))]
     fn normalize(&mut self) -> Result<()> {
         let Self {
             kind,
@@ -444,8 +452,6 @@ impl<'a> Link<'a> {
             return Ok(());
         }
 
-        let mut text = String::with_capacity(normalized.as_ref().len());
-
         let link = match kind {
             has_link_dest!() => Tag::Link {
                 link_type: Inline,
@@ -468,26 +474,34 @@ impl<'a> Link<'a> {
             .chain(inner_elem.clone())
             .chain([Event::End(TagEnd::Link)]);
 
-        let _ = cmark_resume(events, &mut text, None)?;
+        let (text, span) = (|| -> Result<_> {
+            let mut text = String::with_capacity(normalized.as_ref().len());
 
-        let span = {
-            let mut state = None;
+            // dropping the state because we are not
+            // appending the final link definition
+            let _ = cmark_resume(events, &mut text, None)?;
 
-            for (event, span) in markdown(&text).into_offset_iter() {
-                match state.as_mut() {
-                    None => {
-                        state = Link::try_open(&text, event, span);
-                    }
-                    Some(link) => {
-                        if let ControlFlow::Break(()) = link.push(event, span)? {
-                            break;
+            let span = {
+                let mut state = None;
+                for (event, span) in markdown(&text).into_offset_iter() {
+                    match state.as_mut() {
+                        None => {
+                            state = Link::try_open(&text, event, span);
+                        }
+                        Some(link) => {
+                            if let ControlFlow::Break(()) = link.push(event, span)? {
+                                break;
+                            }
                         }
                     }
                 }
-            }
+                state.context("should have parsed a link")?.span
+            };
 
-            state.expect("should have parsed a link").span
-        };
+            Ok((text, span))
+        })()
+        .context("failed to reformat link to be on one line")
+        .inspect_err(emit_debug!())?;
 
         *normalized = NormalizedLink::Normalized { text, span };
 
