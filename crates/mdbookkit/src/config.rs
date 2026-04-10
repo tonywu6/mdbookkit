@@ -5,6 +5,7 @@ use serde::{
     de::value::{EnumAccessDeserializer, MapAccessDeserializer, SeqAccessDeserializer},
 };
 
+#[inline]
 pub fn value_or_vec<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
 where
     D: Deserializer<'de>,

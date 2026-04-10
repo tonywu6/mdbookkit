@@ -18,6 +18,7 @@ use crate::env::is_ci;
 
 static MAX_SEVERITY: AtomicU8 = AtomicU8::new(0);
 
+#[inline]
 pub fn has_severity(level: Level) -> bool {
     MAX_SEVERITY.load(Ordering::Relaxed) >= level_to_severity(level)
 }
@@ -70,6 +71,7 @@ pub enum OnWarning {
 }
 
 impl OnWarning {
+    #[inline]
     pub fn check(&self) -> Result<()> {
         if has_severity(Level::ERROR) {
             Err(anyhow!("preprocessor finished with errors"))
@@ -90,6 +92,7 @@ impl OnWarning {
         }
     }
 
+    #[inline]
     pub fn adjusted<T, E>(&self, result: Result<Result<T, E>, E>) -> Result<Result<T, E>, E> {
         match result {
             Err(error) => Err(error),
@@ -180,6 +183,7 @@ pub trait PathDebug {
 }
 
 impl PathDebug for Path {
+    #[inline]
     fn debug(&self) -> impl Debug {
         struct DebugPath<'a>(&'a Path);
 
@@ -193,21 +197,21 @@ impl PathDebug for Path {
     }
 }
 
-pub struct EmitEvent<'a, E> {
-    pub trace: &'a dyn Fn(E),
-    pub debug: &'a dyn Fn(E),
-    pub warn: &'a dyn Fn(E),
-    pub error: &'a dyn Fn(E),
+pub struct EmitEvent<F1, F2, F3, F4> {
+    pub trace: F1,
+    pub debug: F2,
+    pub warn: F3,
+    pub error: F4,
 }
 
 #[macro_export]
 macro_rules! emit {
     ($fmt:literal) => {{
         $crate::error::EmitEvent {
-            trace: &|e| ::tracing::trace!($fmt, e),
-            debug: &|e| ::tracing::debug!($fmt, e),
-            warn: &|e| ::tracing::warn!($fmt, e),
-            error: &|e| ::tracing::error!($fmt, e),
+            trace: |e| ::tracing::trace!($fmt, e),
+            debug: |e| ::tracing::debug!($fmt, e),
+            warn: |e| ::tracing::warn!($fmt, e),
+            error: |e| ::tracing::error!($fmt, e),
         }
     }};
     () => {
@@ -215,18 +219,19 @@ macro_rules! emit {
     };
 }
 
-pub trait ConsumeError<T, E> {
-    fn or_trace(self, emit: EmitEvent<'_, E>) -> Result<T, Break>;
-    fn or_debug(self, emit: EmitEvent<'_, E>) -> Result<T, Break>;
-    fn or_warn(self, emit: EmitEvent<'_, E>) -> Result<T, Break>;
-    fn or_error(self, emit: EmitEvent<'_, E>) -> Result<T, Break>;
+pub trait ConsumeError<T, E, F1, F2, F3, F4> {
+    fn or_trace(self, emit: EmitEvent<F1, F2, F3, F4>) -> Result<T, Break>;
+    fn or_debug(self, emit: EmitEvent<F1, F2, F3, F4>) -> Result<T, Break>;
+    fn or_warn(self, emit: EmitEvent<F1, F2, F3, F4>) -> Result<T, Break>;
+    fn or_error(self, emit: EmitEvent<F1, F2, F3, F4>) -> Result<T, Break>;
 }
 
 pub struct Break;
 
 macro_rules! consume_error {
     ($fn:ident, $level:ident) => {
-        fn $fn(self, emit: EmitEvent<'_, Error>) -> Result<T, Break> {
+        #[inline]
+        fn $fn(self, emit: EmitEvent<F1, F2, F3, F4>) -> Result<T, Break> {
             match self {
                 Ok(v) => Ok(v),
                 Err(e) => {
@@ -238,9 +243,13 @@ macro_rules! consume_error {
     };
 }
 
-impl<T, E> ConsumeError<T, Error> for Result<T, E>
+impl<T, E, F1, F2, F3, F4> ConsumeError<T, Error, F1, F2, F3, F4> for Result<T, E>
 where
     E: Into<Error>,
+    F1: Fn(Error),
+    F2: Fn(Error),
+    F3: Fn(Error),
+    F4: Fn(Error),
 {
     consume_error!(or_trace, trace);
     consume_error!(or_debug, debug);

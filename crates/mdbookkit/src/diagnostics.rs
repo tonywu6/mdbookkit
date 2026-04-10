@@ -193,11 +193,13 @@ where
 }
 
 impl<'a> IssueReport<'a> {
+    #[inline]
     pub fn secondary(&mut self, item: IssueReport<'a>) -> &mut Self {
         self.secondary.push(item);
         self
     }
 
+    #[inline]
     pub fn note(&mut self, note: Note<'a>) -> &mut Self {
         self.notes.push(note);
         self
@@ -216,6 +218,7 @@ impl<'a> IssueReport<'a> {
 }
 
 impl<'a> IssueReporter<'a> {
+    #[inline]
     pub fn sorted(issues: Vec<Self>) -> Vec<Self> {
         let mut sorted = vec![];
 
@@ -252,6 +255,7 @@ impl<'a> IssueReporter<'a> {
 }
 
 impl<'a> From<Highlight<'a>> for Annotation<'a> {
+    #[inline]
     fn from(this: Highlight<'a>) -> Self {
         let Highlight { span, kind, label } = this;
         let highlight = matches!(this.kind, AnnotationKind::Primary);
@@ -260,18 +264,21 @@ impl<'a> From<Highlight<'a>> for Annotation<'a> {
 }
 
 impl<'a> From<Suggestion<'a>> for Patch<'a> {
+    #[inline]
     fn from(this: Suggestion<'a>) -> Self {
         Patch::new(this.span, this.repl)
     }
 }
 
 impl<'a> From<Note<'a>> for Message<'a> {
+    #[inline]
     fn from(this: Note<'a>) -> Self {
         annotate_snippets::Level::from(this.level).message(this.message)
     }
 }
 
 impl From<IssueLevel> for annotate_snippets::Level<'static> {
+    #[inline]
     fn from(value: IssueLevel) -> Self {
         match value {
             IssueLevel::Error => annotate_snippets::Level::ERROR,
@@ -284,6 +291,7 @@ impl From<IssueLevel> for annotate_snippets::Level<'static> {
 }
 
 impl From<IssueLevel> for tracing::Level {
+    #[inline]
     fn from(value: IssueLevel) -> Self {
         match value {
             IssueLevel::Error => tracing::Level::ERROR,

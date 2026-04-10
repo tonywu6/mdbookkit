@@ -31,6 +31,7 @@ where
 {
     type Item = Result<Cow<'a, str>, Error>;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         let range = self.range.clone()?;
 
@@ -101,6 +102,7 @@ where
     Self: Iterator<Item = Result<Cow<'a, str>, Error>>,
 {
     /// Render the patched Markdown source.
+    #[inline]
     pub fn into_string(self) -> Result<String, Error> {
         let mut out = String::new();
         for chunk in self {
@@ -113,6 +115,7 @@ where
 /// <https://github.com/rust-lang/mdBook/blob/v0.5.1/crates/mdbook-markdown/src/lib.rs#L46-L50>
 ///
 /// See also [`markdown_options`][super::book::BookConfigHelper::markdown_options].
+#[inline]
 pub const fn default_markdown_options() -> Options {
     Options::empty()
         .union(Options::ENABLE_TABLES)
