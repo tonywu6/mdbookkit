@@ -1,5 +1,6 @@
 use std::{
-    fmt::Display,
+    fmt::{Debug, Display},
+    path::Path,
     process::exit,
     sync::{
         LockResult,
@@ -185,18 +186,99 @@ where
     }
 }
 
-pub trait ExitProcess<T> {
-    fn exit(self, log: impl FnOnce(Error)) -> T;
+pub trait PathDebug {
+    fn debug(&self) -> impl Debug;
 }
 
-impl<T> ExitProcess<T> for Result<T> {
-    fn exit(self, log: impl FnOnce(Error)) -> T {
-        match self {
-            Ok(v) => v,
-            Err(e) => {
-                log(e);
-                exit(1)
+impl PathDebug for Path {
+    fn debug(&self) -> impl Debug {
+        struct DebugPath<'a>(&'a Path);
+
+        impl Debug for DebugPath<'_> {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{:?}", self.0.display().to_string())
             }
+        }
+
+        DebugPath(self)
+    }
+}
+
+pub struct EmitEvent<'a, E> {
+    pub trace: &'a dyn Fn(E),
+    pub debug: &'a dyn Fn(E),
+    pub warn: &'a dyn Fn(E),
+    pub error: &'a dyn Fn(E),
+}
+
+#[macro_export]
+macro_rules! emit {
+    ($fmt:literal) => {{
+        $crate::error::EmitEvent {
+            trace: &|e| ::tracing::trace!($fmt, e),
+            debug: &|e| ::tracing::debug!($fmt, e),
+            warn: &|e| ::tracing::warn!($fmt, e),
+            error: &|e| ::tracing::error!($fmt, e),
+        }
+    }};
+    () => {
+        $crate::emit!("{:?}")
+    };
+}
+
+pub trait ConsumeError<T, E> {
+    fn ok_or_trace(self, emit: EmitEvent<'_, E>) -> Option<T>;
+    fn ok_or_debug(self, emit: EmitEvent<'_, E>) -> Option<T>;
+    fn ok_or_warn(self, emit: EmitEvent<'_, E>) -> Option<T>;
+    fn ok_or_error(self, emit: EmitEvent<'_, E>) -> Option<T>;
+    fn or_fatal(self, emit: EmitEvent<'_, E>) -> Result<T, Exit>;
+}
+
+pub struct Exit;
+
+macro_rules! consume_error {
+    ($fn:ident, $level:ident) => {
+        fn $fn(self, emit: EmitEvent<'_, Error>) -> Option<T> {
+            match self {
+                Ok(v) => Some(v),
+                Err(e) => {
+                    (emit.$level)(e.into());
+                    None
+                }
+            }
+        }
+    };
+}
+
+impl<T, E> ConsumeError<T, Error> for Result<T, E>
+where
+    E: Into<Error>,
+{
+    consume_error!(ok_or_trace, trace);
+    consume_error!(ok_or_debug, debug);
+    consume_error!(ok_or_warn, warn);
+    consume_error!(ok_or_error, error);
+
+    fn or_fatal(self, emit: EmitEvent<'_, Error>) -> Result<T, Exit> {
+        match self {
+            Ok(v) => Ok(v),
+            Err(e) => {
+                (emit.error)(e.into());
+                Err(Exit)
+            }
+        }
+    }
+}
+
+pub trait ProgramExit {
+    fn exit(self) -> !;
+}
+
+impl ProgramExit for Result<(), Exit> {
+    fn exit(self) -> ! {
+        match self {
+            Ok(()) => exit(0),
+            Err(_) => exit(1),
         }
     }
 }

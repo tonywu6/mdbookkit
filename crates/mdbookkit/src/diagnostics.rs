@@ -11,12 +11,12 @@ use annotate_snippets::{
     Annotation, AnnotationKind, Group, Message, Patch, Renderer, Snippet, renderer::DecorStyle,
 };
 use bon::Builder;
-use tap::{Pipe, TapFallible};
+use tap::Pipe;
 
 use crate::{
-    emit_debug,
+    emit,
     env::{is_colored, is_logging},
-    error::put_severity,
+    error::{ConsumeError, put_severity},
     logging::stderr,
 };
 
@@ -101,8 +101,7 @@ impl<'a> IssueReporter<'a> {
             .decor_style(DecorStyle::Unicode);
             for report in self.emit_reports() {
                 writeln!(stderr(), "{}\n", renderer.render(&report))
-                    .tap_err(emit_debug!())
-                    .ok();
+                    .ok_or_debug(emit!("failed to print to stderr: {:?}"));
             }
         }
     }

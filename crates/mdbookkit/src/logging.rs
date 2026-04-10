@@ -455,46 +455,6 @@ pub fn styled<D>(val: D) -> StyledObject<D> {
 }
 
 #[macro_export]
-macro_rules! emit_trace {
-    () => {
-        |e| ::tracing::trace!("{:?}", e)
-    };
-    ($fmt:expr) => {
-        |e| ::tracing::trace!($fmt, e)
-    };
-}
-
-#[macro_export]
-macro_rules! emit_debug {
-    () => {
-        |e| ::tracing::debug!("{:?}", e)
-    };
-    ($fmt:expr) => {
-        |e| ::tracing::debug!($fmt, e)
-    };
-}
-
-#[macro_export]
-macro_rules! emit_warning {
-    () => {
-        |e| ::tracing::warn!("{:?}", e)
-    };
-    ($fmt:expr) => {
-        |e| ::tracing::warn!($fmt, e)
-    };
-}
-
-#[macro_export]
-macro_rules! emit_error {
-    () => {
-        |e| ::tracing::error!("{:?}", e)
-    };
-    ($fmt:expr) => {
-        |e| ::tracing::error!($fmt, e)
-    };
-}
-
-#[macro_export]
 macro_rules! plural {
     ( $num:expr, $singular:expr ) => {
         $crate::plural!($num, $singular, concat!($singular, "s"))

@@ -1,21 +1,24 @@
-use std::{env::current_dir, path::PathBuf};
+use std::path::PathBuf;
 
-use anyhow::Result;
 use tracing::info_span;
 
-use mdbookkit::{emit_error, error::ExitProcess, logging::Logging};
+use mdbookkit::{
+    emit,
+    error::{ConsumeError, ProgramExit},
+    logging::Logging,
+};
 
 mod postprocess;
 
-fn main() -> Result<()> {
+fn main() {
     Logging::default().init();
     let _span = info_span!({ env!("CARGO_PKG_NAME") }).entered();
     let Program { command } = clap::Parser::parse();
     match command {
-        Command::Postprocess { root_dir } => postprocess::run(root_dir.unwrap_or(current_dir()?)),
+        Command::Postprocess { root_dir } => postprocess::run(root_dir),
     }
-    .exit(emit_error!());
-    Ok(())
+    .or_fatal(emit!())
+    .exit()
 }
 
 #[derive(clap::Parser, Debug, Clone)]

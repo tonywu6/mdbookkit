@@ -1,5 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
+    env::current_dir,
     fmt::Write,
     path::PathBuf,
 };
@@ -19,7 +20,9 @@ use url::Url;
 
 use mdbookkit::{error::OnWarning, url::UrlFromPath};
 
-pub fn run(root_dir: PathBuf) -> Result<()> {
+pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
+    let root_dir = root_dir.unwrap_or(current_dir()?);
+
     let jinja =
         Environment::new().tap_mut(|env| env.add_template("index.html", OPEN_GRAPH).unwrap());
 

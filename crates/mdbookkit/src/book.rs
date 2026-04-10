@@ -174,9 +174,9 @@ where
 pub trait BookHelper {
     fn iter_chapters(&self) -> impl Iterator<Item = (&PathBuf, &Chapter)>;
 
-    fn for_each_page_mut<F>(&mut self, func: F) -> Result<()>
+    fn for_each_page_mut<F, E>(&mut self, func: F) -> Result<(), E>
     where
-        F: FnMut(&PathBuf, &mut String) -> Result<()>;
+        F: FnMut(&PathBuf, &mut String) -> Result<(), E>;
 
     fn to_stdout(self, ctx: &PreprocessorContext) -> Result<()>;
 }
@@ -194,9 +194,9 @@ impl BookHelper for Book {
         })
     }
 
-    fn for_each_page_mut<F>(&mut self, mut func: F) -> Result<()>
+    fn for_each_page_mut<F, E>(&mut self, mut func: F) -> Result<(), E>
     where
-        F: FnMut(&PathBuf, &mut String) -> Result<()>,
+        F: FnMut(&PathBuf, &mut String) -> Result<(), E>,
     {
         let mut result = Ok(());
         self.for_each_chapter_mut(|ch| {

@@ -5,7 +5,7 @@ use std::{collections::HashSet, fmt::Debug, str::FromStr};
 use anyhow::{Context, Result};
 use git2::Repository;
 use mdbook_markdown::pulldown_cmark;
-use mdbook_preprocessor::{Preprocessor, PreprocessorContext, book::Book};
+use mdbook_preprocessor::{PreprocessorContext, book::Book};
 use serde::Deserialize;
 use tap::{Pipe, Tap};
 use tracing::{Level, debug, info, info_span, span::EnteredSpan, trace, warn};
@@ -14,8 +14,8 @@ use url::Url;
 use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin},
     diagnostics::IssueReporter,
-    emit_debug, emit_error,
-    error::{ExitProcess, OnWarning, has_severity},
+    emit,
+    error::{ConsumeError, Exit, OnWarning, ProgramExit, has_severity},
     logging::Logging,
     ticker, ticker_item,
     url::{ExpectUrl, UrlFromPath},
@@ -32,20 +32,35 @@ mod link;
 mod page;
 mod vcs;
 
-fn main() -> Result<()> {
+fn main() {
     Logging::default().init();
     let _span = info_span!({ env!("CARGO_PKG_NAME") }).entered();
     let Program { command } = clap::Parser::parse();
     match command {
-        None => mdbook().exit(emit_error!()),
-        Some(Command::Supports { .. }) => {}
+        None => mdbook(),
+        Some(Command::Supports { .. }) => Ok(()),
     }
-    Ok(())
+    .exit()
 }
 
-fn mdbook() -> Result<()> {
-    let (ctx, book) = book_from_stdin().context("Failed to read from mdBook")?;
-    Permalinks.run(&ctx, book)?.to_stdout(&ctx)?;
+fn mdbook() -> Result<(), Exit> {
+    let (ctx, book) = book_from_stdin()
+        .context("Failed to read from mdBook")
+        .or_fatal(emit!())?;
+
+    match Environment::new(&ctx) {
+        Ok(Ok(env)) => env.process(book)?,
+        Ok(Err(err)) => {
+            warn!("{:?}", err.context("Preprocessor will be disabled"));
+            book
+        }
+        Err(err) => Err(err)
+            .context("Failed to initialize preprocessor")
+            .or_fatal(emit!())?,
+    }
+    .to_stdout(&ctx)
+    .or_fatal(emit!())?;
+
     Ok(())
 }
 
@@ -61,28 +76,6 @@ enum Command {
     Supports { renderer: String },
 }
 
-struct Permalinks;
-
-impl Preprocessor for Permalinks {
-    fn name(&self) -> &str {
-        PREPROCESSOR_NAME
-    }
-
-    fn run(&self, ctx: &PreprocessorContext, book: Book) -> Result<Book> {
-        match Environment::new(ctx) {
-            Ok(Ok(env)) => {
-                debug!("{env:#?}");
-                env.run(ctx, book)
-            }
-            Ok(Err(err)) => {
-                warn!("{:?}", err.context("Preprocessor will be disabled"));
-                Ok(book)
-            }
-            Err(err) => Err(err).context("Failed to initialize preprocessor"),
-        }
-    }
-}
-
 struct Environment {
     vcs: VersionControl,
     root_dir: Url,
@@ -96,24 +89,22 @@ struct VersionControl {
     repo: Repository,
 }
 
-impl Preprocessor for Environment {
-    fn name(&self) -> &str {
-        PREPROCESSOR_NAME
-    }
-
-    fn run(&self, _: &PreprocessorContext, mut book: Book) -> Result<Book> {
+impl Environment {
+    fn process(self: Environment, mut book: Book) -> Result<Book, Exit> {
         let mut contents = Pages::new(self.markdown);
 
         for (path, ch) in book.iter_chapters() {
             let path = (path.to_str())
                 .with_context(|| path.display().to_string())
-                .context("Path contains non-UTF-8 characters, which is not supported:")?;
+                .context("Path contains non-UTF-8 characters, which is not supported:")
+                .or_fatal(emit!())?;
 
             let url = self.root_dir.join(path).expect_url();
 
             (contents.insert(url, &ch.content))
                 .with_context(|| path.to_owned())
-                .context("Failed to parse file as Markdown:")?;
+                .context("Failed to parse file as Markdown:")
+                .or_fatal(emit!())?;
         }
 
         self.resolve(&mut contents);
@@ -125,7 +116,7 @@ impl Preprocessor for Environment {
         contents.log_stats();
 
         // bail before emitting changes
-        self.config.fail_on_warnings.check()?;
+        self.config.fail_on_warnings.check().or_fatal(emit!())?;
 
         let mut results = contents.emit();
 
@@ -135,7 +126,8 @@ impl Preprocessor for Environment {
             if let Some(output) = results.remove(&url) {
                 *content = output
                     .with_context(|| path.display().to_string())
-                    .context("Error generating output")?;
+                    .context("Error generating output")
+                    .or_fatal(emit!())?;
             }
             Ok(())
         })?;
@@ -148,9 +140,7 @@ impl Preprocessor for Environment {
 
         Ok(book)
     }
-}
 
-impl Environment {
     fn resolve(&self, content: &mut Pages<'_>) {
         self.validate();
 
@@ -412,7 +402,7 @@ impl Environment {
     fn new(book: &PreprocessorContext) -> Result<Result<Self>> {
         let config = book
             .preprocessor(&[PREPROCESSOR_NAME, "mdbook-link-forever"])
-            .inspect(emit_debug!("{:#?}"))
+            .inspect(|c| debug!("{c:#?}"))
             .context("Failed to read preprocessor config from book.toml")?;
 
         let vcs = match VersionControl::try_from_git(&config, &book.config) {

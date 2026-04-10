@@ -8,7 +8,8 @@ use tracing::{debug, info, instrument, trace};
 use url::{Url, form_urlencoded::Serializer as SearchParams};
 
 use mdbookkit::{
-    emit_debug, emit_trace,
+    emit,
+    error::ConsumeError,
     url::{ExpectUrl, UrlFromPath},
 };
 
@@ -106,10 +107,10 @@ impl VersionControl {
         {
             if !(self.repo.is_path_ignored(&path))
                 .with_context(|| format!("error testing if {path:?} is ignored"))
-                .inspect_err(emit_debug!())
+                .ok_or_debug(emit!())
                 .unwrap_or(false)
             {
-                Ok(TryFile { path, metadata }).inspect(emit_trace!())
+                Ok(TryFile { path, metadata }).inspect(|f| trace!("{f:?}"))
             } else {
                 debug!("path ignored");
                 Err(PathStatus::Ignored)
@@ -348,7 +349,7 @@ fn get_git_head(repo: &Repository) -> Result<Option<String>> {
 
     debug!("HEAD is at {}", head.id());
 
-    if let Ok(tag) = head
+    if let Some(tag) = head
         .as_object()
         .describe(
             DescribeOptions::new()
@@ -356,7 +357,7 @@ fn get_git_head(repo: &Repository) -> Result<Option<String>> {
                 .max_candidates_tags(0), // exact match
         )
         .and_then(|tag| tag.format(None))
-        .inspect_err(emit_debug!("no exact tag found: {}"))
+        .ok_or_debug(emit!("no exact tag found: {}"))
     {
         info!("Using tag name {tag:?} for permalinks");
         Ok(Some(tag))
@@ -372,7 +373,7 @@ fn find_git_remote(repo: &Repository, config: &MDBookConfig) -> Result<Result<Re
     if let Some(url) = config.get::<String>("output.html.git-repository-url")? {
         debug!("found {url:?} in book.toml");
         gix_url::parse(url.as_str().into())
-            .inspect(emit_debug!("parsed as {:?}"))
+            .inspect(|u| debug!("parsed as {u:?}"))
             .context("Could not parse `output.html.git-repository-url`")?
             .pipe(RepoSource::Config)
             .pipe(Ok)
@@ -391,7 +392,7 @@ fn find_git_remote(repo: &Repository, config: &MDBookConfig) -> Result<Result<Re
         };
         debug!("found {repo:?} via remote `origin`");
         gix_url::parse(repo.into())
-            .inspect(emit_debug!("parsed as {:?}"))
+            .inspect(|u| debug!("parsed as {u:?}"))
             .context("Could not parse the remote URL of `origin`")?
             .pipe(RepoSource::Remote)
             .pipe(Ok)
