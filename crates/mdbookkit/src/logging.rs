@@ -292,22 +292,17 @@ where
         // n.b. using extensions_mut involves a RwLock write, which will cause
         // derive_event to deadlock when it tries to read from the same span
 
-        if let Some(TickerData { key, .. }) = span.extensions().get::<TickerData>() {
-            if let Some(tx) = TICKER.sender() {
-                tx.send(ProgressTick::TickerFinish { key }).ok();
-            } else {
-                derive_event!(id, span.metadata(), "finished");
-            }
+        if let Some(TickerData { key, .. }) = span.extensions().get::<TickerData>()
+            && let Some(tx) = TICKER.sender()
+        {
+            tx.send(ProgressTick::TickerFinish { key }).ok();
         } else if let Some(parent) = span.parent()
             && let Some(TickerData { key, .. }) = parent.extensions().get::<TickerData>()
             && let Some(TickerItem(item)) = span.extensions().get::<TickerItem>()
+            && let Some(tx) = TICKER.sender()
         {
-            if let Some(tx) = TICKER.sender() {
-                let item = item.clone();
-                tx.send(ProgressTick::ItemDone { key, item }).ok();
-            } else {
-                derive_event!(id, span.metadata(), "finished");
-            }
+            let item = item.clone();
+            tx.send(ProgressTick::ItemDone { key, item }).ok();
         }
     }
 
