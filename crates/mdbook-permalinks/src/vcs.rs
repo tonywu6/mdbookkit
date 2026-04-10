@@ -104,7 +104,11 @@ impl VersionControl {
             .expect("should be a file: url")
             .symlink_metadata()
         {
-            if !self.repo.is_path_ignored(&path).unwrap_or(false) {
+            if !(self.repo.is_path_ignored(&path))
+                .with_context(|| format!("error testing if {path:?} is ignored"))
+                .inspect_err(emit_debug!())
+                .unwrap_or(false)
+            {
                 Ok(TryFile { path, metadata }).inspect(emit_trace!())
             } else {
                 debug!("path ignored");
@@ -368,7 +372,8 @@ fn find_git_remote(repo: &Repository, config: &MDBookConfig) -> Result<Result<Re
     if let Some(url) = config.get::<String>("output.html.git-repository-url")? {
         debug!("found {url:?} in book.toml");
         gix_url::parse(url.as_str().into())
-            .inspect(emit_debug!("parsed as {:?}"))?
+            .inspect(emit_debug!("parsed as {:?}"))
+            .context("Could not parse `output.html.git-repository-url`")?
             .pipe(RepoSource::Config)
             .pipe(Ok)
             .pipe(Ok)
@@ -386,7 +391,8 @@ fn find_git_remote(repo: &Repository, config: &MDBookConfig) -> Result<Result<Re
         };
         debug!("found {repo:?} via remote `origin`");
         gix_url::parse(repo.into())
-            .inspect(emit_debug!("parsed as {:?}"))?
+            .inspect(emit_debug!("parsed as {:?}"))
+            .context("Could not parse the remote URL of `origin`")?
             .pipe(RepoSource::Remote)
             .pipe(Ok)
             .pipe(Ok)

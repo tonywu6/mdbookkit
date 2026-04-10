@@ -1,19 +1,15 @@
 use std::{
-    borrow::Borrow,
     collections::{HashMap, HashSet},
-    fmt::Debug,
-    hash::Hash,
     sync::Arc,
 };
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Result, bail};
 use mdbook_markdown::pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
 use tap::Pipe;
 use tracing::{debug, info, instrument, trace};
 use url::Url;
 
 use mdbookkit::{
-    emit_warning,
     markdown::{PatchStream, Spanned},
     plural,
 };
@@ -71,17 +67,11 @@ impl<'a> Pages<'a> {
         })
     }
 
-    pub fn emit<Q>(&self, key: &Q) -> Result<String>
-    where
-        Arc<Url>: Borrow<Q>,
-        Q: Eq + Hash + Debug + ?Sized,
-    {
+    pub fn emit(self) -> HashMap<Arc<Url>, Result<String>> {
         self.pages
-            .get(key)
-            .with_context(|| format!("No such document {key:?}"))
-            .inspect_err(emit_warning!())
-            .expect("should have document")
-            .emit()
+            .into_iter()
+            .map(|(key, page)| (key, page.emit()))
+            .collect()
     }
 
     pub fn log_stats(&self) {

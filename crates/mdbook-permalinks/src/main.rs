@@ -1,10 +1,6 @@
 #![warn(clippy::unwrap_used)]
 
-use std::{
-    collections::{HashMap, HashSet},
-    fmt::Debug,
-    str::FromStr,
-};
+use std::{collections::HashSet, fmt::Debug, str::FromStr};
 
 use anyhow::{Context, Result};
 use git2::Repository;
@@ -82,7 +78,7 @@ impl Preprocessor for Permalinks {
                 warn!("{:?}", err.context("Preprocessor will be disabled"));
                 Ok(book)
             }
-            Err(err) => Err(err).context("Failed to initialize"),
+            Err(err) => Err(err).context("Failed to initialize preprocessor"),
         }
     }
 }
@@ -111,7 +107,7 @@ impl Preprocessor for Environment {
         for (path, ch) in book.iter_chapters() {
             let path = (path.to_str())
                 .with_context(|| path.display().to_string())
-                .context("File contains non-Unicode characters:")?;
+                .context("Path contains non-UTF-8 characters, which is not supported:")?;
 
             let url = self.root_dir.join(path).expect_url();
 
@@ -131,21 +127,15 @@ impl Preprocessor for Environment {
         // bail before emitting changes
         self.config.fail_on_warnings.check()?;
 
-        let mut result = book
-            .iter_chapters()
-            .map(|(path, _)| {
-                let _span = info_span!("emit", key = ?path).entered();
-                debug!("generating output");
-                let key = path.to_str().expect("paths have been checked");
-                let url = self.root_dir.join(key).expect_url();
-                let out = contents.emit(&url).context("Error generating output")?;
-                Ok((path.clone(), out))
-            })
-            .collect::<Result<HashMap<_, _>>>()?;
+        let mut results = contents.emit();
 
         book.for_each_page_mut(|path, content| {
-            if let Some(output) = result.remove(path) {
-                *content = output;
+            let key = path.to_str().expect("paths were checked");
+            let url = self.root_dir.join(key).expect_url();
+            if let Some(output) = results.remove(&url) {
+                *content = output
+                    .with_context(|| path.display().to_string())
+                    .context("Error generating output")?;
             }
             Ok(())
         })?;
