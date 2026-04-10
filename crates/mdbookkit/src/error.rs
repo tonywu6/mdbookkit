@@ -72,14 +72,14 @@ pub enum OnWarning {
 impl OnWarning {
     pub fn check(&self) -> Result<()> {
         if has_severity(Level::ERROR) {
-            Err(anyhow!("Preprocessor finished with errors"))
+            Err(anyhow!("preprocessor finished with errors"))
         } else if has_severity(Level::WARN) {
             match (self, is_ci()) {
-                (Self::AlwaysFail, _) => anyhow! { "Treating warnings as errors because the \
+                (Self::AlwaysFail, _) => anyhow! { "treating warnings as errors because the \
                 `fail-on-warnings` option is set to \"always\"" }
                 .pipe(Err),
                 (Self::FailInCi, Some(ci)) => {
-                    anyhow! { "Treating warnings as errors because CI={ci} and the \
+                    anyhow! { "treating warnings as errors because CI={ci} and the \
                     `fail-on-warnings` option is set to \"ci\"" }
                     .pipe(Err)
                 }

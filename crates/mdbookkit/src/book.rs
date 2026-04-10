@@ -67,8 +67,8 @@ impl PreprocessorHelper for PreprocessorContext {
             if let Some(value) = try_get_options(self, name)? {
                 if idx != 0 {
                     warn! {
-                        "The book.toml section [{deprecated}] is deprecated. \
-                        Use [{recommended}] instead.",
+                        "the book.toml section [{deprecated}] is deprecated, \
+                        use [{recommended}] instead.",
                         deprecated  = preprocessor_table!(preprocessor.name),
                         recommended = preprocessor_table!(preprocessor.names[0])
                     };
@@ -222,10 +222,10 @@ impl BookHelper for Book {
         } else {
             serde_json::to_string(&self).map_err(Into::into)
         }
-        .context("Failed to serialize mdBook output")?;
+        .context("failed to serialize mdBook output")?;
         std::io::stdout()
             .write_all(output.as_bytes())
-            .context("Failed to write mdBook output")
+            .context("failed to write mdBook output")
     }
 }
 
@@ -238,7 +238,7 @@ fn patch_mdbook_input(
     match ctx.get("mdbook_version") {
         Some(Value::String(version)) => {
             if !version.starts_with("0.4.") && !version.starts_with("0.5.") {
-                bail! { "Unsupported mdBook version {version}; \
+                bail! { "unsupported mdBook version {version}; \
                 supported versions are 0.4, 0.5" }
             }
         }

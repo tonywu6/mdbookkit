@@ -403,7 +403,7 @@ where
             } else {
                 let error = anyhow!("parsed: {parsed:?}")
                     .context(format!("string: {args:?}"))
-                    .context("Malformed command line args");
+                    .context("malformed command line args");
                 Err(serde::de::Error::custom(format_args!("{error:?}")))
             }
         }

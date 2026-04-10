@@ -66,8 +66,8 @@ pub fn build_docs(config: BuildConfig, tracker: &mut LinkTracker) -> Result<(), 
     } else {
         default_cargo
             .workspace()
-            .context("While preparing to build docs using `cargo`")
-            .context("Failed to determine the current workspace root")
+            .context("while preparing to build docs using `cargo`")
+            .context("failed to determine the current workspace root")
             .or_error(emit!())?
             .directory()
             .to_owned()
@@ -114,7 +114,7 @@ fn run_builder(
         .current_dir(manifest_dir)
         .run()
         .into_cargo_metadata()
-        .context("Failed to learn about the workspace via cargo")
+        .context("failed to learn about the workspace via cargo")
         .or_warn(emit!())?;
 
     let packages = if packages.is_empty() {
@@ -129,7 +129,7 @@ fn run_builder(
     let mut builder = builder;
     if docs_rs == Some(true) {
         load_docs_rs_options(&mut builder, &metadata, &packages)
-            .context("Failed to inherit docs.rs options")
+            .context("failed to inherit docs.rs options")
             .or_warn(emit!())?;
     }
 
@@ -190,7 +190,7 @@ fn run_builder(
             .current_dir(manifest_dir)
             .run()
             .into_cargo_metadata()
-            .context("Failed to learn about workspace paths via cargo")
+            .context("failed to learn about workspace paths via cargo")
             .or_warn(emit!())?;
         PathMapper::new(&metadata, Some(&build_metadata))
     };
@@ -253,7 +253,7 @@ fn run_builder(
         };
 
         let tempdir = TempDir::new_in(&metadata.target_directory)
-            .context("Failed to create temporary directory for doc artifacts")
+            .context("failed to create temporary directory for doc artifacts")
             .or_warn(emit!())?;
 
         let mut rustdoc = Command::new("rustdoc")
@@ -286,7 +286,7 @@ fn run_builder(
             {
                 symlink_dir_all(doc, tempdir.path().join(name))
                     .with_context(|| doc.to_owned())
-                    .context("Failed to locate `cargo doc` output at:")
+                    .context("failed to locate doc artifacts expected at:")
                     .or_warn(emit!())
                     .ok();
 
@@ -314,7 +314,7 @@ fn run_builder(
             macro_rules! write_to {
                 ( $stdin:ident, $fmt:literal ) => {
                     writeln!($stdin, $fmt)
-                        .context("Could not pass input `rustdoc`")
+                        .context("could not pass input to `rustdoc`")
                         .or_warn(emit!())
                         .ok();
                 };
@@ -351,8 +351,8 @@ fn run_builder(
             stdout: {
                 let path = tempdir.path().join(crate_name!()).join("index.html");
                 std::fs::read_to_string(&path)
-                    .with_context(|| format!("Expected {:?}", path.debug()))
-                    .context("Failed to read from `rustdoc` output")
+                    .with_context(|| format!("expected {:?}", path.debug()))
+                    .context("failed to read from `rustdoc` output")
                     .or_warn(emit!())?
             },
             stderr: result.output.stderr,
@@ -379,9 +379,9 @@ impl BuildCounter {
 
     fn prebuild(&self, id: usize, build: &Builder) {
         if self.num_builds == 1 {
-            info!("Building docs")
+            info!("building docs")
         } else {
-            info!("Running build #{id} {:?}", build.debug())
+            info!("running build #{id} {:?}", build.debug())
         }
     }
 
@@ -391,9 +391,9 @@ impl BuildCounter {
         }
         if self.num_builds != 1 {
             if result.is_err() {
-                warn!("Build #{id} has failed")
+                warn!("build #{id} has failed")
             } else {
-                info!("Build #{id} done")
+                info!("build #{id} done")
             }
         }
     }
@@ -401,13 +401,13 @@ impl BuildCounter {
     fn finish(self) -> Result<()> {
         if self.num_builds == self.num_failed {
             if self.num_builds == 1 {
-                bail!("Build failed")
+                bail!("build failed")
             } else {
-                bail!("All builds have failed")
+                bail!("all builds have failed")
             }
         }
         if self.num_failed != 0 {
-            warn!("Some builds have failed")
+            warn!("some builds have failed")
         }
         Ok(())
     }
@@ -455,7 +455,7 @@ impl CargoRecorder {
             .pipe(cargo_metadata::Message::parse_stream)
         {
             let Ok(msg) = msg
-                .context("I/O error while reading from cargo")
+                .context("error while reading from cargo")
                 .or_warn(emit!())
             else {
                 continue;
@@ -535,7 +535,7 @@ impl CargoRecorder {
 
         for path in filenames {
             self.update_file(name.clone(), &path)
-                .context("Error while collecting compiler artifacts")
+                .context("error while collecting compiler artifacts")
                 .or_warn(emit!())
                 .ok();
         }
@@ -764,7 +764,7 @@ fn resolve_packages(
                 .pipe(Ok)
         })
         .collect::<Result<Vec<_>>>()
-        .context("Failed to resolve package versions")
+        .context("failed to resolve package versions")
         .or_warn(emit!())?
         .iter()
         .flat_map(|output| {
@@ -960,7 +960,7 @@ impl CargoOptions {
             .checked()
             .context("`cargo locate-project` did not run successfully")?
             .pipe(LocateProject::parse)
-            .context("Could not parse output of `cargo locate-project`")
+            .context("could not parse output of `cargo locate-project`")
     }
 
     fn toolchain(&self) -> Option<String> {
@@ -1091,7 +1091,7 @@ impl Subprocess {
             Err(error) => {
                 return (repr.as_context())
                     .context(error)
-                    .context("Error waiting for command to finish")
+                    .context("error waiting for command to finish")
                     .pipe(Err);
             }
         };
@@ -1100,7 +1100,7 @@ impl Subprocess {
             None
         } else {
             (repr.as_context())
-                .context(format!("Command exited with {}", output.status))
+                .context(format!("command exited with {}", output.status))
                 .pipe(Some)
         };
 
@@ -1138,13 +1138,13 @@ struct PrintCommand(String);
 
 impl PrintCommand {
     fn as_context(&self) -> anyhow::Error {
-        anyhow!("Command: {}\n---", self.0)
+        anyhow!("command: {}\n---", self.0)
     }
 
     fn failed_to_spawn(&self, error: &std::io::Error) -> anyhow::Error {
         (self.as_context())
             .context(anyhow!("{error}"))
-            .context("Failed to spawn command")
+            .context("failed to spawn command")
     }
 }
 

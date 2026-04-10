@@ -155,7 +155,7 @@ impl<'a> LinkTracker<'a> {
                         && !eq_escaped(&link.dest, &href)
                     {
                         if let Ok(url) = resolve_url(&output, &href)
-                            .with_context(|| format!("Failed to convert link: {href}"))
+                            .with_context(|| format!("failed to convert link: {href}"))
                             .or_warn(emit!())
                         {
                             link.href = Some(url)
@@ -391,7 +391,7 @@ impl<'a> Link<'a> {
         match event {
             Event::Start(Tag::Link { .. }) => {
                 debug!(?span, "unexpected `Tag::Link` in `Tag::Link`");
-                bail!("Markdown stream malformed at {span:?}");
+                bail!("markdown stream malformed at {span:?}");
             }
 
             Event::End(TagEnd::Link) => {
@@ -405,7 +405,7 @@ impl<'a> Link<'a> {
                     Ok(ControlFlow::Break(()))
                 } else {
                     debug!(?span, "mismatching span, expected {:?}", self.span.full);
-                    bail!("Markdown stream malformed at {span:?}");
+                    bail!("markdown stream malformed at {span:?}");
                 }
             }
 
@@ -505,7 +505,7 @@ impl<'a> Link<'a> {
 
             Ok((text, span))
         })()
-        .context("Internal error while parsing link; the link will be skipped")
+        .context("internal error while parsing link; the link will be skipped")
         .or_warn(emit!())?;
 
         self.normalized = NormalizedLink::Normalized { text, span };
@@ -570,7 +570,7 @@ impl<'a> Link<'a> {
                     }
                 } {
                     let help = format! {
-                        "the `{prefix}...` usage is not supported with this preprocessor\n\
+                        "the usage `{prefix}...` is not supported with this preprocessor\n\
                         specify the crate name, or use the `build.preludes` option to \
                         introduce this item into scope"
                     };
@@ -771,7 +771,7 @@ impl Display for Statistics {
             unsupported,
         } = self;
         write! { f,
-            "Processed {processed}: \
+            "processed {processed}: \
             {resolved} resolved; \
             {unresolved} unresolved",
             processed = plural!(processed, "link"),

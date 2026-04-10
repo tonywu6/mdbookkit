@@ -22,8 +22,8 @@ impl VersionControl {
     #[instrument(level = "debug", skip_all)]
     pub fn try_from_git(config: &Config, book: &MDBookConfig) -> Result<Result<Self>> {
         let repo = match Repository::open_from_env()
-            .context("Preprocessor requires a git repository to work")
-            .context("Could not find a git repository")
+            .context("preprocessor requires a git repository to work")
+            .context("could not find a git repository")
         {
             Ok(repo) => repo,
             Err(err) => return config.fail_on_warnings.adjusted(Ok(Err(err))),
@@ -33,15 +33,15 @@ impl VersionControl {
             .workdir()
             .unwrap_or_else(|| repo.commondir())
             .canonicalize()
-            .context("Could not locate repo root")?
+            .context("could not locate repo root")?
             .to_directory_url();
 
         let Some(reference) =
-            get_git_head(&repo).context("Could not get a tag or the commit hash to HEAD")?
+            get_git_head(&repo).context("could not get a tag or the commit hash to HEAD")?
         else {
             return config
                 .fail_on_warnings
-                .adjusted(Ok(Err(anyhow!("No commit found in this repo"))));
+                .adjusted(Ok(Err(anyhow!("no commit found in this repo"))));
         };
 
         let link = {
@@ -49,19 +49,19 @@ impl VersionControl {
                 debug!("using explicitly set repo_url_template");
                 Permalink {
                     template: (pat.parse())
-                        .context("Failed to parse `repo-url-template` as a valid URL")?,
+                        .context("failed to parse `repo-url-template` as a valid URL")?,
                     reference,
                 }
             } else {
                 let repo = match find_git_remote(&repo, book)
-                    .context("Error while finding a git remote URL")?
+                    .context("error while finding a git remote URL")?
                 {
                     Ok(repo) => repo,
                     Err(err) => {
                         return anyhow!("help: or use `repo-url-template` option")
                             .context("help: set `output.html.git-repository-url` to a GitHub URL")
                             .context(err)
-                            .context("Failed to determine the remote URL prefix for permalinks")
+                            .context("failed to determine the remote URL prefix for permalinks")
                             .pipe(Err)
                             .pipe(Ok)
                             .pipe(|result| config.fail_on_warnings.adjusted(result));
@@ -74,10 +74,10 @@ impl VersionControl {
                         to define a custom URL scheme" }
                         .context(err)
                         .context(match repo {
-                            RepoSource::Config(..) => "In `output.html.git-repository-url`:",
-                            RepoSource::Remote(..) => "In git remote \"origin\":",
+                            RepoSource::Config(..) => "in `output.html.git-repository-url`:",
+                            RepoSource::Remote(..) => "in git remote \"origin\":",
                         })
-                        .context("Failed to find a git remote URL")
+                        .context("failed to find a git remote URL")
                         .pipe(Err);
                     }
                 };
@@ -345,7 +345,7 @@ fn get_git_head(repo: &Repository) -> Result<Option<String>> {
 
     let head = head
         .peel_to_commit()
-        .context("Failed to resolve the commit HEAD is at")?;
+        .context("failed to resolve the commit HEAD is at")?;
 
     debug!("HEAD is at {}", head.id());
 
@@ -359,11 +359,11 @@ fn get_git_head(repo: &Repository) -> Result<Option<String>> {
         .and_then(|tag| tag.format(None))
         .or_debug(emit!("no exact tag found: {}"))
     {
-        info!("Using tag name {tag:?} for permalinks");
+        info!("using tag name {tag:?} for permalinks");
         Ok(Some(tag))
     } else {
         let sha = head.id().to_string();
-        info!("Using commit hash {sha} for permalinks");
+        info!("using commit hash {sha} for permalinks");
         Ok(Some(sha))
     }
 }
@@ -374,26 +374,26 @@ fn find_git_remote(repo: &Repository, config: &MDBookConfig) -> Result<Result<Re
         debug!("found {url:?} in book.toml");
         gix_url::parse(url.as_str().into())
             .inspect(|u| debug!("parsed as {u:?}"))
-            .context("Could not parse `output.html.git-repository-url`")?
+            .context("could not parse `output.html.git-repository-url`")?
             .pipe(RepoSource::Config)
             .pipe(Ok)
             .pipe(Ok)
     } else {
         let repo = match repo
             .find_remote("origin")
-            .context("Repo does not have remote named `origin`")
+            .context("repo does not have remote named `origin`")
         {
             Ok(repo) => repo,
             Err(err) => return Ok(Err(err)),
         };
         let repo = match repo.url() {
             Some(url) => url,
-            None => return Ok(Err(anyhow!("Remote `origin` does not have a URL"))),
+            None => return Ok(Err(anyhow!("remote `origin` does not have a URL"))),
         };
         debug!("found {repo:?} via remote `origin`");
         gix_url::parse(repo.into())
             .inspect(|u| debug!("parsed as {u:?}"))
-            .context("Could not parse the remote URL of `origin`")?
+            .context("could not parse the remote URL of `origin`")?
             .pipe(RepoSource::Remote)
             .pipe(Ok)
             .pipe(Ok)
@@ -402,11 +402,11 @@ fn find_git_remote(repo: &Repository, config: &MDBookConfig) -> Result<Result<Re
 
 fn remote_as_github(url: &gix_url::Url) -> Result<(String, String)> {
     let Some(host) = url.host() else {
-        bail!("Remote URL does not have a host")
+        bail!("remote URL does not have a host")
     };
 
     if host != "github.com" && !host.ends_with(".github.com") {
-        bail!("Unsupported remote {host:?}, only `github.com` is supported")
+        bail!("unsupported remote {host:?}, only `github.com` is supported")
     }
 
     let path = url.path.to_string();
@@ -415,11 +415,11 @@ fn remote_as_github(url: &gix_url::Url) -> Result<(String, String)> {
 
     let owner = iter
         .next()
-        .with_context(|| format!("Malformed path {path:?}, expected `/<owner>/<repo>`"))?;
+        .with_context(|| format!("malformed path {path:?}, expected `/<owner>/<repo>`"))?;
 
     let repo = iter
         .next()
-        .with_context(|| format!("Malformed path {path:?}, expected `/<owner>/<repo>`"))?;
+        .with_context(|| format!("malformed path {path:?}, expected `/<owner>/<repo>`"))?;
 
     let repo = repo.strip_suffix(".git").unwrap_or(repo);
 
@@ -478,7 +478,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Unsupported remote")]
+    #[should_panic(expected = "unsupported remote")]
     fn test_non_github() {
         let config = r#"
         [output.html]

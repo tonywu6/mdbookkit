@@ -15,7 +15,7 @@ use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin},
     diagnostics::IssueReporter,
     emit,
-    error::{ConsumeError, Break, OnWarning, ProgramExit, has_severity},
+    error::{Break, ConsumeError, OnWarning, ProgramExit, has_severity},
     logging::Logging,
     ticker, ticker_item,
     url::{ExpectUrl, UrlFromPath},
@@ -45,17 +45,17 @@ fn main() {
 
 fn mdbook() -> Result<(), Break> {
     let (ctx, book) = book_from_stdin()
-        .context("Failed to read from mdBook")
+        .context("failed to read from mdBook")
         .or_error(emit!())?;
 
     match Environment::new(&ctx) {
         Ok(Ok(env)) => env.process(book)?,
         Ok(Err(err)) => {
-            warn!("{:?}", err.context("Preprocessor will be disabled"));
+            warn!("{:?}", err.context("preprocessor will be disabled"));
             book
         }
         Err(err) => Err(err)
-            .context("Failed to initialize preprocessor")
+            .context("failed to initialize preprocessor")
             .or_error(emit!())?,
     }
     .to_stdout(&ctx)
@@ -96,14 +96,14 @@ impl Environment {
         for (path, ch) in book.iter_chapters() {
             let path = (path.to_str())
                 .with_context(|| path.display().to_string())
-                .context("Path contains non-UTF-8 characters, which is not supported:")
+                .context("path contains non-UTF-8 characters, which is not supported:")
                 .or_error(emit!())?;
 
             let url = self.root_dir.join(path).expect_url();
 
             (contents.insert(url, &ch.content))
                 .with_context(|| path.to_owned())
-                .context("Failed to parse file as Markdown:")
+                .context("failed to parse file as markdown:")
                 .or_error(emit!())?;
         }
 
@@ -126,16 +126,16 @@ impl Environment {
             if let Some(output) = results.remove(&url) {
                 *content = output
                     .with_context(|| path.display().to_string())
-                    .context("Error generating output")
+                    .context("error generating output")
                     .or_error(emit!())?;
             }
             Ok(())
         })?;
 
         if has_severity(Level::WARN) {
-            warn!("Finished with warnings");
+            warn!("finished with warnings");
         } else {
-            info!("Finished");
+            info!("finished");
         }
 
         Ok(book)
@@ -403,7 +403,7 @@ impl Environment {
         let config = book
             .preprocessor(&[PREPROCESSOR_NAME, "mdbook-link-forever"])
             .inspect(|c| debug!("{c:#?}"))
-            .context("Failed to read preprocessor config from book.toml")?;
+            .context("failed to read preprocessor config from book.toml")?;
 
         let vcs = match VersionControl::try_from_git(&config, &book.config) {
             Ok(Ok(vcs)) => vcs,
@@ -415,7 +415,7 @@ impl Environment {
 
         let root_dir = (book.root)
             .canonicalize()
-            .context("Failed to locate book root")?
+            .context("failed to locate book root")?
             .join(&book.config.book.src)
             .to_directory_url();
 

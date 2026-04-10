@@ -56,7 +56,7 @@ enum Command {
 
 fn mdbook() -> Result<(), Break> {
     let (ctx, mut book) = book_from_stdin()
-        .context("Failed to read from mdBook")
+        .context("failed to read from mdBook")
         .or_error(emit!())?;
 
     let Config {
@@ -64,7 +64,7 @@ fn mdbook() -> Result<(), Break> {
         fail_on_warnings,
     } = ctx
         .preprocessor(&[PREPROCESSOR_NAME, "mdbook-rustdoc-link"])
-        .context("Failed to read preprocessor config from book.toml")
+        .context("failed to read preprocessor config from book.toml")
         .or_error(emit!())?;
 
     let mut contents = LinkTracker::default();
@@ -75,7 +75,7 @@ fn mdbook() -> Result<(), Break> {
             info_span!("page_read", path = ?path.debug()).in_scope(|| {
                 contents
                     .read(&chapter.content)
-                    .context("Failed to parse file as Markdown")
+                    .context("failed to parse file as markdown")
                     .or_error(emit!())?;
                 Ok(path.clone())
             })
@@ -114,7 +114,7 @@ fn mdbook() -> Result<(), Break> {
             if let Some(output) = contents.remove(path) {
                 *content = output
                     .with_context(|| path.display().to_string())
-                    .context("Error generating output")
+                    .context("error generating output")
                     .or_error(emit!())?;
             }
             Ok(())
@@ -126,9 +126,9 @@ fn mdbook() -> Result<(), Break> {
     info!("{stats}");
 
     if has_severity(Level::WARN) {
-        warn!("Finished with warnings");
+        warn!("finished with warnings");
     } else {
-        info!("Finished");
+        info!("finished");
     }
 
     Ok(())

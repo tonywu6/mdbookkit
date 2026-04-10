@@ -96,7 +96,7 @@ impl<'a> Pages<'a> {
         }
 
         info!(
-            "Processed {total}: {permalink} to repo; {rewritten} to book; {unreachable}; {unchanged}",
+            "processed {total}: {permalink} to repo; {rewritten} to book; {unreachable}; {unchanged}",
             total = plural!(total, "link"),
             permalink = plural!(permalink, "link"),
             rewritten = plural!(rewritten, "link"),
