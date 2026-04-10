@@ -227,23 +227,22 @@ macro_rules! emit {
 }
 
 pub trait ConsumeError<T, E> {
-    fn ok_or_trace(self, emit: EmitEvent<'_, E>) -> Option<T>;
-    fn ok_or_debug(self, emit: EmitEvent<'_, E>) -> Option<T>;
-    fn ok_or_warn(self, emit: EmitEvent<'_, E>) -> Option<T>;
-    fn ok_or_error(self, emit: EmitEvent<'_, E>) -> Option<T>;
-    fn or_fatal(self, emit: EmitEvent<'_, E>) -> Result<T, Exit>;
+    fn or_trace(self, emit: EmitEvent<'_, E>) -> Result<T, Break>;
+    fn or_debug(self, emit: EmitEvent<'_, E>) -> Result<T, Break>;
+    fn or_warn(self, emit: EmitEvent<'_, E>) -> Result<T, Break>;
+    fn or_error(self, emit: EmitEvent<'_, E>) -> Result<T, Break>;
 }
 
-pub struct Exit;
+pub struct Break;
 
 macro_rules! consume_error {
     ($fn:ident, $level:ident) => {
-        fn $fn(self, emit: EmitEvent<'_, Error>) -> Option<T> {
+        fn $fn(self, emit: EmitEvent<'_, Error>) -> Result<T, Break> {
             match self {
-                Ok(v) => Some(v),
+                Ok(v) => Ok(v),
                 Err(e) => {
                     (emit.$level)(e.into());
-                    None
+                    Err(Break)
                 }
             }
         }
@@ -254,27 +253,17 @@ impl<T, E> ConsumeError<T, Error> for Result<T, E>
 where
     E: Into<Error>,
 {
-    consume_error!(ok_or_trace, trace);
-    consume_error!(ok_or_debug, debug);
-    consume_error!(ok_or_warn, warn);
-    consume_error!(ok_or_error, error);
-
-    fn or_fatal(self, emit: EmitEvent<'_, Error>) -> Result<T, Exit> {
-        match self {
-            Ok(v) => Ok(v),
-            Err(e) => {
-                (emit.error)(e.into());
-                Err(Exit)
-            }
-        }
-    }
+    consume_error!(or_trace, trace);
+    consume_error!(or_debug, debug);
+    consume_error!(or_warn, warn);
+    consume_error!(or_error, error);
 }
 
 pub trait ProgramExit {
     fn exit(self) -> !;
 }
 
-impl ProgramExit for Result<(), Exit> {
+impl ProgramExit for Result<(), Break> {
     fn exit(self) -> ! {
         match self {
             Ok(()) => exit(0),

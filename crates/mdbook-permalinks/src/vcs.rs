@@ -107,7 +107,7 @@ impl VersionControl {
         {
             if !(self.repo.is_path_ignored(&path))
                 .with_context(|| format!("error testing if {path:?} is ignored"))
-                .ok_or_debug(emit!())
+                .or_debug(emit!())
                 .unwrap_or(false)
             {
                 Ok(TryFile { path, metadata }).inspect(|f| trace!("{f:?}"))
@@ -349,7 +349,7 @@ fn get_git_head(repo: &Repository) -> Result<Option<String>> {
 
     debug!("HEAD is at {}", head.id());
 
-    if let Some(tag) = head
+    if let Ok(tag) = head
         .as_object()
         .describe(
             DescribeOptions::new()
@@ -357,7 +357,7 @@ fn get_git_head(repo: &Repository) -> Result<Option<String>> {
                 .max_candidates_tags(0), // exact match
         )
         .and_then(|tag| tag.format(None))
-        .ok_or_debug(emit!("no exact tag found: {}"))
+        .or_debug(emit!("no exact tag found: {}"))
     {
         info!("Using tag name {tag:?} for permalinks");
         Ok(Some(tag))

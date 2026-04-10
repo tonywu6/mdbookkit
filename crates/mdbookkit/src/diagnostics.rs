@@ -101,7 +101,8 @@ impl<'a> IssueReporter<'a> {
             .decor_style(DecorStyle::Unicode);
             for report in self.emit_reports() {
                 writeln!(stderr(), "{}\n", renderer.render(&report))
-                    .ok_or_debug(emit!("failed to print to stderr: {:?}"));
+                    .or_debug(emit!("failed to print to stderr: {:?}"))
+                    .ok();
             }
         }
     }

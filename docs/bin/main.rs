@@ -17,7 +17,7 @@ fn main() {
     match command {
         Command::Postprocess { root_dir } => postprocess::run(root_dir),
     }
-    .or_fatal(emit!())
+    .or_error(emit!())
     .exit()
 }
 

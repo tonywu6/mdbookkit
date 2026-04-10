@@ -15,7 +15,7 @@ use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin},
     diagnostics::IssueReporter,
     emit,
-    error::{ConsumeError, Exit, OnWarning, ProgramExit, has_severity},
+    error::{ConsumeError, Break, OnWarning, ProgramExit, has_severity},
     logging::Logging,
     ticker, ticker_item,
     url::{ExpectUrl, UrlFromPath},
@@ -43,10 +43,10 @@ fn main() {
     .exit()
 }
 
-fn mdbook() -> Result<(), Exit> {
+fn mdbook() -> Result<(), Break> {
     let (ctx, book) = book_from_stdin()
         .context("Failed to read from mdBook")
-        .or_fatal(emit!())?;
+        .or_error(emit!())?;
 
     match Environment::new(&ctx) {
         Ok(Ok(env)) => env.process(book)?,
@@ -56,10 +56,10 @@ fn mdbook() -> Result<(), Exit> {
         }
         Err(err) => Err(err)
             .context("Failed to initialize preprocessor")
-            .or_fatal(emit!())?,
+            .or_error(emit!())?,
     }
     .to_stdout(&ctx)
-    .or_fatal(emit!())?;
+    .or_error(emit!())?;
 
     Ok(())
 }
@@ -90,21 +90,21 @@ struct VersionControl {
 }
 
 impl Environment {
-    fn process(self: Environment, mut book: Book) -> Result<Book, Exit> {
+    fn process(self: Environment, mut book: Book) -> Result<Book, Break> {
         let mut contents = Pages::new(self.markdown);
 
         for (path, ch) in book.iter_chapters() {
             let path = (path.to_str())
                 .with_context(|| path.display().to_string())
                 .context("Path contains non-UTF-8 characters, which is not supported:")
-                .or_fatal(emit!())?;
+                .or_error(emit!())?;
 
             let url = self.root_dir.join(path).expect_url();
 
             (contents.insert(url, &ch.content))
                 .with_context(|| path.to_owned())
                 .context("Failed to parse file as Markdown:")
-                .or_fatal(emit!())?;
+                .or_error(emit!())?;
         }
 
         self.resolve(&mut contents);
@@ -116,7 +116,7 @@ impl Environment {
         contents.log_stats();
 
         // bail before emitting changes
-        self.config.fail_on_warnings.check().or_fatal(emit!())?;
+        self.config.fail_on_warnings.check().or_error(emit!())?;
 
         let mut results = contents.emit();
 
@@ -127,7 +127,7 @@ impl Environment {
                 *content = output
                     .with_context(|| path.display().to_string())
                     .context("Error generating output")
-                    .or_fatal(emit!())?;
+                    .or_error(emit!())?;
             }
             Ok(())
         })?;
