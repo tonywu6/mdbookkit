@@ -18,12 +18,12 @@ use cargo_metadata::{
 use serde::Deserialize;
 use tap::{Pipe, Tap};
 use tempfile::TempDir;
-use tracing::{Level, error, info};
+use tracing::{Level, debug, info, info_span, warn};
 
 use mdbookkit::{
-    emit_warning,
+    emit,
     env::is_logging,
-    error::{ExpectFmt, IntoAnyhow},
+    error::{Break, ConsumeError, ExpectFmt, PathDebug},
     ticker, ticker_event,
 };
 
@@ -35,7 +35,7 @@ use crate::{
     tracker::LinkTracker,
 };
 
-pub fn build_docs(config: BuildConfig, tracker: &mut LinkTracker) -> Result<()> {
+pub fn build_docs(config: BuildConfig, tracker: &mut LinkTracker) -> Result<(), Break> {
     let BuildConfig {
         manifest_dir,
         build,
@@ -66,23 +66,34 @@ pub fn build_docs(config: BuildConfig, tracker: &mut LinkTracker) -> Result<()> 
     } else {
         default_cargo
             .workspace()
-            .context("Could not determine the current workspace root")?
+            .context("While preparing to build docs using `cargo`")
+            .context("Failed to determine the current workspace root")
+            .or_error(emit!())?
             .directory()
             .to_owned()
     };
 
-    for builder in build {
-        run_builder(&manifest_dir, builder, tracker)?;
+    let mut counter = BuildCounter::new(build.len());
+
+    for (build_id, builder) in build.into_iter().enumerate() {
+        let build_id = build_id + 1;
+
+        counter.prebuild(build_id, &builder);
+
+        let result = info_span!("build", instance = build_id)
+            .in_scope(|| run_builder(&manifest_dir, builder, tracker));
+
+        counter.postbuild(build_id, result);
     }
 
-    Ok(())
+    counter.finish().or_error(emit!())
 }
 
 fn run_builder(
     manifest_dir: &Utf8Path,
     builder: Builder,
     tracker: &mut LinkTracker<'_>,
-) -> Result<()> {
+) -> Result<(), Break> {
     let BuildOptions {
         ref packages,
         ref features,
@@ -91,6 +102,9 @@ fn run_builder(
         ..
     } = builder.options;
 
+    let ticker = ticker!(Level::INFO, "prepare", "preparing");
+    ticker_event!(&ticker, Level::INFO, "cargo metadata");
+
     let metadata = cargo
         .command("metadata")
         .options("--format-version", ["1"])
@@ -98,20 +112,28 @@ fn run_builder(
         .flag("--all-features", features.all_features())
         .flag("--no-default-features", features.no_default_features())
         .current_dir(manifest_dir)
-        .output()
-        .checked()?
-        .into_cargo_metadata()?;
+        .run()
+        .into_cargo_metadata()
+        .context("Failed to learn about the workspace via cargo")
+        .or_warn(emit!())?;
 
     let packages = if packages.is_empty() {
         Default::default()
     } else {
+        ticker_event!(&ticker, Level::INFO, "resolving packages");
         resolve_packages(&metadata, &builder.options, manifest_dir)?
     };
 
+    debug!("resolved packages: {packages:#?}");
+
     let mut builder = builder;
     if docs_rs == Some(true) {
-        load_docs_rs_options(&mut builder, &metadata, &packages)?;
+        load_docs_rs_options(&mut builder, &metadata, &packages)
+            .context("Failed to inherit docs.rs options")
+            .or_warn(emit!())?;
     }
+
+    debug!("resolved options: {builder:#?}");
 
     let Builder { targets, options } = builder;
     let BuildOptions {
@@ -141,6 +163,8 @@ fn run_builder(
         vec![]
     };
 
+    debug!("resolved preludes: {preludes:#?}");
+
     let rustc_args = if !rustc_args.is_empty() {
         let flags = toml::Value::from(rustc_args);
         Some(format!("build.rustflags={flags}"))
@@ -158,16 +182,21 @@ fn run_builder(
     let path_mapper = if cargo.runner.is_undefined() {
         PathMapper::new(&metadata, None)
     } else {
+        ticker_event!(&ticker, Level::INFO, "cargo metadata");
         let build_metadata = cargo
             .command("metadata")
             .options("--format-version", ["1"])
             .runner(&cargo.runner)
             .current_dir(manifest_dir)
-            .output()
-            .checked()?
-            .into_cargo_metadata()?;
+            .run()
+            .into_cargo_metadata()
+            .context("Failed to learn about workspace paths via cargo")
+            .or_warn(emit!())?;
         PathMapper::new(&metadata, Some(&build_metadata))
     };
+
+    debug!("resolved path mappings: {path_mapper:#?}");
+    drop(ticker);
 
     let mut artifacts = CargoRecorder::new(path_mapper);
 
@@ -185,12 +214,12 @@ fn run_builder(
         .options("--config", artifacts.term.cargo_options)
         .runner(&cargo.runner)
         .current_dir(manifest_dir)
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()?;
+        .run();
 
-    artifacts.record(proc, ticker!(Level::INFO, "cargo-doc", "cargo doc"))?;
+    artifacts
+        .record(proc, ticker!(Level::INFO, "cargo-doc", "cargo doc"))
+        .context("`cargo doc` did not succeed")
+        .or_warn(emit!())?;
 
     let proc = cargo
         .command("check")
@@ -205,19 +234,27 @@ fn run_builder(
         .options("--config", artifacts.term.cargo_options)
         .runner(&cargo.runner)
         .current_dir(manifest_dir)
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()?;
+        .run();
 
-    artifacts.record(proc, ticker!(Level::INFO, "cargo-check", "cargo check"))?;
+    artifacts
+        .record(proc, ticker!(Level::INFO, "cargo-check", "cargo check"))
+        .context("`cargo check` did not succeed")
+        .or_warn(emit!())?;
 
     for target in artifacts.targets() {
         let Some(docstring) = tracker.rustdoc_input() else {
             break;
         };
 
-        let tempdir = TempDir::new_in(&metadata.target_directory)?;
+        let _ticker = if let Some(target) = target.as_deref() {
+            ticker!(Level::INFO, "rustdoc", "rustdoc [{target}]")
+        } else {
+            ticker!(Level::INFO, "rustdoc", "rustdoc")
+        };
+
+        let tempdir = TempDir::new_in(&metadata.target_directory)
+            .context("Failed to create temporary directory for doc artifacts")
+            .or_warn(emit!())?;
 
         let mut rustdoc = Command::new("rustdoc")
             .values(cargo.toolchain())
@@ -247,7 +284,12 @@ fn run_builder(
                 .and_then(|dir| dir.parent())
                 && let Some(lib) = artifacts.get_lib(name, &target)
             {
-                symlink_dir_all(doc, tempdir.path().join(name))?;
+                symlink_dir_all(doc, tempdir.path().join(name))
+                    .with_context(|| doc.to_owned())
+                    .context("Failed to locate `cargo doc` output at:")
+                    .or_warn(emit!())
+                    .ok();
+
                 rustdoc.arg("--extern").arg(format!("{name}={lib}"));
 
                 if let Some(parent) = lib.parent()
@@ -266,23 +308,41 @@ fn run_builder(
             .options("--crate-name", [crate_name!()])
             .runner(&cargo.runner)
             .current_dir(manifest_dir)
-            .stdin(Stdio::piped())
-            .stdout(Stdio::null())
-            .stderr(Stdio::piped())
-            .spawn()?;
+            .run();
 
         {
-            let mut stdin = rustdoc.stdin.take().expect("should have stdio");
-            writeln!(stdin, "{docstring}")?;
+            macro_rules! write_to {
+                ( $stdin:ident, $fmt:literal ) => {
+                    writeln!($stdin, $fmt)
+                        .context("Could not pass input `rustdoc`")
+                        .or_warn(emit!())
+                        .ok();
+                };
+            }
+
+            let mut stdin = rustdoc.stdin().or_warn(emit!())?;
+
+            write_to!(stdin, "{docstring}");
+
             for prelude in preludes.iter() {
-                writeln!(stdin, "use {prelude};")?;
+                write_to!(stdin, "use {prelude};");
             }
         }
 
-        let output = rustdoc.wait_with_output()?;
+        let result = rustdoc
+            .result()
+            .context("`rustdoc` did not succeed")
+            .or_warn(emit!())?;
 
-        if !output.status.success() {
-            return Err(rustc_json_error(output).context("Failed to run `rustdoc`"));
+        if let Some(status) = result.status {
+            let stderr = rustc_json_error(&result.output.stderr);
+            let stderr = stderr.trim_end();
+            if !stderr.is_empty() {
+                warn!("--- rustdoc stderr\n{stderr}")
+            }
+            return Err(status)
+                .context("`rustdoc` did not succeed")
+                .or_warn(emit!())?;
         }
 
         let output = BuildOutput {
@@ -290,22 +350,74 @@ fn run_builder(
             crates: &artifacts.crates,
             stdout: {
                 let path = tempdir.path().join(crate_name!()).join("index.html");
-                std::fs::read_to_string(path)?
+                std::fs::read_to_string(&path)
+                    .with_context(|| format!("Expected {:?}", path.debug()))
+                    .context("Failed to read from `rustdoc` output")
+                    .or_warn(emit!())?
             },
-            stderr: String::from_utf8(output.stderr)?,
+            stderr: result.output.stderr,
         };
 
-        tracker.rustdoc_output(output)?;
+        tracker.rustdoc_output(output);
     }
 
     Ok(())
+}
+
+struct BuildCounter {
+    num_builds: usize,
+    num_failed: usize,
+}
+
+impl BuildCounter {
+    fn new(num_builds: usize) -> Self {
+        Self {
+            num_builds,
+            num_failed: 0,
+        }
+    }
+
+    fn prebuild(&self, id: usize, build: &Builder) {
+        if self.num_builds == 1 {
+            info!("Building docs")
+        } else {
+            info!("Running build #{id} {:?}", build.debug())
+        }
+    }
+
+    fn postbuild(&mut self, id: usize, result: Result<(), Break>) {
+        if result.is_err() {
+            self.num_failed += 1;
+        }
+        if self.num_builds != 1 {
+            if result.is_err() {
+                warn!("Build #{id} has failed")
+            } else {
+                info!("Build #{id} done")
+            }
+        }
+    }
+
+    fn finish(self) -> Result<()> {
+        if self.num_builds == self.num_failed {
+            if self.num_builds == 1 {
+                bail!("Build failed")
+            } else {
+                bail!("All builds have failed")
+            }
+        }
+        if self.num_failed != 0 {
+            warn!("Some builds have failed")
+        }
+        Ok(())
+    }
 }
 
 pub struct BuildOutput<'a> {
     pub metadata: &'a cargo_metadata::Metadata,
     pub crates: &'a BTreeMap<Arc<str>, PackageId>,
     pub stdout: String,
-    pub stderr: String,
+    pub stderr: Vec<u8>,
 }
 
 struct CargoRecorder {
@@ -332,18 +444,23 @@ impl CargoRecorder {
         }
     }
 
-    fn record(&mut self, mut proc: process::Child, ticker: tracing::Span) -> Result<()> {
-        let stderr = self.term.ticker(ticker, &mut proc);
+    fn record(&mut self, mut proc: Subprocess, ticker: tracing::Span) -> Result<()> {
+        let stderr = self.term.ticker(ticker, proc.stderr()?);
 
         let mut success = false;
         let mut rustc_errors = vec![];
 
-        for msg in (proc.stdout.take())
-            .expect("should have stdio")
+        for msg in (proc.stdout())?
             .pipe(BufReader::new)
             .pipe(cargo_metadata::Message::parse_stream)
         {
-            match msg? {
+            let Ok(msg) = msg
+                .context("I/O error while reading from cargo")
+                .or_warn(emit!())
+            else {
+                continue;
+            };
+            match msg {
                 cargo_metadata::Message::CompilerArtifact(artifact) => {
                     self.update_unit(artifact);
                 }
@@ -359,31 +476,41 @@ impl CargoRecorder {
             }
         }
 
-        let io_error = match proc.wait_with_output() {
-            Ok(output) => {
-                success = output.status.success();
-                anyhow!("command exited with code {}", output.status)
-            }
-            Err(error) => anyhow!(error),
+        let result = proc.result()?;
+
+        let error = if let Some(status) = result.status {
+            Some(status)
+        } else if !success {
+            (result.repr.as_context())
+                .context("cargo finished with errors")
+                .pipe(Some)
+        } else {
+            None
         };
 
-        if success {
-            return Ok(());
-        }
+        if let Some(error) = error {
+            let cargo_errors = stderr
+                .join()
+                .map_err(|_| anyhow!("failed to recover stderr"))
+                .or_debug(emit!())
+                .unwrap_or_default()
+                .join("\n");
 
-        let cargo_errors = stderr.join().unwrap_or_default().join("\n");
-        let cargo_errors = cargo_errors.trim();
-        if !cargo_errors.is_empty() {
-            error!("-- cargo stderr --\n\n{cargo_errors}\n")
-        }
+            let cargo_errors = cargo_errors.trim_end();
+            if !cargo_errors.is_empty() {
+                warn!("--- cargo stderr\n{cargo_errors}\n")
+            }
 
-        let rustc_errors = rustc_errors.join("");
-        let rustc_errors = rustc_errors.trim();
-        if !rustc_errors.is_empty() {
-            error!("-- rustc stderr --\n\n{rustc_errors}\n")
-        }
+            let rustc_errors = rustc_errors.join("");
+            let rustc_errors = rustc_errors.trim_end();
+            if !rustc_errors.is_empty() {
+                warn!("--- rustc stderr\n{rustc_errors}\n")
+            }
 
-        Err(io_error)
+            Err(error)
+        } else {
+            Ok(())
+        }
     }
 
     fn update_unit(&mut self, artifact: cargo_metadata::Artifact) {
@@ -408,7 +535,8 @@ impl CargoRecorder {
 
         for path in filenames {
             self.update_file(name.clone(), &path)
-                .inspect_err(emit_warning!())
+                .context("Error while collecting compiler artifacts")
+                .or_warn(emit!())
                 .ok();
         }
     }
@@ -566,7 +694,7 @@ fn resolve_packages(
     metadata: &cargo_metadata::Metadata,
     options: &BuildOptions,
     manifest_dir: &Utf8Path,
-) -> Result<BTreeSet<String>> {
+) -> Result<BTreeSet<String>, Break> {
     let BuildOptions {
         packages,
         features,
@@ -629,16 +757,15 @@ fn resolve_packages(
                 .options("--depth", [depth])
                 .runner(&cargo.runner)
                 .current_dir(manifest_dir)
-                .stdin(Stdio::null())
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .output()
+                .run()
                 .checked()?
                 .stdout
-                .pipe(String::from_utf8)
-                .anyhow()
+                .pipe(String::from_utf8)?
+                .pipe(Ok)
         })
-        .collect::<Result<Vec<_>>>()?
+        .collect::<Result<Vec<_>>>()
+        .context("Failed to resolve package versions")
+        .or_warn(emit!())?
         .iter()
         .flat_map(|output| {
             output.lines().filter_map(|line| {
@@ -735,8 +862,11 @@ struct CargoProgress {
 
 impl CargoProgress {
     #[must_use]
-    fn ticker(&self, ticker: tracing::Span, proc: &mut process::Child) -> JoinHandle<Vec<String>> {
-        let stderr = proc.stderr.take().expect("should have stdio");
+    fn ticker(
+        &self,
+        ticker: tracing::Span,
+        stderr: process::ChildStderr,
+    ) -> JoinHandle<Vec<String>> {
         let delim = self.line_ending;
         std::thread::spawn(move || {
             let mut buffer = vec![];
@@ -783,37 +913,31 @@ impl Default for CargoProgress {
     }
 }
 
-fn rustc_json_error(output: process::Output) -> anyhow::Error {
-    let stderr =
-        String::from_utf8_lossy(&output.stderr)
-            .lines()
-            .fold(String::new(), |mut error, line| {
-                if let Ok(diag) = serde_json::from_str::<Diagnostic>(line) {
-                    if let Some(rendered) = diag.rendered {
-                        write!(&mut error, "{}", rendered)
-                    } else {
-                        writeln!(&mut error, "{}", diag.message.trim())
-                    }
+fn rustc_json_error(stderr: &[u8]) -> String {
+    String::from_utf8_lossy(stderr)
+        .lines()
+        .fold(String::new(), |mut error, line| {
+            if let Ok(diag) = serde_json::from_str::<Diagnostic>(line) {
+                if let Some(rendered) = diag.rendered {
+                    write!(&mut error, "{}", rendered)
                 } else {
-                    writeln!(&mut error, "{line}")
+                    writeln!(&mut error, "{}", diag.message.trim())
                 }
-                .expect_fmt();
-                error
-            });
-    let stderr = stderr.trim();
-    if !stderr.is_empty() {
-        error!("-- rustdoc stderr --\n\n{stderr}\n")
-    }
-    anyhow!("command exited with code {}", output.status)
+            } else {
+                writeln!(&mut error, "{line}")
+            }
+            .expect_fmt();
+            error
+        })
 }
 
 trait CargoMetadataUtil {
     fn into_cargo_metadata(self) -> Result<cargo_metadata::Metadata>;
 }
 
-impl CargoMetadataUtil for process::Output {
+impl CargoMetadataUtil for Subprocess {
     fn into_cargo_metadata(self) -> Result<cargo_metadata::Metadata> {
-        let stdout = String::from_utf8(self.stdout)?;
+        let stdout = String::from_utf8(self.checked()?.stdout)?;
         Ok(cargo_metadata::MetadataCommand::parse(stdout)?)
     }
 }
@@ -832,10 +956,11 @@ impl CargoOptions {
         self.command("locate-project")
             .arg("--message-format=json")
             .arg("--workspace")
-            .output()
+            .run()
             .checked()
             .context("`cargo locate-project` did not run successfully")?
             .pipe(LocateProject::parse)
+            .context("Could not parse output of `cargo locate-project`")
     }
 
     fn toolchain(&self) -> Option<String> {
@@ -855,9 +980,8 @@ impl LocateProject {
 
     fn parse(output: process::Output) -> Result<Self> {
         let process::Output { stdout, .. } = output;
-        (String::from_utf8(stdout).anyhow())
-            .and_then(|output| serde_json::from_str(&output).anyhow())
-            .context("Could not parse `cargo locate-project` output")
+        let output = String::from_utf8(stdout)?;
+        Ok(serde_json::from_str(&output)?)
     }
 }
 
@@ -876,6 +1000,8 @@ trait CommandUtil {
     fn flag(self, flag: &str, enabled: bool) -> Self;
 
     fn runner(self, runner: &CommandRunner) -> Self;
+
+    fn run(&mut self) -> Subprocess;
 }
 
 impl CommandUtil for Command {
@@ -914,27 +1040,111 @@ impl CommandUtil for Command {
     fn runner(self, runner: &CommandRunner) -> Self {
         runner.command(self)
     }
+
+    fn run(&mut self) -> Subprocess {
+        let repr = PrintCommand(format!("{self:?}"));
+        debug!("running: {}", repr.0);
+        let proc = self
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn();
+        Subprocess { repr, proc }
+    }
 }
 
-trait CheckCommand {
-    fn checked(self) -> Result<process::Output>;
+struct Subprocess {
+    repr: PrintCommand,
+    proc: std::io::Result<process::Child>,
 }
 
-impl CheckCommand for std::io::Result<process::Output> {
-    fn checked(self) -> Result<process::Output> {
-        let output = self?;
-        if output.status.success() {
-            Ok(output)
+impl Subprocess {
+    fn stdin(&mut self) -> Result<process::ChildStdin> {
+        Ok(self.proc()?.stdin.take().expect("should have stdin"))
+    }
+
+    fn stdout(&mut self) -> Result<process::ChildStdout> {
+        Ok(self.proc()?.stdout.take().expect("should have stdout"))
+    }
+
+    fn stderr(&mut self) -> Result<process::ChildStderr> {
+        Ok(self.proc()?.stderr.take().expect("should have stderr"))
+    }
+
+    fn proc(&mut self) -> Result<&mut process::Child> {
+        match self.proc {
+            Ok(ref mut proc) => Ok(proc),
+            Err(ref error) => Err(self.repr.failed_to_spawn(error)),
+        }
+    }
+
+    fn result(self) -> Result<SubprocessResult> {
+        let Self { repr, proc } = self;
+
+        let proc = match proc {
+            Ok(proc) => proc,
+            Err(ref error) => return Err(repr.failed_to_spawn(error)),
+        };
+
+        let output = match proc.wait_with_output() {
+            Ok(output) => output,
+            Err(error) => {
+                return (repr.as_context())
+                    .context(error)
+                    .context("Error waiting for command to finish")
+                    .pipe(Err);
+            }
+        };
+
+        let status = if output.status.success() {
+            None
         } else {
-            let status = anyhow!("command exited with code {}", output.status);
-            let stderr = String::from_utf8_lossy(&output.stderr).trim().to_owned();
-            let error = if stderr.is_empty() {
-                status
+            (repr.as_context())
+                .context(format!("Command exited with {}", output.status))
+                .pipe(Some)
+        };
+
+        Ok(SubprocessResult {
+            output,
+            status,
+            repr,
+        })
+    }
+
+    fn checked(self) -> Result<process::Output> {
+        let SubprocessResult { output, status, .. } = self.result()?;
+        if let Some(status) = status {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let stderr = stderr.trim_end();
+            let error = if !stderr.is_empty() {
+                status.context(format!("--- stderr\n{stderr}\n---"))
             } else {
-                anyhow!(stderr).context(status)
+                status
             };
             Err(error)
+        } else {
+            Ok(output)
         }
+    }
+}
+
+struct SubprocessResult {
+    output: process::Output,
+    status: Option<anyhow::Error>,
+    repr: PrintCommand,
+}
+
+struct PrintCommand(String);
+
+impl PrintCommand {
+    fn as_context(&self) -> anyhow::Error {
+        anyhow!("Command: {}\n---", self.0)
+    }
+
+    fn failed_to_spawn(&self, error: &std::io::Error) -> anyhow::Error {
+        (self.as_context())
+            .context(anyhow!("{error}"))
+            .context("Failed to spawn command")
     }
 }
 

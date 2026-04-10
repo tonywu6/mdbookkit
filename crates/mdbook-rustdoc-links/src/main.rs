@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use anyhow::{Context, Result};
+use anyhow::Context;
 use clap::{Parser, Subcommand};
 use tap::Pipe;
 use tracing::{Level, info, info_span, warn};
@@ -10,8 +10,8 @@ use tracing::{Level, info, info_span, warn};
 use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin},
     diagnostics::IssueReporter,
-    emit_error, emit_issue,
-    error::{ExitProcess, has_severity},
+    emit, emit_issue,
+    error::{Break, ConsumeError, PathDebug, ProgramExit, has_severity},
     logging::Logging,
 };
 
@@ -36,7 +36,7 @@ fn main() {
         Some(Command::Supports { .. }) => Ok(()),
         None => mdbook(),
     }
-    .exit(emit_error!())
+    .exit()
 }
 
 #[derive(Parser, Debug, Clone)]
@@ -54,28 +54,33 @@ enum Command {
     Supports { renderer: String },
 }
 
-fn mdbook() -> Result<()> {
-    let (ctx, mut book) = book_from_stdin().context("Failed to read from mdBook")?;
+fn mdbook() -> Result<(), Break> {
+    let (ctx, mut book) = book_from_stdin()
+        .context("Failed to read from mdBook")
+        .or_error(emit!())?;
 
     let Config {
         build,
         fail_on_warnings,
     } = ctx
         .preprocessor(&[PREPROCESSOR_NAME, "mdbook-rustdoc-link"])
-        .context("Failed to read preprocessor config from book.toml")?;
+        .context("Failed to read preprocessor config from book.toml")
+        .or_error(emit!())?;
 
     let mut contents = LinkTracker::default();
 
     let keys = book
         .iter_chapters()
         .map(|(path, chapter)| {
-            let _span = info_span!("page_read", path = %path.display()).entered();
-            (contents.read(&chapter.content))
-                .with_context(|| path.display().to_string())
-                .context("Failed to parse file as Markdown:")?;
-            Ok(path.clone())
+            info_span!("page_read", path = ?path.debug()).in_scope(|| {
+                contents
+                    .read(&chapter.content)
+                    .context("Failed to parse file as Markdown")
+                    .or_error(emit!())?;
+                Ok(path.clone())
+            })
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<Result<Vec<_>, _>>()?;
 
     build_docs(build, &mut contents)?;
 
@@ -83,7 +88,7 @@ fn mdbook() -> Result<()> {
         contents,
         issues,
         stats,
-    } = contents.export()?;
+    } = contents.export();
 
     {
         let issues = (book.iter_chapters().zip(issues))
@@ -100,20 +105,23 @@ fn mdbook() -> Result<()> {
         }
     }
 
-    fail_on_warnings.check()?;
+    fail_on_warnings.check().or_error(emit!())?;
 
     {
         let mut contents = keys.into_iter().zip(contents).collect::<HashMap<_, _>>();
 
         book.for_each_page_mut(|path, content| {
-            if let Some(rendered) = contents.remove(path) {
-                *content = rendered
+            if let Some(output) = contents.remove(path) {
+                *content = output
+                    .with_context(|| path.display().to_string())
+                    .context("Error generating output")
+                    .or_error(emit!())?;
             }
             Ok(())
         })?;
     }
 
-    book.to_stdout(&ctx)?;
+    book.to_stdout(&ctx).or_error(emit!())?;
 
     info!("{stats}");
 

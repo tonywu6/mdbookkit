@@ -72,7 +72,7 @@ pub enum OnWarning {
 impl OnWarning {
     pub fn check(&self) -> Result<()> {
         if has_severity(Level::ERROR) {
-            Err(anyhow!("Preprocessor has errors"))
+            Err(anyhow!("Preprocessor finished with errors"))
         } else if has_severity(Level::WARN) {
             match (self, is_ci()) {
                 (Self::AlwaysFail, _) => anyhow! { "Treating warnings as errors because the \
@@ -131,17 +131,6 @@ impl<T> ExpectLock<T> for LockResult<T> {
     #[inline(always)]
     fn expect_lock(self) -> T {
         self.expect("lock should not be poisoned")
-    }
-}
-
-pub trait IntoAnyhow<T> {
-    fn anyhow(self) -> Result<T>;
-}
-
-impl<T, E: Into<Error>> IntoAnyhow<T> for Result<T, E> {
-    #[inline(always)]
-    fn anyhow(self) -> Result<T> {
-        self.map_err(Into::into)
     }
 }
 

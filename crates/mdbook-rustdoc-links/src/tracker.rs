@@ -28,8 +28,8 @@ use mdbookkit::{
     diagnostics::{
         Highlight, IssueLevel, IssueReport, Note, Suggestion, annotate_snippets::AnnotationKind,
     },
-    emit_debug,
-    error::ExpectFmt,
+    emit,
+    error::{Break, ConsumeError, ExpectFmt},
     markdown::PatchStream,
     plural,
 };
@@ -91,13 +91,8 @@ impl<'a> LinkTracker<'a> {
                         state = Some(link);
                     }
                     ControlFlow::Break(()) => {
-                        if let Ok(()) = link.normalize() {
+                        if let Ok(link) = link.normalized() {
                             self.links.push(link);
-                        } else {
-                            warn! {
-                                "Internal error while parsing link {:?} at {:?}; \
-                                the link will be ignored", &*link.dest, link.span.full
-                            }
                         }
                     }
                 },
@@ -130,10 +125,12 @@ impl<'a> LinkTracker<'a> {
             .expect_fmt();
         }
 
+        debug!("rustdoc input:\n{input}");
+
         if empty { None } else { Some(input) }
     }
 
-    pub fn rustdoc_output(&mut self, output: BuildOutput<'_>) -> Result<()> {
+    pub fn rustdoc_output(&mut self, output: BuildOutput<'_>) {
         let BuildOutput {
             ref stdout,
             ref stderr,
@@ -157,7 +154,12 @@ impl<'a> LinkTracker<'a> {
                         && let link = &mut self.links[row]
                         && !eq_escaped(&link.dest, &href)
                     {
-                        link.href = Some(resolve_url(&output, &href)?);
+                        if let Ok(url) = resolve_url(&output, &href)
+                            .with_context(|| format!("Failed to convert link: {href}"))
+                            .or_warn(emit!())
+                        {
+                            link.href = Some(url)
+                        }
                         if let Some(title) = elem.get_attribute("title") {
                             link.title = title.into()
                         }
@@ -168,9 +170,12 @@ impl<'a> LinkTracker<'a> {
             ..Default::default()
         }
         .pipe(|cb| HtmlRewriter::new(cb, |_: &[u8]| ()))
-        .pipe(|mut wr| wr.write(stdout.as_bytes()).and_then(|_| wr.end()))?;
+        .pipe(|mut wr| wr.write(stdout.as_bytes()).and_then(|_| wr.end()))
+        .context("unexpected error from HtmlRewriter")
+        .or_debug(emit!())
+        .ok();
 
-        for line in stderr.lines() {
+        for line in String::from_utf8_lossy(stderr).lines() {
             if let Ok(diag) = serde_json::from_str::<Diagnostic>(line)
                 && let Some(line) = locate_diagnostic(&diag)
                 && let Some(link) = self.links.get_mut(line)
@@ -178,11 +183,9 @@ impl<'a> LinkTracker<'a> {
                 link.diagnostics.push(diag);
             }
         }
-
-        Ok(())
     }
 
-    pub fn export<'d: 'a>(&'d self) -> Result<ExportedPages<'d>> {
+    pub fn export<'d: 'a>(&'d self) -> ExportedPages<'d> {
         let mut contents = Vec::with_capacity(self.pages.len());
         let mut issues = Vec::with_capacity(self.pages.len());
 
@@ -210,16 +213,18 @@ impl<'a> LinkTracker<'a> {
                 Some((link, span))
             });
 
-            let text = PatchStream::new(page.text, patches).into_string()?;
+            let text = PatchStream::new(page.text, patches)
+                .into_string()
+                .map_err(<_>::into);
 
             contents.push(text);
         }
 
-        Ok(ExportedPages {
+        ExportedPages {
             contents,
             issues,
             stats,
-        })
+        }
     }
 
     fn link_summary(&self, links: &'a [Link<'a>]) -> Option<IssueReport<'a>> {
@@ -247,7 +252,7 @@ impl<'a> LinkTracker<'a> {
 }
 
 pub struct ExportedPages<'a> {
-    pub contents: Vec<String>,
+    pub contents: Vec<Result<String>>,
     pub issues: Vec<Vec<IssueReport<'a>>>,
     pub stats: Statistics,
 }
@@ -317,7 +322,7 @@ fn resolve_url(output: &BuildOutput<'_>, href: &str) -> Result<Url> {
         let Package { name, version, .. } = &output.metadata[package];
         format!("/{name}/{version}/{href}")
     } else {
-        bail!("unsupported link format {href:?}")
+        bail!("unsupported link format")
     };
 
     Ok("https://docs.rs".parse::<Url>()?.join(&path)?)
@@ -421,15 +426,15 @@ impl<'a> Link<'a> {
         }
     }
 
-    #[instrument(level = "debug", skip_all, fields(dest = ?&*self.dest, span = ?self.span.full))]
-    fn normalize(&mut self) -> Result<()> {
+    #[instrument(level = "debug", skip_all, fields(link = ?&*self.dest, span = ?self.span.full))]
+    fn normalized(mut self) -> Result<Self, Break> {
         let Self {
             kind,
             dest,
             inner_elem,
             normalized,
             ..
-        } = self;
+        } = &self;
 
         let is_shortcut = if matches!(kind, CollapsedUnknown | ShortcutUnknown)
             && inner_elem.len() == 1
@@ -449,7 +454,7 @@ impl<'a> Link<'a> {
         } && !normalized.as_ref().contains('\n');
 
         if is_one_line {
-            return Ok(());
+            return Ok(self);
         }
 
         let link = match kind {
@@ -500,12 +505,12 @@ impl<'a> Link<'a> {
 
             Ok((text, span))
         })()
-        .context("failed to reformat link to be on one line")
-        .inspect_err(emit_debug!())?;
+        .context("Internal error while parsing link; the link will be skipped")
+        .or_warn(emit!())?;
 
-        *normalized = NormalizedLink::Normalized { text, span };
+        self.normalized = NormalizedLink::Normalized { text, span };
 
-        Ok(())
+        Ok(self)
     }
 
     fn diagnose(&'a self, tracker: &LinkTracker<'a>) -> Vec<IssueReport<'a>> {
@@ -768,16 +773,16 @@ impl Display for Statistics {
         write! { f,
             "Processed {processed}: \
             {resolved} resolved; \
-            {unresolved} unresolved;",
+            {unresolved} unresolved",
             processed = plural!(processed, "link"),
         }?;
         if has_warnings > &0 {
-            write! { f, " {};",
+            write! { f, "; {}",
                 plural!(has_warnings, "has warnings", "have warnings")
             }?
         }
         if unsupported > &0 {
-            write!(f, " {unsupported} may be unsupported;")?
+            write!(f, "; {unsupported} may be unsupported")?
         }
         Ok(())
     }
