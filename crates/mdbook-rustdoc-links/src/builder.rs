@@ -35,13 +35,15 @@ use crate::{
     tracker::LinkTracker,
 };
 
-pub fn build_docs(config: BuildConfig, tracker: &mut LinkTracker) -> Result<(), Break> {
-    let BuildConfig {
+pub fn build_docs(
+    BuildConfig {
         manifest_dir,
         build,
         build_options,
-    } = config;
-
+    }: BuildConfig,
+    bookdir: &Utf8Path,
+    tracker: &mut LinkTracker,
+) -> Result<(), Break> {
     let build = if build.is_empty() {
         vec![Default::default()]
     } else {
@@ -62,16 +64,22 @@ pub fn build_docs(config: BuildConfig, tracker: &mut LinkTracker) -> Result<(), 
 
     // https://github.com/rust-lang/cargo/issues/16834
     let manifest_dir = if let Some(dir) = manifest_dir {
-        dir
+        bookdir
+            .join(dir)
+            .canonicalize_utf8()
+            .context("failed to resolve `manifest-dir` to an absolute path")
+            .or_error(emit!())?
     } else {
         default_cargo
-            .workspace()
+            .workspace(bookdir.as_std_path())
             .context("while preparing to build docs using `cargo`")
             .context("failed to determine the current workspace root")
             .or_error(emit!())?
             .directory()
             .to_owned()
     };
+
+    debug!("resolved manifest dir: {manifest_dir}");
 
     let mut counter = BuildCounter::new(build.len());
 
@@ -952,10 +960,11 @@ impl CargoOptions {
         command
     }
 
-    fn workspace(&self) -> Result<LocateProject> {
+    fn workspace(&self, cwd: &Path) -> Result<LocateProject> {
         self.command("locate-project")
             .arg("--message-format=json")
             .arg("--workspace")
+            .current_dir(cwd)
             .run()
             .checked()
             .context("`cargo locate-project` did not run successfully")?

@@ -1,0 +1,8 @@
+[preprocessor.rustdoc-links]
+after = ["links"]
+command = "cargo preprocessor"
+
+[build]
+build-dir = "dist"
+
+[output.markdown]

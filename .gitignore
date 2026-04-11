@@ -153,3 +153,6 @@ out
 .bin
 
 .wrangler
+
+*.profraw
+lcov.info

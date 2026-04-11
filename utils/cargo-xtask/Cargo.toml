@@ -11,4 +11,8 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
+cargo-run-bin = { workspace = true }
 clap = { workspace = true }
+tap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }

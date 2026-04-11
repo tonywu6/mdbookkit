@@ -3,6 +3,7 @@
 use std::collections::HashMap;
 
 use anyhow::Context;
+use cargo_metadata::camino::Utf8Path;
 use clap::{Parser, Subcommand};
 use tap::Pipe;
 use tracing::{Level, info, info_span, warn};
@@ -82,7 +83,11 @@ fn mdbook() -> Result<(), Break> {
         })
         .collect::<Result<Vec<_>, _>>()?;
 
-    build_docs(build, &mut contents)?;
+    let book_dir = <&Utf8Path>::try_from(&*ctx.root)
+        .context("book directory path contains non-UTF-8 characters, which is unsupported")
+        .or_error(emit!())?;
+
+    build_docs(build, book_dir, &mut contents)?;
 
     let ExportedPages {
         contents,

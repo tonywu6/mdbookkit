@@ -96,7 +96,7 @@ impl Environment {
         for (path, ch) in book.iter_chapters() {
             let path = (path.to_str())
                 .with_context(|| path.display().to_string())
-                .context("path contains non-UTF-8 characters, which is not supported:")
+                .context("path contains non-UTF-8 characters, which is unsupported:")
                 .or_error(emit!())?;
 
             let url = self.root_dir.join(path).expect_url();
