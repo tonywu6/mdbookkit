@@ -16,7 +16,7 @@ use mdbookkit::{
     diagnostics::IssueReporter,
     emit,
     error::{Break, ConsumeError, OnWarning, ProgramExit, has_severity},
-    logging::Logging,
+    logging::init_logging,
     ticker, ticker_item,
     url::{ExpectUrl, UrlFromPath},
 };
@@ -33,7 +33,7 @@ mod page;
 mod vcs;
 
 fn main() {
-    Logging::default().init();
+    init_logging();
     let _span = info_span!({ env!("CARGO_PKG_NAME") }).entered();
     let Program { command } = clap::Parser::parse();
     match command {

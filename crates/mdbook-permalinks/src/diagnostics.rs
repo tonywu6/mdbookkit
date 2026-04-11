@@ -3,11 +3,8 @@ use std::borrow::Cow;
 use tap::{Pipe, TapOptional};
 use url::Url;
 
-use mdbookkit::{
-    diagnostics::{
-        Highlight, IssueLevel, IssueReport, IssueReporter, annotate_snippets::AnnotationKind,
-    },
-    emit_issue,
+use mdbookkit::diagnostics::{
+    Highlight, IssueLevel, IssueReport, IssueReporter, annotate_snippets::AnnotationKind,
 };
 
 use crate::{
@@ -35,7 +32,6 @@ impl Environment {
                 IssueReporter {
                     issues,
                     source: (source_code, source_path).into(),
-                    tracer: emit_issue!(),
                 }
             })
             .collect()

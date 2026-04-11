@@ -1,52 +1,66 @@
-use std::{
-    io::IsTerminal,
-    sync::{
-        LazyLock,
-        atomic::{AtomicBool, Ordering},
-    },
-};
+use std::{io::IsTerminal, ops::Deref, sync::LazyLock};
 
-use console::{colors_enabled_stderr, set_colors_enabled_stderr};
+use console::colors_enabled_stderr;
 
-static CI: LazyLock<String> = LazyLock::new(|| std::env::var("CI").unwrap_or("".into()));
+macro_rules! env_var {
+    ($name:ident $(, $extra:ident)*) => {
+        pub(crate) static $name: LazyLock<Option<String>> =
+            LazyLock::new(|| {
+                std::env::var(stringify!($name))
+                    $( .or_else(|_| std::env::var(stringify!($extra))) )*
+                    .ok()
+            });
+    };
+}
 
-pub(crate) static MDBOOK_LOG: LazyLock<Option<String>> = LazyLock::new(|| {
-    std::env::var("MDBOOK_LOG")
-        // mdBook v0.4.x
-        .or_else(|_| std::env::var("RUST_LOG"))
-        .ok()
-});
+env_var!(MDBOOK_LOG, RUST_LOG);
+
+env_var!(CI);
+env_var!(FORCE_COLOR);
+env_var!(NO_COLOR);
+
+env_var!(MDBOOKKIT_TERM_PROGRESS);
+env_var!(MDBOOKKIT_TERM_GRAPHICAL);
 
 #[inline]
 pub fn is_ci() -> Option<&'static str> {
-    let ci = CI.as_str();
-    if matches!(ci, "" | "0" | "false") {
-        None
-    } else {
-        Some(ci)
-    }
+    CI.truthy()
 }
-
-static IS_LOGGING: AtomicBool = AtomicBool::new(false);
 
 #[inline]
 pub fn is_logging() -> bool {
-    IS_LOGGING.load(Ordering::Relaxed)
-        || MDBOOK_LOG.is_some()
-        || is_ci().is_some()
-        || !std::io::stderr().is_terminal()
-}
-
-pub(crate) fn set_logging(enabled: bool) {
-    IS_LOGGING.store(enabled, Ordering::Relaxed);
+    if MDBOOKKIT_TERM_PROGRESS.truthy().is_none() {
+        MDBOOK_LOG.is_some() || is_ci().is_some() || !std::io::stderr().is_terminal()
+    } else {
+        false
+    }
 }
 
 #[inline]
 pub fn is_colored() -> bool {
-    colors_enabled_stderr()
+    static IS_COLORED: LazyLock<bool> = LazyLock::new(|| {
+        if FORCE_COLOR.truthy().is_some() {
+            true
+        } else if NO_COLOR.truthy().is_some() {
+            false
+        } else {
+            colors_enabled_stderr()
+        }
+    });
+    *IS_COLORED
 }
 
-#[inline]
-pub(crate) fn set_colored(enabled: bool) {
-    set_colors_enabled_stderr(enabled);
+pub trait TruthyStr {
+    fn truthy(&self) -> Option<&str>;
+}
+
+impl<S: Deref<Target = str>> TruthyStr for Option<S> {
+    fn truthy(&self) -> Option<&str> {
+        let text = self.as_deref();
+        if matches!(text, None | Some("")) {
+            None
+        } else {
+            text
+        }
+    }
 }

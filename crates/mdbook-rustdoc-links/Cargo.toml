@@ -39,7 +39,7 @@ tracing = { workspace = true }
 url = { workspace = true }
 
 [dev-dependencies]
-snapbox = { workspace = true }
+mdbookkit-testing = { workspace = true }
 
 [package.metadata.binstall]
 pkg-fmt = "tgz"

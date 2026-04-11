@@ -22,13 +22,13 @@ lol_html = "2.7.2"
 mdbook-markdown = { version = "0.5.2" }
 mdbook-preprocessor = { version = "0.5.2" }
 mdbookkit = { path = "crates/mdbookkit", version = "2" }
+mdbookkit-testing = { path = "crates/mdbookkit-testing", version = "0.1" }
 minijinja = "2.19.0"
 percent-encoding = "2.3.2"
 pulldown-cmark-to-cmark = "22.0.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0.149"
 shlex = "1.3.0"
-snapbox = { version = "1.2.1", features = ["term-svg"] }
 tap = "=1.0.1"
 tempfile = "3.27.0"
 thiserror = "2.0.18"

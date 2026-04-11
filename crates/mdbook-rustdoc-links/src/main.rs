@@ -11,9 +11,9 @@ use tracing::{Level, info, info_span, warn};
 use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin},
     diagnostics::IssueReporter,
-    emit, emit_issue,
+    emit,
     error::{Break, ConsumeError, PathDebug, ProgramExit, has_severity},
-    logging::Logging,
+    logging::init_logging,
 };
 
 use self::{
@@ -31,7 +31,7 @@ mod diagnostics;
 mod tracker;
 
 fn main() {
-    Logging::default().init();
+    init_logging();
     let _span = info_span!({ env!("CARGO_PKG_NAME") }).entered();
     match Program::parse().command {
         Some(Command::Supports { .. }) => Ok(()),
@@ -100,7 +100,6 @@ fn mdbook() -> Result<(), Break> {
             .map(|((path, chapter), issues)| IssueReporter {
                 issues,
                 source: (&*chapter.content, path.display()).into(),
-                tracer: emit_issue!(),
             })
             .collect::<Vec<_>>()
             .pipe(IssueReporter::sorted);

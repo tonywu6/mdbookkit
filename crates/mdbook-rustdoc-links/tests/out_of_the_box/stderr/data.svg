@@ -1,0 +1,88 @@
+<svg width="1717px" height="560px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .fg { fill: #AAAAAA }
+    .bg { fill: #000000 }
+    .fg-bright-blue { fill: #5555FF }
+    .fg-bright-green { fill: #55FF55 }
+    .fg-green { fill: #00AA00 }
+    .fg-yellow { fill: #AA5500 }
+    .container {
+      padding: 0 10px;
+      line-height: 18px;
+    }
+    .bold { font-weight: bold; }
+    .italic { font-style: italic; }
+    .dimmed { opacity: 0.4; }
+    tspan {
+      font: 14px SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+      white-space: pre;
+      line-height: 18px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" y="0" rx="4.5" class="bg" />
+
+  <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan> INFO mdbook_driver::mdbook: Book building has started</tspan>
+</tspan>
+    <tspan x="10px" y="46px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: building docs</tspan>
+</tspan>
+    <tspan x="10px" y="64px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">preparing</tspan>
+</tspan>
+    <tspan x="10px" y="82px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: cargo metadata </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">preparing</tspan>
+</tspan>
+    <tspan x="10px" y="100px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-doc</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">cargo doc</tspan>
+</tspan>
+    <tspan x="10px" y="118px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-doc</tspan><tspan>:  Documenting test_case v0.1.0 ([TEST_DIR]/out_of_the_box) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">cargo doc</tspan>
+</tspan>
+    <tspan x="10px" y="136px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-doc</tspan><tspan>:     Finished `dev` profile [unoptimized + debuginfo] target(s) in [CARGO_DURATION] </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">cargo doc</tspan>
+</tspan>
+    <tspan x="10px" y="154px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-doc</tspan><tspan>:    Generated [TEST_DIR]/out_of_the_box/target/doc/test_case/index.html </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">cargo doc</tspan>
+</tspan>
+    <tspan x="10px" y="172px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-check</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">cargo check</tspan>
+</tspan>
+    <tspan x="10px" y="190px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-check</tspan><tspan>:     Checking test_case v0.1.0 ([TEST_DIR]/out_of_the_box) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">cargo check</tspan>
+</tspan>
+    <tspan x="10px" y="208px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-check</tspan><tspan>:     Finished `dev` profile [unoptimized + debuginfo] target(s) in [CARGO_DURATION] </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">cargo check</tspan>
+</tspan>
+    <tspan x="10px" y="226px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">rustdoc</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">rustdoc</tspan>
+</tspan>
+    <tspan x="10px" y="244px"><tspan class="fg-bright-green bold">note</tspan><tspan class="bold">: 1 link resolved</tspan>
+</tspan>
+    <tspan x="10px" y="262px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>chapter_1.md:3:2</tspan>
+</tspan>
+    <tspan x="10px" y="280px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="298px"><tspan class="fg-bright-blue bold">3</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> [</tspan><tspan class="fg-bright-green bold">u8</tspan><tspan>]</tspan>
+</tspan>
+    <tspan x="10px" y="316px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>  </tspan><tspan class="fg-bright-green bold">^^</tspan><tspan> </tspan><tspan class="fg-bright-green bold">https://doc.rust-lang.org/1.94.0/std/primitive.u8.html</tspan>
+</tspan>
+    <tspan x="10px" y="334px">
+</tspan>
+    <tspan x="10px" y="352px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `f80`</tspan>
+</tspan>
+    <tspan x="10px" y="370px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>chapter_1.md:5:2</tspan>
+</tspan>
+    <tspan x="10px" y="388px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="406px"><tspan class="fg-bright-blue bold">5</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> [</tspan><tspan class="fg-yellow bold">f80</tspan><tspan>]</tspan>
+</tspan>
+    <tspan x="10px" y="424px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>  </tspan><tspan class="fg-yellow bold">^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">no item named `f80` in scope</tspan>
+</tspan>
+    <tspan x="10px" y="442px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="460px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: to escape `[` and `]` characters, add '/' before them like `/[` or `/]`</tspan>
+</tspan>
+    <tspan x="10px" y="478px">
+</tspan>
+    <tspan x="10px" y="496px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: processed 2 links: 1 resolved; 1 unresolved; 1 has warnings</tspan>
+</tspan>
+    <tspan x="10px" y="514px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: finished with warnings</tspan>
+</tspan>
+    <tspan x="10px" y="532px"><tspan> INFO mdbook_driver::mdbook: Running the markdown backend</tspan>
+</tspan>
+    <tspan x="10px" y="550px">
+</tspan>
+  </text>
+
+</svg>

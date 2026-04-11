@@ -5,13 +5,13 @@ use tracing::info_span;
 use mdbookkit::{
     emit,
     error::{ConsumeError, ProgramExit},
-    logging::Logging,
+    logging::init_logging,
 };
 
 mod postprocess;
 
 fn main() {
-    Logging::default().init();
+    init_logging();
     let _span = info_span!({ env!("CARGO_PKG_NAME") }).entered();
     let Program { command } = clap::Parser::parse();
     match command {

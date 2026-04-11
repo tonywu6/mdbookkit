@@ -74,7 +74,7 @@ use std::{
 use console::StyledObject;
 use tap::{Pipe, Tap};
 use tracing::{
-    Event, Subscriber,
+    Event, Level, Subscriber,
     field::{Field, Visit},
     span::{Attributes, Id},
 };
@@ -87,7 +87,7 @@ use tracing_subscriber::{
 };
 
 use crate::{
-    env::{MDBOOK_LOG, is_colored, is_logging, set_colored, set_logging},
+    env::{MDBOOK_LOG, is_colored, is_logging},
     error::EventLevelLayer,
 };
 
@@ -113,51 +113,37 @@ macro_rules! is_branded {
     }};
 }
 
-pub struct Logging {
-    pub logging: Option<bool>,
-    pub colored: Option<bool>,
-    pub level: LevelFilter,
+macro_rules! metadata_for {
+    ( $level:expr ) => {{
+        static CALLSITE: ::tracing::callsite::DefaultCallsite =
+            ::tracing::callsite::DefaultCallsite::new(&METADATA);
+        static METADATA: ::tracing::Metadata<'static> = {
+            ::tracing::Metadata::new(
+                "_",
+                module_path!(),
+                $level,
+                Some(file!()),
+                Some(line!()),
+                Some(module_path!()),
+                ::tracing::field::FieldSet::new(&[], ::tracing::callsite::Identifier(&CALLSITE)),
+                ::tracing::metadata::Kind::EVENT,
+            )
+        };
+        &METADATA
+    }};
 }
 
-impl Logging {
-    pub fn init(self) {
-        init_logging(self);
-    }
-}
-
-impl Default for Logging {
-    fn default() -> Self {
-        Self {
-            logging: None,
-            colored: None,
-            level: LevelFilter::INFO,
-        }
-    }
-}
-
-fn init_logging(options: Logging) {
-    if let Some(logging) = options.logging {
-        set_logging(logging);
-    }
-
-    if let Some(colored) = options.colored {
-        set_colored(colored);
-    }
-
-    // https://github.com/rust-lang/mdBook/blob/v0.5.2/src/main.rs#L93
-
+pub fn init_logging() {
     let filter = EnvFilter::builder()
-        .with_default_directive(options.level.into())
+        .with_default_directive(LevelFilter::INFO.into())
         .parse_lossy(MDBOOK_LOG.as_deref().unwrap_or_default());
-
-    let max_level = filter.max_level_hint().unwrap_or(options.level);
 
     let logger = tracing_subscriber::fmt::layer()
         .compact()
         .without_time()
-        .with_file(max_level > LevelFilter::DEBUG)
-        .with_line_number(max_level > LevelFilter::DEBUG)
-        .with_target(is_colored() && max_level > LevelFilter::INFO)
+        .with_file(level_enabled(metadata_for!(Level::TRACE), &filter))
+        .with_line_number(level_enabled(metadata_for!(Level::TRACE), &filter))
+        .with_target(is_colored() && level_enabled(metadata_for!(Level::DEBUG), &filter))
         .with_ansi(is_colored())
         .with_writer(|| TICKER.writer())
         .with_filter(if TICKER.is_enabled() {
@@ -178,6 +164,12 @@ fn init_logging(options: Logging) {
         .with(logger)
         .with(ticker)
         .init();
+}
+
+fn level_enabled(level: &tracing::Metadata<'_>, filter: &EnvFilter) -> bool {
+    tracing_subscriber::registry()
+        .with(filter.clone())
+        .enabled(level)
 }
 
 macro_rules! derive_event {

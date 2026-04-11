@@ -1,7 +1,7 @@
 use std::{
     borrow::Cow,
     collections::BTreeMap,
-    fmt::{Arguments, Debug, Display},
+    fmt::{Debug, Display},
     io::Write,
     ops::Range,
 };
@@ -15,7 +15,7 @@ use tap::Pipe;
 
 use crate::{
     emit,
-    env::{is_colored, is_logging},
+    env::{MDBOOKKIT_TERM_GRAPHICAL, TruthyStr, is_colored, is_logging},
     error::{ConsumeError, put_severity},
     logging::stderr,
 };
@@ -77,7 +77,6 @@ pub struct Note<'a> {
 pub struct IssueReporter<'a> {
     pub issues: Vec<IssueReport<'a>>,
     pub source: SourceCode<'a>,
-    pub tracer: &'a dyn Fn(IssueLevel, Arguments<'_>),
 }
 
 #[derive(Clone)]
@@ -88,32 +87,60 @@ pub struct SourceCode<'a> {
 
 impl<'a> IssueReporter<'a> {
     pub fn emit(self) {
-        if is_logging() {
-            for issue in self.issues {
-                issue_to_traces(issue, self.source.clone(), self.tracer);
-            }
-        } else {
+        let source = self.source.clone();
+        if let Some(style) = is_graphical() {
             let renderer = if is_colored() {
                 Renderer::styled()
             } else {
                 Renderer::plain()
             }
-            .decor_style(DecorStyle::Unicode);
-            for report in self.emit_reports() {
+            .decor_style(style);
+            for report in self
+                .issues
+                .into_iter()
+                // filtering done manually
+                .filter(|issue| tracing_level_enabled(issue.level.into()))
+                .inspect(|issue| put_severity(issue.level.into()))
+                .map(|issue| issue_to_report(issue, source.clone()))
+            {
                 writeln!(stderr(), "{}\n", renderer.render(&report))
                     .or_debug(emit!("failed to print to stderr: {:?}"))
                     .ok();
             }
+        } else {
+            for issue in self.issues {
+                // filtering done by tracing
+                issue_to_traces(issue, source.clone());
+            }
         }
     }
+}
 
-    pub fn emit_reports(self) -> Vec<Vec<Group<'a>>> {
-        self.issues
-            .into_iter()
-            .filter(|issue| tracing_level_enabled(issue.level.into()))
-            .inspect(|issue| put_severity(issue.level.into()))
-            .map(|issue| issue_to_report(issue, self.source.clone()))
-            .collect::<Vec<_>>()
+fn tracing_level_enabled(level: tracing::Level) -> bool {
+    if tracing::enabled!(target: module_path!(), tracing::Level::TRACE) {
+        level <= tracing::Level::TRACE
+    } else if tracing::enabled!(target: module_path!(), tracing::Level::DEBUG) {
+        level <= tracing::Level::DEBUG
+    } else if tracing::enabled!(target: module_path!(), tracing::Level::INFO) {
+        level <= tracing::Level::INFO
+    } else if tracing::enabled!(target: module_path!(), tracing::Level::WARN) {
+        level <= tracing::Level::WARN
+    } else {
+        level <= tracing::Level::ERROR
+    }
+}
+
+fn is_graphical() -> Option<DecorStyle> {
+    match MDBOOKKIT_TERM_GRAPHICAL.truthy() {
+        None => {
+            if is_logging() {
+                None
+            } else {
+                Some(DecorStyle::Unicode)
+            }
+        }
+        Some("ascii") => Some(DecorStyle::Ascii),
+        Some(_) => Some(DecorStyle::Unicode),
     }
 }
 
@@ -151,10 +178,7 @@ pub fn issue_to_report<'a>(issue: IssueReport<'a>, source: SourceCode<'a>) -> Ve
     sections
 }
 
-pub fn issue_to_traces<'a, F>(issue: IssueReport<'a>, source: SourceCode<'a>, emit: F)
-where
-    F: Fn(IssueLevel, Arguments<'_>),
-{
+pub fn issue_to_traces<'a>(issue: IssueReport<'a>, source: SourceCode<'a>) {
     struct IssueFormatter<'a> {
         issue: IssueReport<'a>,
         source: SourceCode<'a>,
@@ -189,7 +213,14 @@ where
 
     let level = issue.level;
     let formatter = IssueFormatter { issue, source };
-    emit(level, format_args!("{formatter}"))
+
+    match level {
+        IssueLevel::Error => tracing::error!("{formatter}"),
+        IssueLevel::Warning => tracing::warn!("{formatter}"),
+        IssueLevel::Info => tracing::info!("{formatter}"),
+        IssueLevel::Help => tracing::info!("{formatter}"),
+        IssueLevel::Note => tracing::debug!("{formatter}"),
+    }
 }
 
 impl<'a> IssueReport<'a> {
@@ -222,12 +253,7 @@ impl<'a> IssueReporter<'a> {
     pub fn sorted(issues: Vec<Self>) -> Vec<Self> {
         let mut sorted = vec![];
 
-        for Self {
-            issues,
-            source,
-            tracer,
-        } in issues
-        {
+        for Self { issues, source } in issues {
             let mut levels = BTreeMap::<_, Vec<_>>::new();
             for issue in issues {
                 let level = tracing::Level::from(issue.level);
@@ -235,21 +261,17 @@ impl<'a> IssueReporter<'a> {
             }
             for (level, mut issues) in levels {
                 issues.sort_by_key(|issue| issue.sort_key());
-                sorted.push((level, issues, source.clone(), tracer));
+                sorted.push((level, issues, source.clone()));
             }
         }
 
-        sorted.sort_by(|(l1, _, s1, _), (l2, _, s2, _)| {
-            (l2, &s1.source_path).cmp(&(l1, &s2.source_path))
+        sorted.sort_by(|(level1, _, source1), (level2, _, source2)| {
+            (level2, &source1.source_path).cmp(&(level1, &source2.source_path))
         });
 
         sorted
             .into_iter()
-            .map(|(_, issues, source, tracer)| Self {
-                issues,
-                source,
-                tracer,
-            })
+            .map(|(_, issues, source)| Self { issues, source })
             .collect()
     }
 }
@@ -312,33 +334,6 @@ impl Display for IssueLevel {
             IssueLevel::Note => f.write_str("note"),
             IssueLevel::Help => f.write_str("help"),
         }
-    }
-}
-
-#[macro_export]
-macro_rules! emit_issue {
-    () => {
-        &|level: $crate::diagnostics::IssueLevel, message: ::std::fmt::Arguments<'_>| match level {
-            $crate::diagnostics::IssueLevel::Error => ::tracing::error!("{message}"),
-            $crate::diagnostics::IssueLevel::Warning => ::tracing::warn!("{message}"),
-            $crate::diagnostics::IssueLevel::Info => ::tracing::info!("{message}"),
-            $crate::diagnostics::IssueLevel::Note => ::tracing::debug!("{message}"),
-            $crate::diagnostics::IssueLevel::Help => ::tracing::info!("{message}"),
-        }
-    };
-}
-
-fn tracing_level_enabled(level: tracing::Level) -> bool {
-    if tracing::enabled!(tracing::Level::TRACE) {
-        level <= tracing::Level::TRACE
-    } else if tracing::enabled!(tracing::Level::DEBUG) {
-        level <= tracing::Level::DEBUG
-    } else if tracing::enabled!(tracing::Level::INFO) {
-        level <= tracing::Level::INFO
-    } else if tracing::enabled!(tracing::Level::WARN) {
-        level <= tracing::Level::WARN
-    } else {
-        level <= tracing::Level::ERROR
     }
 }
 
