@@ -1059,6 +1059,7 @@ dependencies = [
  "anstyle",
  "anstyle-svg",
  "anyhow",
+ "camino",
  "regex",
  "snapbox",
  "tap",

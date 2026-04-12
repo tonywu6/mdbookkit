@@ -12,7 +12,7 @@ use cargo_metadata::{
     diagnostic::{Diagnostic, DiagnosticSpan},
 };
 use html_escape::decode_html_entities;
-use lol_html::{HtmlRewriter, Settings, element};
+use lol_html::{HtmlRewriter, element};
 use mdbook_markdown::pulldown_cmark::{
     CowStr, Event,
     LinkType::{self, *},
@@ -139,7 +139,7 @@ impl<'a> LinkTracker<'a> {
 
         let row = Cell::<Option<usize>>::new(None);
 
-        Settings {
+        lol_html::Settings {
             element_content_handlers: vec![
                 element!(OUTER_SELECTOR, |_| {
                     row.update(|i| match i {
@@ -257,6 +257,15 @@ pub struct ExportedPages<'a> {
     pub stats: Statistics,
 }
 
+macro_rules! link_type {
+    (dest_defined) => {
+        Inline | Reference | Collapsed | Shortcut
+    };
+    (ignored_link) => {
+        Autolink | Email | WikiLink { .. }
+    };
+}
+
 fn could_be_item_link(kind: LinkType, url: &str) -> bool {
     if matches!(kind, Autolink | Email | WikiLink { .. }) {
         return false;
@@ -346,12 +355,6 @@ macro_rules! data_attr {
 static OUTER_SELECTOR: &str = concat!("span[", data_attr!(), "]");
 static COMMENT_PREFIX: &str = concat!("//! - <span ", data_attr!(), ">");
 static COMMENT_SUFFIX: &str = "</span>";
-
-macro_rules! has_link_dest {
-    () => {
-        Inline | Reference | Collapsed | Shortcut
-    };
-}
 
 impl<'a> Link<'a> {
     fn try_open(text: &'a str, event: Event<'a>, span: Range<usize>) -> Option<Self> {
@@ -450,7 +453,7 @@ impl<'a> Link<'a> {
             CollapsedUnknown | ShortcutUnknown => is_shortcut,
             Inline | ReferenceUnknown => true,
             Reference | Collapsed | Shortcut => false,
-            Autolink | Email | WikiLink { .. } => unreachable!(),
+            link_type!(ignored_link) => unreachable!(),
         } && !normalized.as_ref().contains('\n');
 
         if is_one_line {
@@ -458,19 +461,19 @@ impl<'a> Link<'a> {
         }
 
         let link = match kind {
-            has_link_dest!() => Tag::Link {
-                link_type: Inline,
-                dest_url: dest.clone(),
-                title: "".into(),
-                id: "".into(),
-            },
             ReferenceUnknown | CollapsedUnknown | ShortcutUnknown => Tag::Link {
                 link_type: Reference,
                 dest_url: "".into(),
                 title: "".into(),
                 id: dest.clone(),
             },
-            Autolink | Email | WikiLink { .. } => {
+            link_type!(dest_defined) => Tag::Link {
+                link_type: Inline,
+                dest_url: dest.clone(),
+                title: "".into(),
+                id: "".into(),
+            },
+            link_type!(ignored_link) => {
                 unreachable!()
             }
         };
@@ -533,7 +536,7 @@ impl<'a> Link<'a> {
                         .message("rustdoc may not support the syntax of this item")
                         .build(),
                 ])
-                .secondary(if matches!(self.kind, has_link_dest!()) {
+                .secondary(if matches!(self.kind, link_type!(dest_defined)) {
                     vec![suggest_path_prefix(span.clone())]
                 } else {
                     vec![]
@@ -555,8 +558,10 @@ impl<'a> Link<'a> {
             .conv::<IssueReport>();
 
             if has_error_code(diagnostic, "rustdoc::broken_intra_doc_links") {
-                if matches!(self.kind, has_link_dest!())
+                if matches!(self.kind, link_type!(dest_defined))
                     && diagnostic.message.starts_with("unresolved link to")
+                    && !self.dest.contains("::")
+                    && !self.dest.contains("<")
                 {
                     issue.secondary(suggest_path_prefix(self.span.dest.clone()));
                 }

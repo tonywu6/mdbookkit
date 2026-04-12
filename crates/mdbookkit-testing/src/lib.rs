@@ -1,8 +1,9 @@
-use std::{borrow::Cow, fmt::Display, path::PathBuf, sync::LazyLock};
+use std::{borrow::Cow, fmt::Display, path::Path, sync::LazyLock};
 
 use anstyle::RgbColor;
 use anstyle_svg::Palette;
 use anyhow::{Context, Result};
+use camino::Utf8PathBuf;
 use regex::Regex;
 use snapbox::{
     Assert, Data, IntoData, RedactedValue, Redactions, assert::DEFAULT_ACTION_ENV, cmd::Command,
@@ -14,9 +15,8 @@ pub use regex;
 pub use snapbox;
 
 pub struct TestBook {
-    pub name: &'static str,
+    pub dirs: TestRoot,
     pub code: i32,
-    pub root_dir: PathBuf,
     pub env_vars: Vec<(&'static str, &'static str)>,
     pub redacted: Vec<(&'static str, RedactedValue)>,
     pub stderr_txt: Data,
@@ -26,55 +26,34 @@ pub struct TestBook {
 
 impl TestBook {
     pub fn run(self) -> Result<()> {
-        let Self {
-            name,
-            code,
-            root_dir,
-            env_vars,
-            redacted,
-            stderr_txt,
-            stderr_svg,
-            rendered,
-        } = self;
-
-        let book_dir = root_dir.join(name);
         let temp_dir = DirRoot::mutable_temp()?;
-        let dist_dir = book_dir.join("out");
+        self.cargo("clean", self.dirs.book_dir());
 
-        Command::new(env!("CARGO"))
-            .arg("clean")
-            .current_dir(&book_dir)
-            .assert()
-            .success();
+        let assert = self.assert()?;
 
-        let result = Command::new(env!("CARGO"))
-            .args(["bin", "mdbook", "build"])
-            .arg(&book_dir)
-            .current_dir(&root_dir)
+        let result = self
+            .cargo("bin", &self.dirs.root_dir)
+            .current_dir(&self.dirs.root_dir)
+            .args(["mdbook", "build"])
+            .arg(self.dirs.book_dir())
             .env("MDBOOK_build__build_dir", temp_dir.path().unwrap())
             .env("MDBOOK_LOG", "off,mdbookkit::diagnostics=info")
             .env("MDBOOKKIT_TERM_GRAPHICAL", "ascii")
             .env("FORCE_COLOR", "1")
             .env("RUST_BACKTRACE", "0")
-            .envs(env_vars)
+            .envs(self.env_vars)
             .assert()
-            .code(code);
+            .code(self.code);
 
-        let assert = {
-            let mut redactions = Redactions::new();
-            redactions.insert("[TEST_DIR]", &root_dir)?;
-            redactions.insert("[ELAPSED]", Regex::new(r"in (?<redacted>\d+\.\d+s)")?)?;
-            redactions.insert(
-                "[LLVM_COV_STDERR]",
-                Regex::new(r"(?<redacted>error: process didn't exit successfully:.*)")?,
-            )?;
-            for (placeholder, matcher) in redacted {
-                redactions.insert(placeholder, matcher)?;
-            }
-            Assert::new()
-                .action_env(DEFAULT_ACTION_ENV)
-                .redact_with(redactions)
-        };
+        let Self {
+            dirs,
+            code: _,
+            env_vars: _,
+            redacted: _,
+            stderr_txt,
+            stderr_svg,
+            rendered,
+        } = self;
 
         let stderr = &*result.get_output().stderr;
         let stderr = String::from_utf8_lossy(stderr);
@@ -86,7 +65,7 @@ impl TestBook {
 
         for expected in rendered {
             let page = expected.source().unwrap().as_path().unwrap();
-            let page = page.strip_prefix(&dist_dir)?.to_owned();
+            let page = page.strip_prefix(dirs.dist_dir())?.to_owned();
 
             let actual_path = temp_dir.path().unwrap().join(&page);
             let actual = std::fs::read_to_string(actual_path)
@@ -107,9 +86,109 @@ impl TestBook {
 
         Ok(())
     }
+
+    pub fn assert(&self) -> Result<Assert> {
+        let mut redactions = Redactions::new();
+        redactions.insert("[TEST_DIR]", self.dirs.root_dir.as_str().to_owned())?;
+        redactions.insert("[ELAPSED]", Regex::new(r"in (?<redacted>\d+\.\d+s)")?)?;
+        redactions.insert(
+            "[LLVM_COV_STDERR]",
+            Regex::new(r"(?<redacted>error: process didn't exit successfully:.*)")?,
+        )?;
+        for (placeholder, matcher) in &self.redacted {
+            redactions.insert(placeholder, matcher.clone())?;
+        }
+        Ok(Assert::new()
+            .action_env(DEFAULT_ACTION_ENV)
+            .redact_with(redactions))
+    }
+
+    pub fn cargo(&self, command: &str, wd: impl AsRef<Path>) -> Command {
+        Command::new(env!("CARGO")).arg(command).current_dir(wd)
+    }
 }
 
-trait AssertUtil {
+pub struct TestRoot {
+    pub root_dir: Utf8PathBuf,
+    pub name: &'static str,
+}
+
+impl TestRoot {
+    pub fn book_dir(&self) -> Utf8PathBuf {
+        self.root_dir.join(self.name)
+    }
+
+    pub fn dist_dir(&self) -> Utf8PathBuf {
+        self.book_dir().join("out")
+    }
+
+    pub fn rel_path(&self, case: &Data) -> Option<Utf8PathBuf> {
+        case.source()?
+            .as_path()?
+            .strip_prefix(self.dist_dir())
+            .ok()?
+            .to_owned()
+            .try_into()
+            .ok()
+    }
+}
+
+#[macro_export]
+macro_rules! test_mdbook {
+    [
+        @init $name:ident
+        exit($code:literal),
+        stderr.svg = $stderr_svg:expr,
+        stderr.txt = $stderr_txt:expr,
+        $( rendered = [$($data:expr),*], )?
+        $( env = [$($env:tt)*], )?
+        $( redacted = [$($redacted:tt)*], )?
+    ] => {
+        $crate::TestBook {
+            dirs: $crate::TestRoot {
+                name: stringify!($name),
+                root_dir: $crate::snapbox::current_dir!().try_into()?,
+            },
+            code: $code,
+            stderr_svg: $stderr_svg,
+            stderr_txt: $stderr_txt,
+            rendered: vec![$($($data),*)?],
+            env_vars: $crate::test_mdbook!(@key_values $($($env)*)?),
+            redacted: $crate::test_mdbook!(@key_values $($($redacted)*)?),
+        }
+    };
+
+    [$name:ident $(($shared:ident))?, $($args:tt)+] => {
+        #[test]
+        fn $name() -> $crate::anyhow::Result<()> {
+            // must init struct within test to have
+            // "update snapshots" editor action
+            $crate::test_mdbook!(@init $name $($args)+).run()
+        }
+
+        $crate::test_mdbook!(@newtype $name ($($shared)?) ($($args)+));
+    };
+
+    (@newtype $name:ident ($shared:ident) ($($args:tt)+)) => {
+        pub struct $shared($crate::TestBook);
+
+        impl $shared {
+            pub fn book() -> $crate::anyhow::Result<$crate::TestBook> {
+                Ok($crate::test_mdbook!(@init $name $($args)+))
+            }
+        }
+    };
+    (@newtype $name:ident () ($($args:tt)+)) => {};
+
+    (@key_values $($key:literal = $val:expr),*) => {
+        vec![$(($key, $val)),*]
+    };
+    (@key_values $($tt:tt)+) => {
+        $($tt)+
+    }
+}
+
+pub trait AssertUtil {
     fn try_eq_text<S: AsRef<str>>(
         &self,
         name: Option<&dyn Display>,
@@ -184,39 +263,4 @@ fn render_svg(text: &str) -> String {
             "SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;",
             "Menlo, SF Mono, Liberation Mono, Consolas, ui-monospace, monospace;",
         )
-}
-
-#[macro_export]
-macro_rules! test_mdbook {
-    [
-        $name:ident,
-        exit($code:literal),
-        stderr.svg = $stderr_svg:expr,
-        stderr.txt = $stderr_txt:expr,
-        $( rendered = [$($data:expr),*], )?
-        $( env = [$($env:tt)*], )?
-        $( redacted = [$($redacted:tt)*], )?
-    ] => {
-        #[test]
-        fn $name() -> $crate::anyhow::Result<()> {
-            $crate::TestBook {
-                name: stringify!($name),
-                code: $code,
-                root_dir: $crate::snapbox::current_dir!(),
-                stderr_svg: $stderr_svg,
-                stderr_txt: $stderr_txt,
-                rendered: vec![$($($data),*)?],
-                env_vars: $crate::test_mdbook!(@key_values $($($env)*)?),
-                redacted: $crate::test_mdbook!(@key_values $($($redacted)*)?),
-            }
-            .run()
-        }
-    };
-
-    (@key_values $($key:literal = $val:expr),*) => {
-        vec![$(($key, $val)),*]
-    };
-    (@key_values $($tt:tt)+) => {
-        $($tt)+
-    }
 }

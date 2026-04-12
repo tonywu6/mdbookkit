@@ -1,8 +1,8 @@
-warning: unresolved link to `f80`
- --> chapter_1.md:5:2
+warning: unresolved link
+ --> ignored.md:8:2
   |
-5 | [f80]
-  |  ^^^ no item named `f80` in scope
+8 | [binary number]
+  |  ^^^^^^^^^^^^^ rustdoc did not process this link
   |
-  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`
+  = note: rustdoc may not support the syntax of this item
 

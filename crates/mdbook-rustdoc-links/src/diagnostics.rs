@@ -52,7 +52,7 @@ impl<'a, 'r> From<RustcDiagnostic<'a, 'r>> for IssueReport<'a> {
 
         let notes = (diagnostic.children.iter())
             .filter(|item| is_note(item))
-            .filter(|item| !item.message.starts_with("`#[warn("))
+            .filter(|item| !less_helpful_message(item))
             .map(|item| {
                 Note::level(report_level(item.level))
                     .message(&item.message)
@@ -95,4 +95,13 @@ fn report_level(level: DiagnosticLevel) -> IssueLevel {
 
 fn is_note(diagnostic: &Diagnostic) -> bool {
     diagnostic.spans.is_empty()
+}
+
+fn less_helpful_message(message: &Diagnostic) -> bool {
+    let Diagnostic { message, level, .. } = message;
+    match level {
+        DiagnosticLevel::Note => message.starts_with(r"`#[warn("),
+        DiagnosticLevel::Help => message.starts_with(r"to escape `[` and `]` characters"),
+        _ => false,
+    }
 }
