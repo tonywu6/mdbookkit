@@ -1,0 +1,8 @@
+warning: unresolved link to `f80`
+ --> chapter_1.md:5:2
+  |
+5 | [f80]
+  |  ^^^ no item named `f80` in scope
+  |
+  = help: to escape `[` and `]` characters, add '/' before them like `/[` or `/]`
+
