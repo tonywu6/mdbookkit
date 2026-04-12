@@ -1,34 +1,37 @@
-use std::{fmt::Display, path::PathBuf};
+use std::{borrow::Cow, fmt::Display, path::PathBuf, sync::LazyLock};
 
 use anstyle::RgbColor;
 use anstyle_svg::Palette;
 use anyhow::{Context, Result};
 use regex::Regex;
 use snapbox::{
-    Assert, Data, Redactions, assert::DEFAULT_ACTION_ENV, cmd::Command, data::DataFormat,
-    dir::DirRoot,
+    Assert, Data, IntoData, RedactedValue, Redactions, assert::DEFAULT_ACTION_ENV, cmd::Command,
+    data::DataFormat, dir::DirRoot,
 };
 
 pub use anyhow;
+pub use regex;
 pub use snapbox;
 
-pub struct TestBook<'a> {
-    pub name: &'a str,
+pub struct TestBook {
+    pub name: &'static str,
     pub code: i32,
     pub root_dir: PathBuf,
-    pub env_vars: Vec<(&'a str, &'a str)>,
+    pub env_vars: Vec<(&'static str, &'static str)>,
+    pub redacted: Vec<(&'static str, RedactedValue)>,
     pub stderr_txt: Data,
     pub stderr_svg: Data,
     pub rendered: Vec<Data>,
 }
 
-impl TestBook<'_> {
+impl TestBook {
     pub fn run(self) -> Result<()> {
         let Self {
             name,
             code,
             root_dir,
             env_vars,
+            redacted,
             stderr_txt,
             stderr_svg,
             rendered,
@@ -60,11 +63,14 @@ impl TestBook<'_> {
         let assert = {
             let mut redactions = Redactions::new();
             redactions.insert("[TEST_DIR]", &root_dir)?;
-            redactions.insert("[CARGO_ELAPSED]", Regex::new(r"in (?<redacted>\d+\.\d+s)")?)?;
+            redactions.insert("[ELAPSED]", Regex::new(r"in (?<redacted>\d+\.\d+s)")?)?;
             redactions.insert(
                 "[LLVM_COV_STDERR]",
                 Regex::new(r"(?<redacted>error: process didn't exit successfully:.*)")?,
             )?;
+            for (placeholder, matcher) in redacted {
+                redactions.insert(placeholder, matcher)?;
+            }
             Assert::new()
                 .action_env(DEFAULT_ACTION_ENV)
                 .redact_with(redactions)
@@ -119,18 +125,27 @@ impl AssertUtil for Assert {
         actual: S,
         expected: Data,
     ) -> snapbox::assert::Result<()> {
+        let actual = actual.as_ref();
+        let actual = normalize_path_separators(actual);
+        let actual = &*actual;
         if expected.format() == DataFormat::TermSvg {
-            let rendered = self.redactions().redact(actual.as_ref().trim_end());
+            let rendered = self.redactions().redact(actual.trim_end());
             let rendered = render_svg(&rendered);
             let expected = expected.coerce_to(DataFormat::Text);
-            self.try_eq(name, rendered.into(), expected)
+            self.try_eq(name, rendered.into_data().raw(), expected.raw())
         } else if expected.format() == DataFormat::Text {
-            let rendered = anstream::adapter::strip_str(actual.as_ref()).to_string();
-            self.try_eq(name, rendered.into(), expected)
+            let rendered = anstream::adapter::strip_str(actual).to_string();
+            self.try_eq(name, rendered.into_data().raw(), expected.raw())
         } else {
-            self.try_eq(name, actual.as_ref().into(), expected)
+            self.try_eq(name, actual.into(), expected)
         }
     }
+}
+
+fn normalize_path_separators(text: &str) -> Cow<'_, str> {
+    static REGEX: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"([\p{L}\p{N}])\\([\p{L}\p{N}])").unwrap());
+    REGEX.replace_all(text, "$1/$2")
 }
 
 fn render_svg(text: &str) -> String {
@@ -178,8 +193,9 @@ macro_rules! test_mdbook {
         exit($code:literal),
         stderr.svg = $stderr_svg:expr,
         stderr.txt = $stderr_txt:expr,
-        $( rendered = [$( $data:expr ),*], )?
-        $( env = [$( $env_key:literal = $env_val:literal ),*], )?
+        $( rendered = [$($data:expr),*], )?
+        $( env = [$($env:tt)*], )?
+        $( redacted = [$($redacted:tt)*], )?
     ] => {
         #[test]
         fn $name() -> $crate::anyhow::Result<()> {
@@ -189,10 +205,18 @@ macro_rules! test_mdbook {
                 root_dir: $crate::snapbox::current_dir!(),
                 stderr_svg: $stderr_svg,
                 stderr_txt: $stderr_txt,
-                rendered: vec![$($($data)*)?],
-                env_vars: vec![$($(($env_key, $env_val))*)?],
+                rendered: vec![$($($data),*)?],
+                env_vars: $crate::test_mdbook!(@key_values $($($env)*)?),
+                redacted: $crate::test_mdbook!(@key_values $($($redacted)*)?),
             }
             .run()
         }
     };
+
+    (@key_values $($key:literal = $val:expr),*) => {
+        vec![$(($key, $val)),*]
+    };
+    (@key_values $($tt:tt)+) => {
+        $($tt)+
+    }
 }

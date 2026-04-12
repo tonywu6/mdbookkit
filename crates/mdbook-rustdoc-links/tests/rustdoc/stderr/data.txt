@@ -4,5 +4,5 @@ warning: unresolved link to `f80`
 5 | [f80]
   |  ^^^ no item named `f80` in scope
   |
-  = help: to escape `[` and `]` characters, add '/' before them like `/[` or `/]`
+  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`
 

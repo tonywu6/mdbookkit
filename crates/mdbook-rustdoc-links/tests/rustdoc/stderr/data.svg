@@ -31,7 +31,7 @@
 </tspan>
     <tspan x="10px" y="118px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="136px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: to escape `[` and `]` characters, add '/' before them like `/[` or `/]`</tspan>
+    <tspan x="10px" y="136px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`</tspan>
 </tspan>
   </text>
 
