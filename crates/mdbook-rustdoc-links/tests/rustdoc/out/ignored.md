@@ -7,4 +7,4 @@
 
 [binary number]
 
-[`std::marker::PhantomData</>`]
+[`std::marker::PhantomData</>`](https://doc.rust-lang.org/1.94.0/core/marker/struct.PhantomData.html "struct core::marker::PhantomData")

@@ -1,8 +1,7 @@
 use std::{
     cell::Cell,
-    collections::HashSet,
+    collections::BTreeSet,
     fmt::{Debug, Display, Write},
-    hash::Hash,
     ops::{ControlFlow, Range},
 };
 
@@ -25,6 +24,7 @@ use tracing::{debug, instrument, trace, warn};
 use url::Url;
 
 use mdbookkit::{
+    cmp::{Lexicographic, LexicographicOrd},
     diagnostics::{
         Highlight, IssueLevel, IssueReport, Note, Suggestion, annotate_snippets::AnnotationKind,
     },
@@ -36,7 +36,7 @@ use mdbookkit::{
 
 use crate::{
     builder::BuildOutput,
-    diagnostics::{RustcDiagnostic, SourceMap},
+    diagnostics::{RustcDiagnostic, SourceMap, report_level},
     markdown::markdown,
 };
 
@@ -257,8 +257,8 @@ pub struct ExportedPages<'a> {
     pub stats: Statistics,
 }
 
-macro_rules! link_type {
-    (dest_defined) => {
+macro_rules! link_class {
+    (href_defined) => {
         Inline | Reference | Collapsed | Shortcut
     };
     (ignored_link) => {
@@ -266,27 +266,26 @@ macro_rules! link_type {
     };
 }
 
-fn could_be_item_link(kind: LinkType, url: &str) -> bool {
-    if matches!(kind, Autolink | Email | WikiLink { .. }) {
+fn could_be_item_link(kind: LinkType, dest: &str) -> bool {
+    if matches!(kind, link_class!(ignored_link)) {
+        return false;
+    }
+    if matches!(kind, link_class!(href_defined)) && dest.contains('/') {
         return false;
     }
 
-    let url = if let Some(idx) = url.rfind('#') {
-        &url[..idx]
+    let dest = if let Some(idx) = dest.find('#') {
+        &dest[..idx]
     } else {
-        url
+        dest
     };
 
-    if url.is_empty() {
-        return false;
-    }
-
-    if !(url.chars()).all(|c| c.is_alphanumeric() || ":_<>, !*&;@()'".contains(c)) {
+    if dest.is_empty() {
         return false;
     }
 
     if matches!(kind, ShortcutUnknown)
-        && let Some(suffix) = url.strip_prefix('!')
+        && let Some(suffix) = dest.strip_prefix('!')
         && !suffix.is_empty()
         && suffix.chars().all(|c| c.is_ascii_alphabetic())
     {
@@ -340,11 +339,19 @@ fn resolve_url(output: &BuildOutput<'_>, href: &str) -> Result<Url> {
 fn locate_diagnostic(diag: &Diagnostic) -> Option<usize> {
     diag.spans.iter().find_map(|span| {
         if span.file_name == "<anon>" && span.is_primary {
-            Some(span.line_start - 1)
+            locate_diagnostic_span(span)
         } else {
             None
         }
     })
+}
+
+fn locate_diagnostic_span(span: &DiagnosticSpan) -> Option<usize> {
+    if span.line_start == span.line_end {
+        Some(span.line_start - 1)
+    } else {
+        None
+    }
 }
 
 macro_rules! data_attr {
@@ -453,7 +460,7 @@ impl<'a> Link<'a> {
             CollapsedUnknown | ShortcutUnknown => is_shortcut,
             Inline | ReferenceUnknown => true,
             Reference | Collapsed | Shortcut => false,
-            link_type!(ignored_link) => unreachable!(),
+            link_class!(ignored_link) => unreachable!(),
         } && !normalized.as_ref().contains('\n');
 
         if is_one_line {
@@ -467,13 +474,13 @@ impl<'a> Link<'a> {
                 title: "".into(),
                 id: dest.clone(),
             },
-            link_type!(dest_defined) => Tag::Link {
+            link_class!(href_defined) => Tag::Link {
                 link_type: Inline,
                 dest_url: dest.clone(),
                 title: "".into(),
                 id: "".into(),
             },
-            link_type!(ignored_link) => {
+            link_class!(ignored_link) => {
                 unreachable!()
             }
         };
@@ -518,36 +525,28 @@ impl<'a> Link<'a> {
 
     fn diagnose(&'a self, tracker: &LinkTracker<'a>) -> Vec<IssueReport<'a>> {
         let mut issues = Vec::with_capacity(self.diagnostics.len());
-        let mut seen = HashSet::new();
+        let mut seen = BTreeSet::new();
 
         if self.href.is_none() && self.diagnostics.is_empty() {
             let span = &self.span.dest;
 
-            let issue = IssueReport::level(IssueLevel::Warning)
-                .title("unresolved link")
+            let issue = IssueReport::level(IssueLevel::Note)
+                .title("link ignored")
                 .annotations(vec![
                     Highlight::span(span.clone())
-                        .kind(AnnotationKind::Primary)
-                        .label("rustdoc did not process this link")
+                        .kind(AnnotationKind::Context)
                         .build(),
                 ])
-                .notes(vec![
-                    Note::level(IssueLevel::Note)
-                        .message("rustdoc may not support the syntax of this item")
-                        .build(),
-                ])
-                .secondary(if matches!(self.kind, link_type!(dest_defined)) {
-                    vec![suggest_path_prefix(span.clone())]
-                } else {
-                    vec![]
-                })
                 .build();
 
             issues.push(issue);
         }
 
         for diagnostic in self.diagnostics.iter() {
-            if seen.replace(DiagnosticKey(diagnostic)).is_some() {
+            if seen
+                .replace(Lexicographic(DiagnosticKey(diagnostic)))
+                .is_some()
+            {
                 continue;
             }
 
@@ -558,7 +557,7 @@ impl<'a> Link<'a> {
             .conv::<IssueReport>();
 
             if has_error_code(diagnostic, "rustdoc::broken_intra_doc_links") {
-                if matches!(self.kind, link_type!(dest_defined))
+                if matches!(self.kind, link_class!(href_defined))
                     && diagnostic.message.starts_with("unresolved link to")
                     && !self.dest.contains("::")
                     && !self.dest.contains("<")
@@ -648,11 +647,7 @@ fn suggest_path_prefix<'a>(span: Range<usize>) -> IssueReport<'a> {
 
 impl SourceMap for LinkTracker<'_> {
     fn map_span(&self, span: &DiagnosticSpan) -> Option<Range<usize>> {
-        if span.line_start != span.line_end {
-            return None;
-        }
-
-        let link = self.links.get(span.line_start - 1)?;
+        let link = self.links.get(locate_diagnostic_span(span)?)?;
         let line = span.text.first()?;
 
         let lower = line.highlight_start - 1;
@@ -681,6 +676,24 @@ impl SourceMap for LinkTracker<'_> {
         let upper = lower + len;
         Some(lower..upper)
     }
+
+    fn include_note(&self, diag: &Diagnostic, note: &str) -> bool {
+        let link = if let Some(idx) = locate_diagnostic(diag)
+            && let Some(link) = self.links.get(idx)
+        {
+            link
+        } else {
+            return true;
+        };
+
+        if note.starts_with(r"`#[warn(") {
+            false
+        } else if note.starts_with(r"to escape `[`") {
+            !matches!(link.kind, link_class!(href_defined))
+        } else {
+            true
+        }
+    }
 }
 
 impl<'a> NormalizedLink<'a> {
@@ -701,43 +714,28 @@ impl AsRef<str> for NormalizedLink<'_> {
 #[derive(Debug)]
 struct DiagnosticKey<'a>(&'a Diagnostic);
 
-impl PartialEq for DiagnosticKey<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.key() == other.key()
-            && self.0.spans.len() == other.0.spans.len()
-            && self.spans().zip(other.spans()).all(|(s1, s2)| s1 == s2)
-    }
-}
-
-impl DiagnosticKey<'_> {
-    fn key(&self) -> impl Eq + Hash {
-        (&self.0.level, &self.0.code, &self.0.message)
+impl LexicographicOrd for DiagnosticKey<'_> {
+    fn head(&self) -> impl Ord {
+        (
+            report_level(self.0.level),
+            self.0.code.as_ref().map(|c| &c.code),
+            &self.0.message,
+        )
     }
 
-    fn spans(&self) -> impl Iterator<Item = impl Eq + Hash> {
+    fn tail(&self) -> impl Iterator<Item = impl Ord> {
         (self.0.spans.iter()).map(|span| {
             (
-                &span.label,
+                &span.is_primary,
                 &span.line_start,
                 &span.column_start,
                 &span.line_end,
                 &span.column_end,
+                &span.label,
                 &span.file_name,
-                &span.is_primary,
                 &span.suggested_replacement,
             )
         })
-    }
-}
-
-impl Eq for DiagnosticKey<'_> {}
-
-impl Hash for DiagnosticKey<'_> {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.key().hash(state);
-        for span in self.spans() {
-            span.hash(state);
-        }
     }
 }
 

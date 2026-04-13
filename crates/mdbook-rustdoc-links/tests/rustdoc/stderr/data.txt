@@ -1,8 +1,21 @@
-warning: unresolved link
- --> ignored.md:8:2
+warning: unresolved link to `std::Option`
+ --> basic.md:2:12
   |
-8 | [binary number]
-  |  ^^^^^^^^^^^^^ rustdoc did not process this link
+2 | - [option](std::Option)
+  |            ^^^^^^^^^^^ no item named `Option` in module `std`
+
+warning: `std::vec` is both a module and a macro
+ --> basic.md:6:8
   |
-  = note: rustdoc may not support the syntax of this item
+6 | [vec]: std::vec
+  |        ^^^^^^^^ ambiguous link
+  |
+help: to link to the module, prefix with `mod@`
+  |
+6 | [vec]: mod@std::vec
+  |        ++++
+help: to link to the macro, add an exclamation mark
+  |
+6 | [vec]: std::vec!
+  |                +
 

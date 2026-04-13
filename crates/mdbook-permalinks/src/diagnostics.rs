@@ -57,7 +57,15 @@ impl<'a> LinkDiagnostic<'a> {
             status, span, link, ..
         } = self.link;
         let path = self.shorten(link);
-        let label = match status {
+        let kind = match status {
+            LinkStatus::Ignored => AnnotationKind::Context,
+            LinkStatus::Unchanged => AnnotationKind::Context,
+            LinkStatus::Rewritten => AnnotationKind::Primary,
+            LinkStatus::Permalink => AnnotationKind::Primary,
+            LinkStatus::Unreachable(..) => AnnotationKind::Primary,
+            LinkStatus::Error(_) => AnnotationKind::Primary,
+        };
+        let text = match status {
             LinkStatus::Ignored => None,
             LinkStatus::Unchanged => Some(path.into()),
             LinkStatus::Permalink => Some(path.into()),
@@ -78,8 +86,8 @@ impl<'a> LinkDiagnostic<'a> {
             LinkStatus::Error(..) => Some(status.to_string()),
         };
         Highlight::span(span.clone())
-            .kind(AnnotationKind::Primary)
-            .maybe_label(label)
+            .kind(kind)
+            .maybe_label(text)
             .build()
     }
 

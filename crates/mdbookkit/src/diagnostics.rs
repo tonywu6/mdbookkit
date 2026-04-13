@@ -1,6 +1,6 @@
 use std::{
     borrow::Cow,
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     fmt::{Debug, Display},
     io::Write,
     ops::Range,
@@ -11,12 +11,14 @@ use annotate_snippets::{
     Annotation, AnnotationKind, Group, Message, Patch, Renderer, Snippet, renderer::DecorStyle,
 };
 use bon::Builder;
-use tap::Pipe;
+use tap::{Pipe, Tap};
 
 use crate::{
+    cmp::{Lexicographic, LexicographicOrd},
     emit,
     env::{MDBOOKKIT_TERM_GRAPHICAL, TruthyStr, is_colored, is_logging},
     error::{ConsumeError, put_severity},
+    lexicographic_ordering,
     logging::stderr,
 };
 
@@ -65,7 +67,7 @@ pub struct Suggestion<'a> {
     repl: Cow<'a, str>,
 }
 
-#[derive(Builder, Debug)]
+#[derive(Builder, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[builder(start_fn = level)]
 pub struct Note<'a> {
     #[builder(start_fn)]
@@ -225,6 +227,12 @@ pub fn issue_to_traces<'a>(issue: IssueReport<'a>, source: SourceCode<'a>) {
 
 impl<'a> IssueReport<'a> {
     #[inline]
+    pub fn annotations(&mut self, item: Highlight<'a>) -> &mut Self {
+        self.annotations.push(item);
+        self
+    }
+
+    #[inline]
     pub fn secondary(&mut self, item: IssueReport<'a>) -> &mut Self {
         self.secondary.push(item);
         self
@@ -234,6 +242,62 @@ impl<'a> IssueReport<'a> {
     pub fn note(&mut self, note: Note<'a>) -> &mut Self {
         self.notes.push(note);
         self
+    }
+
+    fn append(&mut self, other: &mut Self) -> &mut Self {
+        self.annotations = self
+            .annotations
+            .drain(..)
+            .chain(other.annotations.drain(..))
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect();
+
+        self.secondary = self
+            .secondary
+            .drain(..)
+            .chain(other.secondary.drain(..))
+            .collect::<Vec<_>>()
+            .pipe(Self::merged);
+
+        self
+    }
+
+    fn merged(mut issues: Vec<Self>) -> Vec<Self> {
+        let mut deduped = BTreeMap::<_, Vec<_>>::new();
+        for (index, issue) in issues.iter().enumerate() {
+            deduped
+                .entry(Lexicographic(IssueReportKey(issue)))
+                .or_default()
+                .push(index);
+        }
+        let indices = deduped
+            .into_values()
+            .collect::<Vec<_>>()
+            .tap_mut(|indices| indices.sort());
+
+        for indices in indices.iter() {
+            let (issues, tail) = issues.split_at_mut(indices[0] + 1);
+            let offset = issues.len();
+            let head = &mut issues[indices[0]];
+            for idx in &indices[1..] {
+                head.append(&mut tail[*idx - offset]);
+            }
+        }
+
+        let mut indices = indices.iter().peekable();
+        issues
+            .into_iter()
+            .enumerate()
+            .filter_map(|(idx, item)| {
+                if indices.peek()?[0] == idx {
+                    indices.next();
+                    Some(item)
+                } else {
+                    None
+                }
+            })
+            .collect()
     }
 }
 
@@ -259,7 +323,9 @@ impl<'a> IssueReporter<'a> {
                 let level = tracing::Level::from(issue.level);
                 levels.entry(level).or_default().push(issue);
             }
-            for (level, mut issues) in levels {
+
+            for (level, issues) in levels {
+                let mut issues = IssueReport::merged(issues);
                 issues.sort_by_key(|issue| issue.sort_key());
                 sorted.push((level, issues, source.clone()));
             }
@@ -368,4 +434,40 @@ fn byte_to_line_col(text: &str, byte: usize) -> Option<(usize, usize)> {
         }
     }
     None
+}
+
+struct IssueReportKey<'a>(&'a IssueReport<'a>);
+
+impl LexicographicOrd for IssueReportKey<'_> {
+    fn head(&self) -> impl Ord {
+        (
+            self.0.level,
+            &self.0.title,
+            &self.0.patches,
+            &self.0.notes,
+            (self.0.secondary)
+                .iter()
+                .map(|item| Lexicographic(Self(item)))
+                .collect::<Vec<_>>(),
+        )
+    }
+}
+
+impl LexicographicOrd for &'_ Highlight<'_> {
+    fn head(&self) -> impl Ord {
+        (range_ord(&self.span), self.kind, &self.label)
+    }
+}
+
+impl LexicographicOrd for &'_ Suggestion<'_> {
+    fn head(&self) -> impl Ord {
+        (range_ord(&self.span), &self.repl)
+    }
+}
+
+lexicographic_ordering!(Highlight<'_>);
+lexicographic_ordering!(Suggestion<'_>);
+
+fn range_ord<T: Ord>(range: &Range<T>) -> impl Ord {
+    (&range.start, &range.end)
 }

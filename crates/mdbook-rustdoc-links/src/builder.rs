@@ -309,7 +309,7 @@ fn run_builder(
         }
 
         for path in library_paths {
-            rustdoc.arg("-L").arg(path);
+            rustdoc.arg("-L").arg(format!("dependency={path}"));
         }
 
         let mut rustdoc = rustdoc

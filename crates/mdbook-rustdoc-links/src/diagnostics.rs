@@ -18,6 +18,7 @@ pub struct RustcDiagnostic<'a, 'r> {
 
 pub trait SourceMap {
     fn map_span(&self, span: &DiagnosticSpan) -> Option<Range<usize>>;
+    fn include_note(&self, diag: &Diagnostic, note: &str) -> bool;
 }
 
 impl<'a, 'r> From<RustcDiagnostic<'a, 'r>> for IssueReport<'a> {
@@ -52,7 +53,7 @@ impl<'a, 'r> From<RustcDiagnostic<'a, 'r>> for IssueReport<'a> {
 
         let notes = (diagnostic.children.iter())
             .filter(|item| is_note(item))
-            .filter(|item| !less_helpful_message(item))
+            .filter(|item| source_map.include_note(diagnostic, &item.message))
             .map(|item| {
                 Note::level(report_level(item.level))
                     .message(&item.message)
@@ -81,7 +82,7 @@ impl<'a, 'r> From<RustcDiagnostic<'a, 'r>> for IssueReport<'a> {
     }
 }
 
-fn report_level(level: DiagnosticLevel) -> IssueLevel {
+pub fn report_level(level: DiagnosticLevel) -> IssueLevel {
     match level {
         Error => IssueLevel::Error,
         Warning => IssueLevel::Warning,
@@ -95,13 +96,4 @@ fn report_level(level: DiagnosticLevel) -> IssueLevel {
 
 fn is_note(diagnostic: &Diagnostic) -> bool {
     diagnostic.spans.is_empty()
-}
-
-fn less_helpful_message(message: &Diagnostic) -> bool {
-    let Diagnostic { message, level, .. } = message;
-    match level {
-        DiagnosticLevel::Note => message.starts_with(r"`#[warn("),
-        DiagnosticLevel::Help => message.starts_with(r"to escape `[` and `]` characters"),
-        _ => false,
-    }
 }

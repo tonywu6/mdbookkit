@@ -1,4 +1,4 @@
-use std::{borrow::Cow, fmt::Display, path::Path, sync::LazyLock};
+use std::{borrow::Cow, ffi::OsStr, fmt::Display, path::Path, sync::LazyLock};
 
 use anstyle::RgbColor;
 use anstyle_svg::Palette;
@@ -37,11 +37,13 @@ impl TestBook {
             .args(["mdbook", "build"])
             .arg(self.dirs.book_dir())
             .env("MDBOOK_build__build_dir", temp_dir.path().unwrap())
-            .env("MDBOOK_LOG", "off,mdbookkit::diagnostics=info")
-            .env("MDBOOKKIT_TERM_GRAPHICAL", "ascii")
-            .env("FORCE_COLOR", "1")
-            .env("RUST_BACKTRACE", "0")
-            .envs(self.env_vars)
+            .envs(load_env(&[
+                ("MDBOOK_LOG", "off,mdbookkit::diagnostics=info"),
+                ("MDBOOKKIT_TERM_GRAPHICAL", "ascii"),
+                ("FORCE_COLOR", "1"),
+                ("RUST_BACKTRACE", "0"),
+            ]))
+            .envs(load_env(&self.env_vars))
             .assert()
             .code(self.code);
 
@@ -57,6 +59,8 @@ impl TestBook {
 
         let stderr = &*result.get_output().stderr;
         let stderr = String::from_utf8_lossy(stderr);
+
+        eprint!("--- stderr\n{stderr}");
 
         let mut results = vec![
             assert.try_eq_text(None, &stderr, stderr_txt),
@@ -131,6 +135,21 @@ impl TestRoot {
             .try_into()
             .ok()
     }
+}
+
+fn load_env<'a>(vars: &[(&'a str, &str)]) -> impl Iterator<Item = (&'a str, impl AsRef<OsStr>)> {
+    vars.iter().map(|(key, default)| {
+        let val = if let Some(overridden) = std::env::var_os(key) {
+            eprintln!(
+                "--- overriding env var {key:?} = {:?}",
+                &*overridden.to_string_lossy()
+            );
+            Cow::Owned(overridden)
+        } else {
+            Cow::Borrowed(default.as_ref())
+        };
+        (*key, val)
+    })
 }
 
 #[macro_export]
@@ -236,6 +255,7 @@ fn render_svg(text: &str) -> String {
     const FG_COLOR: RgbColor = rgb(178, 178, 178);
 
     const PALETTE: Palette = Palette([
+        //
         rgb(54, 60, 70),
         rgb(224, 108, 117),
         rgb(150, 196, 117),
@@ -244,14 +264,23 @@ fn render_svg(text: &str) -> String {
         rgb(198, 120, 221),
         rgb(81, 181, 195),
         rgb(211, 211, 211),
-        rgb(110, 112, 116),
+        //
+        rgb(54, 60, 70),
         rgb(224, 108, 117),
-        rgb(168, 220, 131),
-        rgb(244, 183, 127),
-        rgb(95, 183, 255),
-        rgb(224, 135, 251),
-        rgb(94, 211, 227),
-        rgb(250, 250, 250),
+        rgb(150, 196, 117),
+        rgb(209, 154, 102),
+        rgb(92, 173, 241),
+        rgb(198, 120, 221),
+        rgb(81, 181, 195),
+        rgb(211, 211, 211),
+        // rgb(110, 112, 116),
+        // rgb(224, 108, 117),
+        // rgb(168, 220, 131),
+        // rgb(244, 183, 127),
+        // rgb(95, 183, 255),
+        // rgb(224, 135, 251),
+        // rgb(94, 211, 227),
+        // rgb(250, 250, 250),
     ]);
 
     anstyle_svg::Term::new()
@@ -261,6 +290,6 @@ fn render_svg(text: &str) -> String {
         .render_svg(text)
         .replace(
             "SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;",
-            "Menlo, SF Mono, Liberation Mono, Consolas, ui-monospace, monospace;",
+            "Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;",
         )
 }
