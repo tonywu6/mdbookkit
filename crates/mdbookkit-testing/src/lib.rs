@@ -3,40 +3,44 @@ use std::{borrow::Cow, ffi::OsStr, fmt::Display, path::Path, sync::LazyLock};
 use anstyle::RgbColor;
 use anstyle_svg::Palette;
 use anyhow::{Context, Result};
-use camino::Utf8PathBuf;
+use camino::{Utf8Path, Utf8PathBuf};
 use regex::Regex;
 use snapbox::{
-    Assert, Data, IntoData, RedactedValue, Redactions, assert::DEFAULT_ACTION_ENV, cmd::Command,
-    data::DataFormat, dir::DirRoot,
+    Assert, Data, IntoData, RedactedValue, Redactions,
+    assert::DEFAULT_ACTION_ENV,
+    cmd::Command,
+    data::DataFormat,
+    dir::{DirRoot, Walk},
 };
+use tap::TryConv;
 
 pub use anyhow;
 pub use regex;
 pub use snapbox;
 
 pub struct TestBook {
-    pub dirs: TestRoot,
+    pub path: TestRoot,
     pub code: i32,
     pub env_vars: Vec<(&'static str, &'static str)>,
     pub redacted: Vec<(&'static str, RedactedValue)>,
-    pub stderr_txt: Data,
-    pub stderr_svg: Data,
-    pub rendered: Vec<Data>,
 }
 
 impl TestBook {
-    pub fn run(self) -> Result<()> {
+    pub fn run(&self) -> Result<()> {
         let temp_dir = DirRoot::mutable_temp()?;
-        self.cargo("clean", self.dirs.book_dir());
+        let temp_dir = temp_dir
+            .path()
+            .expect("temp dir should have a path")
+            .try_conv::<&Utf8Path>()?;
 
-        let assert = self.assert()?;
+        self.cargo("clean", self.path.book_dir());
 
         let result = self
-            .cargo("bin", &self.dirs.root_dir)
-            .current_dir(&self.dirs.root_dir)
+            .cargo("bin", &self.path.root_dir)
+            .current_dir(&self.path.root_dir)
             .args(["mdbook", "build"])
-            .arg(self.dirs.book_dir())
-            .env("MDBOOK_build__build_dir", temp_dir.path().unwrap())
+            .arg(self.path.book_dir())
+            .env("MDBOOK_build__build_dir", temp_dir)
             .envs(load_env(&[
                 ("MDBOOK_LOG", "off,mdbookkit::diagnostics=info"),
                 ("MDBOOKKIT_TERM_GRAPHICAL", "ascii"),
@@ -47,35 +51,25 @@ impl TestBook {
             .assert()
             .code(self.code);
 
-        let Self {
-            dirs,
-            code: _,
-            env_vars: _,
-            redacted: _,
-            stderr_txt,
-            stderr_svg,
-            rendered,
-        } = self;
+        let stderr_txt = self.path.stderr_txt();
+        let stderr_svg = self.path.stderr_svg();
 
         let stderr = &*result.get_output().stderr;
         let stderr = String::from_utf8_lossy(stderr);
 
         eprint!("--- stderr\n{stderr}");
 
+        let assert = self.assert()?;
+
         let mut results = vec![
             assert.try_eq_text(None, &stderr, stderr_txt),
             assert.try_eq_text(None, &stderr, stderr_svg),
         ];
 
-        for expected in rendered {
-            let page = expected.source().unwrap().as_path().unwrap();
-            let page = page.strip_prefix(dirs.dist_dir())?.to_owned();
-
-            let actual_path = temp_dir.path().unwrap().join(&page);
-            let actual = std::fs::read_to_string(actual_path)
-                .with_context(|| format!("no such page: {:?}", page.display()))?;
-
-            results.push(assert.try_eq_text(Some(&page.display()), actual, expected));
+        for page in self.path.expected_pages() {
+            let (name, expected) = page?;
+            let actual = self.path.actual_page(&name, temp_dir)?;
+            results.push(assert.try_eq_text(Some(&name), actual, expected));
         }
 
         for result in results.iter() {
@@ -93,7 +87,7 @@ impl TestBook {
 
     pub fn assert(&self) -> Result<Assert> {
         let mut redactions = Redactions::new();
-        redactions.insert("[TEST_DIR]", self.dirs.root_dir.as_str().to_owned())?;
+        redactions.insert("[TEST_DIR]", self.path.root_dir.as_str().to_owned())?;
         redactions.insert("[ELAPSED]", Regex::new(r"in (?<redacted>\d+\.\d+s)")?)?;
         redactions.insert(
             "[LLVM_COV_STDERR]",
@@ -126,14 +120,50 @@ impl TestRoot {
         self.book_dir().join("out")
     }
 
-    pub fn rel_path(&self, case: &Data) -> Option<Utf8PathBuf> {
-        case.source()?
-            .as_path()?
-            .strip_prefix(self.dist_dir())
-            .ok()?
-            .to_owned()
-            .try_into()
-            .ok()
+    fn stderr_txt(&self) -> Data {
+        self.test_data("stderr/data.txt", DataFormat::Text)
+    }
+
+    fn stderr_svg(&self) -> Data {
+        self.test_data("stderr/data.svg", DataFormat::TermSvg)
+    }
+
+    pub fn expected_pages(&self) -> impl Iterator<Item = Result<(Utf8PathBuf, Data)>> {
+        let root = self.book_dir();
+
+        Walk::new(root.join("src").as_std_path())
+            .map(|path| {
+                let path = path
+                    .context("error walking src dir")?
+                    .try_conv::<Utf8PathBuf>()?;
+
+                if path.extension() != Some("md") || path.file_name() == Some("SUMMARY.md") {
+                    return Ok(None);
+                }
+
+                let root = self.book_dir();
+                let name = path
+                    .strip_prefix(root.join("src"))
+                    .expect("path is under src dir")
+                    .to_owned();
+
+                let path = root.join("out").join(&name);
+                let data = self.test_data(path, DataFormat::Text);
+
+                Ok(Some((name, data)))
+            })
+            .filter_map(Result::transpose)
+    }
+
+    fn actual_page(&self, name: &Utf8Path, temp: &Utf8Path) -> Result<String> {
+        let text = std::fs::read_to_string(temp.join(name))
+            .with_context(|| name.to_string())
+            .context("mdbook did not build this file")?;
+        Ok(text)
+    }
+
+    fn test_data(&self, path: impl AsRef<Path>, format: DataFormat) -> Data {
+        Data::read_from(&self.book_dir().join_os(path), Some(format))
     }
 }
 
@@ -155,23 +185,16 @@ fn load_env<'a>(vars: &[(&'a str, &str)]) -> impl Iterator<Item = (&'a str, impl
 #[macro_export]
 macro_rules! test_mdbook {
     [
-        @init $name:ident
-        exit($code:literal),
-        stderr.svg = $stderr_svg:expr,
-        stderr.txt = $stderr_txt:expr,
-        $( rendered = [$($data:expr),*], )?
-        $( env = [$($env:tt)*], )?
-        $( redacted = [$($redacted:tt)*], )?
+        @init $name:ident exit($code:literal)
+        $( , env = [$($env:tt)*] )?
+        $( , redacted = [$($redacted:tt)*] )?
     ] => {
         $crate::TestBook {
-            dirs: $crate::TestRoot {
+            path: $crate::TestRoot {
                 name: stringify!($name),
                 root_dir: $crate::snapbox::current_dir!().try_into()?,
             },
             code: $code,
-            stderr_svg: $stderr_svg,
-            stderr_txt: $stderr_txt,
-            rendered: vec![$($($data),*)?],
             env_vars: $crate::test_mdbook!(@key_values $($($env)*)?),
             redacted: $crate::test_mdbook!(@key_values $($($redacted)*)?),
         }
@@ -208,19 +231,19 @@ macro_rules! test_mdbook {
 }
 
 pub trait AssertUtil {
-    fn try_eq_text<S: AsRef<str>>(
+    fn try_eq_text(
         &self,
         name: Option<&dyn Display>,
-        actual: S,
+        actual: impl AsRef<str>,
         expected: Data,
     ) -> snapbox::assert::Result<()>;
 }
 
 impl AssertUtil for Assert {
-    fn try_eq_text<S: AsRef<str>>(
+    fn try_eq_text(
         &self,
         name: Option<&dyn Display>,
-        actual: S,
+        actual: impl AsRef<str>,
         expected: Data,
     ) -> snapbox::assert::Result<()> {
         let actual = actual.as_ref();
