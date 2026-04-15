@@ -1,5 +1,5 @@
 use std::{
-    cell::Cell,
+    cell::RefCell,
     collections::BTreeSet,
     fmt::{Debug, Display, Write},
     ops::{ControlFlow, Range},
@@ -11,7 +11,7 @@ use cargo_metadata::{
     diagnostic::{Diagnostic, DiagnosticSpan},
 };
 use html_escape::decode_html_entities;
-use lol_html::{HtmlRewriter, element};
+use lol_html::{HtmlRewriter, element, text};
 use mdbook_markdown::pulldown_cmark::{
     CowStr, Event,
     LinkType::{self, *},
@@ -137,21 +137,31 @@ impl<'a> LinkTracker<'a> {
             ..
         } = output;
 
-        let row = Cell::<Option<usize>>::new(None);
+        struct State<'r, 'a> {
+            links: &'r mut Vec<Link<'a>>,
+            row: Option<usize>,
+            text_content: String,
+        }
+
+        let state = RefCell::new(State {
+            links: &mut self.links,
+            row: None,
+            text_content: String::new(),
+        });
 
         lol_html::Settings {
             element_content_handlers: vec![
                 element!(OUTER_SELECTOR, |_| {
-                    row.update(|i| match i {
-                        Some(i) => Some(i + 1),
-                        None => Some(0),
-                    });
+                    state.borrow_mut().enter();
                     Ok(())
                 }),
                 element!("a[href]", |elem| {
-                    if let Some(row) = row.get()
-                        && let Some(href) = elem.get_attribute("href")
-                        && let link = &mut self.links[row]
+                    if !state.borrow().has_link() {
+                        return Ok(());
+                    };
+
+                    if let Some(href) = elem.get_attribute("href")
+                        && let Some(link) = state.borrow_mut().link()
                         && !eq_escaped(&link.dest, &href)
                     {
                         if let Ok(url) = resolve_url(&output, &href)
@@ -164,6 +174,30 @@ impl<'a> LinkTracker<'a> {
                             link.title = title.into()
                         }
                     }
+
+                    Ok(())
+                }),
+                text!("a[href]", |text| {
+                    if !state.borrow().has_link() {
+                        return Ok(());
+                    };
+
+                    let text = text.as_str();
+                    if text.is_empty() {
+                        let mut state = state.borrow_mut();
+                        let text = std::mem::take(&mut state.text_content);
+                        let link = state.link().expect("checked");
+                        if matches!(link.kind, CollapsedUnknown | ShortcutUnknown)
+                            && link.inner_elem.len() == 1
+                            && let Some(Event::Text(original) | Event::Code(original)) =
+                                link.inner_elem.first_mut()
+                        {
+                            *original = CowStr::Boxed(text.into())
+                        }
+                    } else {
+                        state.borrow_mut().text_content.push_str(text);
+                    }
+
                     Ok(())
                 }),
             ],
@@ -174,6 +208,24 @@ impl<'a> LinkTracker<'a> {
         .context("unexpected error from HtmlRewriter")
         .or_debug(emit!())
         .ok();
+
+        impl<'a> State<'_, 'a> {
+            fn enter(&mut self) {
+                self.row = match self.row {
+                    None => Some(0),
+                    Some(i) => Some(i + 1),
+                };
+                self.text_content = String::new();
+            }
+
+            fn link(&mut self) -> Option<&mut Link<'a>> {
+                Some(&mut self.links[self.row?])
+            }
+
+            fn has_link(&self) -> bool {
+                self.row.is_some()
+            }
+        }
 
         for line in String::from_utf8_lossy(stderr).lines() {
             if let Ok(diag) = serde_json::from_str::<Diagnostic>(line)
@@ -593,8 +645,6 @@ impl<'a> Link<'a> {
             href,
             title,
             inner_elem,
-            kind,
-            dest,
             ..
         } = self;
 
@@ -606,23 +656,7 @@ impl<'a> Link<'a> {
             title: title.clone(),
             id: CowStr::Borrowed(""),
         }))
-        .chain(inner_elem.iter().map(|elem| match elem {
-            Event::Text(text) | Event::Code(text) => {
-                if matches!(kind, CollapsedUnknown | ShortcutUnknown)
-                    && **text == **dest
-                    && let Some((_, text)) = text.split_once('@')
-                {
-                    match elem {
-                        Event::Text(..) => Event::Text(text.into()),
-                        Event::Code(..) => Event::Code(text.into()),
-                        _ => unreachable!(),
-                    }
-                } else {
-                    elem.clone()
-                }
-            }
-            elem => elem.clone(),
-        }))
+        .chain(inner_elem.iter().cloned())
         .chain(std::iter::once(Event::End(TagEnd::Link)));
 
         Some(iter)

@@ -1,5 +1,4 @@
-**/*.snap
-**/*.snap.new
+crates/*/tests/*/out/**/*.md
 
 docs/build
 docs/dist

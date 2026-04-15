@@ -7,9 +7,13 @@ use mdbookkit::markdown::default_markdown_options;
 use tap::Pipe;
 use url::Url;
 
-use mdbookkit_testing::{snapbox::assert_data_eq, test_mdbook};
+use mdbookkit_testing::{
+    regex::Regex,
+    snapbox::{RedactedValue, Redactions, assert_data_eq},
+    test_mdbook,
+};
 
-test_mdbook![rustdoc(RustDoc), exit(0)];
+test_mdbook![rustdoc(RustDoc), exit(0), redacted = [redacted()]];
 
 #[test]
 fn rustdoc_parity() -> Result<()> {
@@ -24,15 +28,14 @@ fn rustdoc_parity() -> Result<()> {
     let mut upstream = String::new();
     let mut expected = String::new();
 
-    for page in book.path.expected_pages() {
-        let (name, data) = page?;
+    for page in book.path.expected_pages()? {
+        let page = page?;
 
-        let html = name.with_extension("").join("index.html");
+        writeln!(upstream, "# {}\n", page.name())?;
+        writeln!(expected, "# {}\n", page.name())?;
 
-        writeln!(upstream, "# {html}\n")?;
-        writeln!(expected, "# {html}\n")?;
-
-        let base = base.join(html.as_str())?;
+        let html = format!("{}/index.html", page.mod_name());
+        let base = base.join(&html)?;
 
         let html = (book.path.book_dir())
             .join("target/doc")
@@ -64,7 +67,7 @@ fn rustdoc_parity() -> Result<()> {
         .pipe(|cb| HtmlRewriter::new(cb, |_: &[u8]| ()))
         .pipe(|mut wr| wr.write(html.as_bytes()).and_then(|_| wr.end()))?;
 
-        let rendered = data.to_string();
+        let rendered = page.expected().to_string();
 
         for event in Parser::new_ext(&rendered, default_markdown_options()) {
             if let Event::Start(Tag::Link {
@@ -82,7 +85,32 @@ fn rustdoc_parity() -> Result<()> {
         writeln!(expected)?;
     }
 
-    assert_data_eq!(upstream, expected);
+    let redactions = {
+        let mut redactions = Redactions::new();
+        for (k, v) in redacted() {
+            redactions.insert(k, v)?;
+        }
+        redactions.insert(
+            "[CRATE]",
+            r"https://docs\.rs/(?<redacted>[a-z_-]+/[0-9.]+)/".parse::<Regex>()?,
+        )?;
+        redactions
+    };
+
+    let upstream = redactions.redact(&upstream);
+    let expected = redactions.redact(&expected);
+
+    assert_data_eq!(&*upstream, &*expected);
 
     Ok(())
+}
+
+fn redacted() -> Vec<(&'static str, RedactedValue)> {
+    vec![(
+        "[STABLE]",
+        r"https://doc\.rust-lang\.org/(?<redacted>1\.\d+\.\d+)/(core|alloc|std)/"
+            .parse::<Regex>()
+            .unwrap()
+            .into(),
+    )]
 }

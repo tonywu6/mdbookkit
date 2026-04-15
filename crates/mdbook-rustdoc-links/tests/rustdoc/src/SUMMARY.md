@@ -1,5 +1,9 @@
 # Summary
 
 - [](basic.md)
+- [](disambiguators.md)
+- [](extern-crates.md)
+- [](generics.md)
 - [](ignored.md)
-- [](markdown.md)
+- [](lints.md)
+- [](syntax.md)

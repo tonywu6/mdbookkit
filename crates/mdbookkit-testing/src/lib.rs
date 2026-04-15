@@ -6,11 +6,8 @@ use anyhow::{Context, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use regex::Regex;
 use snapbox::{
-    Assert, Data, IntoData, RedactedValue, Redactions,
-    assert::DEFAULT_ACTION_ENV,
-    cmd::Command,
-    data::DataFormat,
-    dir::{DirRoot, Walk},
+    Assert, Data, IntoData, RedactedValue, Redactions, assert::DEFAULT_ACTION_ENV, cmd::Command,
+    data::DataFormat, dir::DirRoot,
 };
 use tap::TryConv;
 
@@ -19,7 +16,7 @@ pub use regex;
 pub use snapbox;
 
 pub struct TestBook {
-    pub path: TestRoot,
+    pub path: TestRoot<'static>,
     pub code: i32,
     pub env_vars: Vec<(&'static str, &'static str)>,
     pub redacted: Vec<(&'static str, RedactedValue)>,
@@ -66,9 +63,11 @@ impl TestBook {
             assert.try_eq_text(None, &stderr, stderr_svg),
         ];
 
-        for page in self.path.expected_pages() {
-            let (name, expected) = page?;
-            let actual = self.path.actual_page(&name, temp_dir)?;
+        for page in self.path.expected_pages()? {
+            let page = page?;
+            let name = page.name();
+            let expected = page.expected();
+            let actual = self.path.actual_page(name, temp_dir)?;
             results.push(assert.try_eq_text(Some(&name), actual, expected));
         }
 
@@ -104,82 +103,6 @@ impl TestBook {
     pub fn cargo(&self, command: &str, wd: impl AsRef<Path>) -> Command {
         Command::new(env!("CARGO")).arg(command).current_dir(wd)
     }
-}
-
-pub struct TestRoot {
-    pub root_dir: Utf8PathBuf,
-    pub name: &'static str,
-}
-
-impl TestRoot {
-    pub fn book_dir(&self) -> Utf8PathBuf {
-        self.root_dir.join(self.name)
-    }
-
-    pub fn dist_dir(&self) -> Utf8PathBuf {
-        self.book_dir().join("out")
-    }
-
-    fn stderr_txt(&self) -> Data {
-        self.test_data("stderr/data.txt", DataFormat::Text)
-    }
-
-    fn stderr_svg(&self) -> Data {
-        self.test_data("stderr/data.svg", DataFormat::TermSvg)
-    }
-
-    pub fn expected_pages(&self) -> impl Iterator<Item = Result<(Utf8PathBuf, Data)>> {
-        let root = self.book_dir();
-
-        Walk::new(root.join("src").as_std_path())
-            .map(|path| {
-                let path = path
-                    .context("error walking src dir")?
-                    .try_conv::<Utf8PathBuf>()?;
-
-                if path.extension() != Some("md") || path.file_name() == Some("SUMMARY.md") {
-                    return Ok(None);
-                }
-
-                let root = self.book_dir();
-                let name = path
-                    .strip_prefix(root.join("src"))
-                    .expect("path is under src dir")
-                    .to_owned();
-
-                let path = root.join("out").join(&name);
-                let data = self.test_data(path, DataFormat::Text);
-
-                Ok(Some((name, data)))
-            })
-            .filter_map(Result::transpose)
-    }
-
-    fn actual_page(&self, name: &Utf8Path, temp: &Utf8Path) -> Result<String> {
-        let text = std::fs::read_to_string(temp.join(name))
-            .with_context(|| name.to_string())
-            .context("mdbook did not build this file")?;
-        Ok(text)
-    }
-
-    fn test_data(&self, path: impl AsRef<Path>, format: DataFormat) -> Data {
-        Data::read_from(&self.book_dir().join_os(path), Some(format))
-    }
-}
-
-fn load_env<'a>(vars: &[(&'a str, &str)]) -> impl Iterator<Item = (&'a str, impl AsRef<OsStr>)> {
-    vars.iter().map(|(key, default)| {
-        let val = if let Some(overridden) = std::env::var_os(key) {
-            eprintln!(
-                "--- overriding env var {key:?} = {:?}",
-                &*overridden.to_string_lossy()
-            );
-            Cow::Owned(overridden)
-        } else {
-            Cow::Borrowed(default.as_ref())
-        };
-        (*key, val)
-    })
 }
 
 #[macro_export]
@@ -228,6 +151,112 @@ macro_rules! test_mdbook {
     (@key_values $($tt:tt)+) => {
         $($tt)+
     }
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub struct TestRoot<'a> {
+    pub root_dir: Utf8PathBuf,
+    pub name: &'a str,
+}
+
+impl TestRoot<'_> {
+    pub fn book_dir(&self) -> Utf8PathBuf {
+        self.root_dir.join(self.name)
+    }
+
+    pub fn dist_dir(&self) -> Utf8PathBuf {
+        self.book_dir().join("out")
+    }
+
+    fn stderr_txt(&self) -> Data {
+        self.test_data("stderr/data.txt", DataFormat::Text)
+    }
+
+    fn stderr_svg(&self) -> Data {
+        self.test_data("stderr/data.svg", DataFormat::TermSvg)
+    }
+
+    pub fn expected_pages(&self) -> Result<impl Iterator<Item = Result<TestPage<'_>>>> {
+        let root = self.book_dir();
+
+        let iter = std::fs::read_dir(root.join("src").as_std_path())
+            .context("error reading src dir")?
+            .map(|path| {
+                let path = path?.path().try_conv::<Utf8PathBuf>()?;
+
+                if path.extension() != Some("md") || path.file_name() == Some("SUMMARY.md") {
+                    return Ok(None);
+                }
+
+                let root = self.book_dir();
+                let name = path
+                    .strip_prefix(root.join("src"))
+                    .expect("path is under src dir")
+                    .to_owned();
+
+                Ok(Some(TestPage { name, root: self }))
+            })
+            .filter_map(Result::transpose);
+
+        Ok(iter)
+    }
+
+    fn actual_page(&self, name: &Utf8Path, temp: &Utf8Path) -> Result<String> {
+        let text = std::fs::read_to_string(temp.join(name))
+            .with_context(|| name.to_string())
+            .context("mdbook did not build this file")?;
+        Ok(text)
+    }
+
+    fn test_data(&self, path: impl AsRef<Path>, format: DataFormat) -> Data {
+        Data::read_from(&self.book_dir().join_os(path), Some(format))
+    }
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub struct TestPage<'a> {
+    name: Utf8PathBuf,
+    root: &'a TestRoot<'a>,
+}
+
+impl TestPage<'_> {
+    pub fn name(&self) -> &Utf8Path {
+        &self.name
+    }
+
+    pub fn expected(&self) -> Data {
+        let path = Utf8Path::new("out").join(&self.name);
+        self.root.test_data(path, DataFormat::Text)
+    }
+
+    pub fn toc_item(&self) -> String {
+        format!("- []({})", self.name)
+    }
+
+    pub fn mod_item(&self) -> String {
+        let path = &self.name;
+        let name = self.mod_name();
+        format!("#[doc = include_str!({path:?})]\npub mod {name} {{}}")
+    }
+
+    pub fn mod_name(&self) -> String {
+        self.name.with_extension("").as_str().replace('-', "_")
+    }
+}
+
+fn load_env<'a>(vars: &[(&'a str, &str)]) -> impl Iterator<Item = (&'a str, impl AsRef<OsStr>)> {
+    vars.iter().map(|(key, default)| {
+        let val = if let Some(overridden) = std::env::var_os(key) {
+            eprintln!(
+                "--- overriding env var {key:?} = {:?}",
+                &*overridden.to_string_lossy()
+            );
+            Cow::Owned(overridden)
+        } else {
+            Cow::Borrowed(default.as_ref())
+        };
+        (*key, val)
+    })
 }
 
 pub trait AssertUtil {
