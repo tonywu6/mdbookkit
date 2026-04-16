@@ -95,9 +95,7 @@ impl TestBook {
         for (placeholder, matcher) in &self.redacted {
             redactions.insert(placeholder, matcher.clone())?;
         }
-        Ok(Assert::new()
-            .action_env(DEFAULT_ACTION_ENV)
-            .redact_with(redactions))
+        Ok(default_assert().redact_with(redactions))
     }
 
     pub fn cargo(&self, command: &str, wd: impl AsRef<Path>) -> Command {
@@ -240,7 +238,10 @@ impl TestPage<'_> {
     }
 
     pub fn mod_name(&self) -> String {
-        self.name.with_extension("").as_str().replace('-', "_")
+        static RE: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r"^[^a-z_]+|[^a-z0-9_]+").unwrap());
+        RE.replace_all(self.name.with_extension("").as_str(), "_")
+            .into()
     }
 }
 
@@ -285,11 +286,16 @@ impl AssertUtil for Assert {
             self.try_eq(name, rendered.into_data().raw(), expected.raw())
         } else if expected.format() == DataFormat::Text {
             let rendered = anstream::adapter::strip_str(actual).to_string();
+            let rendered = self.redactions().redact(&rendered);
             self.try_eq(name, rendered.into_data().raw(), expected.raw())
         } else {
             self.try_eq(name, actual.into(), expected)
         }
     }
+}
+
+pub fn default_assert() -> Assert {
+    Assert::new().action_env(DEFAULT_ACTION_ENV)
 }
 
 fn normalize_path_separators(text: &str) -> Cow<'_, str> {

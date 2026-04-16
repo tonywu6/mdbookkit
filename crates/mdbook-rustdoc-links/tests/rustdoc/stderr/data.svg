@@ -1,11 +1,17 @@
-<svg width="740px" height="20px" xmlns="http://www.w3.org/2000/svg">
+<svg width="827px" height="5906px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
+    .fg-bright-blue { fill: #5CADF1 }
+    .fg-bright-cyan { fill: #51B5C3 }
+    .fg-bright-green { fill: #96C475 }
+    .fg-bright-red { fill: #E06C75 }
+    .fg-yellow { fill: #D19A66 }
     .container {
       padding: 0 10px;
       line-height: 18px;
     }
+    .bold { font-weight: bold; }
     tspan {
       font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;
       white-space: pre;
@@ -16,6 +22,660 @@
   <rect width="100%" height="100%" y="0" rx="4.5" class="bg" />
 
   <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `Nonexistent`</tspan>
+</tspan>
+    <tspan x="10px" y="46px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:3:5</tspan>
+</tspan>
+    <tspan x="10px" y="64px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="82px"><tspan class="fg-bright-blue bold">3</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`</tspan><tspan class="fg-yellow bold">Nonexistent</tspan><tspan>`]</tspan>
+</tspan>
+    <tspan x="10px" y="100px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">no item named `Nonexistent` in scope</tspan>
+</tspan>
+    <tspan x="10px" y="118px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="136px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`</tspan>
+</tspan>
+    <tspan x="10px" y="154px">
+</tspan>
+    <tspan x="10px" y="172px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `tap::tap::Tab`</tspan>
+</tspan>
+    <tspan x="10px" y="190px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:4:5</tspan>
+</tspan>
+    <tspan x="10px" y="208px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="226px"><tspan class="fg-bright-blue bold">4</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`</tspan><tspan class="fg-yellow bold">tap::tap::Tab</tspan><tspan>`]</tspan>
+</tspan>
+    <tspan x="10px" y="244px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">no item named `Tab` in module `tap`</tspan>
+</tspan>
+    <tspan x="10px" y="262px">
+</tspan>
+    <tspan x="10px" y="280px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `tap::tap::Tap::tab`</tspan>
+</tspan>
+    <tspan x="10px" y="298px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:5:5</tspan>
+</tspan>
+    <tspan x="10px" y="316px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="334px"><tspan class="fg-bright-blue bold">5</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`</tspan><tspan class="fg-yellow bold">tap::tap::Tap::tab</tspan><tspan>`]</tspan>
+</tspan>
+    <tspan x="10px" y="352px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">the trait `Tap` has no associated item named `tab`</tspan>
+</tspan>
+    <tspan x="10px" y="370px">
+</tspan>
+    <tspan x="10px" y="388px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `Vec&lt;&gt;&gt;`</tspan>
+</tspan>
+    <tspan x="10px" y="406px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:6:5</tspan>
+</tspan>
+    <tspan x="10px" y="424px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="442px"><tspan class="fg-bright-blue bold">6</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`</tspan><tspan class="fg-yellow bold">Vec&lt;&gt;&gt;</tspan><tspan>`]</tspan>
+</tspan>
+    <tspan x="10px" y="460px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-yellow bold">^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">empty angle brackets</tspan>
+</tspan>
+    <tspan x="10px" y="478px">
+</tspan>
+    <tspan x="10px" y="496px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `&lt;Vec as IntoIterator&gt;::into_iter`</tspan>
+</tspan>
+    <tspan x="10px" y="514px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:7:5</tspan>
+</tspan>
+    <tspan x="10px" y="532px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="550px"><tspan class="fg-bright-blue bold">7</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`</tspan><tspan class="fg-yellow bold">&lt;Vec as IntoIterator&gt;::into_iter()</tspan><tspan>`]</tspan>
+</tspan>
+    <tspan x="10px" y="568px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">fully-qualified syntax is unsupported</tspan>
+</tspan>
+    <tspan x="10px" y="586px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="604px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: see https://github.com/rust-lang/rust/issues/74563 for more information</tspan>
+</tspan>
+    <tspan x="10px" y="622px">
+</tspan>
+    <tspan x="10px" y="640px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `Fn`</tspan>
+</tspan>
+    <tspan x="10px" y="658px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:8:5</tspan>
+</tspan>
+    <tspan x="10px" y="676px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="694px"><tspan class="fg-bright-blue bold">8</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`</tspan><tspan class="fg-yellow bold">Fn()</tspan><tspan>`]</tspan>
+</tspan>
+    <tspan x="10px" y="712px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-yellow bold">^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">this link resolves to the trait `Fn`, which is not a function</tspan>
+</tspan>
+    <tspan x="10px" y="730px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="748px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the trait, prefix with `trait@`</tspan>
+</tspan>
+    <tspan x="10px" y="766px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="784px"><tspan class="fg-bright-blue bold">8</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [`Fn</tspan><tspan class="fg-bright-red">()</tspan><tspan>`]</tspan>
+</tspan>
+    <tspan x="10px" y="802px"><tspan class="fg-bright-blue bold">8</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [`</tspan><tspan class="fg-bright-green">trait@</tspan><tspan>Fn`]</tspan>
+</tspan>
+    <tspan x="10px" y="820px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="838px">
+</tspan>
+    <tspan x="10px" y="856px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: incompatible link kind for `Vec`</tspan>
+</tspan>
+    <tspan x="10px" y="874px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:9:5</tspan>
+</tspan>
+    <tspan x="10px" y="892px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="910px"><tspan class="fg-bright-blue bold">9</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`</tspan><tspan class="fg-yellow bold">enum@Vec</tspan><tspan>`]</tspan>
+</tspan>
+    <tspan x="10px" y="928px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-yellow bold">^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">this link resolved to a struct, which is not an enum</tspan>
+</tspan>
+    <tspan x="10px" y="946px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="964px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the struct, prefix with `struct@`</tspan>
+</tspan>
+    <tspan x="10px" y="982px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1000px"><tspan class="fg-bright-blue bold">9</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [`</tspan><tspan class="fg-bright-red">enum@</tspan><tspan>Vec`]</tspan>
+</tspan>
+    <tspan x="10px" y="1018px"><tspan class="fg-bright-blue bold">9</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [`</tspan><tspan class="fg-bright-green">struct@</tspan><tspan>Vec`]</tspan>
+</tspan>
+    <tspan x="10px" y="1036px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1054px">
+</tspan>
+    <tspan x="10px" y="1072px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: `std::vec` is both a module and a macro</tspan>
+</tspan>
+    <tspan x="10px" y="1090px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:10:5</tspan>
+</tspan>
+    <tspan x="10px" y="1108px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1126px"><tspan class="fg-bright-blue bold">10</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`</tspan><tspan class="fg-yellow bold">std::vec</tspan><tspan>`]</tspan>
+</tspan>
+    <tspan x="10px" y="1144px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-yellow bold">^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">ambiguous link</tspan>
+</tspan>
+    <tspan x="10px" y="1162px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1180px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the module, prefix with `mod@`</tspan>
+</tspan>
+    <tspan x="10px" y="1198px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1216px"><tspan class="fg-bright-blue bold">10</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [`</tspan><tspan class="fg-bright-green">mod@</tspan><tspan>std::vec`]</tspan>
+</tspan>
+    <tspan x="10px" y="1234px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-bright-green">++++</tspan>
+</tspan>
+    <tspan x="10px" y="1252px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the macro, add an exclamation mark</tspan>
+</tspan>
+    <tspan x="10px" y="1270px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1288px"><tspan class="fg-bright-blue bold">10</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [`std::vec</tspan><tspan class="fg-bright-green">!</tspan><tspan>`]</tspan>
+</tspan>
+    <tspan x="10px" y="1306px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>             </tspan><tspan class="fg-bright-green">+</tspan>
+</tspan>
+    <tspan x="10px" y="1324px">
+</tspan>
+    <tspan x="10px" y="1342px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: ``Vec#Examples#1`` contains multiple anchors</tspan>
+</tspan>
+    <tspan x="10px" y="1360px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:11:5</tspan>
+</tspan>
+    <tspan x="10px" y="1378px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1396px"><tspan class="fg-bright-blue bold">11</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`</tspan><tspan class="fg-yellow bold">Vec#Examples#1</tspan><tspan>`]</tspan>
+</tspan>
+    <tspan x="10px" y="1414px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^</tspan><tspan class="fg-bright-blue bold">-</tspan>
+</tspan>
+    <tspan x="10px" y="1432px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1450px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                  </tspan><tspan class="fg-bright-blue bold">invalid anchor</tspan>
+</tspan>
+    <tspan x="10px" y="1468px">
+</tspan>
+    <tspan x="10px" y="1486px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: ``Option::None#Methods`` contains an anchor, but links to variants are already anchored</tspan>
+</tspan>
+    <tspan x="10px" y="1504px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:12:5</tspan>
+</tspan>
+    <tspan x="10px" y="1522px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1540px"><tspan class="fg-bright-blue bold">12</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`</tspan><tspan class="fg-yellow bold">Option::None#Methods</tspan><tspan>`]</tspan>
+</tspan>
+    <tspan x="10px" y="1558px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^</tspan><tspan class="fg-bright-blue bold">-------</tspan>
+</tspan>
+    <tspan x="10px" y="1576px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1594px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                  </tspan><tspan class="fg-bright-blue bold">invalid anchor</tspan>
+</tspan>
+    <tspan x="10px" y="1612px">
+</tspan>
+    <tspan x="10px" y="1630px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `NotImplemented`</tspan>
+</tspan>
+    <tspan x="10px" y="1648px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:18:29</tspan>
+</tspan>
+    <tspan x="10px" y="1666px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1684px"><tspan class="fg-bright-blue bold">18</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [Hasn't been implemented](</tspan><tspan class="fg-yellow bold">NotImplemented</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1702px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                             </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">no item named `NotImplemented` in scope</tspan>
+</tspan>
+    <tspan x="10px" y="1720px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1738px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to indicate that this is a relative path (which will silence this warning),</tspan>
+</tspan>
+    <tspan x="10px" y="1756px"><tspan>      prepend the link with `./`</tspan>
+</tspan>
+    <tspan x="10px" y="1774px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1792px"><tspan class="fg-bright-blue bold">18</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [Hasn't been implemented](</tspan><tspan class="fg-bright-green">./</tspan><tspan>NotImplemented)</tspan>
+</tspan>
+    <tspan x="10px" y="1810px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                             </tspan><tspan class="fg-bright-green">++</tspan>
+</tspan>
+    <tspan x="10px" y="1828px">
+</tspan>
+    <tspan x="10px" y="1846px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `NotImplemented`</tspan>
+</tspan>
+    <tspan x="10px" y="1864px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:19:29</tspan>
+</tspan>
+    <tspan x="10px" y="1882px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1900px"><tspan class="fg-bright-blue bold">19</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [Hasn't been implemented](</tspan><tspan class="fg-yellow bold">NotImplemented</tspan>
+</tspan>
+    <tspan x="10px" y="1918px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                             </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">no item named `NotImplemented` in scope</tspan>
+</tspan>
+    <tspan x="10px" y="1936px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1954px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to indicate that this is a relative path (which will silence this warning),</tspan>
+</tspan>
+    <tspan x="10px" y="1972px"><tspan>      prepend the link with `./`</tspan>
+</tspan>
+    <tspan x="10px" y="1990px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2008px"><tspan class="fg-bright-blue bold">19</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [Hasn't been implemented](</tspan><tspan class="fg-bright-green">./</tspan><tspan>NotImplemented</tspan>
+</tspan>
+    <tspan x="10px" y="2026px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                             </tspan><tspan class="fg-bright-green">++</tspan>
+</tspan>
+    <tspan x="10px" y="2044px">
+</tspan>
+    <tspan x="10px" y="2062px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `NotImplemented`</tspan>
+</tspan>
+    <tspan x="10px" y="2080px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:22:16</tspan>
+</tspan>
+    <tspan x="10px" y="2098px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2116px"><tspan class="fg-bright-blue bold">22</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>   implemented][</tspan><tspan class="fg-yellow bold">NotImplemented</tspan><tspan>]</tspan>
+</tspan>
+    <tspan x="10px" y="2134px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">no item named `NotImplemented` in scope</tspan>
+</tspan>
+    <tspan x="10px" y="2152px"><tspan class="fg-bright-blue bold">...</tspan>
+</tspan>
+    <tspan x="10px" y="2170px"><tspan class="fg-bright-blue bold">26</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [Hasn't been implemented][</tspan><tspan class="fg-yellow bold">NotImplemented</tspan><tspan>]</tspan>
+</tspan>
+    <tspan x="10px" y="2188px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                             </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">no item named `NotImplemented` in scope</tspan>
+</tspan>
+    <tspan x="10px" y="2206px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2224px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`</tspan>
+</tspan>
+    <tspan x="10px" y="2242px">
+</tspan>
+    <tspan x="10px" y="2260px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `NotImplemented`</tspan>
+</tspan>
+    <tspan x="10px" y="2278px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:28:20</tspan>
+</tspan>
+    <tspan x="10px" y="2296px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2314px"><tspan class="fg-bright-blue bold">28</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> [not-implemented]: </tspan><tspan class="fg-yellow bold">NotImplemented</tspan>
+</tspan>
+    <tspan x="10px" y="2332px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                    </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">no item named `NotImplemented` in scope</tspan>
+</tspan>
+    <tspan x="10px" y="2350px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2368px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to indicate that this is a relative path (which will silence this warning),</tspan>
+</tspan>
+    <tspan x="10px" y="2386px"><tspan>      prepend the link with `./`</tspan>
+</tspan>
+    <tspan x="10px" y="2404px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2422px"><tspan class="fg-bright-blue bold">28</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>[not-implemented]: </tspan><tspan class="fg-bright-green">./</tspan><tspan>NotImplemented</tspan>
+</tspan>
+    <tspan x="10px" y="2440px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                    </tspan><tspan class="fg-bright-green">++</tspan>
+</tspan>
+    <tspan x="10px" y="2458px">
+</tspan>
+    <tspan x="10px" y="2476px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `std::pinned::PhantomPinned`</tspan>
+</tspan>
+    <tspan x="10px" y="2494px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:34:24</tspan>
+</tspan>
+    <tspan x="10px" y="2512px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2530px"><tspan class="fg-bright-blue bold">34</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`PhantomPinned&lt;T&gt;`](</tspan><tspan class="fg-yellow bold">std::pinned::PhantomPinned</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="2548px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                        </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">no item named `pinned` in module `std`</tspan>
+</tspan>
+    <tspan x="10px" y="2566px">
+</tspan>
+    <tspan x="10px" y="2584px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `PhantomPinned`</tspan>
+</tspan>
+    <tspan x="10px" y="2602px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:35:24</tspan>
+</tspan>
+    <tspan x="10px" y="2620px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2638px"><tspan class="fg-bright-blue bold">35</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`PhantomPinned&lt;T&gt;`](</tspan><tspan class="fg-yellow bold">PhantomPinned&lt;T&gt;</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="2656px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                        </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">no item named `PhantomPinned` in scope</tspan>
+</tspan>
+    <tspan x="10px" y="2674px">
+</tspan>
+    <tspan x="10px" y="2692px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: incompatible link kind for `Iterator`</tspan>
+</tspan>
+    <tspan x="10px" y="2710px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:42:13</tspan>
+</tspan>
+    <tspan x="10px" y="2728px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2746px"><tspan class="fg-bright-blue bold">42</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> [iterator]: </tspan><tspan class="fg-yellow bold">struct@Iterator</tspan>
+</tspan>
+    <tspan x="10px" y="2764px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>             </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">this link resolved to a trait, which is not a struct</tspan>
+</tspan>
+    <tspan x="10px" y="2782px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2800px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the trait, prefix with `trait@`</tspan>
+</tspan>
+    <tspan x="10px" y="2818px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2836px"><tspan class="fg-bright-blue bold">42</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>[iterator]: </tspan><tspan class="fg-bright-red">struct@</tspan><tspan>Iterator</tspan>
+</tspan>
+    <tspan x="10px" y="2854px"><tspan class="fg-bright-blue bold">42</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>[iterator]: </tspan><tspan class="fg-bright-green">trait@</tspan><tspan>Iterator</tspan>
+</tspan>
+    <tspan x="10px" y="2872px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2890px">
+</tspan>
+    <tspan x="10px" y="2908px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: `std::vec` is both a module and a macro</tspan>
+</tspan>
+    <tspan x="10px" y="2926px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:43:8</tspan>
+</tspan>
+    <tspan x="10px" y="2944px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2962px"><tspan class="fg-bright-blue bold">43</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> [vec]: </tspan><tspan class="fg-yellow bold">std::vec</tspan>
+</tspan>
+    <tspan x="10px" y="2980px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>        </tspan><tspan class="fg-yellow bold">^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">ambiguous link</tspan>
+</tspan>
+    <tspan x="10px" y="2998px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3016px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the module, prefix with `mod@`</tspan>
+</tspan>
+    <tspan x="10px" y="3034px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3052px"><tspan class="fg-bright-blue bold">43</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>[vec]: </tspan><tspan class="fg-bright-green">mod@</tspan><tspan>std::vec</tspan>
+</tspan>
+    <tspan x="10px" y="3070px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>        </tspan><tspan class="fg-bright-green">++++</tspan>
+</tspan>
+    <tspan x="10px" y="3088px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the macro, add an exclamation mark</tspan>
+</tspan>
+    <tspan x="10px" y="3106px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3124px"><tspan class="fg-bright-blue bold">43</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>[vec]: std::vec</tspan><tspan class="fg-bright-green">!</tspan>
+</tspan>
+    <tspan x="10px" y="3142px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                </tspan><tspan class="fg-bright-green">+</tspan>
+</tspan>
+    <tspan x="10px" y="3160px">
+</tspan>
+    <tspan x="10px" y="3178px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unclosed HTML tag `T`</tspan>
+</tspan>
+    <tspan x="10px" y="3196px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:47:7</tspan>
+</tspan>
+    <tspan x="10px" y="3214px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3232px"><tspan class="fg-bright-blue bold">47</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [Vec</tspan><tspan class="fg-yellow bold">&lt;T&gt;</tspan><tspan>]</tspan>
+</tspan>
+    <tspan x="10px" y="3250px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-yellow bold">^^^</tspan>
+</tspan>
+    <tspan x="10px" y="3268px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3286px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try marking as source code</tspan>
+</tspan>
+    <tspan x="10px" y="3304px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3322px"><tspan class="fg-bright-blue bold">47</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [</tspan><tspan class="fg-bright-green">`</tspan><tspan>Vec&lt;T&gt;</tspan><tspan class="fg-bright-green">`</tspan><tspan>]</tspan>
+</tspan>
+    <tspan x="10px" y="3340px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-green">+</tspan><tspan>      </tspan><tspan class="fg-bright-green">+</tspan>
+</tspan>
+    <tspan x="10px" y="3358px">
+</tspan>
+    <tspan x="10px" y="3376px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unclosed HTML tag `T`</tspan>
+</tspan>
+    <tspan x="10px" y="3394px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:48:10</tspan>
+</tspan>
+    <tspan x="10px" y="3412px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3430px"><tspan class="fg-bright-blue bold">48</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [Option</tspan><tspan class="fg-yellow bold">&lt;T&gt;</tspan><tspan>][option]</tspan>
+</tspan>
+    <tspan x="10px" y="3448px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>          </tspan><tspan class="fg-yellow bold">^^^</tspan>
+</tspan>
+    <tspan x="10px" y="3466px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3484px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try marking as source code</tspan>
+</tspan>
+    <tspan x="10px" y="3502px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3520px"><tspan class="fg-bright-blue bold">48</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [</tspan><tspan class="fg-bright-green">`</tspan><tspan>Option&lt;T&gt;</tspan><tspan class="fg-bright-green">`</tspan><tspan>][option]</tspan>
+</tspan>
+    <tspan x="10px" y="3538px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-green">+</tspan><tspan>         </tspan><tspan class="fg-bright-green">+</tspan>
+</tspan>
+    <tspan x="10px" y="3556px">
+</tspan>
+    <tspan x="10px" y="3574px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: redundant explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="3592px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:50:11</tspan>
+</tspan>
+    <tspan x="10px" y="3610px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3628px"><tspan class="fg-bright-blue bold">48</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [Option&lt;T&gt;][option]</tspan>
+</tspan>
+    <tspan x="10px" y="3646px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">------</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">because label contains path that resolves to same destination</tspan>
+</tspan>
+    <tspan x="10px" y="3664px"><tspan class="fg-bright-blue bold">49</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3682px"><tspan class="fg-bright-blue bold">50</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> [option]: </tspan><tspan class="fg-yellow bold">Option</tspan>
+</tspan>
+    <tspan x="10px" y="3700px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>           </tspan><tspan class="fg-yellow bold">^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">explicit target is redundant</tspan>
+</tspan>
+    <tspan x="10px" y="3718px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3736px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: when a link's destination is not specified,</tspan>
+</tspan>
+    <tspan x="10px" y="3754px"><tspan>           the label is used to resolve intra-doc links</tspan>
+</tspan>
+    <tspan x="10px" y="3772px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: remove explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="3790px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3808px"><tspan class="fg-bright-blue bold">48</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- </tspan><tspan class="fg-bright-red">[Option&lt;T&gt;][option]</tspan>
+</tspan>
+    <tspan x="10px" y="3826px"><tspan class="fg-bright-blue bold">48</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- </tspan><tspan class="fg-bright-green">[Option]</tspan>
+</tspan>
+    <tspan x="10px" y="3844px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3862px">
+</tspan>
+    <tspan x="10px" y="3880px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: redundant explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="3898px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:54:10</tspan>
+</tspan>
+    <tspan x="10px" y="3916px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3934px"><tspan class="fg-bright-blue bold">54</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [None][</tspan><tspan class="fg-yellow bold">None</tspan><tspan>]</tspan>
+</tspan>
+    <tspan x="10px" y="3952px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">----</tspan><tspan>  </tspan><tspan class="fg-yellow bold">^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">explicit target is redundant</tspan>
+</tspan>
+    <tspan x="10px" y="3970px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="3988px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">because label contains path that resolves to same destination</tspan>
+</tspan>
+    <tspan x="10px" y="4006px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4024px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: when a link's destination is not specified,</tspan>
+</tspan>
+    <tspan x="10px" y="4042px"><tspan>           the label is used to resolve intra-doc links</tspan>
+</tspan>
+    <tspan x="10px" y="4060px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: remove explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="4078px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4096px"><tspan class="fg-bright-blue bold">54</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- </tspan><tspan class="fg-bright-red">[None][None]</tspan>
+</tspan>
+    <tspan x="10px" y="4114px"><tspan class="fg-bright-blue bold">54</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- </tspan><tspan class="fg-bright-green">[None]</tspan>
+</tspan>
+    <tspan x="10px" y="4132px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4150px">
+</tspan>
+    <tspan x="10px" y="4168px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: redundant explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="4186px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:55:11</tspan>
+</tspan>
+    <tspan x="10px" y="4204px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4222px"><tspan class="fg-bright-blue bold">55</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`Box`][</tspan><tspan class="fg-yellow bold">Box</tspan><tspan>]</tspan>
+</tspan>
+    <tspan x="10px" y="4240px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">-----</tspan><tspan>  </tspan><tspan class="fg-yellow bold">^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">explicit target is redundant</tspan>
+</tspan>
+    <tspan x="10px" y="4258px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4276px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">because label contains path that resolves to same destination</tspan>
+</tspan>
+    <tspan x="10px" y="4294px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4312px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: when a link's destination is not specified,</tspan>
+</tspan>
+    <tspan x="10px" y="4330px"><tspan>           the label is used to resolve intra-doc links</tspan>
+</tspan>
+    <tspan x="10px" y="4348px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: remove explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="4366px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4384px"><tspan class="fg-bright-blue bold">55</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- </tspan><tspan class="fg-bright-red">[`Box`][Box]</tspan>
+</tspan>
+    <tspan x="10px" y="4402px"><tspan class="fg-bright-blue bold">55</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- </tspan><tspan class="fg-bright-green">[`Box`]</tspan>
+</tspan>
+    <tspan x="10px" y="4420px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4438px">
+</tspan>
+    <tspan x="10px" y="4456px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: redundant explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="4474px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:56:8</tspan>
+</tspan>
+    <tspan x="10px" y="4492px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4510px"><tspan class="fg-bright-blue bold">56</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [u8](</tspan><tspan class="fg-yellow bold">u8</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="4528px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">--</tspan><tspan>  </tspan><tspan class="fg-yellow bold">^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">explicit target is redundant</tspan>
+</tspan>
+    <tspan x="10px" y="4546px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4564px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">because label contains path that resolves to same destination</tspan>
+</tspan>
+    <tspan x="10px" y="4582px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4600px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: when a link's destination is not specified,</tspan>
+</tspan>
+    <tspan x="10px" y="4618px"><tspan>           the label is used to resolve intra-doc links</tspan>
+</tspan>
+    <tspan x="10px" y="4636px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: remove explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="4654px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4672px"><tspan class="fg-bright-blue bold">56</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- </tspan><tspan class="fg-bright-red">[u8](u8)</tspan>
+</tspan>
+    <tspan x="10px" y="4690px"><tspan class="fg-bright-blue bold">56</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- </tspan><tspan class="fg-bright-green">[u8]</tspan>
+</tspan>
+    <tspan x="10px" y="4708px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4726px">
+</tspan>
+    <tspan x="10px" y="4744px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: redundant explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="4762px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>3.lints.md:59:7</tspan>
+</tspan>
+    <tspan x="10px" y="4780px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4798px"><tspan class="fg-bright-blue bold">57</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [u8][u8]</tspan>
+</tspan>
+    <tspan x="10px" y="4816px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">--</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">because label contains path that resolves to same destination</tspan>
+</tspan>
+    <tspan x="10px" y="4834px"><tspan class="fg-bright-blue bold">58</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4852px"><tspan class="fg-bright-blue bold">59</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> [u8]: </tspan><tspan class="fg-yellow bold">u8</tspan>
+</tspan>
+    <tspan x="10px" y="4870px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-yellow bold">^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">explicit target is redundant</tspan>
+</tspan>
+    <tspan x="10px" y="4888px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4906px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: when a link's destination is not specified,</tspan>
+</tspan>
+    <tspan x="10px" y="4924px"><tspan>           the label is used to resolve intra-doc links</tspan>
+</tspan>
+    <tspan x="10px" y="4942px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: remove explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="4960px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="4978px"><tspan class="fg-bright-blue bold">57</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- </tspan><tspan class="fg-bright-red">[u8][u8]</tspan>
+</tspan>
+    <tspan x="10px" y="4996px"><tspan class="fg-bright-blue bold">57</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- </tspan><tspan class="fg-bright-green">[u8]</tspan>
+</tspan>
+    <tspan x="10px" y="5014px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5032px">
+</tspan>
+    <tspan x="10px" y="5050px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: redundant explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="5068px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>4.known-issues.md:8:10</tspan>
+</tspan>
+    <tspan x="10px" y="5086px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5104px"><tspan class="fg-bright-blue bold">8</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [f64]\[</tspan><tspan class="fg-yellow bold">f64</tspan><tspan>]</tspan>
+</tspan>
+    <tspan x="10px" y="5122px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">---</tspan><tspan>   </tspan><tspan class="fg-yellow bold">^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">explicit target is redundant</tspan>
+</tspan>
+    <tspan x="10px" y="5140px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5158px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">because label contains path that resolves to same destination</tspan>
+</tspan>
+    <tspan x="10px" y="5176px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5194px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: when a link's destination is not specified,</tspan>
+</tspan>
+    <tspan x="10px" y="5212px"><tspan>          the label is used to resolve intra-doc links</tspan>
+</tspan>
+    <tspan x="10px" y="5230px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: remove explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="5248px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5266px"><tspan class="fg-bright-blue bold">8</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- </tspan><tspan class="fg-bright-red">[f64]\[f64]</tspan>
+</tspan>
+    <tspan x="10px" y="5284px"><tspan class="fg-bright-blue bold">8</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- </tspan><tspan class="fg-bright-green">[f64]</tspan>
+</tspan>
+    <tspan x="10px" y="5302px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5320px">
+</tspan>
+    <tspan x="10px" y="5338px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: redundant explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="5356px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>4.known-issues.md:16:10</tspan>
+</tspan>
+    <tspan x="10px" y="5374px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5392px"><tspan class="fg-bright-blue bold">16</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [drop](</tspan><tspan class="fg-yellow bold">drop "This function is not magic"</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="5410px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">----</tspan><tspan>  </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">explicit target is redundant</tspan>
+</tspan>
+    <tspan x="10px" y="5428px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5446px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">because label contains path that resolves to same destination</tspan>
+</tspan>
+    <tspan x="10px" y="5464px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5482px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: when a link's destination is not specified,</tspan>
+</tspan>
+    <tspan x="10px" y="5500px"><tspan>           the label is used to resolve intra-doc links</tspan>
+</tspan>
+    <tspan x="10px" y="5518px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: remove explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="5536px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5554px"><tspan class="fg-bright-blue bold">16</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- </tspan><tspan class="fg-bright-red">[drop](drop "This function is not magic")</tspan>
+</tspan>
+    <tspan x="10px" y="5572px"><tspan class="fg-bright-blue bold">16</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- </tspan><tspan class="fg-bright-green">[drop]</tspan>
+</tspan>
+    <tspan x="10px" y="5590px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5608px">
+</tspan>
+    <tspan x="10px" y="5626px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: redundant explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="5644px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>4.known-issues.md:21:9</tspan>
+</tspan>
+    <tspan x="10px" y="5662px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5680px"><tspan class="fg-bright-blue bold">17</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [drop][drop]</tspan>
+</tspan>
+    <tspan x="10px" y="5698px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">----</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">because label contains path that resolves to same destination</tspan>
+</tspan>
+    <tspan x="10px" y="5716px"><tspan class="fg-bright-blue bold">...</tspan>
+</tspan>
+    <tspan x="10px" y="5734px"><tspan class="fg-bright-blue bold">21</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> [drop]: </tspan><tspan class="fg-yellow bold">drop</tspan><tspan> "This function is not magic"</tspan>
+</tspan>
+    <tspan x="10px" y="5752px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>         </tspan><tspan class="fg-yellow bold">^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">explicit target is redundant</tspan>
+</tspan>
+    <tspan x="10px" y="5770px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5788px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: when a link's destination is not specified,</tspan>
+</tspan>
+    <tspan x="10px" y="5806px"><tspan>           the label is used to resolve intra-doc links</tspan>
+</tspan>
+    <tspan x="10px" y="5824px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: remove explicit link target</tspan>
+</tspan>
+    <tspan x="10px" y="5842px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5860px"><tspan class="fg-bright-blue bold">17</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- </tspan><tspan class="fg-bright-red">[drop][drop]</tspan>
+</tspan>
+    <tspan x="10px" y="5878px"><tspan class="fg-bright-blue bold">17</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- </tspan><tspan class="fg-bright-green">[drop]</tspan>
+</tspan>
+    <tspan x="10px" y="5896px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
   </text>
 
 </svg>

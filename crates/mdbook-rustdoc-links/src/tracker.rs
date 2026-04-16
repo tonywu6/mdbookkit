@@ -70,7 +70,7 @@ enum NormalizedLink<'a> {
     Normalized { text: String, span: SourceSpan },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct SourceSpan {
     full: Range<usize>,
     text: Range<usize>,
@@ -192,6 +192,7 @@ impl<'a> LinkTracker<'a> {
                             && let Some(Event::Text(original) | Event::Code(original)) =
                                 link.inner_elem.first_mut()
                         {
+                            let text = decode_html_entities(&text);
                             *original = CowStr::Boxed(text.into())
                         }
                     } else {
@@ -229,9 +230,23 @@ impl<'a> LinkTracker<'a> {
 
         for line in String::from_utf8_lossy(stderr).lines() {
             if let Ok(diag) = serde_json::from_str::<Diagnostic>(line)
-                && let Some(line) = locate_diagnostic(&diag)
-                && let Some(link) = self.links.get_mut(line)
+                .with_context(|| line.to_owned())
+                .context("could not parse line as diagnostic")
+                .or_debug(emit!())
+                && let Ok(line) = locate_diagnostic(&diag)
+                    .with_context(|| format!("{diag:?}"))
+                    .context("could not determine primary line")
+                    .or_debug(emit!())
+                && let Ok(link) = (self.links.get_mut(line))
+                    .with_context(|| format!("{diag:?}"))
+                    .with_context(|| format!("line {line}"))
+                    .context("line does not belong to any link")
+                    .or_debug(emit!())
             {
+                trace! {
+                    "line {}, link {:?}, {}", line + 1, &*link.dest,
+                    diag.rendered.as_deref().unwrap_or(&diag.message)
+                };
                 link.diagnostics.push(diag);
             }
         }
@@ -428,17 +443,17 @@ impl<'a> Link<'a> {
         };
 
         if !could_be_item_link(link_type, &dest_url) {
-            trace!(?span, ?dest_url, "link ...");
+            trace!(?span, dest = ?&*dest_url, "link ...");
             return None;
         }
 
-        trace!(?span, ?dest_url, "link >>>");
+        trace!(?span, dest = ?&*dest_url, title = ?&*title, "link >>>");
         Some(Link {
             href: None,
             kind: link_type,
             span: SourceSpan {
                 full: span.clone(),
-                text: text.len()..0,
+                text: text.len()..0, // empty span
                 dest: locate_text(text, &dest_url, &span),
             },
             dest: dest_url,
@@ -493,6 +508,7 @@ impl<'a> Link<'a> {
         let Self {
             kind,
             dest,
+            title,
             inner_elem,
             normalized,
             ..
@@ -519,17 +535,21 @@ impl<'a> Link<'a> {
             return Ok(self);
         }
 
+        // https://spec.commonmark.org/0.31.2/#link-title
+        // > link titles may span multiple lines
+        let title = title.replace('\n', "&#10;").into();
+
         let link = match kind {
             ReferenceUnknown | CollapsedUnknown | ShortcutUnknown => Tag::Link {
                 link_type: Reference,
                 dest_url: "".into(),
-                title: "".into(),
+                title,
                 id: dest.clone(),
             },
             link_class!(href_defined) => Tag::Link {
                 link_type: Inline,
                 dest_url: dest.clone(),
-                title: "".into(),
+                title,
                 id: "".into(),
             },
             link_class!(ignored_link) => {
@@ -569,6 +589,11 @@ impl<'a> Link<'a> {
         })()
         .context("internal error while parsing link; the link will be skipped")
         .or_warn(emit!())?;
+
+        // link text may still contain newlines
+        let text = text.replace('\n', " ");
+        // this is acceptable even within `inline code`:
+        // https://spec.commonmark.org/0.31.2/#code-spans
 
         self.normalized = NormalizedLink::Normalized { text, span };
 
@@ -694,19 +719,28 @@ impl SourceMap for LinkTracker<'_> {
         let upper = upper.checked_sub(COMMENT_PREFIX.len())?;
         let len = upper.checked_sub(lower)?;
 
-        let lower = match &link.normalized {
-            NormalizedLink::Unmodified { .. } => link.span.full.start + lower,
+        let (span, lower) = match &link.normalized {
+            NormalizedLink::Unmodified { .. } => {
+                let span = &link.span.full;
+                (span, span.start + lower)
+            }
             NormalizedLink::Normalized { span, .. } => {
-                if span.text.start <= lower && span.text.end >= upper {
-                    link.span.text.start + lower - span.text.start
-                } else if span.dest.start <= lower && span.dest.end >= upper {
-                    link.span.dest.start + lower - span.dest.start
+                if span.text.start <= lower && lower <= span.text.end {
+                    let source = &link.span.text;
+                    let mapped = &span.text;
+                    (source, (source.start + lower - mapped.start))
+                } else if span.dest.start <= lower && lower <= span.dest.end {
+                    let source = &link.span.dest;
+                    let mapped = &span.dest;
+                    (source, (source.start + lower - mapped.start))
                 } else {
-                    link.span.full.start + lower - span.full.start
+                    let span = &link.span.full;
+                    (span, span.start)
                 }
             }
         };
 
+        let len = len.min(span.end - span.start);
         let upper = lower + len;
         Some(lower..upper)
     }
@@ -823,4 +857,89 @@ impl Display for Statistics {
         }
         Ok(())
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use anyhow::Result;
+
+    use mdbookkit::diagnostics::{
+        Highlight, IssueLevel, IssueReport,
+        annotate_snippets::{AnnotationKind, Renderer, renderer::DecorStyle},
+        issue_to_report,
+    };
+    use mdbookkit_testing::{
+        AssertUtil, default_assert,
+        snapbox::{Data, data::DataFormat, utils::current_dir},
+    };
+
+    use super::{LinkTracker, SourceSpan};
+
+    fn print_link_spans(span: SourceSpan) -> IssueReport<'static> {
+        let SourceSpan { full, text, dest } = span;
+        IssueReport::level(IssueLevel::Warning)
+            .title("link spans")
+            .annotations(vec![
+                Highlight::span(full)
+                    .kind(AnnotationKind::Primary)
+                    .label("full")
+                    .build(),
+                Highlight::span(dest)
+                    .kind(AnnotationKind::Context)
+                    .label("dest")
+                    .build(),
+                Highlight::span(text)
+                    .kind(AnnotationKind::Context)
+                    .label("text")
+                    .build(),
+            ])
+            .build()
+    }
+
+    fn test_link_spans(text: &str, expected: Data) -> Result<()> {
+        let mut tracker = LinkTracker::default();
+        tracker.read(text)?;
+        let span = tracker.links[0].span.clone();
+        let report = print_link_spans(span);
+        let report = issue_to_report(report, (text, "<anon>").into());
+        let renderer = Renderer::styled().decor_style(DecorStyle::Ascii);
+        let actual = renderer.render(&report);
+        default_assert().try_eq_text(None, actual, expected)?;
+        Ok(())
+    }
+
+    macro_rules! test_link_spans {
+        ( $name:ident ( $($line:literal),* ) ) => {
+            #[test]
+            fn $name() -> Result<()> {
+                let path = current_dir!()
+                    .join("tracker/tests")
+                    .join(concat!(stringify!($name), ".svg"));
+                let data = Data::read_from(&path, Some(DataFormat::TermSvg));
+                let text = concat!($($line, "\n"),*);
+                test_link_spans(text, data)
+            }
+        };
+    }
+
+    test_link_spans!(link_span_inline("[drop](drop)"));
+    test_link_spans!(link_span_inline_with_title(
+        "[drop](drop 'This function is not magic')"
+    ));
+    test_link_spans!(link_span_inline_whitespace(
+        "[`Infallible`]( std::convert::Infallible",
+        "'The error type for errors that can never happen",
+        "Since this enum has no variant, a value of this type can never actually exist.')"
+    ));
+
+    test_link_spans!(link_span_reference("[drop][drop]", "", "[drop]: drop"));
+    test_link_spans!(link_span_reference_with_title(
+        "[drop][drop]",
+        "",
+        "[drop]: drop 'This function is not magic'"
+    ));
+    test_link_spans!(link_span_shortcut("[drop]", "", "[drop]: drop"));
+
+    test_link_spans!(link_span_reference_unknown("[drop][drop]"));
+    test_link_spans!(link_span_shortcut_unknown("[drop]"));
 }

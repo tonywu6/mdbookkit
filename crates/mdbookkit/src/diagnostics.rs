@@ -146,6 +146,7 @@ fn is_graphical() -> Option<DecorStyle> {
     }
 }
 
+#[must_use]
 pub fn issue_to_report<'a>(issue: IssueReport<'a>, source: SourceCode<'a>) -> Vec<Group<'a>> {
     macro_rules! snippet {
         ($items:ident, $kind:ident) => {{

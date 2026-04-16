@@ -2,14 +2,14 @@ use std::fmt::Write;
 
 use anyhow::{Context, Result};
 use lol_html::{HtmlRewriter, element};
-use mdbook_markdown::pulldown_cmark::{Event, LinkType, Parser, Tag};
+use mdbook_markdown::pulldown_cmark::{Event, LinkType::*, Parser, Tag};
 use mdbookkit::markdown::default_markdown_options;
 use tap::Pipe;
 use url::Url;
 
 use mdbookkit_testing::{
     regex::Regex,
-    snapbox::{RedactedValue, Redactions, assert_data_eq},
+    snapbox::{IntoData, RedactedValue, Redactions, assert_data_eq},
     test_mdbook,
 };
 
@@ -35,7 +35,7 @@ fn rustdoc_parity() -> Result<()> {
         writeln!(expected, "# {}\n", page.name())?;
 
         let html = format!("{}/index.html", page.mod_name());
-        let base = base.join(&html)?;
+        let base = base.join(&html)?.join(".")?;
 
         let html = (book.path.book_dir())
             .join("target/doc")
@@ -46,6 +46,13 @@ fn rustdoc_parity() -> Result<()> {
             .context(html)
             .context("rustdoc did not emit this file")?;
 
+        let link_ignored = |url: &Url| {
+            url.scheme() != "https" ||
+            // links pointing at the same directory as the page itself
+            // are likely [inline](links) that are broken
+            url.as_str().starts_with(base.as_str())
+        };
+
         lol_html::Settings {
             element_content_handlers: vec![element!(".top-doc a", |elem| {
                 if elem.get_attribute("class").as_deref() == Some("doc-anchor") {
@@ -55,7 +62,7 @@ fn rustdoc_parity() -> Result<()> {
                     return Ok(());
                 };
                 let href = base.join(&href)?;
-                if href.scheme() != "https" {
+                if link_ignored(&href) {
                     return Ok(());
                 }
                 let title = elem.get_attribute("title").unwrap_or_default();
@@ -73,11 +80,13 @@ fn rustdoc_parity() -> Result<()> {
             if let Event::Start(Tag::Link {
                 dest_url,
                 title,
-                link_type: LinkType::Inline,
+                link_type: Inline | Reference | Collapsed | Shortcut,
                 ..
             }) = event
+                && let Ok(url) = dest_url.parse::<Url>()
+                && !link_ignored(&url)
             {
-                writeln!(expected, "{dest_url} {:?}", &*title)?;
+                writeln!(expected, "{url} {:?}", &*title)?;
             }
         }
 
@@ -97,18 +106,18 @@ fn rustdoc_parity() -> Result<()> {
         redactions
     };
 
-    let upstream = redactions.redact(&upstream);
-    let expected = redactions.redact(&expected);
+    let upstream = redactions.redact(&upstream).into_data().raw();
+    let expected = redactions.redact(&expected).into_data().raw();
 
-    assert_data_eq!(&*upstream, &*expected);
+    assert_data_eq!(upstream, expected);
 
     Ok(())
 }
 
 fn redacted() -> Vec<(&'static str, RedactedValue)> {
     vec![(
-        "[STABLE]",
-        r"https://doc\.rust-lang\.org/(?<redacted>1\.\d+\.\d+)/(core|alloc|std)/"
+        "[RUST_VERSION]",
+        r"https://doc\.rust-lang\.org/(?<redacted>nightly|1\.\d+\.\d+)/(core|alloc|std)/"
             .parse::<Regex>()
             .unwrap()
             .into(),

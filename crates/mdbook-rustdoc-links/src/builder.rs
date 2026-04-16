@@ -16,9 +16,9 @@ use cargo_metadata::{
     diagnostic::Diagnostic,
 };
 use serde::Deserialize;
-use tap::{Pipe, Tap};
+use tap::{Pipe, Tap, TapFallible};
 use tempfile::TempDir;
-use tracing::{Level, debug, info, info_span, warn};
+use tracing::{Level, debug, info, info_span, trace, warn};
 
 use mdbookkit::{
     emit,
@@ -345,12 +345,13 @@ fn run_builder(
         if let Some(status) = result.status {
             let stderr = rustc_json_error(&result.output.stderr);
             let stderr = stderr.trim_end();
-            if !stderr.is_empty() {
-                warn!("--- rustdoc stderr\n{stderr}")
-            }
+            warn!("--- rustdoc stderr\n{stderr}");
             return Err(status)
                 .context("`rustdoc` did not succeed")
                 .or_warn(emit!())?;
+        } else {
+            trace! { "--- rustdoc stderr\n{}",
+            String::from_utf8_lossy(&result.output.stderr) };
         }
 
         let output = BuildOutput {
@@ -463,6 +464,7 @@ impl CargoRecorder {
             .pipe(cargo_metadata::Message::parse_stream)
         {
             let Ok(msg) = msg
+                .tap_ok(|msg| trace!("{msg:?}"))
                 .context("error while reading from cargo")
                 .or_warn(emit!())
             else {
@@ -505,15 +507,11 @@ impl CargoRecorder {
                 .join("\n");
 
             let cargo_errors = cargo_errors.trim_end();
-            if !cargo_errors.is_empty() {
-                warn!("--- cargo stderr\n{cargo_errors}\n")
-            }
+            warn!("--- cargo stderr\n{cargo_errors}\n");
 
             let rustc_errors = rustc_errors.join("");
             let rustc_errors = rustc_errors.trim_end();
-            if !rustc_errors.is_empty() {
-                warn!("--- rustc stderr\n{rustc_errors}\n")
-            }
+            warn!("--- rustc stderr\n{rustc_errors}\n");
 
             Err(error)
         } else {
@@ -1125,11 +1123,7 @@ impl Subprocess {
         if let Some(status) = status {
             let stderr = String::from_utf8_lossy(&output.stderr);
             let stderr = stderr.trim_end();
-            let error = if !stderr.is_empty() {
-                status.context(format!("--- stderr\n{stderr}\n---"))
-            } else {
-                status
-            };
+            let error = status.context(format!("--- stderr\n{stderr}\n---"));
             Err(error)
         } else {
             Ok(output)

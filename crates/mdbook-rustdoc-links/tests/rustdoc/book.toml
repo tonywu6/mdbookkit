@@ -3,6 +3,7 @@ after = ["links"]
 command = "cargo preprocessor"
 
 [build]
-build-dir = "out"
+build-dir = "dist"
+create-missing = false
 
 [output.markdown]

@@ -1,0 +1,328 @@
+warning: unresolved link to `Nonexistent`
+ --> 3.lints.md:3:5
+  |
+3 | - [`Nonexistent`]
+  |     ^^^^^^^^^^^ no item named `Nonexistent` in scope
+  |
+  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`
+
+warning: unresolved link to `tap::tap::Tab`
+ --> 3.lints.md:4:5
+  |
+4 | - [`tap::tap::Tab`]
+  |     ^^^^^^^^^^^^^ no item named `Tab` in module `tap`
+
+warning: unresolved link to `tap::tap::Tap::tab`
+ --> 3.lints.md:5:5
+  |
+5 | - [`tap::tap::Tap::tab`]
+  |     ^^^^^^^^^^^^^^^^^^ the trait `Tap` has no associated item named `tab`
+
+warning: unresolved link to `Vec<>>`
+ --> 3.lints.md:6:5
+  |
+6 | - [`Vec<>>`]
+  |     ^^^^^^ empty angle brackets
+
+warning: unresolved link to `<Vec as IntoIterator>::into_iter`
+ --> 3.lints.md:7:5
+  |
+7 | - [`<Vec as IntoIterator>::into_iter()`]
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ fully-qualified syntax is unsupported
+  |
+  = note: see https://github.com/rust-lang/rust/issues/74563 for more information
+
+warning: unresolved link to `Fn`
+ --> 3.lints.md:8:5
+  |
+8 | - [`Fn()`]
+  |     ^^^^ this link resolves to the trait `Fn`, which is not a function
+  |
+help: to link to the trait, prefix with `trait@`
+  |
+8 - - [`Fn()`]
+8 + - [`trait@Fn`]
+  |
+
+warning: incompatible link kind for `Vec`
+ --> 3.lints.md:9:5
+  |
+9 | - [`enum@Vec`]
+  |     ^^^^^^^^ this link resolved to a struct, which is not an enum
+  |
+help: to link to the struct, prefix with `struct@`
+  |
+9 - - [`enum@Vec`]
+9 + - [`struct@Vec`]
+  |
+
+warning: `std::vec` is both a module and a macro
+  --> 3.lints.md:10:5
+   |
+10 | - [`std::vec`]
+   |     ^^^^^^^^ ambiguous link
+   |
+help: to link to the module, prefix with `mod@`
+   |
+10 | - [`mod@std::vec`]
+   |     ++++
+help: to link to the macro, add an exclamation mark
+   |
+10 | - [`std::vec!`]
+   |             +
+
+warning: ``Vec#Examples#1`` contains multiple anchors
+  --> 3.lints.md:11:5
+   |
+11 | - [`Vec#Examples#1`]
+   |     ^^^^^^^^^^^^^-
+   |                  |
+   |                  invalid anchor
+
+warning: ``Option::None#Methods`` contains an anchor, but links to variants are already anchored
+  --> 3.lints.md:12:5
+   |
+12 | - [`Option::None#Methods`]
+   |     ^^^^^^^^^^^^^-------
+   |                  |
+   |                  invalid anchor
+
+warning: unresolved link to `NotImplemented`
+  --> 3.lints.md:18:29
+   |
+18 | - [Hasn't been implemented](NotImplemented)
+   |                             ^^^^^^^^^^^^^^ no item named `NotImplemented` in scope
+   |
+help: to indicate that this is a relative path (which will silence this warning),
+      prepend the link with `./`
+   |
+18 | - [Hasn't been implemented](./NotImplemented)
+   |                             ++
+
+warning: unresolved link to `NotImplemented`
+  --> 3.lints.md:19:29
+   |
+19 | - [Hasn't been implemented](NotImplemented
+   |                             ^^^^^^^^^^^^^^ no item named `NotImplemented` in scope
+   |
+help: to indicate that this is a relative path (which will silence this warning),
+      prepend the link with `./`
+   |
+19 | - [Hasn't been implemented](./NotImplemented
+   |                             ++
+
+warning: unresolved link to `NotImplemented`
+  --> 3.lints.md:22:16
+   |
+22 |   implemented][NotImplemented]
+   |                ^^^^^^^^^^^^^^ no item named `NotImplemented` in scope
+...
+26 | - [Hasn't been implemented][NotImplemented]
+   |                             ^^^^^^^^^^^^^^ no item named `NotImplemented` in scope
+   |
+   = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`
+
+warning: unresolved link to `NotImplemented`
+  --> 3.lints.md:28:20
+   |
+28 | [not-implemented]: NotImplemented
+   |                    ^^^^^^^^^^^^^^ no item named `NotImplemented` in scope
+   |
+help: to indicate that this is a relative path (which will silence this warning),
+      prepend the link with `./`
+   |
+28 | [not-implemented]: ./NotImplemented
+   |                    ++
+
+warning: unresolved link to `std::pinned::PhantomPinned`
+  --> 3.lints.md:34:24
+   |
+34 | - [`PhantomPinned<T>`](std::pinned::PhantomPinned)
+   |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ no item named `pinned` in module `std`
+
+warning: unresolved link to `PhantomPinned`
+  --> 3.lints.md:35:24
+   |
+35 | - [`PhantomPinned<T>`](PhantomPinned<T>)
+   |                        ^^^^^^^^^^^^^^^^ no item named `PhantomPinned` in scope
+
+warning: incompatible link kind for `Iterator`
+  --> 3.lints.md:42:13
+   |
+42 | [iterator]: struct@Iterator
+   |             ^^^^^^^^^^^^^^^ this link resolved to a trait, which is not a struct
+   |
+help: to link to the trait, prefix with `trait@`
+   |
+42 - [iterator]: struct@Iterator
+42 + [iterator]: trait@Iterator
+   |
+
+warning: `std::vec` is both a module and a macro
+  --> 3.lints.md:43:8
+   |
+43 | [vec]: std::vec
+   |        ^^^^^^^^ ambiguous link
+   |
+help: to link to the module, prefix with `mod@`
+   |
+43 | [vec]: mod@std::vec
+   |        ++++
+help: to link to the macro, add an exclamation mark
+   |
+43 | [vec]: std::vec!
+   |                +
+
+warning: unclosed HTML tag `T`
+  --> 3.lints.md:47:7
+   |
+47 | - [Vec<T>]
+   |       ^^^
+   |
+help: try marking as source code
+   |
+47 | - [`Vec<T>`]
+   |    +      +
+
+warning: unclosed HTML tag `T`
+  --> 3.lints.md:48:10
+   |
+48 | - [Option<T>][option]
+   |          ^^^
+   |
+help: try marking as source code
+   |
+48 | - [`Option<T>`][option]
+   |    +         +
+
+warning: redundant explicit link target
+  --> 3.lints.md:50:11
+   |
+48 | - [Option<T>][option]
+   |    ------ because label contains path that resolves to same destination
+49 |
+50 | [option]: Option
+   |           ^^^^^^ explicit target is redundant
+   |
+   = note: when a link's destination is not specified,
+           the label is used to resolve intra-doc links
+help: remove explicit link target
+   |
+48 - - [Option<T>][option]
+48 + - [Option]
+   |
+
+warning: redundant explicit link target
+  --> 3.lints.md:54:10
+   |
+54 | - [None][None]
+   |    ----  ^^^^ explicit target is redundant
+   |    |
+   |    because label contains path that resolves to same destination
+   |
+   = note: when a link's destination is not specified,
+           the label is used to resolve intra-doc links
+help: remove explicit link target
+   |
+54 - - [None][None]
+54 + - [None]
+   |
+
+warning: redundant explicit link target
+  --> 3.lints.md:55:11
+   |
+55 | - [`Box`][Box]
+   |    -----  ^^^ explicit target is redundant
+   |    |
+   |    because label contains path that resolves to same destination
+   |
+   = note: when a link's destination is not specified,
+           the label is used to resolve intra-doc links
+help: remove explicit link target
+   |
+55 - - [`Box`][Box]
+55 + - [`Box`]
+   |
+
+warning: redundant explicit link target
+  --> 3.lints.md:56:8
+   |
+56 | - [u8](u8)
+   |    --  ^^ explicit target is redundant
+   |    |
+   |    because label contains path that resolves to same destination
+   |
+   = note: when a link's destination is not specified,
+           the label is used to resolve intra-doc links
+help: remove explicit link target
+   |
+56 - - [u8](u8)
+56 + - [u8]
+   |
+
+warning: redundant explicit link target
+  --> 3.lints.md:59:7
+   |
+57 | - [u8][u8]
+   |    -- because label contains path that resolves to same destination
+58 |
+59 | [u8]: u8
+   |       ^^ explicit target is redundant
+   |
+   = note: when a link's destination is not specified,
+           the label is used to resolve intra-doc links
+help: remove explicit link target
+   |
+57 - - [u8][u8]
+57 + - [u8]
+   |
+
+warning: redundant explicit link target
+ --> 4.known-issues.md:8:10
+  |
+8 | - [f64]\[f64]
+  |    ---   ^^^ explicit target is redundant
+  |    |
+  |    because label contains path that resolves to same destination
+  |
+  = note: when a link's destination is not specified,
+          the label is used to resolve intra-doc links
+help: remove explicit link target
+  |
+8 - - [f64]\[f64]
+8 + - [f64]
+  |
+
+warning: redundant explicit link target
+  --> 4.known-issues.md:16:10
+   |
+16 | - [drop](drop "This function is not magic")
+   |    ----  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ explicit target is redundant
+   |    |
+   |    because label contains path that resolves to same destination
+   |
+   = note: when a link's destination is not specified,
+           the label is used to resolve intra-doc links
+help: remove explicit link target
+   |
+16 - - [drop](drop "This function is not magic")
+16 + - [drop]
+   |
+
+warning: redundant explicit link target
+  --> 4.known-issues.md:21:9
+   |
+17 | - [drop][drop]
+   |    ---- because label contains path that resolves to same destination
+...
+21 | [drop]: drop "This function is not magic"
+   |         ^^^^ explicit target is redundant
+   |
+   = note: when a link's destination is not specified,
+           the label is used to resolve intra-doc links
+help: remove explicit link target
+   |
+17 - - [drop][drop]
+17 + - [drop]
+   |
+
