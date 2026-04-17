@@ -39,7 +39,7 @@ impl TestBook {
             .arg(self.path.book_dir())
             .env("MDBOOK_build__build_dir", temp_dir)
             .envs(load_env(&[
-                ("MDBOOK_LOG", "off,mdbookkit::diagnostics=info"),
+                ("MDBOOK_LOG", "warn,mdbookkit::diagnostics=info"),
                 ("MDBOOKKIT_TERM_GRAPHICAL", "ascii"),
                 ("FORCE_COLOR", "1"),
                 ("RUST_BACKTRACE", "0"),

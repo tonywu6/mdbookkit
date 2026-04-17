@@ -345,13 +345,16 @@ fn run_builder(
         if let Some(status) = result.status {
             let stderr = rustc_json_error(&result.output.stderr);
             let stderr = stderr.trim_end();
+            let stderr = if stderr.is_empty() { "(empty)" } else { stderr };
             warn!("--- rustdoc stderr\n{stderr}");
             return Err(status)
                 .context("`rustdoc` did not succeed")
                 .or_warn(emit!())?;
         } else {
-            trace! { "--- rustdoc stderr\n{}",
-            String::from_utf8_lossy(&result.output.stderr) };
+            let stderr = String::from_utf8_lossy(&result.output.stderr);
+            let stderr = stderr.trim_end();
+            let stderr = if stderr.is_empty() { "(empty)" } else { stderr };
+            trace!("--- rustdoc stderr\n{stderr}");
         }
 
         let output = BuildOutput {
@@ -506,11 +509,15 @@ impl CargoRecorder {
                 .unwrap_or_default()
                 .join("\n");
 
-            let cargo_errors = cargo_errors.trim_end();
+            let cargo_errors = cargo_errors
+                .trim_end()
+                .pipe(|s| if s.is_empty() { "(empty)" } else { s });
             warn!("--- cargo stderr\n{cargo_errors}\n");
 
             let rustc_errors = rustc_errors.join("");
-            let rustc_errors = rustc_errors.trim_end();
+            let rustc_errors = rustc_errors
+                .trim_end()
+                .pipe(|s| if s.is_empty() { "(empty)" } else { s });
             warn!("--- rustc stderr\n{rustc_errors}\n");
 
             Err(error)
@@ -1123,6 +1130,7 @@ impl Subprocess {
         if let Some(status) = status {
             let stderr = String::from_utf8_lossy(&output.stderr);
             let stderr = stderr.trim_end();
+            let stderr = if stderr.is_empty() { "(empty)" } else { stderr };
             let error = status.context(format!("--- stderr\n{stderr}\n---"));
             Err(error)
         } else {

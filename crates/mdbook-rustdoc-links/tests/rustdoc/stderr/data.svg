@@ -1,4 +1,4 @@
-<svg width="827px" height="5906px" xmlns="http://www.w3.org/2000/svg">
+<svg width="827px" height="5942px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -675,6 +675,10 @@
     <tspan x="10px" y="5878px"><tspan class="fg-bright-blue bold">17</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- </tspan><tspan class="fg-bright-green">[drop]</tspan>
 </tspan>
     <tspan x="10px" y="5896px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5914px">
+</tspan>
+    <tspan x="10px" y="5932px"><tspan class="fg-yellow"> WARN</tspan><tspan> finished with warnings</tspan>
 </tspan>
   </text>
 

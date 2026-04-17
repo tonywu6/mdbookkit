@@ -627,15 +627,21 @@ impl<'a> Link<'a> {
                 continue;
             }
 
+            let is_unresolved = has_error_code(diagnostic, "rustdoc::broken_intra_doc_links")
+                && diagnostic.message.starts_with("unresolved link to");
+
+            if is_unresolved && self.href.is_some() {
+                continue;
+            }
+
             let mut issue = RustcDiagnostic {
                 diagnostic,
                 source_map: tracker,
             }
             .conv::<IssueReport>();
 
-            if has_error_code(diagnostic, "rustdoc::broken_intra_doc_links") {
+            if is_unresolved {
                 if matches!(self.kind, link_class!(href_defined))
-                    && diagnostic.message.starts_with("unresolved link to")
                     && !self.dest.contains("::")
                     && !self.dest.contains("<")
                 {
