@@ -40,10 +40,13 @@ use crate::{
     markdown::markdown,
 };
 
+use self::diagnostics::DiagnosticHints;
+
 #[derive(Debug, Default)]
 pub struct LinkTracker<'a> {
     links: Vec<Link<'a>>,
     pages: Vec<Page<'a>>,
+    hints: DiagnosticHints,
 }
 
 #[derive(Debug)]
@@ -252,6 +255,10 @@ impl<'a> LinkTracker<'a> {
         }
     }
 
+    pub fn hints(&mut self) -> &mut DiagnosticHints {
+        &mut self.hints
+    }
+
     pub fn export<'d: 'a>(&'d self) -> ExportedPages<'d> {
         let mut contents = Vec::with_capacity(self.pages.len());
         let mut issues = Vec::with_capacity(self.pages.len());
@@ -262,13 +269,17 @@ impl<'a> LinkTracker<'a> {
             Some((page, links))
         });
 
+        let mut ctx = IssueReportContext {
+            tracker: self,
+            hints: self.hints.clone(),
+        };
         let mut stats = Statistics::default();
 
         for (page, links) in links {
             let page_issues = links
                 .iter()
                 .inspect(|link| stats.count(link))
-                .flat_map(|link| link.diagnose(self))
+                .flat_map(|link| ctx.diagnose(link))
                 .chain(self.link_summary(links))
                 .collect();
 
@@ -600,77 +611,6 @@ impl<'a> Link<'a> {
         Ok(self)
     }
 
-    fn diagnose(&'a self, tracker: &LinkTracker<'a>) -> Vec<IssueReport<'a>> {
-        let mut issues = Vec::with_capacity(self.diagnostics.len());
-        let mut seen = BTreeSet::new();
-
-        if self.href.is_none() && self.diagnostics.is_empty() {
-            let span = &self.span.dest;
-
-            let issue = IssueReport::level(IssueLevel::Note)
-                .title("link ignored")
-                .annotations(vec![
-                    Highlight::span(span.clone())
-                        .kind(AnnotationKind::Context)
-                        .build(),
-                ])
-                .build();
-
-            issues.push(issue);
-        }
-
-        for diagnostic in self.diagnostics.iter() {
-            if seen
-                .replace(Lexicographic(DiagnosticKey(diagnostic)))
-                .is_some()
-            {
-                continue;
-            }
-
-            let is_unresolved = has_error_code(diagnostic, "rustdoc::broken_intra_doc_links")
-                && diagnostic.message.starts_with("unresolved link to");
-
-            if is_unresolved && self.href.is_some() {
-                continue;
-            }
-
-            let mut issue = RustcDiagnostic {
-                diagnostic,
-                source_map: tracker,
-            }
-            .conv::<IssueReport>();
-
-            if is_unresolved {
-                if matches!(self.kind, link_class!(href_defined))
-                    && !self.dest.contains("::")
-                    && !self.dest.contains("<")
-                {
-                    issue.secondary(suggest_path_prefix(self.span.dest.clone()));
-                }
-                if let Some(prefix) = {
-                    if self.dest.starts_with("crate::") {
-                        Some("crate::")
-                    } else if self.dest.starts_with("self::") {
-                        Some("self::")
-                    } else {
-                        None
-                    }
-                } {
-                    let help = format! {
-                        "the usage `{prefix}...` is not supported with this preprocessor\n\
-                        specify the crate name, or use the `build.preludes` option to \
-                        introduce this item into scope"
-                    };
-                    issue.note(Note::level(IssueLevel::Note).message(help).build());
-                }
-            }
-
-            issues.push(issue);
-        }
-
-        issues
-    }
-
     fn export(&'a self) -> Option<impl Iterator<Item = Event<'a>>> {
         let Self {
             href,
@@ -694,20 +634,111 @@ impl<'a> Link<'a> {
     }
 }
 
-fn has_error_code(diag: &Diagnostic, code: &str) -> bool {
-    diag.code.as_ref().map(|c| c.code == code).unwrap_or(false)
+struct IssueReportContext<'a> {
+    tracker: &'a LinkTracker<'a>,
+    hints: DiagnosticHints,
 }
 
-fn suggest_path_prefix<'a>(span: Range<usize>) -> IssueReport<'a> {
-    let help = {
-        "to indicate that this is a relative path (which will silence this warning),\n\
-        prepend the link with `./`"
-    };
-    let span = span.start..span.start;
-    IssueReport::level(IssueLevel::Help)
-        .title(help)
-        .patches(vec![Suggestion::span(span).repl("./").build()])
-        .build()
+impl<'a> IssueReportContext<'a> {
+    fn diagnose(&mut self, link: &'a Link<'a>) -> Vec<IssueReport<'a>> {
+        let mut issues = Vec::with_capacity(link.diagnostics.len());
+        let mut seen = BTreeSet::new();
+
+        if link.href.is_none() && link.diagnostics.is_empty() {
+            let span = &link.span.dest;
+
+            let issue = IssueReport::level(IssueLevel::Note)
+                .title("link ignored")
+                .annotations(vec![
+                    Highlight::span(span.clone())
+                        .kind(AnnotationKind::Context)
+                        .build(),
+                ])
+                .build();
+
+            issues.push(issue);
+        }
+
+        for diagnostic in link.diagnostics.iter() {
+            if seen
+                .replace(Lexicographic(DiagnosticKey(diagnostic)))
+                .is_some()
+            {
+                continue;
+            }
+
+            let is_unresolved = has_error_code(diagnostic, "rustdoc::broken_intra_doc_links")
+                && diagnostic.message.starts_with("unresolved link to");
+
+            if is_unresolved && link.href.is_some() {
+                continue;
+            }
+
+            let mut issue = RustcDiagnostic {
+                diagnostic,
+                source_map: self.tracker,
+            }
+            .conv::<IssueReport>();
+
+            if is_unresolved {
+                self.augment_unresolved(link, &mut issue);
+            }
+
+            issues.push(issue);
+        }
+
+        issues
+    }
+
+    fn augment_unresolved(&mut self, link: &Link<'_>, report: &mut IssueReport<'_>) {
+        let could_be_a_path = matches!(link.kind, link_class!(href_defined))
+            && !link.dest.contains("::")
+            && !link.dest.contains("<");
+
+        if could_be_a_path {
+            let span = &link.span.dest;
+            let span = span.start..span.start;
+            let help = {
+                "to indicate that this is a relative path (which will silence this warning),\n\
+            prepend the link with `./`"
+            };
+            let suggestion = IssueReport::level(IssueLevel::Help)
+                .title(help)
+                .patches(vec![Suggestion::span(span).repl("./").build()])
+                .build();
+            report.secondary(suggestion);
+        }
+
+        let could_be_top_level = report
+            .iter_labels()
+            .any(|label| label.ends_with(" in scope"));
+
+        if could_be_top_level && let Some(options) = self.hints.options_specified() {
+            let note = format! {
+                "the following options have been specified, which \
+                may have affected link resolution:\n{options}"
+            };
+            report.note(Note::level(IssueLevel::Note).message(note).build());
+        }
+
+        if link.dest.starts_with("crate::") || link.dest.starts_with("self::") {
+            // TODO: link to doc
+            if let Some(derived) = self.hints.derived_preludes() {
+                let note = format!("the temporary crate has an implicit prelude:\n`{derived}`");
+                report.note(Note::level(IssueLevel::Note).message(note).build());
+            } else {
+                let help1 = "try specifying the crate name";
+                let help2 = "or use the `build.preludes` option to introduce this item into scope";
+                report
+                    .note(Note::level(IssueLevel::Help).message(help1).build())
+                    .note(Note::level(IssueLevel::Help).message(help2).build());
+            }
+        }
+    }
+}
+
+fn has_error_code(diag: &Diagnostic, code: &str) -> bool {
+    diag.code.as_ref().map(|c| c.code == code).unwrap_or(false)
 }
 
 impl SourceMap for LinkTracker<'_> {
@@ -763,7 +794,10 @@ impl SourceMap for LinkTracker<'_> {
         if note.starts_with(r"`#[warn(") {
             false
         } else if note.starts_with(r"to escape `[`") {
-            !matches!(link.kind, link_class!(href_defined))
+            matches!(
+                link.kind,
+                ReferenceUnknown | CollapsedUnknown | ShortcutUnknown
+            ) && !matches!(link.inner_elem.as_slice(), [Event::Code(..)])
         } else {
             true
         }
@@ -862,6 +896,62 @@ impl Display for Statistics {
             write!(f, "; {unsupported} may be unsupported")?
         }
         Ok(())
+    }
+}
+
+mod diagnostics {
+    use std::{collections::BTreeSet, fmt::Debug};
+
+    use tap::Pipe;
+
+    #[derive(Debug, Default, Clone)]
+    pub struct DiagnosticHints {
+        options_specified: BTreeSet<&'static str>,
+        derived_preludes: Vec<String>,
+        visited: VisitedHints,
+    }
+
+    #[derive(Debug, Default, Clone)]
+    struct VisitedHints {
+        options_specified: bool,
+        derived_preludes: bool,
+    }
+
+    impl DiagnosticHints {
+        pub fn options_specified(&mut self) -> Option<String> {
+            if self.visited.options_specified || self.options_specified.is_empty() {
+                return None;
+            }
+            self.visited.options_specified = true;
+            self.options_specified
+                .iter()
+                .map(|opt| format!("- `{opt}`"))
+                .collect::<Vec<_>>()
+                .join("\n")
+                .pipe(Some)
+        }
+
+        pub fn derived_preludes(&mut self) -> Option<String> {
+            if self.visited.derived_preludes || self.derived_preludes.is_empty() {
+                return None;
+            }
+            self.visited.derived_preludes = true;
+            self.derived_preludes
+                .iter()
+                .map(|module| format!("use {module};"))
+                .collect::<Vec<_>>()
+                .join("\n")
+                .pipe(Some)
+        }
+
+        pub fn mark_option_specified(&mut self, option: &'static str) {
+            self.options_specified.insert(option);
+        }
+
+        pub fn mark_derived_preludes(&mut self, preludes: Vec<String>) -> Vec<String> {
+            self.derived_preludes = preludes.clone();
+            preludes
+        }
     }
 }
 

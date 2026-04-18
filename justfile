@@ -7,7 +7,7 @@ cov-report:
     cargo bin llvm-cov report --html
 
 cov-clean:
-    cargo bin llvm-cov clean --profraw-only
+    cargo bin llvm-cov clean
 
 fmt: fmt-cargo fmt-prettier
 

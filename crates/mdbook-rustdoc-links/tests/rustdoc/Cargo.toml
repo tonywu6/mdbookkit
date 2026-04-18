@@ -5,7 +5,7 @@ publish = false
 version = "0.1.0"
 
 [dependencies]
-tap = "1.0.1"
+tap = "=1.0.1"
 
 [workspace]
 resolver = "2"

@@ -3,8 +3,6 @@ warning: unresolved link to `Nonexistent`
   |
 3 | - [`Nonexistent`]
   |     ^^^^^^^^^^^ no item named `Nonexistent` in scope
-  |
-  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`
 
 warning: unresolved link to `tap::tap::Tab`
  --> 3.lints.md:4:5

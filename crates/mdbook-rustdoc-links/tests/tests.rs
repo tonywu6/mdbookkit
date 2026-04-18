@@ -15,6 +15,7 @@ use mdbookkit_testing::{
 
 test_mdbook![rustdoc(RustDoc), exit(0), redacted = [redacted()]];
 test_mdbook![options_targets, exit(0), redacted = [redacted()]];
+test_mdbook![options_packages, exit(0), redacted = [redacted()]];
 
 #[test]
 fn rustdoc_parity() -> Result<()> {

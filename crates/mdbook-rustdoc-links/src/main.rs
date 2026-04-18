@@ -23,11 +23,10 @@ use self::{
 };
 
 mod builder;
+mod diagnostics;
 mod markdown;
 mod options;
-// #[cfg(test)]
-// mod tests;
-mod diagnostics;
+mod subprocess;
 mod tracker;
 
 fn main() {
@@ -87,7 +86,7 @@ fn mdbook() -> Result<(), Break> {
         .context("book directory path contains non-UTF-8 characters, which is unsupported")
         .or_error(emit!())?;
 
-    build_docs(build, book_dir, &mut contents)?;
+    build_docs(build.resolve(book_dir)?, &mut contents)?;
 
     let ExportedPages {
         contents,

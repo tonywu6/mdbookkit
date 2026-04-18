@@ -1,0 +1,12 @@
+[preprocessor.rustdoc-links]
+after = ["links"]
+command = "cargo preprocessor"
+
+[preprocessor.rustdoc-links.build]
+packages = ["unicode-ident", { name = "anstyle-parse", dependencies = true }]
+
+[build]
+build-dir = "dist"
+create-missing = false
+
+[output.markdown]

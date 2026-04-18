@@ -1,11 +1,24 @@
-use std::{borrow::Cow, fmt::Debug, process::Command};
+use std::{
+    borrow::Cow,
+    fmt::Debug,
+    path::Path,
+    process::{self, Command},
+};
 
 use anyhow::{Context, Result, anyhow};
-use cargo_metadata::camino::Utf8PathBuf;
+use cargo_metadata::camino::{Utf8Path, Utf8PathBuf};
 use serde::{Deserialize, Deserializer, de::value::MapAccessDeserializer};
 use shlex::Shlex;
 
-use mdbookkit::{config::value_or_vec, de_struct, error::OnWarning};
+use mdbookkit::{
+    config::value_or_vec,
+    de_struct, emit,
+    error::{Break, ConsumeError, OnWarning},
+};
+use tap::Pipe;
+use tracing::debug;
+
+use crate::subprocess::CommandUtil;
 
 de_struct!(
     #[serde(rename_all = "kebab-case", deny_unknown_fields)]
@@ -67,9 +80,9 @@ pub struct Config {
 
 #[derive(Debug, Default)]
 pub struct BuildConfig {
-    pub manifest_dir: Option<Utf8PathBuf>,
-    pub build: Vec<Builder>,
-    pub build_options: BuildOptions,
+    manifest_dir: Option<Utf8PathBuf>,
+    build: Vec<Builder>,
+    build_options: BuildOptions,
 }
 
 #[derive(Debug, Default)]
@@ -104,6 +117,65 @@ pub struct CargoOptions {
     pub toolchain: Option<String>,
     pub cargo_args: Vec<String>,
     pub runner: CommandRunner,
+}
+
+#[derive(Debug)]
+pub struct BuildConfigResolved {
+    pub manifest_dir: Utf8PathBuf,
+    pub builders: Vec<Builder>,
+}
+
+impl BuildConfig {
+    pub fn resolve(self, book_dir: &Utf8Path) -> Result<BuildConfigResolved, Break> {
+        let Self {
+            manifest_dir,
+            build,
+            build_options,
+        } = self;
+
+        let builders = if build.is_empty() {
+            vec![Default::default()]
+        } else {
+            build
+        }
+        .into_iter()
+        .map(|mut builder| {
+            builder.options.assign(&build_options);
+            builder
+        })
+        .collect::<Vec<_>>();
+
+        let default_cargo = if builders.len() == 1 {
+            &builders[0].options.cargo
+        } else {
+            &build_options.cargo
+        };
+
+        // https://github.com/rust-lang/cargo/issues/16834
+        let manifest_dir = if let Some(dir) = manifest_dir {
+            book_dir
+                .join(dir)
+                .canonicalize_utf8()
+                .context("while preparing to build docs using `cargo`")
+                .context("failed to resolve `manifest-dir` to an absolute path")
+                .or_error(emit!())?
+        } else {
+            default_cargo
+                .workspace(book_dir.as_std_path())
+                .context("while preparing to build docs using `cargo`")
+                .context("failed to determine the current workspace root")
+                .or_error(emit!())?
+                .directory()
+                .to_owned()
+        };
+
+        debug!("resolved manifest dir: {manifest_dir}");
+
+        Ok(BuildConfigResolved {
+            manifest_dir,
+            builders,
+        })
+    }
 }
 
 impl BuildOptions {
@@ -205,6 +277,50 @@ pub enum WorkspaceMember {
     #[default]
     Default,
     All,
+}
+
+impl CargoOptions {
+    pub fn command(&self, subcommand: &str) -> Command {
+        let mut command = Command::new("cargo");
+        command
+            .args(self.toolchain())
+            .arg(subcommand)
+            .args(&self.cargo_args);
+        command
+    }
+
+    pub fn toolchain(&self) -> Option<String> {
+        self.toolchain.as_ref().map(|t| format!("+{t}"))
+    }
+
+    fn workspace(&self, cwd: &Path) -> Result<LocateProject> {
+        self.command("locate-project")
+            .arg("--message-format=json")
+            .arg("--workspace")
+            .current_dir(cwd)
+            .run()
+            .checked()
+            .context("`cargo locate-project` did not run successfully")?
+            .pipe(LocateProject::parse)
+            .context("could not parse output of `cargo locate-project`")
+    }
+}
+
+#[derive(Deserialize)]
+struct LocateProject {
+    root: Utf8PathBuf,
+}
+
+impl LocateProject {
+    fn directory(&self) -> &Utf8Path {
+        (self.root.parent()).expect("path to Cargo.toml should have a parent")
+    }
+
+    fn parse(output: process::Output) -> Result<Self> {
+        let process::Output { stdout, .. } = output;
+        let output = String::from_utf8(stdout)?;
+        Ok(serde_json::from_str(&output)?)
+    }
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]

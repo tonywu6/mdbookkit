@@ -245,6 +245,12 @@ impl<'a> IssueReport<'a> {
         self
     }
 
+    pub fn iter_labels(&self) -> impl Iterator<Item = &str> {
+        self.annotations
+            .iter()
+            .filter_map(|anno| anno.label.as_deref())
+    }
+
     fn append(&mut self, other: &mut Self) -> &mut Self {
         self.annotations = self
             .annotations

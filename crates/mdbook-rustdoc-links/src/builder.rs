@@ -1,10 +1,9 @@
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
-    ffi::OsStr,
     fmt::{Debug, Write as _},
     io::{BufRead, BufReader, Write as _},
     path::Path,
-    process::{self, Command, Stdio},
+    process::{self, Command},
     sync::Arc,
     thread::JoinHandle,
 };
@@ -15,7 +14,6 @@ use cargo_metadata::{
     camino::{Utf8Path, Utf8PathBuf},
     diagnostic::Diagnostic,
 };
-use serde::Deserialize;
 use tap::{Pipe, Tap, TapFallible};
 use tempfile::TempDir;
 use tracing::{Level, debug, info, info_span, trace, warn};
@@ -29,61 +27,21 @@ use mdbookkit::{
 
 use crate::{
     options::{
-        BuildConfig, BuildOptions, Builder, CargoOptions, CommandRunner, PackageSelector,
-        PackageSpec, WorkspaceMember,
+        BuildConfigResolved, BuildOptions, Builder, PackageSelector, PackageSpec, WorkspaceMember,
     },
+    subprocess::{CommandUtil, Subprocess},
     tracker::LinkTracker,
 };
 
-pub fn build_docs(
-    BuildConfig {
+pub fn build_docs(options: BuildConfigResolved, tracker: &mut LinkTracker) -> Result<(), Break> {
+    let BuildConfigResolved {
         manifest_dir,
-        build,
-        build_options,
-    }: BuildConfig,
-    bookdir: &Utf8Path,
-    tracker: &mut LinkTracker,
-) -> Result<(), Break> {
-    let build = if build.is_empty() {
-        vec![Default::default()]
-    } else {
-        build
-    }
-    .into_iter()
-    .map(|mut builder| {
-        builder.options.assign(&build_options);
-        builder
-    })
-    .collect::<Vec<_>>();
+        builders,
+    } = options;
 
-    let default_cargo = if build.len() == 1 {
-        &build[0].options.cargo
-    } else {
-        &build_options.cargo
-    };
+    let mut counter = BuildCounter::new(builders.len());
 
-    // https://github.com/rust-lang/cargo/issues/16834
-    let manifest_dir = if let Some(dir) = manifest_dir {
-        bookdir
-            .join(dir)
-            .canonicalize_utf8()
-            .context("failed to resolve `manifest-dir` to an absolute path")
-            .or_error(emit!())?
-    } else {
-        default_cargo
-            .workspace(bookdir.as_std_path())
-            .context("while preparing to build docs using `cargo`")
-            .context("failed to determine the current workspace root")
-            .or_error(emit!())?
-            .directory()
-            .to_owned()
-    };
-
-    debug!("resolved manifest dir: {manifest_dir}");
-
-    let mut counter = BuildCounter::new(build.len());
-
-    for (build_id, builder) in build.into_iter().enumerate() {
+    for (build_id, builder) in builders.into_iter().enumerate() {
         let build_id = build_id + 1;
 
         counter.prebuild(build_id, &builder);
@@ -128,6 +86,7 @@ fn run_builder(
     let packages = if packages.is_empty() {
         Default::default()
     } else {
+        tracker.hints().mark_option_specified("build.packages");
         ticker_event!(&ticker, Level::INFO, "resolving packages");
         resolve_packages(&metadata, &builder.options, manifest_dir)?
     };
@@ -155,9 +114,12 @@ fn run_builder(
     } = options;
 
     let preludes = if let Some(preludes) = preludes {
+        tracker.hints().mark_option_specified("build.preludes");
         preludes
-    } else if metadata.workspace_default_packages().len() == 1
-        && let Some(pkg) = metadata.workspace_default_packages().first()
+    } else if let default_packages = metadata.workspace_default_packages()
+        && default_packages.len() == 1
+        && let pkg = default_packages[0]
+        && packages.contains(pkg)
         && let Some(lib) = pkg.targets.iter().find_map(|t| {
             if t.is_lib() || t.is_dylib() || t.is_proc_macro() || t.is_rlib() {
                 Some(format!("{}::*", t.name))
@@ -166,7 +128,7 @@ fn run_builder(
             }
         })
     {
-        vec![lib]
+        tracker.hints().mark_derived_preludes(vec![lib])
     } else {
         vec![]
     };
@@ -213,7 +175,7 @@ fn run_builder(
         .options("--message-format", ["json"])
         .options("--target", &targets)
         .flag("--no-deps", !packages.is_empty())
-        .options("--package", &packages)
+        .options("--package", packages.to_args())
         .options("--features", features.list())
         .flag("--all-features", features.all_features())
         .flag("--no-default-features", features.no_default_features())
@@ -233,7 +195,7 @@ fn run_builder(
         .command("check")
         .options("--message-format", ["json"])
         .options("--target", &targets)
-        .options("--package", &packages)
+        .options("--package", packages.to_args())
         .options("--features", features.list())
         .flag("--all-features", features.all_features())
         .flag("--no-default-features", features.no_default_features())
@@ -351,10 +313,12 @@ fn run_builder(
                 .context("`rustdoc` did not succeed")
                 .or_warn(emit!())?;
         } else {
-            let stderr = String::from_utf8_lossy(&result.output.stderr);
-            let stderr = stderr.trim_end();
-            let stderr = if stderr.is_empty() { "(empty)" } else { stderr };
-            trace!("--- rustdoc stderr\n{stderr}");
+            if tracing::enabled!(Level::TRACE) {
+                let stderr = String::from_utf8_lossy(&result.output.stderr);
+                let stderr = stderr.trim_end();
+                let stderr = if stderr.is_empty() { "(empty)" } else { stderr };
+                trace!("--- rustdoc stderr\n{stderr}");
+            }
         }
 
         let output = BuildOutput {
@@ -707,7 +671,7 @@ fn resolve_packages(
     metadata: &cargo_metadata::Metadata,
     options: &BuildOptions,
     manifest_dir: &Utf8Path,
-) -> Result<BTreeSet<String>, Break> {
+) -> Result<PackageList, Break> {
     let BuildOptions {
         packages,
         features,
@@ -783,20 +747,21 @@ fn resolve_packages(
         .flat_map(|output| {
             output.lines().filter_map(|line| {
                 let mut iter = line.split(' ');
-                let name = iter.next()?;
+                let name = iter.next()?.to_owned();
                 let version = iter.next()?;
-                let version = version.strip_prefix('v')?;
-                Some(format!("{name}@{version}"))
+                let version = version.strip_prefix('v')?.to_owned();
+                Some((name, version))
             })
         })
         .collect::<BTreeSet<_>>()
+        .pipe(PackageList)
         .pipe(Ok)
 }
 
 fn load_docs_rs_options(
     builder: &mut Builder,
     metadata: &cargo_metadata::Metadata,
-    packages: &BTreeSet<String>,
+    packages: &PackageList,
 ) -> Result<()> {
     let selected = if packages.is_empty() {
         metadata.workspace_default_packages()
@@ -805,8 +770,7 @@ fn load_docs_rs_options(
             .iter()
             .filter_map(|id| {
                 let pkg = &metadata[id];
-                let spec = format!("{}@{}", pkg.name, pkg.version);
-                if packages.contains(&spec) {
+                if packages.contains(pkg) {
                     Some(pkg)
                 } else {
                     None
@@ -866,6 +830,30 @@ fn load_docs_rs_options(
     }
 
     Ok(())
+}
+
+#[derive(Debug, Default)]
+struct PackageList(BTreeSet<(String, String)>);
+
+impl PackageList {
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    fn contains(&self, pkg: &cargo_metadata::Package) -> bool {
+        if self.is_empty() {
+            true
+        } else {
+            let spec = (pkg.name.to_string(), pkg.version.to_string());
+            self.0.contains(&spec)
+        }
+    }
+
+    fn to_args(&self) -> Vec<String> {
+        (self.0.iter())
+            .map(|(name, version)| format!("{name}@{version}"))
+            .collect()
+    }
 }
 
 struct CargoProgress {
@@ -952,210 +940,6 @@ impl CargoMetadataUtil for Subprocess {
     fn into_cargo_metadata(self) -> Result<cargo_metadata::Metadata> {
         let stdout = String::from_utf8(self.checked()?.stdout)?;
         Ok(cargo_metadata::MetadataCommand::parse(stdout)?)
-    }
-}
-
-impl CargoOptions {
-    fn command(&self, subcommand: &str) -> Command {
-        let mut command = Command::new("cargo");
-        command
-            .args(self.toolchain())
-            .arg(subcommand)
-            .args(&self.cargo_args);
-        command
-    }
-
-    fn workspace(&self, cwd: &Path) -> Result<LocateProject> {
-        self.command("locate-project")
-            .arg("--message-format=json")
-            .arg("--workspace")
-            .current_dir(cwd)
-            .run()
-            .checked()
-            .context("`cargo locate-project` did not run successfully")?
-            .pipe(LocateProject::parse)
-            .context("could not parse output of `cargo locate-project`")
-    }
-
-    fn toolchain(&self) -> Option<String> {
-        self.toolchain.as_ref().map(|t| format!("+{t}"))
-    }
-}
-
-#[derive(Deserialize)]
-struct LocateProject {
-    root: Utf8PathBuf,
-}
-
-impl LocateProject {
-    fn directory(&self) -> &Utf8Path {
-        (self.root.parent()).expect("path to Cargo.toml should have a parent")
-    }
-
-    fn parse(output: process::Output) -> Result<Self> {
-        let process::Output { stdout, .. } = output;
-        let output = String::from_utf8(stdout)?;
-        Ok(serde_json::from_str(&output)?)
-    }
-}
-
-trait CommandUtil {
-    fn values<I, S>(self, values: I) -> Self
-    where
-        I: IntoIterator<Item = S>,
-        S: AsRef<OsStr>;
-
-    fn options<I, J, S>(self, flag: &str, values: I) -> Self
-    where
-        I: IntoIterator<IntoIter = J>,
-        J: ExactSizeIterator<Item = S>,
-        S: AsRef<OsStr>;
-
-    fn flag(self, flag: &str, enabled: bool) -> Self;
-
-    fn runner(self, runner: &CommandRunner) -> Self;
-
-    fn run(&mut self) -> Subprocess;
-}
-
-impl CommandUtil for Command {
-    fn values<I, S>(mut self, values: I) -> Self
-    where
-        I: IntoIterator<Item = S>,
-        S: AsRef<OsStr>,
-    {
-        self.args(values);
-        self
-    }
-
-    fn options<I, J, S>(mut self, flag: &str, values: I) -> Self
-    where
-        I: IntoIterator<IntoIter = J>,
-        J: ExactSizeIterator<Item = S>,
-        S: AsRef<OsStr>,
-    {
-        let values = values.into_iter();
-        if values.len() == 0 {
-            return self;
-        }
-        for value in values {
-            self.arg(flag).arg(value);
-        }
-        self
-    }
-
-    fn flag(mut self, flag: &str, enabled: bool) -> Self {
-        if enabled {
-            self.arg(flag);
-        }
-        self
-    }
-
-    fn runner(self, runner: &CommandRunner) -> Self {
-        runner.command(self)
-    }
-
-    fn run(&mut self) -> Subprocess {
-        let repr = PrintCommand(format!("{self:?}"));
-        debug!("running: {}", repr.0);
-        let proc = self
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn();
-        Subprocess { repr, proc }
-    }
-}
-
-struct Subprocess {
-    repr: PrintCommand,
-    proc: std::io::Result<process::Child>,
-}
-
-impl Subprocess {
-    fn stdin(&mut self) -> Result<process::ChildStdin> {
-        Ok(self.proc()?.stdin.take().expect("should have stdin"))
-    }
-
-    fn stdout(&mut self) -> Result<process::ChildStdout> {
-        Ok(self.proc()?.stdout.take().expect("should have stdout"))
-    }
-
-    fn stderr(&mut self) -> Result<process::ChildStderr> {
-        Ok(self.proc()?.stderr.take().expect("should have stderr"))
-    }
-
-    fn proc(&mut self) -> Result<&mut process::Child> {
-        match self.proc {
-            Ok(ref mut proc) => Ok(proc),
-            Err(ref error) => Err(self.repr.failed_to_spawn(error)),
-        }
-    }
-
-    fn result(self) -> Result<SubprocessResult> {
-        let Self { repr, proc } = self;
-
-        let proc = match proc {
-            Ok(proc) => proc,
-            Err(ref error) => return Err(repr.failed_to_spawn(error)),
-        };
-
-        let output = match proc.wait_with_output() {
-            Ok(output) => output,
-            Err(error) => {
-                return (repr.as_context())
-                    .context(error)
-                    .context("error waiting for command to finish")
-                    .pipe(Err);
-            }
-        };
-
-        let status = if output.status.success() {
-            None
-        } else {
-            (repr.as_context())
-                .context(format!("command exited with {}", output.status))
-                .pipe(Some)
-        };
-
-        Ok(SubprocessResult {
-            output,
-            status,
-            repr,
-        })
-    }
-
-    fn checked(self) -> Result<process::Output> {
-        let SubprocessResult { output, status, .. } = self.result()?;
-        if let Some(status) = status {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let stderr = stderr.trim_end();
-            let stderr = if stderr.is_empty() { "(empty)" } else { stderr };
-            let error = status.context(format!("--- stderr\n{stderr}\n---"));
-            Err(error)
-        } else {
-            Ok(output)
-        }
-    }
-}
-
-struct SubprocessResult {
-    output: process::Output,
-    status: Option<anyhow::Error>,
-    repr: PrintCommand,
-}
-
-struct PrintCommand(String);
-
-impl PrintCommand {
-    fn as_context(&self) -> anyhow::Error {
-        anyhow!("command: {}\n---", self.0)
-    }
-
-    fn failed_to_spawn(&self, error: &std::io::Error) -> anyhow::Error {
-        (self.as_context())
-            .context(anyhow!("{error}"))
-            .context("failed to spawn command")
     }
 }
 

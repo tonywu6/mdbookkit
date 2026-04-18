@@ -1,0 +1,19 @@
+warning: unresolved link to `itoa`
+  --> index.md:12:3
+   |
+12 | [`itoa`]
+   |   ^^^^ no item named `itoa` in scope
+   |
+   = note: the following options have been specified, which may have affected link resolution:
+           - `build.packages`
+
+warning: unresolved link to `crate::func`
+  --> index.md:17:3
+   |
+17 | [`crate::func`]
+   |   ^^^^^^^^^^^ no item named `func` in module `temporary_crate_0`
+   |
+   = help: try specifying the crate name
+   = help: or use the `build.preludes` option to introduce this item into scope
+
+ WARN finished with warnings
