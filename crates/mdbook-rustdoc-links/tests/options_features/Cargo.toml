@@ -1,0 +1,14 @@
+[package]
+edition = "2024"
+name = "options_packages"
+publish = false
+version = "0.1.0"
+
+[workspace]
+resolver = "2"
+
+[dependencies]
+anstyle-parse = { version = "=1.0.0", default-features = false }
+
+[features]
+fancy = []

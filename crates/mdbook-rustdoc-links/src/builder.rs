@@ -83,6 +83,7 @@ fn run_builder(
         .current_dir(manifest_dir)
         .run()
         .into_cargo_metadata()
+        .note_options(tracker.notes())
         .context("failed to learn about the workspace via cargo")
         .or_warn(emit!())?;
 

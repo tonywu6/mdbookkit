@@ -249,10 +249,8 @@ pub trait ErrorWithNotes<T> {
 impl<T> ErrorWithNotes<T> for anyhow::Result<T> {
     fn note_options(self, hints: &DiagnosticNotes) -> anyhow::Result<T> {
         if let Some(options) = hints.print_specified_options() {
-            let note = format! {
-                "the following options have been specified, which \
-                may have caused this error:\n{options}",
-            };
+            let note = format! { "possibly the following options that \
+            have been specified:\n{options}" };
             self.context(note)
         } else {
             self

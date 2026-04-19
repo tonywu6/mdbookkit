@@ -18,6 +18,7 @@ test_mdbook![options_targets, exit(0), redacted = [redacted()]];
 test_mdbook![options_packages, exit(0), redacted = [redacted()]];
 test_mdbook![options_preludes, exit(0), redacted = [redacted()]];
 test_mdbook![options_preludes_implicit, exit(0), redacted = [redacted()]];
+test_mdbook![options_features, exit(0), redacted = [redacted()]];
 
 #[test]
 fn rustdoc_parity() -> Result<()> {
