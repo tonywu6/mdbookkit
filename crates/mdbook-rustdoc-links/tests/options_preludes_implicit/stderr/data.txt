@@ -1,0 +1,23 @@
+warning: unresolved link to `crate::public::TEXT`
+ --> index.md:8:5
+  |
+8 | - [`crate::public::TEXT`]
+  |     ^^^^^^^^^^^^^^^^^^^ no item named `TEXT` in module `public`
+
+warning: unresolved link to `crate::fun`
+ --> index.md:9:5
+  |
+9 | - [`crate::fun`]
+  |     ^^^^^^^^^^ no item named `fun` in module `temporary_crate_0`
+  |
+  = note: in order to resolve links, the preprocessor creates a temporary crate;
+          the following prelude has been implicitly added to the temporary crate:
+          `use options_preludes_implicit::*;`
+
+warning: unresolved link to `fun`
+  --> index.md:10:5
+   |
+10 | - [`fun`]
+   |     ^^^ no item named `fun` in scope
+
+ WARN finished with warnings
