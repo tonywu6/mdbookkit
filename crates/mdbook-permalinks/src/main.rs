@@ -8,7 +8,7 @@ use mdbook_markdown::pulldown_cmark;
 use mdbook_preprocessor::{PreprocessorContext, book::Book};
 use serde::Deserialize;
 use tap::{Pipe, Tap};
-use tracing::{Level, debug, info, info_span, span::EnteredSpan, trace, warn};
+use tracing::{Level, debug, error_span, info, span::EnteredSpan, trace, warn};
 use url::Url;
 
 use mdbookkit::{
@@ -34,7 +34,7 @@ mod vcs;
 
 fn main() {
     init_logging();
-    let _span = info_span!({ env!("CARGO_PKG_NAME") }).entered();
+    let _span = error_span!({ env!("CARGO_PKG_NAME") }).entered();
     let Program { command } = clap::Parser::parse();
     match command {
         None => mdbook(),

@@ -6,7 +6,7 @@ use anyhow::Context;
 use cargo_metadata::camino::Utf8Path;
 use clap::{Parser, Subcommand};
 use tap::Pipe;
-use tracing::{Level, info, info_span, warn};
+use tracing::{Level, error_span, info, info_span, warn};
 
 use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin},
@@ -31,7 +31,7 @@ mod tracker;
 
 fn main() {
     init_logging();
-    let _span = info_span!({ env!("CARGO_PKG_NAME") }).entered();
+    let _span = error_span!({ env!("CARGO_PKG_NAME") }).entered();
     match Program::parse().command {
         Some(Command::Supports { .. }) => Ok(()),
         None => mdbook(),

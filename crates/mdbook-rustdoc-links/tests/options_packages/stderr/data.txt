@@ -19,4 +19,4 @@ warning: unresolved link to `crate::func`
            a prelude was not implicitly added to the temporary crate because:
            the default workspace member has been filtered out by the `build.packages` option
 
- WARN finished with warnings
+ WARN mdbook-rustdoc-links: finished with warnings

@@ -19,4 +19,4 @@ warning: unresolved link to `crate::func`
           a prelude was not implicitly added to the temporary crate because:
           the `build.preludes` option has been specified
 
- WARN finished with warnings
+ WARN mdbook-rustdoc-links: finished with warnings

@@ -306,9 +306,9 @@ fn run_builder(
             let stderr = rustc_json_error(&result.output.stderr);
             let stderr = stderr.trim_end();
             let stderr = if stderr.is_empty() { "(empty)" } else { stderr };
-            warn!("--- rustdoc stderr\n{stderr}");
             return Err(status)
                 .note_options(tracker.notes())
+                .context(format!("--- rustdoc stderr\n{stderr}"))
                 .context("`rustdoc` did not succeed")
                 .or_warn(emit!())?;
         } else {
@@ -465,23 +465,30 @@ impl CargoRecorder {
         };
 
         if let Some(error) = error {
-            let cargo_errors = stderr
+            let cargo_stderr = stderr
                 .join()
                 .map_err(|_| anyhow!("failed to recover stderr"))
                 .or_debug(emit!())
-                .unwrap_or_default()
-                .join("\n");
+                .unwrap_or_default();
 
-            let cargo_errors = cargo_errors
-                .trim_end()
-                .pipe(|s| if s.is_empty() { "(empty)" } else { s });
-            warn!("--- cargo stderr\n{cargo_errors}\n");
+            let cargo_stderr = if let Some(stderr) = cargo_stderr {
+                stderr.join("\n")
+            } else {
+                "(see logs above)".into()
+            };
 
             let rustc_errors = rustc_errors.join("");
+
+            let cargo_stderr = cargo_stderr
+                .trim_end()
+                .pipe(|s| if s.is_empty() { "(empty)" } else { s });
             let rustc_errors = rustc_errors
                 .trim_end()
                 .pipe(|s| if s.is_empty() { "(empty)" } else { s });
-            warn!("--- rustc stderr\n{rustc_errors}\n");
+
+            let error = error
+                .context(format!("--- cargo stderr\n{cargo_stderr}"))
+                .context(format!("--- rustc errors\n{rustc_errors}"));
 
             Err(error)
         } else {
@@ -892,7 +899,7 @@ impl PackageList {
 
 struct CargoProgress {
     cargo_options: &'static [&'static str],
-    line_ending: u8,
+    term_progress: bool,
 }
 
 impl CargoProgress {
@@ -901,20 +908,26 @@ impl CargoProgress {
         &self,
         ticker: tracing::Span,
         stderr: process::ChildStderr,
-    ) -> JoinHandle<Vec<String>> {
-        let delim = self.line_ending;
+    ) -> JoinHandle<Option<Vec<String>>> {
+        let term_progress = self.term_progress;
+        let line_ending = if term_progress { b'\r' } else { b'\n' };
+        let visible = !ticker.is_disabled();
+
         std::thread::spawn(move || {
             let mut buffer = vec![];
             let mut reader = BufReader::new(stderr);
+
             loop {
                 let mut buf = vec![];
-                let Ok(1..) = reader.read_until(delim, &mut buf) else {
+                let Ok(1..) = reader.read_until(line_ending, &mut buf) else {
                     break;
                 };
                 let buf = String::from_utf8_lossy(&buf);
+
                 for line in buf.lines() {
-                    match (delim, line.as_bytes().last()) {
-                        (b'\r', Some(b'\r')) | (b'\n', _) => {
+                    let ending = line.as_bytes().last();
+                    match (visible, term_progress, ending) {
+                        (true, true, Some(b'\r')) | (true, false, _) => {
                             ticker_event!(&ticker, Level::INFO, "{}", line.trim_end());
                         }
                         _ => {
@@ -923,7 +936,12 @@ impl CargoProgress {
                     }
                 }
             }
-            buffer
+
+            if visible && !term_progress {
+                None
+            } else {
+                Some(buffer)
+            }
         })
     }
 }
@@ -933,7 +951,7 @@ impl Default for CargoProgress {
         if is_logging() {
             Self {
                 cargo_options: &["term.color = 'never'", "term.progress.when = 'never'"],
-                line_ending: b'\n',
+                term_progress: false,
             }
         } else {
             Self {
@@ -942,7 +960,7 @@ impl Default for CargoProgress {
                     "term.progress.when = 'always'",
                     "term.progress.width = 1024",
                 ],
-                line_ending: b'\r',
+                term_progress: true,
             }
         }
     }

@@ -249,7 +249,7 @@ fn load_env<'a>(vars: &[(&'a str, &str)]) -> impl Iterator<Item = (&'a str, impl
     vars.iter().map(|(key, default)| {
         let val = if let Some(overridden) = std::env::var_os(key) {
             eprintln!(
-                "--- overriding env var {key:?} = {:?} (from {default:?})",
+                "--- overriding env var {key:?} = {:?} (over {default:?})",
                 &*overridden.to_string_lossy()
             );
             Cow::Owned(overridden)
@@ -276,21 +276,51 @@ impl AssertUtil for Assert {
         actual: impl AsRef<str>,
         expected: Data,
     ) -> snapbox::assert::Result<()> {
+        let format = likely_format(&expected);
+        let expected = text_fallback(expected);
         let actual = actual.as_ref();
         let actual = normalize_path_separators(actual);
         let actual = &*actual;
-        if expected.format() == DataFormat::TermSvg {
+        if format == DataFormat::TermSvg {
             let rendered = self.redactions().redact(actual.trim_end());
             let rendered = render_svg(&rendered);
-            let expected = expected.coerce_to(DataFormat::Text);
+            let expected = expected.is(DataFormat::Text);
             self.try_eq(name, rendered.into_data().raw(), expected.raw())
-        } else if expected.format() == DataFormat::Text {
+        } else if format == DataFormat::Text {
             let rendered = anstream::adapter::strip_str(actual).to_string();
             let rendered = self.redactions().redact(&rendered);
             self.try_eq(name, rendered.into_data().raw(), expected.raw())
         } else {
             self.try_eq(name, actual.into(), expected)
         }
+    }
+}
+
+fn text_fallback(data: Data) -> Data {
+    if data.format() != DataFormat::Error {
+        data
+    } else if let Some(path) = data.source().and_then(|source| source.as_path()) {
+        Data::read_from(path, Some(DataFormat::Text))
+    } else {
+        Data::new().is(DataFormat::Text)
+    }
+}
+
+fn likely_format(data: &Data) -> DataFormat {
+    let format = data.format();
+    if format == DataFormat::Error {
+        let extension = data
+            .source()
+            .and_then(|source| source.as_path())
+            .and_then(|path| path.extension())
+            .map(|ext| ext.as_encoded_bytes());
+        match extension {
+            Some(b"svg") => DataFormat::TermSvg,
+            Some(b"txt" | b"md") => DataFormat::Text,
+            _ => format,
+        }
+    } else {
+        format
     }
 }
 

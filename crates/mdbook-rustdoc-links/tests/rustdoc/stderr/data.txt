@@ -324,4 +324,4 @@ help: remove explicit link target
 17 + - [drop]
    |
 
- WARN finished with warnings
+ WARN mdbook-rustdoc-links: finished with warnings

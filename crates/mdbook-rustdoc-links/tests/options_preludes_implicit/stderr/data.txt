@@ -20,4 +20,4 @@ warning: unresolved link to `fun`
 10 | - [`fun`]
    |     ^^^ no item named `fun` in scope
 
- WARN finished with warnings
+ WARN mdbook-rustdoc-links: finished with warnings

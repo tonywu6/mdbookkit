@@ -1,0 +1,1 @@
+- [`fancy`](https://docs.rs/options_preludes/0.1.0/options_preludes/fn.fancy.html "fn options_preludes::fancy")

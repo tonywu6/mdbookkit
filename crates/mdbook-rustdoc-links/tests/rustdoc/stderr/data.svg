@@ -674,7 +674,7 @@
 </tspan>
     <tspan x="10px" y="5878px">
 </tspan>
-    <tspan x="10px" y="5896px"><tspan class="fg-yellow"> WARN</tspan><tspan> finished with warnings</tspan>
+    <tspan x="10px" y="5896px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: finished with warnings</tspan>
 </tspan>
   </text>
 
