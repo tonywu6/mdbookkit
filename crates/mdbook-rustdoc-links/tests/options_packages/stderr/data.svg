@@ -55,7 +55,7 @@
 </tspan>
     <tspan x="10px" y="334px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: in order to resolve links, the preprocessor creates a temporary crate;</tspan>
 </tspan>
-    <tspan x="10px" y="352px"><tspan>           a prelude was not implicitly added to the crate because:</tspan>
+    <tspan x="10px" y="352px"><tspan>           a prelude was not implicitly added to the temporary crate because:</tspan>
 </tspan>
     <tspan x="10px" y="370px"><tspan>           the default workspace member has been filtered out by the `build.packages` option</tspan>
 </tspan>

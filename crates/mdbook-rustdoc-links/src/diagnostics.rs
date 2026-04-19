@@ -155,7 +155,7 @@ impl DiagnosticNotes {
             .join("\n");
         let note = format! {
             "in order to resolve links, the preprocessor creates a temporary crate;\n\
-            the following prelude has been implicitly added to the crate:\n`{preludes}`"
+            the following prelude has been implicitly added to the temporary crate:\n`{preludes}`"
         };
         Some(note)
     }
@@ -168,7 +168,7 @@ impl DiagnosticNotes {
         let reason = self.preludes_not_derived?;
         let note = format! {
             "in order to resolve links, the preprocessor creates a temporary crate;\n\
-            a prelude was not implicitly added to the crate because:\n{reason}"
+            a prelude was not implicitly added to the temporary crate because:\n{reason}"
         };
         Some(note)
     }

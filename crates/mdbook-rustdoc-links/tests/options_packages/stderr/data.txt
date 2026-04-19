@@ -16,7 +16,7 @@ warning: unresolved link to `crate::func`
    = help: try specifying the crate name instead of `crate::`
    = help: or use the `build.preludes` option to introduce this item into scope
    = note: in order to resolve links, the preprocessor creates a temporary crate;
-           a prelude was not implicitly added to the crate because:
+           a prelude was not implicitly added to the temporary crate because:
            the default workspace member has been filtered out by the `build.packages` option
 
  WARN finished with warnings
