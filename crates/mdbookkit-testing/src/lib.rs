@@ -59,8 +59,8 @@ impl TestBook {
         let assert = self.assert()?;
 
         let mut results = vec![
-            assert.try_eq_text(None, &stderr, stderr_txt),
             assert.try_eq_text(None, &stderr, stderr_svg),
+            assert.try_eq_text(None, &stderr, stderr_txt),
         ];
 
         for page in self.path.expected_pages()? {
@@ -249,7 +249,7 @@ fn load_env<'a>(vars: &[(&'a str, &str)]) -> impl Iterator<Item = (&'a str, impl
     vars.iter().map(|(key, default)| {
         let val = if let Some(overridden) = std::env::var_os(key) {
             eprintln!(
-                "--- overriding env var {key:?} = {:?}",
+                "--- overriding env var {key:?} = {:?} (from {default:?})",
                 &*overridden.to_string_lossy()
             );
             Cow::Owned(overridden)

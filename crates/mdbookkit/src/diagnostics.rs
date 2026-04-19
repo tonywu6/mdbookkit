@@ -306,9 +306,7 @@ impl<'a> IssueReport<'a> {
             })
             .collect()
     }
-}
 
-impl<'a> IssueReport<'a> {
     fn sort_key(&self) -> impl Ord + use<> {
         let span = self
             .annotations
@@ -346,6 +344,17 @@ impl<'a> IssueReporter<'a> {
             .into_iter()
             .map(|(_, issues, source)| Self { issues, source })
             .collect()
+    }
+}
+
+impl<'a> Note<'a> {
+    pub fn help(message: impl Into<Cow<'a, str>>) -> Self {
+        Self::level(IssueLevel::Help).message(message).build()
+    }
+
+    #[allow(clippy::self_named_constructors)]
+    pub fn note(message: impl Into<Cow<'a, str>>) -> Self {
+        Self::level(IssueLevel::Note).message(message).build()
     }
 }
 

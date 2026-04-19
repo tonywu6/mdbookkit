@@ -36,17 +36,15 @@ use mdbookkit::{
 
 use crate::{
     builder::BuildOutput,
-    diagnostics::{RustcDiagnostic, SourceMap, report_level},
+    diagnostics::{DiagnosticNotes, RustcDiagnostic, SourceMap, report_level},
     markdown::markdown,
 };
-
-use self::diagnostics::DiagnosticHints;
 
 #[derive(Debug, Default)]
 pub struct LinkTracker<'a> {
     links: Vec<Link<'a>>,
     pages: Vec<Page<'a>>,
-    hints: DiagnosticHints,
+    notes: DiagnosticNotes,
 }
 
 #[derive(Debug)]
@@ -255,8 +253,8 @@ impl<'a> LinkTracker<'a> {
         }
     }
 
-    pub fn hints(&mut self) -> &mut DiagnosticHints {
-        &mut self.hints
+    pub fn notes(&mut self) -> &mut DiagnosticNotes {
+        &mut self.notes
     }
 
     pub fn export<'d: 'a>(&'d self) -> ExportedPages<'d> {
@@ -271,7 +269,7 @@ impl<'a> LinkTracker<'a> {
 
         let mut ctx = IssueReportContext {
             tracker: self,
-            hints: self.hints.clone(),
+            notes: self.notes.clone(),
         };
         let mut stats = Statistics::default();
 
@@ -636,7 +634,7 @@ impl<'a> Link<'a> {
 
 struct IssueReportContext<'a> {
     tracker: &'a LinkTracker<'a>,
-    hints: DiagnosticHints,
+    notes: DiagnosticNotes,
 }
 
 impl<'a> IssueReportContext<'a> {
@@ -700,7 +698,7 @@ impl<'a> IssueReportContext<'a> {
             let span = span.start..span.start;
             let help = {
                 "to indicate that this is a relative path (which will silence this warning),\n\
-            prepend the link with `./`"
+                prepend the link with `./`"
             };
             let suggestion = IssueReport::level(IssueLevel::Help)
                 .title(help)
@@ -709,29 +707,35 @@ impl<'a> IssueReportContext<'a> {
             report.secondary(suggestion);
         }
 
-        let could_be_top_level = report
-            .iter_labels()
-            .any(|label| label.ends_with(" in scope"));
+        let could_be_top_level = report.iter_labels().any(|label| {
+            label.ends_with(" in scope") || label.contains(" in module `temporary_crate_")
+        });
 
-        if could_be_top_level && let Some(options) = self.hints.options_specified() {
-            let note = format! {
-                "the following options have been specified, which \
-                may have affected link resolution:\n{options}"
-            };
-            report.note(Note::level(IssueLevel::Note).message(note).build());
+        if could_be_top_level && let Some(note) = self.notes.note_options_specified() {
+            report.note(Note::note(note));
         }
 
-        if link.dest.starts_with("crate::") || link.dest.starts_with("self::") {
-            // TODO: link to doc
-            if let Some(derived) = self.hints.derived_preludes() {
-                let note = format!("the temporary crate has an implicit prelude:\n`{derived}`");
-                report.note(Note::level(IssueLevel::Note).message(note).build());
+        let specifies_crate = if link.dest.starts_with("crate::") {
+            Some("crate")
+        } else if link.dest.starts_with("self::") {
+            Some("self")
+        } else {
+            None
+        };
+
+        if let Some(specifies_crate) = specifies_crate
+            && could_be_top_level
+        {
+            if let Some(note) = self.notes.note_preludes_derived() {
+                report.note(Note::note(note));
             } else {
-                let help1 = "try specifying the crate name";
+                let help1 =
+                    format!("try specifying the crate name instead of `{specifies_crate}::`");
                 let help2 = "or use the `build.preludes` option to introduce this item into scope";
-                report
-                    .note(Note::level(IssueLevel::Help).message(help1).build())
-                    .note(Note::level(IssueLevel::Help).message(help2).build());
+                report.note(Note::help(help1)).note(Note::help(help2));
+                if let Some(note) = self.notes.note_preludes_not_derived() {
+                    report.note(Note::note(note));
+                }
             }
         }
     }
@@ -896,62 +900,6 @@ impl Display for Statistics {
             write!(f, "; {unsupported} may be unsupported")?
         }
         Ok(())
-    }
-}
-
-mod diagnostics {
-    use std::{collections::BTreeSet, fmt::Debug};
-
-    use tap::Pipe;
-
-    #[derive(Debug, Default, Clone)]
-    pub struct DiagnosticHints {
-        options_specified: BTreeSet<&'static str>,
-        derived_preludes: Vec<String>,
-        visited: VisitedHints,
-    }
-
-    #[derive(Debug, Default, Clone)]
-    struct VisitedHints {
-        options_specified: bool,
-        derived_preludes: bool,
-    }
-
-    impl DiagnosticHints {
-        pub fn options_specified(&mut self) -> Option<String> {
-            if self.visited.options_specified || self.options_specified.is_empty() {
-                return None;
-            }
-            self.visited.options_specified = true;
-            self.options_specified
-                .iter()
-                .map(|opt| format!("- `{opt}`"))
-                .collect::<Vec<_>>()
-                .join("\n")
-                .pipe(Some)
-        }
-
-        pub fn derived_preludes(&mut self) -> Option<String> {
-            if self.visited.derived_preludes || self.derived_preludes.is_empty() {
-                return None;
-            }
-            self.visited.derived_preludes = true;
-            self.derived_preludes
-                .iter()
-                .map(|module| format!("use {module};"))
-                .collect::<Vec<_>>()
-                .join("\n")
-                .pipe(Some)
-        }
-
-        pub fn mark_option_specified(&mut self, option: &'static str) {
-            self.options_specified.insert(option);
-        }
-
-        pub fn mark_derived_preludes(&mut self, preludes: Vec<String>) -> Vec<String> {
-            self.derived_preludes = preludes.clone();
-            preludes
-        }
     }
 }
 

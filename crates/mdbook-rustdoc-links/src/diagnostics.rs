@@ -1,5 +1,6 @@
-use std::ops::Range;
+use std::{collections::BTreeSet, ops::Range};
 
+use anyhow::Context;
 use cargo_metadata::diagnostic::{
     Diagnostic,
     DiagnosticLevel::{self, *},
@@ -10,6 +11,8 @@ use tap::Pipe;
 use mdbookkit::diagnostics::{
     Highlight, IssueLevel, IssueReport, Note, Suggestion, annotate_snippets::AnnotationKind,
 };
+
+use crate::options::{BuildOptions, CargoOptions, FeatureSelection};
 
 pub struct RustcDiagnostic<'a, 'r> {
     pub diagnostic: &'a Diagnostic,
@@ -96,4 +99,163 @@ pub fn report_level(level: DiagnosticLevel) -> IssueLevel {
 
 fn is_note(diagnostic: &Diagnostic) -> bool {
     diagnostic.spans.is_empty()
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct DiagnosticNotes {
+    options_specified: BTreeSet<&'static str>,
+    preludes_derived: Vec<String>,
+    preludes_not_derived: Option<&'static str>,
+    visited: VisitedNotes,
+}
+
+#[derive(Debug, Default, Clone)]
+struct VisitedNotes {
+    options_specified: bool,
+    preludes_derived: bool,
+    preludes_not_derived: bool,
+}
+
+impl DiagnosticNotes {
+    pub fn note_options_specified(&mut self) -> Option<String> {
+        if self.visited.options_specified {
+            return None;
+        }
+        self.visited.options_specified = true;
+        let options = self.print_specified_options()?;
+        let note = format! {
+            "the following options have been specified, which \
+            may have affected link resolution:\n{options}",
+        };
+        Some(note)
+    }
+
+    fn print_specified_options(&self) -> Option<String> {
+        if self.options_specified.is_empty() {
+            return None;
+        }
+        self.options_specified
+            .iter()
+            .map(|opt| format!("- {opt}"))
+            .collect::<Vec<_>>()
+            .join("\n")
+            .pipe(Some)
+    }
+
+    pub fn note_preludes_derived(&mut self) -> Option<String> {
+        if self.preludes_derived.is_empty() || self.visited.preludes_derived {
+            return None;
+        }
+        self.visited.preludes_derived = true;
+        let preludes = self
+            .preludes_derived
+            .iter()
+            .map(|module| format!("use {module};"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let note = format! {
+            "in order to resolve links, the preprocessor creates a temporary crate;\n\
+            the following prelude has been implicitly added to the crate:\n`{preludes}`"
+        };
+        Some(note)
+    }
+
+    pub fn note_preludes_not_derived(&mut self) -> Option<String> {
+        if self.visited.preludes_not_derived {
+            return None;
+        }
+        self.visited.preludes_not_derived = true;
+        let reason = self.preludes_not_derived?;
+        let note = format! {
+            "in order to resolve links, the preprocessor creates a temporary crate;\n\
+            a prelude was not implicitly added to the crate because:\n{reason}"
+        };
+        Some(note)
+    }
+
+    pub fn mark_option_specified(&mut self, options: &BuildOptions) {
+        let BuildOptions {
+            packages,
+            preludes,
+            features,
+            rustc_args,
+            rustdoc_args,
+            cargo,
+            docs_rs,
+        } = options;
+        if !packages.is_empty() {
+            self.options_specified.insert("build.packages");
+        }
+        if preludes.is_some() {
+            self.options_specified.insert("build.preludes");
+        }
+        {
+            let FeatureSelection {
+                features,
+                all_features,
+                no_default_features,
+            } = features;
+            if !features.is_empty() {
+                self.options_specified.insert("build.features");
+            }
+            if all_features.is_some() {
+                self.options_specified.insert("build.all-features");
+            }
+            if no_default_features.is_some() {
+                self.options_specified.insert("build.no-default-features");
+            }
+        }
+        if !rustc_args.is_empty() {
+            self.options_specified.insert("build.rustc-args");
+        }
+        if !rustdoc_args.is_empty() {
+            self.options_specified.insert("build.rustdoc-args");
+        }
+        {
+            let CargoOptions {
+                toolchain,
+                cargo_args,
+                runner,
+            } = cargo;
+            if toolchain.is_some() {
+                self.options_specified.insert("build.toolchain");
+            }
+            if !cargo_args.is_empty() {
+                self.options_specified.insert("build.cargo-args");
+            }
+            if !runner.is_undefined() {
+                self.options_specified.insert("build.runner");
+            }
+        }
+        if docs_rs.is_some() {
+            self.options_specified.insert("build.docs-rs");
+        }
+    }
+
+    pub fn mark_preludes_derived(&mut self, preludes: Vec<String>) -> Vec<String> {
+        self.preludes_derived = preludes.clone();
+        preludes
+    }
+
+    pub fn mark_preludes_not_derived_because(&mut self, reason: &'static str) {
+        self.preludes_not_derived = Some(reason)
+    }
+}
+
+pub trait ErrorWithNotes<T> {
+    fn note_options(self, hints: &DiagnosticNotes) -> anyhow::Result<T>;
+}
+
+impl<T> ErrorWithNotes<T> for anyhow::Result<T> {
+    fn note_options(self, hints: &DiagnosticNotes) -> anyhow::Result<T> {
+        if let Some(options) = hints.print_specified_options() {
+            let note = format! {
+                "the following options have been specified, which \
+                may have caused this error:\n{options}",
+            };
+            self.context(note)
+        } else {
+            self
+        }
+    }
 }

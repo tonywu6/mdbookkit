@@ -26,6 +26,7 @@ use mdbookkit::{
 };
 
 use crate::{
+    diagnostics::ErrorWithNotes,
     options::{
         BuildConfigResolved, BuildOptions, Builder, PackageSelector, PackageSpec, WorkspaceMember,
     },
@@ -60,6 +61,8 @@ fn run_builder(
     builder: Builder,
     tracker: &mut LinkTracker<'_>,
 ) -> Result<(), Break> {
+    tracker.notes().mark_option_specified(&builder.options);
+
     let BuildOptions {
         ref packages,
         ref features,
@@ -86,7 +89,6 @@ fn run_builder(
     let packages = if packages.is_empty() {
         Default::default()
     } else {
-        tracker.hints().mark_option_specified("build.packages");
         ticker_event!(&ticker, Level::INFO, "resolving packages");
         resolve_packages(&metadata, &builder.options, manifest_dir)?
     };
@@ -114,23 +116,15 @@ fn run_builder(
     } = options;
 
     let preludes = if let Some(preludes) = preludes {
-        tracker.hints().mark_option_specified("build.preludes");
+        (tracker.notes())
+            .mark_preludes_not_derived_because("the `build.preludes` option has been specified");
         preludes
-    } else if let default_packages = metadata.workspace_default_packages()
-        && default_packages.len() == 1
-        && let pkg = default_packages[0]
-        && packages.contains(pkg)
-        && let Some(lib) = pkg.targets.iter().find_map(|t| {
-            if t.is_lib() || t.is_dylib() || t.is_proc_macro() || t.is_rlib() {
-                Some(format!("{}::*", t.name))
-            } else {
-                None
-            }
-        })
-    {
-        tracker.hints().mark_derived_preludes(vec![lib])
     } else {
-        vec![]
+        if let Some(lib) = resolve_prelude(tracker, &metadata, &packages) {
+            tracker.notes().mark_preludes_derived(vec![lib])
+        } else {
+            vec![]
+        }
     };
 
     debug!("resolved preludes: {preludes:#?}");
@@ -188,6 +182,7 @@ fn run_builder(
 
     artifacts
         .record(proc, ticker!(Level::INFO, "cargo-doc", "cargo doc"))
+        .note_options(tracker.notes())
         .context("`cargo doc` did not succeed")
         .or_warn(emit!())?;
 
@@ -208,6 +203,7 @@ fn run_builder(
 
     artifacts
         .record(proc, ticker!(Level::INFO, "cargo-check", "cargo check"))
+        .note_options(tracker.notes())
         .context("`cargo check` did not succeed")
         .or_warn(emit!())?;
 
@@ -301,6 +297,7 @@ fn run_builder(
 
         let result = rustdoc
             .result()
+            .note_options(tracker.notes())
             .context("`rustdoc` did not succeed")
             .or_warn(emit!())?;
 
@@ -310,6 +307,7 @@ fn run_builder(
             let stderr = if stderr.is_empty() { "(empty)" } else { stderr };
             warn!("--- rustdoc stderr\n{stderr}");
             return Err(status)
+                .note_options(tracker.notes())
                 .context("`rustdoc` did not succeed")
                 .or_warn(emit!())?;
         } else {
@@ -830,6 +828,41 @@ fn load_docs_rs_options(
     }
 
     Ok(())
+}
+
+fn resolve_prelude(
+    tracker: &mut LinkTracker<'_>,
+    metadata: &cargo_metadata::Metadata,
+    packages: &PackageList,
+) -> Option<String> {
+    let default_packages = metadata.workspace_default_packages();
+    if default_packages.len() != 1 {
+        let reason = "workspace has multiple default members";
+        tracker.notes().mark_preludes_not_derived_because(reason);
+        return None;
+    }
+
+    let pkg = default_packages[0];
+    if !packages.contains(pkg) {
+        let reason =
+            "the default workspace member has been filtered out by the `build.packages` option";
+        tracker.notes().mark_preludes_not_derived_because(reason);
+        return None;
+    }
+
+    let Some(lib) = pkg.targets.iter().find_map(|t| {
+        if t.is_lib() || t.is_dylib() || t.is_proc_macro() || t.is_rlib() {
+            Some(format!("{}::*", t.name))
+        } else {
+            None
+        }
+    }) else {
+        let reason = "the default workspace member is not a library";
+        tracker.notes().mark_preludes_not_derived_because(reason);
+        return None;
+    };
+
+    Some(lib)
 }
 
 #[derive(Debug, Default)]

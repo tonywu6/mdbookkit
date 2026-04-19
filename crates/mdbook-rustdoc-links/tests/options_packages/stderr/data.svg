@@ -1,4 +1,4 @@
-<svg width="810px" height="362px" xmlns="http://www.w3.org/2000/svg">
+<svg width="810px" height="416px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -33,7 +33,7 @@
 </tspan>
     <tspan x="10px" y="136px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the following options have been specified, which may have affected link resolution:</tspan>
 </tspan>
-    <tspan x="10px" y="154px"><tspan>           - `build.packages`</tspan>
+    <tspan x="10px" y="154px"><tspan>           - build.packages</tspan>
 </tspan>
     <tspan x="10px" y="172px">
 </tspan>
@@ -49,13 +49,19 @@
 </tspan>
     <tspan x="10px" y="280px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="298px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: try specifying the crate name</tspan>
+    <tspan x="10px" y="298px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: try specifying the crate name instead of `crate::`</tspan>
 </tspan>
     <tspan x="10px" y="316px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: or use the `build.preludes` option to introduce this item into scope</tspan>
 </tspan>
-    <tspan x="10px" y="334px">
+    <tspan x="10px" y="334px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: in order to resolve links, the preprocessor creates a temporary crate;</tspan>
 </tspan>
-    <tspan x="10px" y="352px"><tspan class="fg-yellow"> WARN</tspan><tspan> finished with warnings</tspan>
+    <tspan x="10px" y="352px"><tspan>           a prelude was not implicitly added to the crate because:</tspan>
+</tspan>
+    <tspan x="10px" y="370px"><tspan>           the default workspace member has been filtered out by the `build.packages` option</tspan>
+</tspan>
+    <tspan x="10px" y="388px">
+</tspan>
+    <tspan x="10px" y="406px"><tspan class="fg-yellow"> WARN</tspan><tspan> finished with warnings</tspan>
 </tspan>
   </text>
 
