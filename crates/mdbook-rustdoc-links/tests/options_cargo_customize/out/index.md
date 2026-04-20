@@ -1,0 +1,3 @@
+- [`unicode_ident::is_xid_start`](https://docs.rs/unicode-ident/1.0.24/unicode_ident/fn.is_xid_start.html "fn unicode_ident::is_xid_start")
+- [`crate::legacy`](https://docs.rs/options_cargo_customize/0.1.0/options_cargo_customize/fn.legacy.html "fn options_cargo_customize::legacy")
+- [`crate::helper`](https://docs.rs/options_cargo_customize/0.1.0/options_cargo_customize/fn.helper.html "fn options_cargo_customize::helper")

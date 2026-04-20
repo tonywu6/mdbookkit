@@ -131,6 +131,7 @@ impl<'a> LinkTracker<'a> {
         if empty { None } else { Some(input) }
     }
 
+    #[instrument("debug", skip_all)]
     pub fn rustdoc_output(&mut self, output: BuildOutput<'_>) {
         let BuildOutput {
             ref stdout,
@@ -160,6 +161,7 @@ impl<'a> LinkTracker<'a> {
                     if !state.borrow().has_link() {
                         return Ok(());
                     };
+                    trace!("{elem:?}");
 
                     if let Some(href) = elem.get_attribute("href")
                         && let Some(link) = state.borrow_mut().link()

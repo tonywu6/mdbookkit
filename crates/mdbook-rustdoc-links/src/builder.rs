@@ -130,16 +130,17 @@ fn run_builder(
 
     debug!("resolved preludes: {preludes:#?}");
 
-    let rustc_args = if !rustc_args.is_empty() {
-        let flags = toml::Value::from(rustc_args);
-        Some(format!("build.rustflags={flags}"))
+    let rustflags = if !rustc_args.is_empty() {
+        Some(into_cargo_config("build.rustflags", rustc_args))
     } else {
         None
     };
 
-    let rustdoc_args = if !rustdoc_args.is_empty() {
-        let flags = toml::Value::from(rustdoc_args);
-        Some(format!("build.rustdocflags={flags}"))
+    let rustdocflags = if !rustdoc_args.is_empty() {
+        Some(into_cargo_config(
+            "build.rustdocflags",
+            rustdoc_args.clone(),
+        ))
     } else {
         None
     };
@@ -174,8 +175,8 @@ fn run_builder(
         .options("--features", features.list())
         .flag("--all-features", features.all_features())
         .flag("--no-default-features", features.no_default_features())
-        .options("--config", &rustc_args)
-        .options("--config", &rustdoc_args)
+        .options("--config", &rustflags)
+        .options("--config", &rustdocflags)
         .options("--config", artifacts.term.cargo_options)
         .runner(&cargo.runner)
         .current_dir(manifest_dir)
@@ -195,8 +196,8 @@ fn run_builder(
         .options("--features", features.list())
         .flag("--all-features", features.all_features())
         .flag("--no-default-features", features.no_default_features())
-        .options("--config", &rustc_args)
-        .options("--config", &rustdoc_args)
+        .options("--config", &rustflags)
+        .options("--config", &rustdocflags)
         .options("--config", artifacts.term.cargo_options)
         .runner(&cargo.runner)
         .current_dir(manifest_dir)
@@ -231,6 +232,8 @@ fn run_builder(
             .options("--crate-type", ["lib"])
             .options("--error-format", ["json"])
             .values(["-"]);
+
+        rustdoc.args(&rustdoc_args);
 
         let mut library_paths = HashSet::new();
 
@@ -895,6 +898,10 @@ impl PackageList {
             .map(|(name, version)| format!("{name}@{version}"))
             .collect()
     }
+}
+
+fn into_cargo_config(key: &str, value: impl Into<toml::Value>) -> String {
+    format!("{key}={}", value.into())
 }
 
 struct CargoProgress {

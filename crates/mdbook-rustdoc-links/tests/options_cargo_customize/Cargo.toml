@@ -1,6 +1,6 @@
 [package]
 edition = "2024"
-name = "options_preludes"
+name = "options_cargo_customize"
 publish = false
 version = "0.1.0"
 
@@ -8,3 +8,4 @@ version = "0.1.0"
 resolver = "2"
 
 [dependencies]
+unicode-ident = "=1.0.24"
