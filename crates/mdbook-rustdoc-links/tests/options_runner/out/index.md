@@ -1,0 +1,1 @@
+- [`std`](https://doc.rust-lang.org/[RUST_VERSION]/std/index.html "mod std")
