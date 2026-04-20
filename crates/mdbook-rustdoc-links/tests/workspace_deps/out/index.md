@@ -1,2 +1,2 @@
-- [`::text::is_xid_start`](https://docs.rs/unicode-ident/1.0.24/unicode_ident/fn.is_xid_start.html "fn unicode_ident::is_xid_start") (`#[doc(inline)]` has no effect here)
-- [`::itoa::Integer`]
+- [`::text::get_width`](https://docs.rs/utf8-width/0.1.8/utf8_width/fn.get_width.html "fn utf8_width::get_width") (`#[doc(inline)]` has no effect here)
+- [`::pin_project_lite::pin_project`]

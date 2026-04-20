@@ -6,11 +6,11 @@ version = 4
 name = "cargo_customize"
 version = "0.1.0"
 dependencies = [
- "unicode-ident",
+ "utf8-width",
 ]
 
 [[package]]
-name = "unicode-ident"
-version = "1.0.24"
+name = "utf8-width"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
+checksum = "1292c0d970b54115d14f2492fe0170adf21d68a1de108eebc51c1df4f346a091"

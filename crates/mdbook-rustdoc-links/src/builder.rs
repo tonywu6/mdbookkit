@@ -209,6 +209,8 @@ fn run_builder(
         .context("`cargo check` did not succeed")
         .or_warn(emit!())?;
 
+    trace!("{artifacts:?}");
+
     for target in artifacts.targets() {
         let Some(docstring) = tracker.rustdoc_input() else {
             break;

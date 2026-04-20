@@ -1,3 +1,3 @@
-- [`unicode_ident::is_xid_start`]
+- [`utf8_width::get_width`]
 - [`crate::legacy`]
 - [`crate::helper`]

@@ -1,8 +1,8 @@
-warning: unresolved link to `itoa`
+warning: unresolved link to `pin_project_lite`
   --> index.md:12:3
    |
-12 | [`itoa`]
-   |   ^^^^ no item named `itoa` in scope
+12 | [`pin_project_lite`]
+   |   ^^^^^^^^^^^^^^^^ no item named `pin_project_lite` in scope
    |
    = note: the following options have been specified, which may have affected link resolution:
            - build.packages

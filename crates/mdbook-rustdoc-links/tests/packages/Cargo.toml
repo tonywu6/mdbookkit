@@ -9,5 +9,5 @@ resolver = "2"
 
 [dependencies]
 anstyle-parse = "=1.0.0"
-itoa = "=1.0.18"
-unicode-ident = "=1.0.24"
+pin-project-lite = "=0.2.17"
+utf8-width = "=0.1.8"

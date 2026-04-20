@@ -8,4 +8,4 @@ version = "0.1.0"
 resolver = "2"
 
 [dependencies]
-unicode-ident = "=1.0.24"
+utf8-width = "=0.1.8"
