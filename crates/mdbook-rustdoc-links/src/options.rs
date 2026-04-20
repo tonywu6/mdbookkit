@@ -9,14 +9,14 @@ use anyhow::{Context, Result, anyhow};
 use cargo_metadata::camino::{Utf8Path, Utf8PathBuf};
 use serde::{Deserialize, Deserializer, de::value::MapAccessDeserializer};
 use shlex::Shlex;
+use tap::Pipe;
+use tracing::debug;
 
 use mdbookkit::{
     config::value_or_vec,
     de_struct, emit,
     error::{Break, ConsumeError, OnWarning},
 };
-use tap::Pipe;
-use tracing::debug;
 
 use crate::subprocess::CommandUtil;
 

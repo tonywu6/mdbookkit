@@ -1,0 +1,16 @@
+[package]
+edition = "2024"
+name = "docs_rs"
+publish = false
+version = "0.1.0"
+
+[features]
+fancy = []
+
+[workspace]
+resolver = "2"
+
+[package.metadata.docs.rs]
+default-target = "aarch64-unknown-linux-gnu"
+features = ["fancy"]
+targets = ["x86_64-unknown-linux-gnu"]

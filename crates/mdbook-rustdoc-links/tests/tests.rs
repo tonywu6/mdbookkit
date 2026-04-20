@@ -3,10 +3,10 @@ use std::fmt::Write;
 use anyhow::{Context, Result};
 use lol_html::{HtmlRewriter, element};
 use mdbook_markdown::pulldown_cmark::{Event, LinkType::*, Parser, Tag};
-use mdbookkit::markdown::default_markdown_options;
 use tap::Pipe;
 use url::Url;
 
+use mdbookkit::markdown::default_markdown_options;
 use mdbookkit_testing::{
     regex::Regex,
     snapbox::{IntoData, RedactedValue, Redactions, assert_data_eq},
@@ -21,14 +21,15 @@ test_mdbook![preludes_implicit, exit(0), redacted = [redacted()]];
 test_mdbook![features, exit(0), redacted = [redacted()]];
 test_mdbook![cargo_customize, exit(0), redacted = [redacted()]];
 test_mdbook![runner, exit(0), redacted = [redacted()]];
+test_mdbook![docs_rs, exit(0), redacted = [redacted()]];
+test_mdbook![workspace, exit(0), redacted = [redacted()]];
+test_mdbook![workspace_deps, exit(0), redacted = [redacted()]];
 test_mdbook![
     manifest_dir,
     exit(0),
     redacted = [redacted()],
     manifest = "./rust"
 ];
-test_mdbook![workspace, exit(0), redacted = [redacted()]];
-test_mdbook![workspace_deps, exit(0), redacted = [redacted()]];
 
 #[test]
 fn rustdoc_parity() -> Result<()> {

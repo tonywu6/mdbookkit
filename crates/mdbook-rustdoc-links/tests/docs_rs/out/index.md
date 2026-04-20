@@ -1,0 +1,3 @@
+- [`amd64_only`](https://docs.rs/docs_rs/0.1.0/docs_rs/fn.amd64_only.html "fn docs_rs::amd64_only")
+- [`arm64_only`](https://docs.rs/docs_rs/0.1.0/docs_rs/fn.arm64_only.html "fn docs_rs::arm64_only")
+- [`fancy`](https://docs.rs/docs_rs/0.1.0/docs_rs/fn.fancy.html "fn docs_rs::fancy")
