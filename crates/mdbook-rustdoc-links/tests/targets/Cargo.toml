@@ -1,0 +1,8 @@
+[package]
+edition = "2024"
+name = "targets"
+publish = false
+version = "0.1.0"
+
+[workspace]
+resolver = "2"

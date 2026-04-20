@@ -1,0 +1,2 @@
+- [`amd64_only`](https://docs.rs/targets/0.1.0/targets/fn.amd64_only.html "fn targets::amd64_only")
+- [`arm64_only`](https://docs.rs/targets/0.1.0/targets/fn.arm64_only.html "fn targets::arm64_only")

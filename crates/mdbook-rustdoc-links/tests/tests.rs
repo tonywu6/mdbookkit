@@ -14,13 +14,13 @@ use mdbookkit_testing::{
 };
 
 test_mdbook![rustdoc(RustDoc), exit(0), redacted = [redacted()]];
-test_mdbook![options_targets, exit(0), redacted = [redacted()]];
-test_mdbook![options_packages, exit(0), redacted = [redacted()]];
-test_mdbook![options_preludes, exit(0), redacted = [redacted()]];
-test_mdbook![options_preludes_implicit, exit(0), redacted = [redacted()]];
-test_mdbook![options_features, exit(0), redacted = [redacted()]];
-test_mdbook![options_cargo_customize, exit(0), redacted = [redacted()]];
-test_mdbook![options_runner, exit(0), redacted = [redacted()]];
+test_mdbook![targets, exit(0), redacted = [redacted()]];
+test_mdbook![packages, exit(0), redacted = [redacted()]];
+test_mdbook![preludes, exit(0), redacted = [redacted()]];
+test_mdbook![preludes_implicit, exit(0), redacted = [redacted()]];
+test_mdbook![features, exit(0), redacted = [redacted()]];
+test_mdbook![cargo_customize, exit(0), redacted = [redacted()]];
+test_mdbook![runner, exit(0), redacted = [redacted()]];
 
 #[test]
 fn rustdoc_parity() -> Result<()> {

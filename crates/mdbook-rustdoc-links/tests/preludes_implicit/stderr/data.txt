@@ -1,0 +1,23 @@
+warning: unresolved link to `crate::public::TEXT`
+ --> index.md:8:5
+  |
+8 | - [`crate::public::TEXT`]
+  |     ^^^^^^^^^^^^^^^^^^^ no item named `TEXT` in module `public`
+
+warning: unresolved link to `crate::func`
+ --> index.md:9:5
+  |
+9 | - [`crate::func`]
+  |     ^^^^^^^^^^^ no item named `func` in module `temporary_crate_0`
+  |
+  = note: in order to resolve links, the preprocessor creates a temporary crate;
+          the following prelude has been implicitly added to the temporary crate:
+          `use preludes_implicit::*;`
+
+warning: unresolved link to `func`
+  --> index.md:10:5
+   |
+10 | - [`func`]
+   |     ^^^^ no item named `func` in scope
+
+ WARN mdbook-rustdoc-links: finished with warnings
