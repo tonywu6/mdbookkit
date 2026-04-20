@@ -30,7 +30,9 @@ impl TestBook {
             .expect("temp dir should have a path")
             .try_conv::<&Utf8Path>()?;
 
-        self.cargo("clean", self.path.book_dir());
+        self.cargo("clean", self.path.manifest_dir())
+            .assert()
+            .success();
 
         let result = self
             .cargo("bin", &self.path.root_dir)
@@ -109,11 +111,17 @@ macro_rules! test_mdbook {
         @init $name:ident exit($code:literal)
         $( , env = [$($env:tt)*] )?
         $( , redacted = [$($redacted:tt)*] )?
+        $( , manifest = $manifest:literal )?
     ] => {
         $crate::TestBook {
             path: $crate::TestRoot {
                 name: stringify!($name),
                 root_dir: $crate::snapbox::current_dir!().try_into()?,
+                rust_dir: {
+                    let dir = ".";
+                    $(let dir = $manifest;)?
+                    dir
+                },
             },
             code: $code,
             env_vars: $crate::test_mdbook!(@key_values $($($env)*)?),
@@ -154,6 +162,7 @@ macro_rules! test_mdbook {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub struct TestRoot<'a> {
     pub root_dir: Utf8PathBuf,
+    pub rust_dir: &'a str,
     pub name: &'a str,
 }
 
@@ -164,6 +173,10 @@ impl TestRoot<'_> {
 
     pub fn dist_dir(&self) -> Utf8PathBuf {
         self.book_dir().join("out")
+    }
+
+    fn manifest_dir(&self) -> Utf8PathBuf {
+        self.book_dir().join(self.rust_dir)
     }
 
     fn stderr_txt(&self) -> Data {

@@ -21,6 +21,12 @@ test_mdbook![preludes_implicit, exit(0), redacted = [redacted()]];
 test_mdbook![features, exit(0), redacted = [redacted()]];
 test_mdbook![cargo_customize, exit(0), redacted = [redacted()]];
 test_mdbook![runner, exit(0), redacted = [redacted()]];
+test_mdbook![
+    manifest_dir,
+    exit(0),
+    redacted = [redacted()],
+    manifest = "./rust"
+];
 
 #[test]
 fn rustdoc_parity() -> Result<()> {
