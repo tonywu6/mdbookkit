@@ -27,6 +27,7 @@ test_mdbook![
     redacted = [redacted()],
     manifest = "./rust"
 ];
+test_mdbook![workspace, exit(0), redacted = [redacted()]];
 
 #[test]
 fn rustdoc_parity() -> Result<()> {

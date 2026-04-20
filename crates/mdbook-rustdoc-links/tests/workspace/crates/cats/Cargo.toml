@@ -1,0 +1,5 @@
+[package]
+edition = "2024"
+name = "cats"
+publish = false
+version = "0.1.0"
