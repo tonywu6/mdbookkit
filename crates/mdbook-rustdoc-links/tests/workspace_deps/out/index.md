@@ -1,0 +1,2 @@
+- [`::text::is_xid_start`](https://docs.rs/unicode-ident/1.0.24/unicode_ident/fn.is_xid_start.html "fn unicode_ident::is_xid_start") (`#[doc(inline)]` has no effect here)
+- [`::itoa::Integer`]

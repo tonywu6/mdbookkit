@@ -1,0 +1,2 @@
+- [`::text::is_xid_start`] (`#[doc(inline)]` has no effect here)
+- [`::itoa::Integer`]

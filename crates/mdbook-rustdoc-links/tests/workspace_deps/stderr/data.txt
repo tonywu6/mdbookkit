@@ -1,0 +1,10 @@
+warning: unresolved link to `::itoa::Integer`
+ --> index.md:2:5
+  |
+2 | - [`::itoa::Integer`]
+  |     ^^^^^^^^^^^^^^^ no item named `` in scope
+  |
+  = note: the following options have been specified, which may have affected link resolution:
+          - build.packages
+
+ WARN mdbook-rustdoc-links: finished with warnings

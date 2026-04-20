@@ -1,0 +1,8 @@
+[package]
+edition = "2024"
+name = "text"
+publish = false
+version = "0.1.0"
+
+[dependencies]
+unicode-ident = "=1.0.24"

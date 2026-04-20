@@ -1,0 +1,8 @@
+[package]
+edition = "2024"
+name = "calc"
+publish = false
+version = "0.1.0"
+
+[dependencies]
+itoa = "=1.0.18"
