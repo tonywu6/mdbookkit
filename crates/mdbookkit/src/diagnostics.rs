@@ -15,9 +15,9 @@ use tap::{Pipe, Tap};
 
 use crate::{
     cmp::{Lexicographic, LexicographicOrd},
-    emit,
+    emit_debug,
     env::{MDBOOKKIT_TERM_GRAPHICAL, TruthyStr, is_colored, is_logging},
-    error::{ConsumeError, put_severity},
+    error::put_severity,
     lexicographic_ordering,
     logging::stderr,
 };
@@ -106,7 +106,7 @@ impl<'a> IssueReporter<'a> {
                 .map(|issue| issue_to_report(issue, source.clone()))
             {
                 writeln!(stderr(), "{}\n", renderer.render(&report))
-                    .or_debug(emit!("failed to print to stderr: {:?}"))
+                    .or_else(emit_debug!("failed to print to stderr: {:?}"))
                     .ok();
             }
         } else {

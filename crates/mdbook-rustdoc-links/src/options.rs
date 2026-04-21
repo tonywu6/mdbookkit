@@ -14,8 +14,8 @@ use tracing::debug;
 
 use mdbookkit::{
     config::value_or_vec,
-    de_struct, emit,
-    error::{Break, ConsumeError, OnWarning},
+    de_struct, emit_error,
+    error::{Break, OnWarning},
 };
 
 use crate::subprocess::CommandUtil;
@@ -158,13 +158,13 @@ impl BuildConfig {
                 .canonicalize_utf8()
                 .context("while preparing to build docs using `cargo`")
                 .context("failed to resolve `manifest-dir` to an absolute path")
-                .or_error(emit!())?
+                .or_else(emit_error!())?
         } else {
             default_cargo
                 .workspace(book_dir.as_std_path())
                 .context("while preparing to build docs using `cargo`")
                 .context("failed to determine the current workspace root")
-                .or_error(emit!())?
+                .or_else(emit_error!())?
                 .directory()
                 .to_owned()
         };

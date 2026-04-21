@@ -8,8 +8,7 @@ use tracing::{debug, info, instrument, trace};
 use url::{Url, form_urlencoded::Serializer as SearchParams};
 
 use mdbookkit::{
-    emit,
-    error::ConsumeError,
+    emit_debug,
     url::{ExpectUrl, UrlFromPath},
 };
 
@@ -107,7 +106,7 @@ impl VersionControl {
         {
             if !(self.repo.is_path_ignored(&path))
                 .with_context(|| format!("error testing if {path:?} is ignored"))
-                .or_debug(emit!())
+                .or_else(emit_debug!())
                 .unwrap_or(false)
             {
                 Ok(TryFile { path, metadata }).inspect(|f| trace!("{f:?}"))
@@ -357,7 +356,7 @@ fn get_git_head(repo: &Repository) -> Result<Option<String>> {
                 .max_candidates_tags(0), // exact match
         )
         .and_then(|tag| tag.format(None))
-        .or_debug(emit!("no exact tag found: {}"))
+        .or_else(emit_debug!("no exact tag found: {}"))
     {
         info!("using tag name {tag:?} for permalinks");
         Ok(Some(tag))

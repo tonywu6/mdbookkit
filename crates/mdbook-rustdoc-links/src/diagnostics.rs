@@ -1,6 +1,5 @@
 use std::{collections::BTreeSet, ops::Range};
 
-use anyhow::Context;
 use cargo_metadata::diagnostic::{
     Diagnostic,
     DiagnosticLevel::{self, *},
@@ -130,7 +129,7 @@ impl DiagnosticNotes {
         Some(note)
     }
 
-    fn print_specified_options(&self) -> Option<String> {
+    pub fn print_specified_options(&self) -> Option<String> {
         if self.options_specified.is_empty() {
             return None;
         }
@@ -242,18 +241,15 @@ impl DiagnosticNotes {
     }
 }
 
-pub trait ErrorWithNotes<T> {
-    fn note_options(self, hints: &DiagnosticNotes) -> anyhow::Result<T>;
-}
-
-impl<T> ErrorWithNotes<T> for anyhow::Result<T> {
-    fn note_options(self, hints: &DiagnosticNotes) -> anyhow::Result<T> {
-        if let Some(options) = hints.print_specified_options() {
-            let note = format! { "possibly the following options that \
-            have been specified:\n{options}" };
-            self.context(note)
-        } else {
-            self
-        }
-    }
+#[macro_export]
+macro_rules! with_notes {
+    ($emit:ident, $hints:expr) => {
+        $emit! { "{:?}{}", {
+            if let Some(options) = $hints.print_specified_options() {
+                format!("\nnote: the following options have been specified, which may have caused the error:\n{options}")
+            } else {
+                String::new()
+            }
+        } }
+    };
 }

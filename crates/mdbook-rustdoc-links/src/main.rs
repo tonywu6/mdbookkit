@@ -11,8 +11,8 @@ use tracing::{Level, error_span, info, info_span, warn};
 use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin},
     diagnostics::IssueReporter,
-    emit,
-    error::{Break, ConsumeError, PathDebug, ProgramExit, has_severity},
+    emit_error,
+    error::{Break, PathDebug, ProgramExit, has_severity},
     logging::init_logging,
 };
 
@@ -57,7 +57,7 @@ enum Command {
 fn mdbook() -> Result<(), Break> {
     let (ctx, mut book) = book_from_stdin()
         .context("failed to read from mdBook")
-        .or_error(emit!())?;
+        .or_else(emit_error!())?;
 
     let Config {
         build,
@@ -65,7 +65,7 @@ fn mdbook() -> Result<(), Break> {
     } = ctx
         .preprocessor(&[PREPROCESSOR_NAME, "mdbook-rustdoc-link"])
         .context("failed to read preprocessor config from book.toml")
-        .or_error(emit!())?;
+        .or_else(emit_error!())?;
 
     let mut contents = LinkTracker::default();
 
@@ -76,7 +76,7 @@ fn mdbook() -> Result<(), Break> {
                 contents
                     .read(&chapter.content)
                     .context("failed to parse file as markdown")
-                    .or_error(emit!())?;
+                    .or_else(emit_error!())?;
                 Ok(path.clone())
             })
         })
@@ -84,7 +84,7 @@ fn mdbook() -> Result<(), Break> {
 
     let book_dir = <&Utf8Path>::try_from(&*ctx.root)
         .context("book directory path contains non-UTF-8 characters, which is unsupported")
-        .or_error(emit!())?;
+        .or_else(emit_error!())?;
 
     build_docs(build.resolve(book_dir)?, &mut contents)?;
 
@@ -108,7 +108,7 @@ fn mdbook() -> Result<(), Break> {
         }
     }
 
-    fail_on_warnings.check().or_error(emit!())?;
+    fail_on_warnings.check().or_else(emit_error!())?;
 
     {
         let mut contents = keys.into_iter().zip(contents).collect::<HashMap<_, _>>();
@@ -118,13 +118,13 @@ fn mdbook() -> Result<(), Break> {
                 *content = output
                     .with_context(|| path.display().to_string())
                     .context("error generating output")
-                    .or_error(emit!())?;
+                    .or_else(emit_error!())?;
             }
             Ok(())
         })?;
     }
 
-    book.to_stdout(&ctx).or_error(emit!())?;
+    book.to_stdout(&ctx).or_else(emit_error!())?;
 
     info!("{stats}");
 

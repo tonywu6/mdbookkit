@@ -28,10 +28,10 @@ use mdbookkit::{
     diagnostics::{
         Highlight, IssueLevel, IssueReport, Note, Suggestion, annotate_snippets::AnnotationKind,
     },
-    emit,
-    error::{Break, ConsumeError, ExpectFmt},
+    emit_debug, emit_warning,
+    error::{Break, ExpectFmt},
     markdown::PatchStream,
-    plural,
+    plural, with_bug_report,
 };
 
 use crate::{
@@ -161,6 +161,7 @@ impl<'a> LinkTracker<'a> {
                     if !state.borrow().has_link() {
                         return Ok(());
                     };
+                    trace!(concat!("abc", env!("CARGO_PKG_REPOSITORY")));
                     trace!("{elem:?}");
 
                     if let Some(href) = elem.get_attribute("href")
@@ -168,8 +169,8 @@ impl<'a> LinkTracker<'a> {
                         && !eq_escaped(&link.dest, &href)
                     {
                         if let Ok(url) = resolve_url(&output, &href)
-                            .with_context(|| format!("failed to convert link: {href}"))
-                            .or_warn(emit!())
+                            .with_context(|| format!("could not convert to a full URL: {href:?}"))
+                            .or_else(with_bug_report!(emit_warning))
                         {
                             link.href = Some(url)
                         }
@@ -210,7 +211,7 @@ impl<'a> LinkTracker<'a> {
         .pipe(|cb| HtmlRewriter::new(cb, |_: &[u8]| ()))
         .pipe(|mut wr| wr.write(stdout.as_bytes()).and_then(|_| wr.end()))
         .context("unexpected error from HtmlRewriter")
-        .or_debug(emit!())
+        .or_else(emit_debug!())
         .ok();
 
         impl<'a> State<'_, 'a> {
@@ -235,16 +236,16 @@ impl<'a> LinkTracker<'a> {
             if let Ok(diag) = serde_json::from_str::<Diagnostic>(line)
                 .with_context(|| line.to_owned())
                 .context("could not parse line as diagnostic")
-                .or_debug(emit!())
+                .or_else(emit_debug!())
                 && let Ok(line) = locate_diagnostic(&diag)
                     .with_context(|| format!("{diag:?}"))
                     .context("could not determine primary line")
-                    .or_debug(emit!())
+                    .or_else(emit_debug!())
                 && let Ok(link) = (self.links.get_mut(line))
                     .with_context(|| format!("{diag:?}"))
                     .with_context(|| format!("line {line}"))
                     .context("line does not belong to any link")
-                    .or_debug(emit!())
+                    .or_else(emit_debug!())
             {
                 trace! {
                     "line {}, link {:?}, {}", line + 1, &*link.dest,
@@ -599,7 +600,7 @@ impl<'a> Link<'a> {
             Ok((text, span))
         })()
         .context("internal error while parsing link; the link will be skipped")
-        .or_warn(emit!())?;
+        .or_else(emit_warning!())?;
 
         // link text may still contain newlines
         let text = text.replace('\n', " ");

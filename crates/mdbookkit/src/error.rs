@@ -204,57 +204,72 @@ pub struct EmitEvent<F1, F2, F3, F4> {
     pub error: F4,
 }
 
+pub struct Break;
+
 #[macro_export]
-macro_rules! emit {
-    ($fmt:literal) => {{
-        $crate::error::EmitEvent {
-            trace: |e| ::tracing::trace!($fmt, e),
-            debug: |e| ::tracing::debug!($fmt, e),
-            warn: |e| ::tracing::warn!($fmt, e),
-            error: |e| ::tracing::error!($fmt, e),
+macro_rules! emit_trace {
+    ($fmt:literal $($args:tt)*) => {{
+        |e| {
+            let e = ::anyhow::Error::from(e);
+            ::tracing::trace!($fmt, e $($args)*);
+            Err($crate::error::Break)
         }
     }};
     () => {
-        $crate::emit!("{:?}")
+        $crate::emit_trace!("{:?}")
     };
 }
 
-pub trait ConsumeError<T, E, F1, F2, F3, F4> {
-    fn or_trace(self, emit: EmitEvent<F1, F2, F3, F4>) -> Result<T, Break>;
-    fn or_debug(self, emit: EmitEvent<F1, F2, F3, F4>) -> Result<T, Break>;
-    fn or_warn(self, emit: EmitEvent<F1, F2, F3, F4>) -> Result<T, Break>;
-    fn or_error(self, emit: EmitEvent<F1, F2, F3, F4>) -> Result<T, Break>;
-}
-
-pub struct Break;
-
-macro_rules! consume_error {
-    ($fn:ident, $level:ident) => {
-        #[inline]
-        fn $fn(self, emit: EmitEvent<F1, F2, F3, F4>) -> Result<T, Break> {
-            match self {
-                Ok(v) => Ok(v),
-                Err(e) => {
-                    (emit.$level)(e.into());
-                    Err(Break)
-                }
-            }
+#[macro_export]
+macro_rules! emit_debug {
+    ($fmt:literal $($args:tt)*) => {{
+        |e| {
+            let e = ::anyhow::Error::from(e);
+            ::tracing::debug!($fmt, e $($args)*);
+            Err($crate::error::Break)
         }
+    }};
+    () => {
+        $crate::emit_debug!("{:?}")
     };
 }
 
-impl<T, E, F1, F2, F3, F4> ConsumeError<T, Error, F1, F2, F3, F4> for Result<T, E>
-where
-    E: Into<Error>,
-    F1: Fn(Error),
-    F2: Fn(Error),
-    F3: Fn(Error),
-    F4: Fn(Error),
-{
-    consume_error!(or_trace, trace);
-    consume_error!(or_debug, debug);
-    consume_error!(or_warn, warn);
-    consume_error!(or_error, error);
+#[macro_export]
+macro_rules! emit_warning {
+    ($fmt:literal $($args:tt)*) => {{
+        |e| {
+            let e = ::anyhow::Error::from(e);
+            ::tracing::warn!($fmt, e $($args)*);
+            Err($crate::error::Break)
+        }
+    }};
+    () => {
+        $crate::emit_warning!("{:?}")
+    };
+}
+
+#[macro_export]
+macro_rules! emit_error {
+    ($fmt:literal $($args:tt)*) => {{
+        |e| {
+            let e = ::anyhow::Error::from(e);
+            ::tracing::error!($fmt, e $($args)*);
+            Err($crate::error::Break)
+        }
+    }};
+    () => {
+        $crate::emit_error!("{:?}")
+    };
+}
+
+#[macro_export]
+macro_rules! with_bug_report {
+    ($emit:ident) => {
+        $emit!(
+            "{:?}\n\nthis could be a bug; please file a bug report at {repo}/issues",
+            repo = env!("CARGO_PKG_REPOSITORY")
+        )
+    };
 }
 
 pub trait ProgramExit {

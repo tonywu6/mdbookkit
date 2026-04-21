@@ -1,23 +1,19 @@
 use std::path::PathBuf;
 
-use tracing::info_span;
+use tracing::error_span;
 
-use mdbookkit::{
-    emit,
-    error::{ConsumeError, ProgramExit},
-    logging::init_logging,
-};
+use mdbookkit::{emit_error, error::ProgramExit, logging::init_logging};
 
 mod postprocess;
 
 fn main() {
     init_logging();
-    let _span = info_span!({ env!("CARGO_PKG_NAME") }).entered();
+    let _span = error_span!({ env!("CARGO_PKG_NAME") }).entered();
     let Program { command } = clap::Parser::parse();
     match command {
         Command::Postprocess { root_dir } => postprocess::run(root_dir),
     }
-    .or_error(emit!())
+    .or_else(emit_error!())
     .exit()
 }
 

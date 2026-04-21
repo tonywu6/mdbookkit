@@ -14,8 +14,8 @@ use url::Url;
 use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin},
     diagnostics::IssueReporter,
-    emit,
-    error::{Break, ConsumeError, OnWarning, ProgramExit, has_severity},
+    emit_error,
+    error::{Break, OnWarning, ProgramExit, has_severity},
     logging::init_logging,
     ticker, ticker_item,
     url::{ExpectUrl, UrlFromPath},
@@ -46,7 +46,7 @@ fn main() {
 fn mdbook() -> Result<(), Break> {
     let (ctx, book) = book_from_stdin()
         .context("failed to read from mdBook")
-        .or_error(emit!())?;
+        .or_else(emit_error!())?;
 
     match Environment::new(&ctx) {
         Ok(Ok(env)) => env.process(book)?,
@@ -56,10 +56,10 @@ fn mdbook() -> Result<(), Break> {
         }
         Err(err) => Err(err)
             .context("failed to initialize preprocessor")
-            .or_error(emit!())?,
+            .or_else(emit_error!())?,
     }
     .to_stdout(&ctx)
-    .or_error(emit!())?;
+    .or_else(emit_error!())?;
 
     Ok(())
 }
@@ -97,14 +97,14 @@ impl Environment {
             let path = (path.to_str())
                 .with_context(|| path.display().to_string())
                 .context("path contains non-UTF-8 characters, which is unsupported:")
-                .or_error(emit!())?;
+                .or_else(emit_error!())?;
 
             let url = self.root_dir.join(path).expect_url();
 
             (contents.insert(url, &ch.content))
                 .with_context(|| path.to_owned())
                 .context("failed to parse file as markdown:")
-                .or_error(emit!())?;
+                .or_else(emit_error!())?;
         }
 
         self.resolve(&mut contents);
@@ -116,7 +116,10 @@ impl Environment {
         contents.log_stats();
 
         // bail before emitting changes
-        self.config.fail_on_warnings.check().or_error(emit!())?;
+        self.config
+            .fail_on_warnings
+            .check()
+            .or_else(emit_error!())?;
 
         let mut results = contents.emit();
 
@@ -127,7 +130,7 @@ impl Environment {
                 *content = output
                     .with_context(|| path.display().to_string())
                     .context("error generating output")
-                    .or_error(emit!())?;
+                    .or_else(emit_error!())?;
             }
             Ok(())
         })?;

@@ -19,19 +19,19 @@ use tempfile::TempDir;
 use tracing::{Level, debug, info, info_span, trace, warn};
 
 use mdbookkit::{
-    emit,
+    emit_debug, emit_error, emit_warning,
     env::is_logging,
-    error::{Break, ConsumeError, ExpectFmt, PathDebug},
+    error::{Break, ExpectFmt, PathDebug},
     ticker, ticker_event,
 };
 
 use crate::{
-    diagnostics::ErrorWithNotes,
     options::{
         BuildConfigResolved, BuildOptions, Builder, PackageSelector, PackageSpec, WorkspaceMember,
     },
     subprocess::{CommandUtil, Subprocess},
     tracker::LinkTracker,
+    with_notes,
 };
 
 pub fn build_docs(options: BuildConfigResolved, tracker: &mut LinkTracker) -> Result<(), Break> {
@@ -53,7 +53,7 @@ pub fn build_docs(options: BuildConfigResolved, tracker: &mut LinkTracker) -> Re
         counter.postbuild(build_id, result);
     }
 
-    counter.finish().or_error(emit!())
+    counter.finish().or_else(emit_error!())
 }
 
 fn run_builder(
@@ -83,9 +83,8 @@ fn run_builder(
         .current_dir(manifest_dir)
         .run()
         .into_cargo_metadata()
-        .note_options(tracker.notes())
         .context("failed to learn about the workspace via cargo")
-        .or_warn(emit!())?;
+        .or_else(with_notes!(emit_warning, tracker.notes()))?;
 
     let packages = if packages.is_empty() {
         Default::default()
@@ -100,7 +99,7 @@ fn run_builder(
     if docs_rs == Some(true) {
         load_docs_rs_options(&mut builder, &metadata, &packages)
             .context("failed to inherit docs.rs options")
-            .or_warn(emit!())?;
+            .or_else(emit_warning!())?;
     }
 
     debug!("resolved options: {builder:#?}");
@@ -157,7 +156,7 @@ fn run_builder(
             .run()
             .into_cargo_metadata()
             .context("failed to learn about workspace paths via cargo")
-            .or_warn(emit!())?;
+            .or_else(emit_warning!())?;
         PathMapper::new(&metadata, Some(&build_metadata))
     };
 
@@ -184,9 +183,8 @@ fn run_builder(
 
     artifacts
         .record(proc, ticker!(Level::INFO, "cargo-doc", "cargo doc"))
-        .note_options(tracker.notes())
         .context("`cargo doc` did not succeed")
-        .or_warn(emit!())?;
+        .or_else(with_notes!(emit_warning, tracker.notes()))?;
 
     let proc = cargo
         .command("check")
@@ -205,9 +203,8 @@ fn run_builder(
 
     artifacts
         .record(proc, ticker!(Level::INFO, "cargo-check", "cargo check"))
-        .note_options(tracker.notes())
         .context("`cargo check` did not succeed")
-        .or_warn(emit!())?;
+        .or_else(with_notes!(emit_warning, tracker.notes()))?;
 
     trace!("{artifacts:?}");
 
@@ -224,7 +221,7 @@ fn run_builder(
 
         let tempdir = TempDir::new_in(&metadata.target_directory)
             .context("failed to create temporary directory for doc artifacts")
-            .or_warn(emit!())?;
+            .or_else(emit_warning!())?;
 
         let mut rustdoc = Command::new("rustdoc")
             .values(cargo.toolchain())
@@ -259,7 +256,7 @@ fn run_builder(
                 symlink_dir_all(doc, tempdir.path().join(name))
                     .with_context(|| doc.to_owned())
                     .context("failed to locate doc artifacts expected at:")
-                    .or_warn(emit!())
+                    .or_else(emit_warning!())
                     .ok();
 
                 rustdoc.arg("--extern").arg(format!("{name}={lib}"));
@@ -287,12 +284,12 @@ fn run_builder(
                 ( $stdin:ident, $fmt:literal ) => {
                     writeln!($stdin, $fmt)
                         .context("could not pass input to `rustdoc`")
-                        .or_warn(emit!())
+                        .or_else(emit_warning!())
                         .ok();
                 };
             }
 
-            let mut stdin = rustdoc.stdin().or_warn(emit!())?;
+            let mut stdin = rustdoc.stdin().or_else(emit_warning!())?;
 
             write_to!(stdin, "{docstring}");
 
@@ -303,19 +300,17 @@ fn run_builder(
 
         let result = rustdoc
             .result()
-            .note_options(tracker.notes())
             .context("`rustdoc` did not succeed")
-            .or_warn(emit!())?;
+            .or_else(with_notes!(emit_warning, tracker.notes()))?;
 
         if let Some(status) = result.status {
             let stderr = rustc_json_error(&result.output.stderr);
             let stderr = stderr.trim_end();
             let stderr = if stderr.is_empty() { "(empty)" } else { stderr };
             return Err(status)
-                .note_options(tracker.notes())
                 .context(format!("--- rustdoc stderr\n{stderr}"))
                 .context("`rustdoc` did not succeed")
-                .or_warn(emit!())?;
+                .or_else(with_notes!(emit_warning, tracker.notes()))?;
         } else {
             if tracing::enabled!(Level::TRACE) {
                 let stderr = String::from_utf8_lossy(&result.output.stderr);
@@ -333,7 +328,7 @@ fn run_builder(
                 std::fs::read_to_string(&path)
                     .with_context(|| format!("expected {:?}", path.debug()))
                     .context("failed to read from `rustdoc` output")
-                    .or_warn(emit!())?
+                    .or_else(emit_warning!())?
             },
             stderr: result.output.stderr,
         };
@@ -437,7 +432,7 @@ impl CargoRecorder {
             let Ok(msg) = msg
                 .tap_ok(|msg| trace!("{msg:?}"))
                 .context("error while reading from cargo")
-                .or_warn(emit!())
+                .or_else(emit_warning!())
             else {
                 continue;
             };
@@ -473,7 +468,7 @@ impl CargoRecorder {
             let cargo_stderr = stderr
                 .join()
                 .map_err(|_| anyhow!("failed to recover stderr"))
-                .or_debug(emit!())
+                .or_else(emit_debug!())
                 .unwrap_or_default();
 
             let cargo_stderr = if let Some(stderr) = cargo_stderr {
@@ -524,7 +519,7 @@ impl CargoRecorder {
         for path in filenames {
             self.update_file(name.clone(), &path)
                 .context("error while collecting compiler artifacts")
-                .or_warn(emit!())
+                .or_else(emit_warning!())
                 .ok();
         }
     }
@@ -753,7 +748,7 @@ fn resolve_packages(
         })
         .collect::<Result<Vec<_>>>()
         .context("failed to resolve package versions")
-        .or_warn(emit!())?
+        .or_else(emit_warning!())?
         .iter()
         .flat_map(|output| {
             output.lines().filter_map(|line| {
