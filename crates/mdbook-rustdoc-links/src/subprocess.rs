@@ -159,7 +159,7 @@ pub struct PrintCommand(String);
 
 impl PrintCommand {
     pub fn as_context(&self) -> anyhow::Error {
-        anyhow!("command: {}\n---", self.0)
+        anyhow!("command: {}\n", self.0)
     }
 
     pub fn failed_to_spawn(&self, error: &std::io::Error) -> anyhow::Error {

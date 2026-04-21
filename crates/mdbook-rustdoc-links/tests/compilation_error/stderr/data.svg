@@ -1,0 +1,80 @@
+<svg width="1448px" height="524px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .fg { fill: #B2B2B2 }
+    .bg { fill: #1A1A1A }
+    .fg-red { fill: #E06C75 }
+    .fg-yellow { fill: #D19A66 }
+    .container {
+      padding: 0 10px;
+      line-height: 18px;
+    }
+    .bold { font-weight: bold; }
+    tspan {
+      font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;
+      white-space: pre;
+      line-height: 18px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" y="0" rx="4.5" class="bg" />
+
+  <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: `cargo check` did not succeed</tspan>
+</tspan>
+    <tspan x="10px" y="46px">
+</tspan>
+    <tspan x="10px" y="64px"><tspan>Caused by:</tspan>
+</tspan>
+    <tspan x="10px" y="82px"><tspan>    0: --- rustc errors</tspan>
+</tspan>
+    <tspan x="10px" y="100px"><tspan>       error[E0311]: the parameter type `T` may not live long enough</tspan>
+</tspan>
+    <tspan x="10px" y="118px"><tspan>        --&gt; src/lib.rs:4:5</tspan>
+</tspan>
+    <tspan x="10px" y="136px"><tspan>         |</tspan>
+</tspan>
+    <tspan x="10px" y="154px"><tspan>       3 | pub fn no_restriction&lt;T&gt;(x: &amp;()) -&gt; &amp;() {</tspan>
+</tspan>
+    <tspan x="10px" y="172px"><tspan>         |                             --- the parameter type `T` must be valid for the anonymous lifetime defined here...</tspan>
+</tspan>
+    <tspan x="10px" y="190px"><tspan>       4 |     with_restriction::&lt;T&gt;(x)</tspan>
+</tspan>
+    <tspan x="10px" y="208px"><tspan>         |     ^^^^^^^^^^^^^^^^^^^^^ ...so that the type `T` will meet its required lifetime bounds</tspan>
+</tspan>
+    <tspan x="10px" y="226px"><tspan>         |</tspan>
+</tspan>
+    <tspan x="10px" y="244px"><tspan>       help: consider adding an explicit lifetime bound</tspan>
+</tspan>
+    <tspan x="10px" y="262px"><tspan>         |</tspan>
+</tspan>
+    <tspan x="10px" y="280px"><tspan>       3 | pub fn no_restriction&lt;'a, T: 'a&gt;(x: &amp;'a ()) -&gt; &amp;'a () {</tspan>
+</tspan>
+    <tspan x="10px" y="298px"><tspan>         |                       +++  ++++      ++         ++</tspan>
+</tspan>
+    <tspan x="10px" y="316px"><tspan>       </tspan>
+</tspan>
+    <tspan x="10px" y="334px"><tspan>       For more information about this error, try `rustc --explain E0311`.</tspan>
+</tspan>
+    <tspan x="10px" y="352px"><tspan>    1: --- cargo stderr</tspan>
+</tspan>
+    <tspan x="10px" y="370px"><tspan>           Checking compilation_error v0.1.0 ([TEST_DIR]/compilation_error)</tspan>
+</tspan>
+    <tspan x="10px" y="388px"><tspan>       [LLVM_COV_STDERR]</tspan>
+</tspan>
+    <tspan x="10px" y="406px"><tspan>       error: could not compile `compilation_error` (lib) due to 1 previous error</tspan>
+</tspan>
+    <tspan x="10px" y="424px"><tspan>    2: command exited with exit status: 101</tspan>
+</tspan>
+    <tspan x="10px" y="442px"><tspan>    3: command: cd "[TEST_DIR]/compilation_error" &amp;&amp; "cargo" "check" "--message-format" "json" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"</tspan>
+</tspan>
+    <tspan x="10px" y="460px"><tspan>       </tspan>
+</tspan>
+    <tspan x="10px" y="478px"><tspan class="fg-red">ERROR</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: build failed</tspan>
+</tspan>
+    <tspan x="10px" y="496px"><tspan>[LLVM_COV_STDERR]</tspan>
+</tspan>
+    <tspan x="10px" y="514px"><tspan>ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status</tspan>
+</tspan>
+  </text>
+
+</svg>

@@ -37,6 +37,7 @@ test_mdbook![
 ];
 
 test_mdbook![preludes_invalid, exit(101), redacted = [redacted()]];
+test_mdbook![compilation_error, exit(101), redacted = [redacted()]];
 
 #[test]
 fn rustdoc_parity() -> Result<()> {

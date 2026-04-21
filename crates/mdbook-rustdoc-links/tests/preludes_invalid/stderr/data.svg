@@ -1,4 +1,4 @@
-<svg width="3406px" height="506px" xmlns="http://www.w3.org/2000/svg">
+<svg width="3406px" height="488px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -57,7 +57,7 @@
 </tspan>
     <tspan x="10px" y="352px"><tspan>    2: command: cd "[TEST_DIR]/preludes_invalid" &amp;&amp; "rustdoc" "--out-dir" "[TEST_DIR]/preludes_invalid/target/[TEMP_DIR]" "--edition" "2024" "--crate-type" "lib" "--error-format" "json" "-" "--extern" "preludes_invalid=[TEST_DIR]/preludes_invalid/target/debug/deps/libpreludes_invalid-[BUILD_HASH].rmeta" "-L" "dependency=[TEST_DIR]/preludes_invalid/target/debug/deps" "--crate-name" "temporary_crate_0"</tspan>
 </tspan>
-    <tspan x="10px" y="370px"><tspan>       ---</tspan>
+    <tspan x="10px" y="370px"><tspan>       </tspan>
 </tspan>
     <tspan x="10px" y="388px"><tspan>note: the following options have been specified, which may have caused the error:</tspan>
 </tspan>
@@ -65,13 +65,11 @@
 </tspan>
     <tspan x="10px" y="424px">
 </tspan>
-    <tspan x="10px" y="442px">
+    <tspan x="10px" y="442px"><tspan class="fg-red">ERROR</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: build failed</tspan>
 </tspan>
-    <tspan x="10px" y="460px"><tspan class="fg-red">ERROR</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: build failed</tspan>
+    <tspan x="10px" y="460px"><tspan>[LLVM_COV_STDERR]</tspan>
 </tspan>
-    <tspan x="10px" y="478px"><tspan>[LLVM_COV_STDERR]</tspan>
-</tspan>
-    <tspan x="10px" y="496px"><tspan>ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status</tspan>
+    <tspan x="10px" y="478px"><tspan>ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status</tspan>
 </tspan>
   </text>
 

@@ -246,7 +246,7 @@ macro_rules! with_notes {
     ($emit:ident, $hints:expr) => {
         $emit! { "{:?}{}", {
             if let Some(options) = $hints.print_specified_options() {
-                format!("\nnote: the following options have been specified, which may have caused the error:\n{options}\n\n")
+                format!("\nnote: the following options have been specified, which may have caused the error:\n{options}\n")
             } else {
                 String::new()
             }
