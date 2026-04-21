@@ -1,0 +1,2 @@
+- [`cats::shelter`](https://docs.rs/cats/0.1.0/cats/fn.shelter.html "fn cats::shelter")
+- [`cats_macros::make_shelter!`](https://docs.rs/cats-macros/0.1.0/cats_macros/macro.make_shelter.html "macro cats_macros::make_shelter")
