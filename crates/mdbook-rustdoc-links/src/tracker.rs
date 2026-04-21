@@ -28,7 +28,7 @@ use mdbookkit::{
     diagnostics::{
         Highlight, IssueLevel, IssueReport, Note, Suggestion, annotate_snippets::AnnotationKind,
     },
-    emit_debug, emit_warning,
+    emit_debug, emit_trace, emit_warning,
     error::{Break, ExpectFmt},
     markdown::PatchStream,
     plural, with_bug_report,
@@ -240,7 +240,7 @@ impl<'a> LinkTracker<'a> {
                 && let Ok(line) = locate_diagnostic(&diag)
                     .with_context(|| format!("{diag:?}"))
                     .context("could not determine primary line")
-                    .or_else(emit_debug!())
+                    .or_else(emit_trace!())
                 && let Ok(link) = (self.links.get_mut(line))
                     .with_context(|| format!("{diag:?}"))
                     .with_context(|| format!("line {line}"))

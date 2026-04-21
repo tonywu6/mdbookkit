@@ -25,6 +25,7 @@ test_mdbook![docs_rs, exit(0), redacted = [redacted()]];
 test_mdbook![workspace, exit(0), redacted = [redacted()]];
 test_mdbook![workspace_deps, exit(0), redacted = [redacted()]];
 test_mdbook![workspace_all, exit(0), redacted = [redacted()]];
+test_mdbook![multi_stage, exit(0), redacted = [redacted()]];
 test_mdbook![
     manifest_dir,
     exit(0),

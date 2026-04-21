@@ -1,0 +1,28 @@
+[preprocessor.rustdoc-links]
+after = ["links"]
+command = "cargo preprocessor"
+
+[preprocessor.rustdoc-links.build-options]
+runner = "bash -c $*"
+rustdoc-args = [
+  "-Z",
+  "unstable-options",
+  "--extern-html-root-takes-precedence",
+  "--extern-html-root-url",
+  "utf8_width=https://example.org",
+]
+toolchain = "nightly"
+
+[[preprocessor.rustdoc-links.build]]
+packages = ["anstyle-parse"]
+targets = ["host-tuple"]
+
+[[preprocessor.rustdoc-links.build]]
+packages = [{ dependencies = false }]
+targets = ["aarch64-unknown-linux-gnu", "x86_64-unknown-linux-gnu"]
+
+[build]
+build-dir = "dist"
+create-missing = false
+
+[output.markdown]

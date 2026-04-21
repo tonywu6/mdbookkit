@@ -1,0 +1,19 @@
+warning: unresolved link to `utf8_width::get_width`
+ --> index.md:4:5
+  |
+4 | - [`utf8_width::get_width`]
+  |     ^^^^^^^^^^^^^^^^^^^^^ no item named `utf8_width` in scope
+  |
+  = note: the following options have been specified, which may have affected link resolution:
+          - build.packages
+          - build.runner
+          - build.rustdoc-args
+          - build.toolchain
+
+warning: unresolved link to `utf8parse::Parser`
+  --> index.md:11:5
+   |
+11 | - [`utf8parse::Parser`]
+   |     ^^^^^^^^^^^^^^^^^ no item named `utf8parse` in scope
+
+ WARN mdbook-rustdoc-links: finished with warnings
