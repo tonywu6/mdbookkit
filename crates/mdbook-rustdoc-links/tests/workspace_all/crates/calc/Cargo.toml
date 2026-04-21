@@ -1,0 +1,8 @@
+[package]
+edition = "2024"
+name = "calc"
+publish = false
+version = "0.1.0"
+
+[dependencies]
+pin-project-lite = "=0.2.17"

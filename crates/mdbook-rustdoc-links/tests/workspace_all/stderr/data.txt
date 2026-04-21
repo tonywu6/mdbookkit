@@ -1,0 +1,16 @@
+warning: unresolved link to `utf8_width::get_width`
+ --> index.md:9:5
+  |
+9 | - [`utf8_width::get_width`]
+  |     ^^^^^^^^^^^^^^^^^^^^^ no item named `utf8_width` in scope
+  |
+  = note: the following options have been specified, which may have affected link resolution:
+          - build.packages
+
+warning: unresolved link to `pin_project_lite::pin_project`
+  --> index.md:10:5
+   |
+10 | - [`pin_project_lite::pin_project`]
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no item named `pin_project_lite` in scope
+
+ WARN mdbook-rustdoc-links: finished with warnings
