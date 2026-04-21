@@ -45,6 +45,7 @@ impl TestBook {
                 ("MDBOOKKIT_TERM_GRAPHICAL", "ascii"),
                 ("FORCE_COLOR", "1"),
                 ("RUST_BACKTRACE", "0"),
+                ("CI", ""),
             ]))
             .envs(load_env(&self.env_vars))
             .assert()

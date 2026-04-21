@@ -1,0 +1,43 @@
+ WARN mdbook-rustdoc-links: `cargo check` did not succeed
+
+Caused by:
+    0: --- rustc errors
+       error[E0308]: mismatched types
+        --> src/lib.rs:8:5
+         |
+       7 | pub fn arm64_only() {
+         |                    - help: try adding a return type: `-> i32`
+       8 |     42
+         |     ^^ expected `()`, found integer
+       
+       For more information about this error, try `rustc --explain E0308`.
+    1: --- cargo stderr
+           Checking multi_stage_all_failed v0.1.0 ([TEST_DIR]/multi_stage_all_failed)
+       [LLVM_COV_STDERR]
+       error: could not compile `multi_stage_all_failed` (lib) due to 1 previous error
+    2: command exited with exit status: 101
+    3: command: cd "[TEST_DIR]/multi_stage_all_failed" && "cargo" "check" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"
+       
+ WARN mdbook-rustdoc-links: build #1 has failed
+ WARN mdbook-rustdoc-links: `cargo check` did not succeed
+
+Caused by:
+    0: --- rustc errors
+       error[E0080]: evaluation panicked: explicit panic
+        --> src/lib.rs:3:19
+         |
+       3 |     const _: () = panic!();
+         |                   ^^^^^^^^ evaluation of `amd64_only::_` failed here
+       
+       For more information about this error, try `rustc --explain E0080`.
+    1: --- cargo stderr
+           Checking multi_stage_all_failed v0.1.0 ([TEST_DIR]/multi_stage_all_failed)
+       [LLVM_COV_STDERR]
+       error: could not compile `multi_stage_all_failed` (lib) due to 1 previous error
+    2: command exited with exit status: 101
+    3: command: cd "[TEST_DIR]/multi_stage_all_failed" && "cargo" "check" "--message-format" "json" "--target" "x86_64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"
+       
+ WARN mdbook-rustdoc-links: build #2 has failed
+ERROR mdbook-rustdoc-links: all builds have failed
+[LLVM_COV_STDERR]
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status

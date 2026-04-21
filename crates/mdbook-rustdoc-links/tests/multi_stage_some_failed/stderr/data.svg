@@ -1,0 +1,92 @@
+<svg width="1826px" height="632px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .fg { fill: #B2B2B2 }
+    .bg { fill: #1A1A1A }
+    .fg-bright-blue { fill: #5CADF1 }
+    .fg-yellow { fill: #D19A66 }
+    .container {
+      padding: 0 10px;
+      line-height: 18px;
+    }
+    .bold { font-weight: bold; }
+    tspan {
+      font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;
+      white-space: pre;
+      line-height: 18px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" y="0" rx="4.5" class="bg" />
+
+  <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: `cargo check` did not succeed</tspan>
+</tspan>
+    <tspan x="10px" y="46px">
+</tspan>
+    <tspan x="10px" y="64px"><tspan>Caused by:</tspan>
+</tspan>
+    <tspan x="10px" y="82px"><tspan>    0: --- rustc errors</tspan>
+</tspan>
+    <tspan x="10px" y="100px"><tspan>       error[E0308]: mismatched types</tspan>
+</tspan>
+    <tspan x="10px" y="118px"><tspan>        --&gt; src/lib.rs:6:5</tspan>
+</tspan>
+    <tspan x="10px" y="136px"><tspan>         |</tspan>
+</tspan>
+    <tspan x="10px" y="154px"><tspan>       5 | pub fn arm64_only() {</tspan>
+</tspan>
+    <tspan x="10px" y="172px"><tspan>         |                    - help: try adding a return type: `-&gt; i32`</tspan>
+</tspan>
+    <tspan x="10px" y="190px"><tspan>       6 |     42</tspan>
+</tspan>
+    <tspan x="10px" y="208px"><tspan>         |     ^^ expected `()`, found integer</tspan>
+</tspan>
+    <tspan x="10px" y="226px"><tspan>       </tspan>
+</tspan>
+    <tspan x="10px" y="244px"><tspan>       For more information about this error, try `rustc --explain E0308`.</tspan>
+</tspan>
+    <tspan x="10px" y="262px"><tspan>    1: --- cargo stderr</tspan>
+</tspan>
+    <tspan x="10px" y="280px"><tspan>           Blocking waiting for file lock on package cache</tspan>
+</tspan>
+    <tspan x="10px" y="298px"><tspan>           Checking multi_stage_some_failed v0.1.0 ([TEST_DIR]/multi_stage_some_failed)</tspan>
+</tspan>
+    <tspan x="10px" y="316px"><tspan>       [LLVM_COV_STDERR]</tspan>
+</tspan>
+    <tspan x="10px" y="334px"><tspan>       error: could not compile `multi_stage_some_failed` (lib) due to 1 previous error</tspan>
+</tspan>
+    <tspan x="10px" y="352px"><tspan>    2: command exited with exit status: 101</tspan>
+</tspan>
+    <tspan x="10px" y="370px"><tspan>    3: command: cd "[TEST_DIR]/multi_stage_some_failed" &amp;&amp; "cargo" "check" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"</tspan>
+</tspan>
+    <tspan x="10px" y="388px"><tspan>       </tspan>
+</tspan>
+    <tspan x="10px" y="406px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: build #1 has failed</tspan>
+</tspan>
+    <tspan x="10px" y="424px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: some builds have failed</tspan>
+</tspan>
+    <tspan x="10px" y="442px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `crate::arm64_only`</tspan>
+</tspan>
+    <tspan x="10px" y="460px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>index.md:2:5</tspan>
+</tspan>
+    <tspan x="10px" y="478px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="496px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [`</tspan><tspan class="fg-yellow bold">crate::arm64_only</tspan><tspan>`]</tspan>
+</tspan>
+    <tspan x="10px" y="514px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">no item named `arm64_only` in module `temporary_crate_0`</tspan>
+</tspan>
+    <tspan x="10px" y="532px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="550px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: in order to resolve links, the preprocessor creates a temporary crate;</tspan>
+</tspan>
+    <tspan x="10px" y="568px"><tspan>          the following prelude has been implicitly added to the temporary crate:</tspan>
+</tspan>
+    <tspan x="10px" y="586px"><tspan>          `use multi_stage_some_failed::*;`</tspan>
+</tspan>
+    <tspan x="10px" y="604px">
+</tspan>
+    <tspan x="10px" y="622px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: finished with warnings</tspan>
+</tspan>
+  </text>
+
+</svg>

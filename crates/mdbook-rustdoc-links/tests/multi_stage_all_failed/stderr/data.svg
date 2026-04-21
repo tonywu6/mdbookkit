@@ -1,0 +1,110 @@
+<svg width="1818px" height="794px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .fg { fill: #B2B2B2 }
+    .bg { fill: #1A1A1A }
+    .fg-red { fill: #E06C75 }
+    .fg-yellow { fill: #D19A66 }
+    .container {
+      padding: 0 10px;
+      line-height: 18px;
+    }
+    .bold { font-weight: bold; }
+    tspan {
+      font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;
+      white-space: pre;
+      line-height: 18px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" y="0" rx="4.5" class="bg" />
+
+  <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: `cargo check` did not succeed</tspan>
+</tspan>
+    <tspan x="10px" y="46px">
+</tspan>
+    <tspan x="10px" y="64px"><tspan>Caused by:</tspan>
+</tspan>
+    <tspan x="10px" y="82px"><tspan>    0: --- rustc errors</tspan>
+</tspan>
+    <tspan x="10px" y="100px"><tspan>       error[E0308]: mismatched types</tspan>
+</tspan>
+    <tspan x="10px" y="118px"><tspan>        --&gt; src/lib.rs:8:5</tspan>
+</tspan>
+    <tspan x="10px" y="136px"><tspan>         |</tspan>
+</tspan>
+    <tspan x="10px" y="154px"><tspan>       7 | pub fn arm64_only() {</tspan>
+</tspan>
+    <tspan x="10px" y="172px"><tspan>         |                    - help: try adding a return type: `-&gt; i32`</tspan>
+</tspan>
+    <tspan x="10px" y="190px"><tspan>       8 |     42</tspan>
+</tspan>
+    <tspan x="10px" y="208px"><tspan>         |     ^^ expected `()`, found integer</tspan>
+</tspan>
+    <tspan x="10px" y="226px"><tspan>       </tspan>
+</tspan>
+    <tspan x="10px" y="244px"><tspan>       For more information about this error, try `rustc --explain E0308`.</tspan>
+</tspan>
+    <tspan x="10px" y="262px"><tspan>    1: --- cargo stderr</tspan>
+</tspan>
+    <tspan x="10px" y="280px"><tspan>           Checking multi_stage_all_failed v0.1.0 ([TEST_DIR]/multi_stage_all_failed)</tspan>
+</tspan>
+    <tspan x="10px" y="298px"><tspan>       [LLVM_COV_STDERR]</tspan>
+</tspan>
+    <tspan x="10px" y="316px"><tspan>       error: could not compile `multi_stage_all_failed` (lib) due to 1 previous error</tspan>
+</tspan>
+    <tspan x="10px" y="334px"><tspan>    2: command exited with exit status: 101</tspan>
+</tspan>
+    <tspan x="10px" y="352px"><tspan>    3: command: cd "[TEST_DIR]/multi_stage_all_failed" &amp;&amp; "cargo" "check" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"</tspan>
+</tspan>
+    <tspan x="10px" y="370px"><tspan>       </tspan>
+</tspan>
+    <tspan x="10px" y="388px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: build #1 has failed</tspan>
+</tspan>
+    <tspan x="10px" y="406px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: `cargo check` did not succeed</tspan>
+</tspan>
+    <tspan x="10px" y="424px">
+</tspan>
+    <tspan x="10px" y="442px"><tspan>Caused by:</tspan>
+</tspan>
+    <tspan x="10px" y="460px"><tspan>    0: --- rustc errors</tspan>
+</tspan>
+    <tspan x="10px" y="478px"><tspan>       error[E0080]: evaluation panicked: explicit panic</tspan>
+</tspan>
+    <tspan x="10px" y="496px"><tspan>        --&gt; src/lib.rs:3:19</tspan>
+</tspan>
+    <tspan x="10px" y="514px"><tspan>         |</tspan>
+</tspan>
+    <tspan x="10px" y="532px"><tspan>       3 |     const _: () = panic!();</tspan>
+</tspan>
+    <tspan x="10px" y="550px"><tspan>         |                   ^^^^^^^^ evaluation of `amd64_only::_` failed here</tspan>
+</tspan>
+    <tspan x="10px" y="568px"><tspan>       </tspan>
+</tspan>
+    <tspan x="10px" y="586px"><tspan>       For more information about this error, try `rustc --explain E0080`.</tspan>
+</tspan>
+    <tspan x="10px" y="604px"><tspan>    1: --- cargo stderr</tspan>
+</tspan>
+    <tspan x="10px" y="622px"><tspan>           Checking multi_stage_all_failed v0.1.0 ([TEST_DIR]/multi_stage_all_failed)</tspan>
+</tspan>
+    <tspan x="10px" y="640px"><tspan>       [LLVM_COV_STDERR]</tspan>
+</tspan>
+    <tspan x="10px" y="658px"><tspan>       error: could not compile `multi_stage_all_failed` (lib) due to 1 previous error</tspan>
+</tspan>
+    <tspan x="10px" y="676px"><tspan>    2: command exited with exit status: 101</tspan>
+</tspan>
+    <tspan x="10px" y="694px"><tspan>    3: command: cd "[TEST_DIR]/multi_stage_all_failed" &amp;&amp; "cargo" "check" "--message-format" "json" "--target" "x86_64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"</tspan>
+</tspan>
+    <tspan x="10px" y="712px"><tspan>       </tspan>
+</tspan>
+    <tspan x="10px" y="730px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: build #2 has failed</tspan>
+</tspan>
+    <tspan x="10px" y="748px"><tspan class="fg-red">ERROR</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: all builds have failed</tspan>
+</tspan>
+    <tspan x="10px" y="766px"><tspan>[LLVM_COV_STDERR]</tspan>
+</tspan>
+    <tspan x="10px" y="784px"><tspan>ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status</tspan>
+</tspan>
+  </text>
+
+</svg>

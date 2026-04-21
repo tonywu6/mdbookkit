@@ -1,0 +1,2 @@
+- [`crate::amd64_only`](https://docs.rs/multi_stage_some_failed/0.1.0/multi_stage_some_failed/fn.amd64_only.html "fn multi_stage_some_failed::amd64_only")
+- [`crate::arm64_only`]
