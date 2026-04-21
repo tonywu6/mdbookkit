@@ -47,7 +47,7 @@
 </tspan>
     <tspan x="10px" y="262px"><tspan>    1: --- cargo stderr</tspan>
 </tspan>
-    <tspan x="10px" y="280px"><tspan>       [LLVM_COV_STDERR]</tspan>
+    <tspan x="10px" y="280px"><tspan>       [CARGO_STDERR]</tspan>
 </tspan>
     <tspan x="10px" y="298px"><tspan>       error: could not compile `multi_stage_all_failed` (lib) due to 1 previous error</tspan>
 </tspan>
@@ -83,7 +83,7 @@
 </tspan>
     <tspan x="10px" y="586px"><tspan>    1: --- cargo stderr</tspan>
 </tspan>
-    <tspan x="10px" y="604px"><tspan>       [LLVM_COV_STDERR]</tspan>
+    <tspan x="10px" y="604px"><tspan>       [CARGO_STDERR]</tspan>
 </tspan>
     <tspan x="10px" y="622px"><tspan>       error: could not compile `multi_stage_all_failed` (lib) due to 1 previous error</tspan>
 </tspan>

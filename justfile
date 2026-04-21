@@ -1,5 +1,6 @@
-test:
-    cargo bin nextest run
+[positional-arguments]
+test *args:
+    cargo bin nextest run $@
 
 cov: cov-clean test cov-report
 

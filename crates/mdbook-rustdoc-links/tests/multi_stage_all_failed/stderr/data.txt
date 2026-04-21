@@ -12,7 +12,7 @@ Caused by:
        
        For more information about this error, try `rustc --explain E0308`.
     1: --- cargo stderr
-       [LLVM_COV_STDERR]
+       [CARGO_STDERR]
        error: could not compile `multi_stage_all_failed` (lib) due to 1 previous error
     2: command exited with exit status: 101
     3: command: cd "[TEST_DIR]/multi_stage_all_failed" && "cargo" "check" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"
@@ -30,7 +30,7 @@ Caused by:
        
        For more information about this error, try `rustc --explain E0080`.
     1: --- cargo stderr
-       [LLVM_COV_STDERR]
+       [CARGO_STDERR]
        error: could not compile `multi_stage_all_failed` (lib) due to 1 previous error
     2: command exited with exit status: 101
     3: command: cd "[TEST_DIR]/multi_stage_all_failed" && "cargo" "check" "--message-format" "json" "--target" "x86_64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"

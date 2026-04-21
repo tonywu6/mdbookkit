@@ -57,7 +57,7 @@
 </tspan>
     <tspan x="10px" y="352px"><tspan>    1: --- cargo stderr</tspan>
 </tspan>
-    <tspan x="10px" y="370px"><tspan>       [LLVM_COV_STDERR]</tspan>
+    <tspan x="10px" y="370px"><tspan>       [CARGO_STDERR]</tspan>
 </tspan>
     <tspan x="10px" y="388px"><tspan>       error: could not compile `compilation_error` (lib) due to 1 previous error</tspan>
 </tspan>
