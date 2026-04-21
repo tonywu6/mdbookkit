@@ -1,4 +1,4 @@
-<svg width="827px" height="5906px" xmlns="http://www.w3.org/2000/svg">
+<svg width="827px" height="6032px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -674,7 +674,21 @@
 </tspan>
     <tspan x="10px" y="5878px">
 </tspan>
-    <tspan x="10px" y="5896px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: finished with warnings</tspan>
+    <tspan x="10px" y="5896px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link</tspan>
+</tspan>
+    <tspan x="10px" y="5914px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>5.syntax.md:70:1</tspan>
+</tspan>
+    <tspan x="10px" y="5932px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="5950px"><tspan class="fg-bright-blue bold">70</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> </tspan><tspan class="fg-yellow bold">/</tspan><tspan> [std::marker::</tspan>
+</tspan>
+    <tspan x="10px" y="5968px"><tspan class="fg-bright-blue bold">71</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> </tspan><tspan class="fg-yellow bold">|</tspan><tspan> PhantomData]</tspan>
+</tspan>
+    <tspan x="10px" y="5986px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> </tspan><tspan class="fg-yellow bold">|____________^</tspan><tspan> </tspan><tspan class="fg-yellow bold">rustdoc did not process this link</tspan>
+</tspan>
+    <tspan x="10px" y="6004px">
+</tspan>
+    <tspan x="10px" y="6022px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: finished with warnings</tspan>
 </tspan>
   </text>
 

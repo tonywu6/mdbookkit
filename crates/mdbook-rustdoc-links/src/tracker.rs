@@ -657,21 +657,6 @@ impl<'a> IssueReportContext<'a> {
         let mut issues = Vec::with_capacity(link.diagnostics.len());
         let mut seen = BTreeSet::new();
 
-        if link.href.is_none() && link.diagnostics.is_empty() {
-            let span = &link.span.dest;
-
-            let issue = IssueReport::level(IssueLevel::Note)
-                .title("link ignored")
-                .annotations(vec![
-                    Highlight::span(span.clone())
-                        .kind(AnnotationKind::Context)
-                        .build(),
-                ])
-                .build();
-
-            issues.push(issue);
-        }
-
         for diagnostic in link.diagnostics.iter() {
             if seen
                 .replace(Lexicographic(DiagnosticKey(diagnostic)))
@@ -704,6 +689,19 @@ impl<'a> IssueReportContext<'a> {
             self.stats.has_warnings += 1
         } else if link.href.is_none() {
             self.stats.unsupported += 1;
+
+            if !matches!(link.kind, link_class!(href_defined)) {
+                let issue = IssueReport::level(IssueLevel::Warning)
+                    .title("unresolved link")
+                    .annotations(vec![
+                        Highlight::span(link.span.full.clone())
+                            .kind(AnnotationKind::Primary)
+                            .label("rustdoc did not process this link")
+                            .build(),
+                    ])
+                    .build();
+                issues.push(issue);
+            }
         }
 
         issues

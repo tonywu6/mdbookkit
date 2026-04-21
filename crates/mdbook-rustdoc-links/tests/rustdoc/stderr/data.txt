@@ -324,4 +324,11 @@ help: remove explicit link target
 17 + - [drop]
    |
 
+warning: unresolved link
+  --> 5.syntax.md:70:1
+   |
+70 | / [std::marker::
+71 | | PhantomData]
+   | |____________^ rustdoc did not process this link
+
  WARN mdbook-rustdoc-links: finished with warnings
