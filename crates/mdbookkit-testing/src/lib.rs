@@ -30,9 +30,7 @@ impl TestBook {
             .expect("temp dir should have a path")
             .try_conv::<&Utf8Path>()?;
 
-        self.cargo("clean", self.path.manifest_dir())
-            .assert()
-            .success();
+        let _ = self.cargo("clean", self.path.manifest_dir()).output();
 
         let result = self
             .cargo("bin", &self.path.root_dir)

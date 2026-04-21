@@ -42,6 +42,7 @@ test_mdbook![multi_stage_some_failed, exit(0), redacted = [redacted()]];
 test_mdbook![multi_stage_all_failed, exit(101), redacted = [redacted()]];
 test_mdbook![runner_bad_command, exit(101), redacted = [redacted()]];
 test_mdbook![runner_not_found, exit(101), redacted = [redacted()]];
+test_mdbook![manifest_invalid, exit(101), redacted = [redacted()]];
 test_mdbook![
     debug_logs,
     exit(0),

@@ -1,0 +1,15 @@
+ERROR mdbook-rustdoc-links: failed to determine the current Cargo workspace
+
+Caused by:
+    0: while preparing to build docs ...
+    1: `cargo locate-project` did not run successfully
+    2: --- stderr
+       error: failed to parse manifest at `[TEST_DIR]/manifest_invalid/Cargo.toml`
+       
+       Caused by:
+         `resolver` setting `000` is not valid, valid options are "1", "2" or "3"
+    3: command exited with exit status: 101
+    4: command: cd "[TEST_DIR]/manifest_invalid" && "cargo" "locate-project" "--message-format=json" "--workspace"
+       
+[LLVM_COV_STDERR]
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status
