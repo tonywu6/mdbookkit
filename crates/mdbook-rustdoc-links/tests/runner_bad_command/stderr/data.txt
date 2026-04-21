@@ -1,0 +1,17 @@
+ WARN mdbook-rustdoc-links: could not determine the workspace layout via cargo
+
+Caused by:
+    0: --- stderr
+       error: no such command: `cargo`
+       
+       help: view all installed commands with `cargo --list`
+       help: find a package to install `cargo` with `cargo search cargo-cargo`
+    1: command exited with exit status: 101
+    2: command: cd "[TEST_DIR]/runner_bad_command" && "cargo" "cargo" "metadata" "--format-version" "1"
+       
+note: the following options have been specified, which may have caused the error:
+- build.runner
+
+ERROR mdbook-rustdoc-links: build failed
+[LLVM_COV_STDERR]
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status

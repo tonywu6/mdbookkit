@@ -155,8 +155,8 @@ fn run_builder(
             .current_dir(manifest_dir)
             .run()
             .into_cargo_metadata()
-            .context("failed to learn about workspace paths via cargo")
-            .or_else(emit_warning!())?;
+            .context("could not determine the workspace layout via cargo")
+            .or_else(with_notes!(emit_warning, tracker.notes()))?;
         PathMapper::new(&metadata, Some(&build_metadata))
     };
 
