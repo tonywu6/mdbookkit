@@ -1,0 +1,13 @@
+warning: unresolved link to `crate::DATA`
+ --> index.md:1:5
+  |
+1 | - [`crate::DATA`]
+  |     ^^^^^^^^^^^ no item named `DATA` in module `temporary_crate_0`
+  |
+  = help: try specifying the crate name instead of `crate::`
+  = help: or use the `build.preludes` option to introduce this item into scope
+  = note: in order to resolve links, the preprocessor creates a temporary crate;
+          a prelude was not implicitly added to the temporary crate because:
+          the default workspace member is not a library
+
+ WARN mdbook-rustdoc-links: finished with warnings

@@ -18,6 +18,7 @@ test_mdbook![targets, exit(0), redacted = [redacted()]];
 test_mdbook![packages, exit(0), redacted = [redacted()]];
 test_mdbook![preludes, exit(0), redacted = [redacted()]];
 test_mdbook![preludes_implicit, exit(0), redacted = [redacted()]];
+test_mdbook![preludes_bin, exit(0), redacted = [redacted()]];
 test_mdbook![features, exit(0), redacted = [redacted()]];
 test_mdbook![cargo_customize, exit(0), redacted = [redacted()]];
 test_mdbook![runner, exit(0), redacted = [redacted()]];
