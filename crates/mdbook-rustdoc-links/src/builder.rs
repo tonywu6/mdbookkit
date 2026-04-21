@@ -16,7 +16,7 @@ use cargo_metadata::{
 };
 use tap::{Pipe, Tap, TapFallible};
 use tempfile::TempDir;
-use tracing::{Level, debug, info, info_span, trace, warn};
+use tracing::{Level, debug, info, info_span, instrument, trace, warn};
 
 use mdbookkit::{
     emit_debug, emit_error, emit_warning,
@@ -26,6 +26,7 @@ use mdbookkit::{
 };
 
 use crate::{
+    diagnostics::DiagnosticNotes,
     options::{
         BuildConfigResolved, BuildOptions, Builder, PackageSelector, PackageSpec, WorkspaceMember,
     },
@@ -90,7 +91,7 @@ fn run_builder(
         Default::default()
     } else {
         ticker_event!(&ticker, Level::INFO, "resolving packages");
-        resolve_packages(&metadata, &builder.options, manifest_dir)?
+        resolve_packages(&metadata, &builder.options, manifest_dir, tracker.notes())?
     };
 
     debug!("resolved packages: {packages:#?}");
@@ -673,10 +674,12 @@ impl PathMapper {
     }
 }
 
+#[instrument(skip_all)]
 fn resolve_packages(
     metadata: &cargo_metadata::Metadata,
     options: &BuildOptions,
     manifest_dir: &Utf8Path,
+    notes: &DiagnosticNotes,
 ) -> Result<PackageList, Break> {
     let BuildOptions {
         packages,
@@ -710,14 +713,14 @@ fn resolve_packages(
             WorkspaceMember::All => metadata.workspace_packages(),
         }
         .iter()
-        .map(|pkg| (&pkg.id.repr, *dependencies))
+        .map(|pkg| (&*pkg.name, *dependencies))
         .collect(),
     });
 
-    let mut trees = HashMap::<_, Vec<_>>::new();
+    let mut trees = HashMap::<_, BTreeSet<_>>::new();
     for (pkg, dep) in pkgs {
         let depth = if dep { "1" } else { "0" };
-        trees.entry(depth).or_default().push(pkg);
+        trees.entry(depth).or_default().insert(pkg);
     }
 
     let command = || {
@@ -732,23 +735,22 @@ fn resolve_packages(
             .options("--edges", ["normal"])
     };
 
-    trees
-        .into_iter()
+    let resolved = trees
+        .iter()
         .map(|(depth, packages)| {
-            command()
+            let stdout = command()
                 .options("--package", packages)
                 .options("--depth", [depth])
                 .runner(&cargo.runner)
                 .current_dir(manifest_dir)
                 .run()
                 .checked()?
-                .stdout
-                .pipe(String::from_utf8)?
-                .pipe(Ok)
+                .stdout;
+            Ok(String::from_utf8(stdout)?)
         })
         .collect::<Result<Vec<_>>>()
-        .context("failed to resolve package versions")
-        .or_else(emit_warning!())?
+        .context("could not obtain package versions")
+        .or_else(with_notes!(emit_warning, notes))?
         .iter()
         .flat_map(|output| {
             output.lines().filter_map(|line| {
@@ -759,9 +761,22 @@ fn resolve_packages(
                 Some((name, version))
             })
         })
-        .collect::<BTreeSet<_>>()
-        .pipe(PackageList)
-        .pipe(Ok)
+        .collect::<BTreeSet<_>>();
+
+    for (name, _) in resolved.iter() {
+        for set in trees.values_mut() {
+            set.remove(name);
+        }
+    }
+
+    let unresolved = trees.into_values().flatten().collect::<BTreeSet<_>>();
+
+    if !unresolved.is_empty() {
+        warn! { "could not determine the versions of these packages after \
+        excluding dev and build dependencies: {unresolved:#?}" };
+    }
+
+    Ok(PackageList(resolved))
 }
 
 fn load_docs_rs_options(

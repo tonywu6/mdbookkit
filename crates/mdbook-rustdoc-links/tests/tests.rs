@@ -28,6 +28,7 @@ test_mdbook![workspace_deps, exit(0), redacted = [redacted()]];
 test_mdbook![workspace_all, exit(0), redacted = [redacted()]];
 test_mdbook![multi_stage, exit(0), redacted = [redacted()]];
 test_mdbook![targets_proc_macro, exit(0), redacted = [redacted()]];
+test_mdbook![packages_dev, exit(0), redacted = [redacted()]];
 test_mdbook![
     manifest_dir,
     exit(0),

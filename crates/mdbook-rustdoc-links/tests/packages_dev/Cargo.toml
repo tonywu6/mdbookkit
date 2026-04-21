@@ -1,0 +1,11 @@
+[package]
+edition = "2024"
+name = "packages_dev"
+publish = false
+version = "0.1.0"
+
+[workspace]
+resolver = "2"
+
+[dev-dependencies]
+pin-project-lite = "=0.2.17"
