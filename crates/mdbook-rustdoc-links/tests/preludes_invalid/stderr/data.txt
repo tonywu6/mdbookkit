@@ -1,0 +1,27 @@
+ WARN mdbook-rustdoc-links: `rustdoc` did not succeed
+
+Caused by:
+    0: --- rustdoc stderr
+       error: expected identifier, found keyword `use`
+        --> <anon>:3:5
+         |
+       3 | use use std::io::*;
+         |     ^^^ expected identifier, found keyword
+       
+       error: expected one of `::`, `;`, or `as`, found `std`
+        --> <anon>:3:9
+         |
+       3 | use use std::io::*;
+         |         ^^^ expected one of `::`, `;`, or `as`
+       
+       error: aborting due to 2 previous errors
+    1: command exited with exit status: 1
+    2: command: cd "[TEST_DIR]/preludes_invalid" && "rustdoc" "--out-dir" "[TEST_DIR]/preludes_invalid/target/[TEMP_DIR]" "--edition" "2024" "--crate-type" "lib" "--error-format" "json" "-" "--extern" "preludes_invalid=[TEST_DIR]/preludes_invalid/target/debug/deps/libpreludes_invalid-[BUILD_HASH].rmeta" "-L" "dependency=[TEST_DIR]/preludes_invalid/target/debug/deps" "--crate-name" "temporary_crate_0"
+       ---
+note: the following options have been specified, which may have caused the error:
+- build.preludes
+
+
+ERROR mdbook-rustdoc-links: build failed
+[LLVM_COV_STDERR]
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status

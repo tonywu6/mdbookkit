@@ -1,2 +1,2 @@
 - [`anstyle_parse::Utf8Parser`](https://docs.rs/anstyle-parse/1.0.0/anstyle_parse/struct.Utf8Parser.html "struct anstyle_parse::Utf8Parser")
-- [`crate::fancy`](https://docs.rs/packages/0.1.0/packages/fn.fancy.html "fn packages::fancy")
+- [`crate::fancy`](https://docs.rs/features/0.1.0/features/fn.fancy.html "fn features::fancy")

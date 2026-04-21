@@ -65,12 +65,14 @@ impl TestBook {
             assert.try_eq_text(None, &stderr, stderr_txt),
         ];
 
-        for page in self.path.expected_pages()? {
-            let page = page?;
-            let name = page.name();
-            let expected = page.expected();
-            let actual = self.path.actual_page(name, temp_dir)?;
-            results.push(assert.try_eq_text(Some(&name), actual, expected));
+        if self.code == 0 {
+            for page in self.path.expected_pages()? {
+                let page = page?;
+                let name = page.name();
+                let expected = page.expected();
+                let actual = self.path.actual_page(name, temp_dir)?;
+                results.push(assert.try_eq_text(Some(&name), actual, expected));
+            }
         }
 
         for result in results.iter() {

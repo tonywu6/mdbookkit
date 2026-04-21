@@ -36,6 +36,8 @@ test_mdbook![
     manifest = "./rust"
 ];
 
+test_mdbook![preludes_invalid, exit(101), redacted = [redacted()]];
+
 #[test]
 fn rustdoc_parity() -> Result<()> {
     let book = RustDoc::book()?;
@@ -136,11 +138,24 @@ fn rustdoc_parity() -> Result<()> {
 }
 
 fn redacted() -> Vec<(&'static str, RedactedValue)> {
-    vec![(
-        "[RUST_VERSION]",
-        r"https://doc\.rust-lang\.org/(?<redacted>nightly|1\.\d+\.\d+)/(core|alloc|std)/"
-            .parse::<Regex>()
+    vec![
+        (
+            "[RUST_VERSION]",
+            Regex::new(
+                r"https://doc\.rust-lang\.org/(?<redacted>nightly|1\.\d+\.\d+)/(core|alloc|std)/",
+            )
             .unwrap()
             .into(),
-    )]
+        ),
+        (
+            "[TEMP_DIR]",
+            Regex::new(r"\.tmp[A-Za-z0-9]+").unwrap().into(),
+        ),
+        (
+            "[BUILD_HASH]",
+            Regex::new(r"/lib.+?-(?<redacted>[a-z0-9]+?)\.rmeta")
+                .unwrap()
+                .into(),
+        ),
+    ]
 }

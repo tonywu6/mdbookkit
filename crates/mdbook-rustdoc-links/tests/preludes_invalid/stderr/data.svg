@@ -1,0 +1,78 @@
+<svg width="3406px" height="506px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .fg { fill: #B2B2B2 }
+    .bg { fill: #1A1A1A }
+    .fg-red { fill: #E06C75 }
+    .fg-yellow { fill: #D19A66 }
+    .container {
+      padding: 0 10px;
+      line-height: 18px;
+    }
+    .bold { font-weight: bold; }
+    tspan {
+      font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;
+      white-space: pre;
+      line-height: 18px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" y="0" rx="4.5" class="bg" />
+
+  <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: `rustdoc` did not succeed</tspan>
+</tspan>
+    <tspan x="10px" y="46px">
+</tspan>
+    <tspan x="10px" y="64px"><tspan>Caused by:</tspan>
+</tspan>
+    <tspan x="10px" y="82px"><tspan>    0: --- rustdoc stderr</tspan>
+</tspan>
+    <tspan x="10px" y="100px"><tspan>       error: expected identifier, found keyword `use`</tspan>
+</tspan>
+    <tspan x="10px" y="118px"><tspan>        --&gt; &lt;anon&gt;:3:5</tspan>
+</tspan>
+    <tspan x="10px" y="136px"><tspan>         |</tspan>
+</tspan>
+    <tspan x="10px" y="154px"><tspan>       3 | use use std::io::*;</tspan>
+</tspan>
+    <tspan x="10px" y="172px"><tspan>         |     ^^^ expected identifier, found keyword</tspan>
+</tspan>
+    <tspan x="10px" y="190px"><tspan>       </tspan>
+</tspan>
+    <tspan x="10px" y="208px"><tspan>       error: expected one of `::`, `;`, or `as`, found `std`</tspan>
+</tspan>
+    <tspan x="10px" y="226px"><tspan>        --&gt; &lt;anon&gt;:3:9</tspan>
+</tspan>
+    <tspan x="10px" y="244px"><tspan>         |</tspan>
+</tspan>
+    <tspan x="10px" y="262px"><tspan>       3 | use use std::io::*;</tspan>
+</tspan>
+    <tspan x="10px" y="280px"><tspan>         |         ^^^ expected one of `::`, `;`, or `as`</tspan>
+</tspan>
+    <tspan x="10px" y="298px"><tspan>       </tspan>
+</tspan>
+    <tspan x="10px" y="316px"><tspan>       error: aborting due to 2 previous errors</tspan>
+</tspan>
+    <tspan x="10px" y="334px"><tspan>    1: command exited with exit status: 1</tspan>
+</tspan>
+    <tspan x="10px" y="352px"><tspan>    2: command: cd "[TEST_DIR]/preludes_invalid" &amp;&amp; "rustdoc" "--out-dir" "[TEST_DIR]/preludes_invalid/target/[TEMP_DIR]" "--edition" "2024" "--crate-type" "lib" "--error-format" "json" "-" "--extern" "preludes_invalid=[TEST_DIR]/preludes_invalid/target/debug/deps/libpreludes_invalid-[BUILD_HASH].rmeta" "-L" "dependency=[TEST_DIR]/preludes_invalid/target/debug/deps" "--crate-name" "temporary_crate_0"</tspan>
+</tspan>
+    <tspan x="10px" y="370px"><tspan>       ---</tspan>
+</tspan>
+    <tspan x="10px" y="388px"><tspan>note: the following options have been specified, which may have caused the error:</tspan>
+</tspan>
+    <tspan x="10px" y="406px"><tspan>- build.preludes</tspan>
+</tspan>
+    <tspan x="10px" y="424px">
+</tspan>
+    <tspan x="10px" y="442px">
+</tspan>
+    <tspan x="10px" y="460px"><tspan class="fg-red">ERROR</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: build failed</tspan>
+</tspan>
+    <tspan x="10px" y="478px"><tspan>[LLVM_COV_STDERR]</tspan>
+</tspan>
+    <tspan x="10px" y="496px"><tspan>ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status</tspan>
+</tspan>
+  </text>
+
+</svg>
