@@ -1,0 +1,14 @@
+ WARN mdbook-rustdoc-links: could not obtain info about the packages to build docs for
+
+Caused by:
+    0: --- stderr
+       error: expected a version like "1.32"
+    1: command exited with exit status: 101
+    2: command: cd "[TEST_DIR]/packages_invalid" && "cargo" "tree" "--no-dedupe" "--format" "{p}" "--prefix" "none" "--edges" "normal" "--package" "@@@@@" "--depth" "0"
+       
+note: the following options have been specified, which may have caused the error:
+- build.packages
+
+ERROR mdbook-rustdoc-links: build failed
+[LLVM_COV_STDERR]
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status

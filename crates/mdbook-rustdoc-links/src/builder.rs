@@ -748,7 +748,7 @@ fn resolve_packages(
             Ok(String::from_utf8(stdout)?)
         })
         .collect::<Result<Vec<_>>>()
-        .context("could not obtain package versions")
+        .context("could not obtain info about the packages to build docs for")
         .or_else(with_notes!(emit_warning, notes))?
         .iter()
         .flat_map(|output| {

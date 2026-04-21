@@ -1,0 +1,19 @@
+[preprocessor.rustdoc-links]
+after = ["links"]
+command = "cargo preprocessor"
+
+[preprocessor.rustdoc-links.build]
+packages = [
+  { workspace = "none" },
+  { workspace = true },
+  { workspace = false },
+  { workspace = "default" },
+  { workspace = "all" },
+  { workspace = "crates/*" },
+]
+
+[build]
+build-dir = "dist"
+create-missing = false
+
+[output.markdown]

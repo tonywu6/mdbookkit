@@ -43,6 +43,9 @@ test_mdbook![multi_stage_all_failed, exit(101), redacted = [redacted()]];
 test_mdbook![runner_bad_command, exit(101), redacted = [redacted()]];
 test_mdbook![runner_not_found, exit(101), redacted = [redacted()]];
 test_mdbook![manifest_invalid, exit(101), redacted = [redacted()]];
+test_mdbook![packages_invalid, exit(101), redacted = [redacted()]];
+test_mdbook![deserialize_workspace, exit(101), redacted = [redacted()]];
+test_mdbook![deserialize_package, exit(101), redacted = [redacted()]];
 test_mdbook![
     debug_logs,
     exit(0),

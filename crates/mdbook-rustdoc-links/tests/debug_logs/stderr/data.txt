@@ -3,12 +3,98 @@ TRACE mdbook-rustdoc-links:page_read: link +++ span=3..10 event=Code(Borrowed("f
 TRACE mdbook-rustdoc-links:page_read: link <<< span=2..11 path="index.md"
 DEBUG mdbook-rustdoc-links: running: cd "[TEST_DIR]/debug_logs" && "cargo" "locate-project" "--message-format=json" "--workspace"
 DEBUG mdbook-rustdoc-links: resolved manifest dir: [TEST_DIR]/debug_logs
- INFO mdbook-rustdoc-links: building docs
+ INFO mdbook-rustdoc-links: running build #1 [aarch64-unknown-linux-gnu]
  INFO mdbook-rustdoc-links:build:prepare: started instance=1 preparing
  INFO mdbook-rustdoc-links:build:prepare: cargo metadata instance=1 preparing
-DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "cargo" "metadata" "--format-version" "1" "--features" "fancy" instance=1
- INFO mdbook-rustdoc-links:build:prepare: resolving packages instance=1 preparing
-DEBUG mdbook-rustdoc-links:build:resolve_packages: running: cd "[TEST_DIR]/debug_logs" && "bash" "-c" "cargo tree --features fancy --no-dedupe --format '{p}' --prefix none --edges normal --package debug_logs --depth 0" instance=1
+DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "cargo" "metadata" "--format-version" "1" instance=1
+DEBUG mdbook-rustdoc-links:build: resolved options: Builder {
+    targets: [
+        "aarch64-unknown-linux-gnu",
+    ],
+    options: BuildOptions {
+        packages: [],
+        preludes: None,
+        features: FeatureSelection {
+            features: [],
+            all_features: None,
+            no_default_features: None,
+        },
+        rustc_args: [],
+        rustdoc_args: [],
+        cargo: CargoOptions {
+            toolchain: None,
+            cargo_args: [],
+            runner: CommandRunner(
+                None,
+            ),
+        },
+        docs_rs: None,
+    },
+} instance=1
+DEBUG mdbook-rustdoc-links:build: resolved packages: {} instance=1
+DEBUG mdbook-rustdoc-links:build: resolved preludes: [
+    "debug_logs::*",
+] instance=1
+DEBUG mdbook-rustdoc-links:build: resolved path mappings: PathMapper {
+    target: "[TEST_DIR]/debug_logs/target",
+} instance=1
+DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "cargo" "doc" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'" instance=1
+ INFO mdbook-rustdoc-links:build:cargo-doc: started instance=1 cargo doc
+TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: [], filenames: ["[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/doc/debug_logs/index.html"], executable: None, fresh: false }) instance=1
+TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=1
+DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "cargo" "check" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'" instance=1
+ INFO mdbook-rustdoc-links:build:cargo-check: started instance=1 cargo check
+TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: [], filenames: ["[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/debug/deps/libdebug_logs-[BUILD_HASH].rmeta"], executable: None, fresh: false }) instance=1
+TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=1
+TRACE mdbook-rustdoc-links:build: CompilerOutput {
+    targets: {
+        "aarch64-unknown-linux-gnu",
+    },
+    crates: {
+        "debug_logs": PackageId {
+            repr: "path+file://[TEST_DIR]/debug_logs#0.1.0",
+        },
+    },
+    libs: {
+        "debug_logs [aarch64-unknown-linux-gnu]": "aarch64-unknown-linux-gnu/debug/deps/libdebug_logs-[BUILD_HASH].rmeta",
+    },
+    docs: {
+        "debug_logs [aarch64-unknown-linux-gnu]": "aarch64-unknown-linux-gnu/doc/debug_logs/index.html",
+    },
+    paths: PathMapper {
+        target: "[TEST_DIR]/debug_logs/target",
+    },
+    ..
+} instance=1
+DEBUG mdbook-rustdoc-links:build: rustdoc input:
+//! - <span mdbook-rustdoc-links>[`fancy`]</span>
+ instance=1
+ INFO mdbook-rustdoc-links:build:rustdoc: started instance=1 rustdoc [aarch64-unknown-linux-gnu]
+DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "rustdoc" "--target" "aarch64-unknown-linux-gnu" "--out-dir" "[TEST_DIR]/debug_logs/target/[TEMP_DIR]" "--edition" "2024" "--crate-type" "lib" "--error-format" "json" "-" "--extern" "debug_logs=[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/debug/deps/libdebug_logs-[BUILD_HASH].rmeta" "-L" "dependency=[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/debug/deps" "--crate-name" "temporary_crate_0" instance=1
+TRACE mdbook-rustdoc-links:build: --- rustdoc stderr
+{"$message_type":"diagnostic","message":"unresolved link to `fancy`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"<anon>","byte_start":35,"byte_end":40,"line_start":1,"line_end":1,"column_start":36,"column_end":41,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[`fancy`]</span>","highlight_start":36,"highlight_end":41}],"label":"no item named `fancy` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null},{"message":"`#[warn(rustdoc::broken_intra_doc_links)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `fancy`\n --> <anon>:1:36/n  |\n1 | //! - <span mdbook-rustdoc-links>[`fancy`]</span>\n  |                                    ^^^^^ no item named `fancy` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default/n\n"}
+{"$message_type":"diagnostic","message":"1 warning emitted","code":null,"level":"warning","spans":[],"children":[],"rendered":"warning: 1 warning emitted/n\n"} instance=1
+TRACE mdbook-rustdoc-links:build:debug: line 1, link "fancy", warning: unresolved link to `fancy`
+ --> <anon>:1:36
+  |
+1 | //! - <span mdbook-rustdoc-links>[`fancy`]</span>
+  |                                    ^^^^^ no item named `fancy` in scope
+  |
+  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`
+  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default
+
+ instance=1
+TRACE mdbook-rustdoc-links:build:debug: could not determine primary line
+
+Caused by:
+    Diagnostic { message: "1 warning emitted", code: None, level: Warning, spans: [], children: [], rendered: Some("warning: 1 warning emitted/n\n") } instance=1
+ INFO mdbook-rustdoc-links: build #1 done
+ INFO mdbook-rustdoc-links: running build #2 [default targets, "fancy", workspace members, (additional options), ..]
+ INFO mdbook-rustdoc-links:build:prepare: started instance=2 preparing
+ INFO mdbook-rustdoc-links:build:prepare: cargo metadata instance=2 preparing
+DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "cargo" "metadata" "--format-version" "1" "--features" "fancy" instance=2
+ INFO mdbook-rustdoc-links:build:prepare: resolving packages instance=2 preparing
+DEBUG mdbook-rustdoc-links:build:resolve_packages: running: cd "[TEST_DIR]/debug_logs" && "bash" "-c" "cargo tree --features fancy --no-dedupe --format '{p}' --prefix none --edges normal --package debug_logs --depth 0" instance=2
 DEBUG mdbook-rustdoc-links:build: resolved options: Builder {
     targets: [],
     options: BuildOptions {
@@ -51,26 +137,26 @@ DEBUG mdbook-rustdoc-links:build: resolved options: Builder {
         },
         docs_rs: None,
     },
-} instance=1
+} instance=2
 DEBUG mdbook-rustdoc-links:build: resolved packages: {
     debug_logs@0.1.0,
-} instance=1
+} instance=2
 DEBUG mdbook-rustdoc-links:build: resolved preludes: [
     "debug_logs::*",
-] instance=1
- INFO mdbook-rustdoc-links:build:prepare: cargo metadata instance=1 preparing
-DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "bash" "-c" "cargo metadata --format-version 1" instance=1
+] instance=2
+ INFO mdbook-rustdoc-links:build:prepare: cargo metadata instance=2 preparing
+DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "bash" "-c" "cargo metadata --format-version 1" instance=2
 DEBUG mdbook-rustdoc-links:build: resolved path mappings: PathMapper {
     target: "[TEST_DIR]/debug_logs/target":"[TEST_DIR]/debug_logs/target",
-} instance=1
-DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "bash" "-c" "cargo doc --message-format json --no-deps --package debug_logs@0.1.0 --features fancy --config \"term.color = 'never'\" --config \"term.progress.when = 'never'\"" instance=1
- INFO mdbook-rustdoc-links:build:cargo-doc: started instance=1 cargo doc
-TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: ["fancy"], filenames: ["[TEST_DIR]/debug_logs/target/doc/debug_logs/index.html"], executable: None, fresh: false }) instance=1
-TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=1
-DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "bash" "-c" "cargo check --message-format json --package debug_logs@0.1.0 --features fancy --config \"term.color = 'never'\" --config \"term.progress.when = 'never'\"" instance=1
- INFO mdbook-rustdoc-links:build:cargo-check: started instance=1 cargo check
-TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: ["fancy"], filenames: ["[TEST_DIR]/debug_logs/target/debug/deps/libdebug_logs-[BUILD_HASH].rmeta"], executable: None, fresh: false }) instance=1
-TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=1
+} instance=2
+DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "bash" "-c" "cargo doc --message-format json --no-deps --package debug_logs@0.1.0 --features fancy --config \"term.color = 'never'\" --config \"term.progress.when = 'never'\"" instance=2
+ INFO mdbook-rustdoc-links:build:cargo-doc: started instance=2 cargo doc
+TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: ["fancy"], filenames: ["[TEST_DIR]/debug_logs/target/doc/debug_logs/index.html"], executable: None, fresh: false }) instance=2
+TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=2
+DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "bash" "-c" "cargo check --message-format json --package debug_logs@0.1.0 --features fancy --config \"term.color = 'never'\" --config \"term.progress.when = 'never'\"" instance=2
+ INFO mdbook-rustdoc-links:build:cargo-check: started instance=2 cargo check
+TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: ["fancy"], filenames: ["[TEST_DIR]/debug_logs/target/debug/deps/libdebug_logs-[BUILD_HASH].rmeta"], executable: None, fresh: false }) instance=2
+TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=2
 TRACE mdbook-rustdoc-links:build: CompilerOutput {
     targets: {},
     crates: {
@@ -88,14 +174,15 @@ TRACE mdbook-rustdoc-links:build: CompilerOutput {
         target: "[TEST_DIR]/debug_logs/target":"[TEST_DIR]/debug_logs/target",
     },
     ..
-} instance=1
+} instance=2
 DEBUG mdbook-rustdoc-links:build: rustdoc input:
 //! - <span mdbook-rustdoc-links>[`fancy`]</span>
- instance=1
- INFO mdbook-rustdoc-links:build:rustdoc: started instance=1 rustdoc
-DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "bash" "-c" "rustdoc --out-dir [TEST_DIR]/debug_logs/target/[TEMP_DIR] --edition 2024 --crate-type lib --error-format json - --extern 'debug_logs=[TEST_DIR]/debug_logs/target/debug/deps/libdebug_logs-[BUILD_HASH].rmeta' -L 'dependency=[TEST_DIR]/debug_logs/target/debug/deps' --crate-name temporary_crate_0" instance=1
+ instance=2
+ INFO mdbook-rustdoc-links:build:rustdoc: started instance=2 rustdoc
+DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "bash" "-c" "rustdoc --out-dir [TEST_DIR]/debug_logs/target/[TEMP_DIR] --edition 2024 --crate-type lib --error-format json - --extern 'debug_logs=[TEST_DIR]/debug_logs/target/debug/deps/libdebug_logs-[BUILD_HASH].rmeta' -L 'dependency=[TEST_DIR]/debug_logs/target/debug/deps' --crate-name temporary_crate_0" instance=2
 TRACE mdbook-rustdoc-links:build: --- rustdoc stderr
-(empty) instance=1
-TRACE mdbook-rustdoc-links:build:debug: Element { tag_name: "a", attributes: [Attribute { name: "href", value: "../debug_logs/fn.fancy.html" }, Attribute { name: "title", value: "fn debug_logs::fancy" }] } instance=1
+(empty) instance=2
+TRACE mdbook-rustdoc-links:build:debug: Element { tag_name: "a", attributes: [Attribute { name: "href", value: "../debug_logs/fn.fancy.html" }, Attribute { name: "title", value: "fn debug_logs::fancy" }] } instance=2
+ INFO mdbook-rustdoc-links: build #2 done
  INFO mdbook-rustdoc-links: processed 1 link: 1 resolved; 0 unresolved
  INFO mdbook-rustdoc-links: finished

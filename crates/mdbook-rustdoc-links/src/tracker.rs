@@ -272,13 +272,12 @@ impl<'a> LinkTracker<'a> {
         let mut ctx = IssueReportContext {
             tracker: self,
             notes: self.notes.clone(),
+            stats: Default::default(),
         };
-        let mut stats = Statistics::default();
 
         for (page, links) in links {
             let page_issues = links
                 .iter()
-                .inspect(|link| stats.count(link))
                 .flat_map(|link| ctx.diagnose(link))
                 .chain(self.link_summary(links))
                 .collect();
@@ -301,7 +300,7 @@ impl<'a> LinkTracker<'a> {
         ExportedPages {
             contents,
             issues,
-            stats,
+            stats: ctx.stats,
         }
     }
 
@@ -637,10 +636,18 @@ impl<'a> Link<'a> {
 struct IssueReportContext<'a> {
     tracker: &'a LinkTracker<'a>,
     notes: DiagnosticNotes,
+    stats: Statistics,
 }
 
 impl<'a> IssueReportContext<'a> {
     fn diagnose(&mut self, link: &'a Link<'a>) -> Vec<IssueReport<'a>> {
+        self.stats.processed += 1;
+        if link.href.is_some() {
+            self.stats.resolved += 1
+        } else {
+            self.stats.unresolved += 1;
+        }
+
         let mut issues = Vec::with_capacity(link.diagnostics.len());
         let mut seen = BTreeSet::new();
 
@@ -685,6 +692,12 @@ impl<'a> IssueReportContext<'a> {
             }
 
             issues.push(issue);
+        }
+
+        if !issues.is_empty() {
+            self.stats.has_warnings += 1
+        } else if link.href.is_none() {
+            self.stats.unsupported += 1;
         }
 
         issues
@@ -860,22 +873,6 @@ pub struct Statistics {
     unresolved: usize,
     has_warnings: usize,
     unsupported: usize,
-}
-
-impl Statistics {
-    fn count(&mut self, link: &Link<'_>) {
-        self.processed += 1;
-        if link.href.is_some() {
-            self.resolved += 1
-        } else {
-            self.unresolved += 1;
-        }
-        if !link.diagnostics.is_empty() {
-            self.has_warnings += 1
-        } else if link.href.is_none() {
-            self.unresolved += 1;
-        }
-    }
 }
 
 impl Display for Statistics {
