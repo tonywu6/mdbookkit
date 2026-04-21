@@ -37,9 +37,24 @@ test_mdbook![
 ];
 
 test_mdbook![preludes_invalid, exit(101), redacted = [redacted()]];
-test_mdbook![compilation_error, exit(101), redacted = [redacted()]];
-test_mdbook![multi_stage_some_failed, exit(0), redacted = [redacted()]];
-test_mdbook![multi_stage_all_failed, exit(101), redacted = [redacted()]];
+test_mdbook![
+    compilation_error,
+    exit(101),
+    env = ["CARGO_TERM_QUIET" = "true"],
+    redacted = [redacted()]
+];
+test_mdbook![
+    multi_stage_some_failed,
+    exit(0),
+    env = ["CARGO_TERM_QUIET" = "true"],
+    redacted = [redacted()]
+];
+test_mdbook![
+    multi_stage_all_failed,
+    exit(101),
+    env = ["CARGO_TERM_QUIET" = "true"],
+    redacted = [redacted()]
+];
 
 #[test]
 fn rustdoc_parity() -> Result<()> {

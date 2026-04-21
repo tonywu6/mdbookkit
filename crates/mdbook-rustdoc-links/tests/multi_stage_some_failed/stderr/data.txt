@@ -12,8 +12,6 @@ Caused by:
        
        For more information about this error, try `rustc --explain E0308`.
     1: --- cargo stderr
-           Blocking waiting for file lock on package cache
-           Checking multi_stage_some_failed v0.1.0 ([TEST_DIR]/multi_stage_some_failed)
        [LLVM_COV_STDERR]
        error: could not compile `multi_stage_some_failed` (lib) due to 1 previous error
     2: command exited with exit status: 101
