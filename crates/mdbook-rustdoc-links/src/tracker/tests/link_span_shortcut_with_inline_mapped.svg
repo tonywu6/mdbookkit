@@ -25,21 +25,21 @@
 </tspan>
     <tspan x="10px" y="64px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="82px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> </tspan><tspan class="fg-yellow bold">[drop](drop)</tspan>
+    <tspan x="10px" y="82px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> </tspan><tspan class="fg-yellow bold">[*PhantomData*]</tspan>
 </tspan>
-    <tspan x="10px" y="100px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^</tspan>
+    <tspan x="10px" y="100px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^</tspan>
 </tspan>
     <tspan x="10px" y="118px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
     <tspan x="10px" y="136px"><tspan class="fg-yellow bold">warning</tspan><tspan>: link dest</tspan>
 </tspan>
-    <tspan x="10px" y="154px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>&lt;anon&gt;:1:8</tspan>
+    <tspan x="10px" y="154px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>&lt;anon&gt;:1:3</tspan>
 </tspan>
     <tspan x="10px" y="172px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="190px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> [drop](</tspan><tspan class="fg-yellow bold">drop</tspan><tspan>)</tspan>
+    <tspan x="10px" y="190px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> [*</tspan><tspan class="fg-yellow bold">PhantomData</tspan><tspan>*]</tspan>
 </tspan>
-    <tspan x="10px" y="208px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>        </tspan><tspan class="fg-yellow bold">^^^^</tspan>
+    <tspan x="10px" y="208px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>   </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^</tspan>
 </tspan>
     <tspan x="10px" y="226px"><tspan class="fg-yellow bold">warning</tspan><tspan>: link text</tspan>
 </tspan>
@@ -47,9 +47,9 @@
 </tspan>
     <tspan x="10px" y="262px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="280px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> [</tspan><tspan class="fg-yellow bold">drop</tspan><tspan>](drop)</tspan>
+    <tspan x="10px" y="280px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> [</tspan><tspan class="fg-yellow bold">*PhantomData*</tspan><tspan>]</tspan>
 </tspan>
-    <tspan x="10px" y="298px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>  </tspan><tspan class="fg-yellow bold">^^^^</tspan>
+    <tspan x="10px" y="298px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>  </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^</tspan>
 </tspan>
   </text>
 

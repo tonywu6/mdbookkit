@@ -75,7 +75,7 @@ enum NormalizedLink<'a> {
 struct SourceSpan {
     full: Range<usize>,
     text: Range<usize>,
-    dest: Range<usize>,
+    dest: Option<Range<usize>>,
 }
 
 impl<'a> LinkTracker<'a> {
@@ -308,7 +308,7 @@ impl<'a> LinkTracker<'a> {
         let resolved = links
             .iter()
             .filter_map(|link| {
-                Highlight::span(link.span.dest.clone())
+                Highlight::span(link.span.any().clone())
                     .kind(AnnotationKind::Primary)
                     .label(link.href.as_ref()?.as_str())
                     .build()
@@ -370,20 +370,6 @@ fn could_be_item_link(kind: LinkType, dest: &str) -> bool {
     }
 
     true
-}
-
-fn locate_text(source: &str, sliced: &str, fallback: &Range<usize>) -> Range<usize> {
-    let sliced_lower = sliced.as_ptr();
-    let sliced_upper = unsafe { sliced_lower.add(sliced.len()) };
-    let source_lower = source.as_ptr();
-    let source_upper = unsafe { source_lower.add(source.len()) };
-    if source_lower <= sliced_lower && sliced_upper <= source_upper {
-        let lower = unsafe { sliced_lower.offset_from_unsigned(source_lower) };
-        let upper = unsafe { sliced_upper.offset_from_unsigned(source_lower) };
-        lower..upper
-    } else {
-        fallback.clone()
-    }
 }
 
 fn eq_escaped(original: &str, encoded: &str) -> bool {
@@ -464,7 +450,7 @@ impl<'a> Link<'a> {
             span: SourceSpan {
                 full: span.clone(),
                 text: text.len()..0, // empty span
-                dest: locate_text(text, &dest_url, &span),
+                dest: locate_text(text, &dest_url),
             },
             dest: dest_url,
             title,
@@ -633,6 +619,26 @@ impl<'a> Link<'a> {
     }
 }
 
+impl SourceSpan {
+    fn any(&self) -> &Range<usize> {
+        self.dest.as_ref().unwrap_or(&self.full)
+    }
+}
+
+fn locate_text(source: &str, sliced: &str) -> Option<Range<usize>> {
+    let sliced_lower = sliced.as_ptr();
+    let sliced_upper = unsafe { sliced_lower.add(sliced.len()) };
+    let source_lower = source.as_ptr();
+    let source_upper = unsafe { source_lower.add(source.len()) };
+    if source_lower <= sliced_lower && sliced_upper <= source_upper {
+        let lower = unsafe { sliced_lower.offset_from_unsigned(source_lower) };
+        let upper = unsafe { sliced_upper.offset_from_unsigned(source_lower) };
+        Some(lower..upper)
+    } else {
+        None
+    }
+}
+
 struct IssueReportContext<'a> {
     tracker: &'a LinkTracker<'a>,
     notes: DiagnosticNotes,
@@ -709,15 +715,18 @@ impl<'a> IssueReportContext<'a> {
             && !link.dest.contains("<");
 
         if could_be_a_path {
-            let span = &link.span.dest;
-            let span = span.start..span.start;
             let help = {
                 "to indicate that this is a relative path (which will silence this warning),\n\
                 prepend the link with `./`"
             };
             let suggestion = IssueReport::level(IssueLevel::Help)
                 .title(help)
-                .patches(vec![Suggestion::span(span).repl("./").build()])
+                .patches(if let Some(span) = &link.span.dest {
+                    let span = span.start..span.start;
+                    vec![Suggestion::span(span).repl("./").build()]
+                } else {
+                    vec![]
+                })
                 .build();
             report.secondary(suggestion);
         }
@@ -785,13 +794,14 @@ impl SourceMap for LinkTracker<'_> {
                     let source = &link.span.text;
                     let mapped = &span.text;
                     (source, (source.start + lower - mapped.start))
-                } else if span.dest.start <= lower && lower <= span.dest.end {
-                    let source = &link.span.dest;
-                    let mapped = &span.dest;
+                } else if let Some(source) = &link.span.dest
+                    && let Some(mapped) = &span.dest
+                    && mapped.start <= lower
+                    && lower <= mapped.end
+                {
                     (source, (source.start + lower - mapped.start))
                 } else {
-                    let span = &link.span.full;
-                    (span, span.start)
+                    return Some(link.span.full.clone());
                 }
             }
         };
@@ -921,19 +931,26 @@ mod tests {
     fn print_link_spans(span: SourceSpan) -> IssueReport<'static> {
         let SourceSpan { full, text, dest } = span;
         IssueReport::level(IssueLevel::Warning)
-            .title("link spans")
+            .title("link")
             .annotations(vec![
-                Highlight::span(full)
+                Highlight::span(full.clone())
                     .kind(AnnotationKind::Primary)
-                    .label("full")
                     .build(),
-                Highlight::span(dest)
-                    .kind(AnnotationKind::Context)
-                    .label("dest")
+            ])
+            .secondary(vec![
+                IssueReport::level(IssueLevel::Warning)
+                    .title("link dest")
+                    .annotations(if let Some(dest) = dest {
+                        vec![Highlight::span(dest).kind(AnnotationKind::Primary).build()]
+                    } else {
+                        vec![Highlight::span(full).kind(AnnotationKind::Visible).build()]
+                    })
                     .build(),
-                Highlight::span(text)
-                    .kind(AnnotationKind::Context)
-                    .label("text")
+                IssueReport::level(IssueLevel::Warning)
+                    .title("link text")
+                    .annotations(vec![
+                        Highlight::span(text).kind(AnnotationKind::Primary).build(),
+                    ])
                     .build(),
             ])
             .build()
@@ -985,4 +1002,9 @@ mod tests {
 
     test_link_spans!(link_span_reference_unknown("[drop][drop]"));
     test_link_spans!(link_span_shortcut_unknown("[drop]"));
+
+    test_link_spans!(link_span_shortcut_with_inline_mapped("[*PhantomData*]"));
+    test_link_spans!(link_span_shortcut_with_inline_unmapped(
+        "[PhantomData<fn()>]"
+    ));
 }
