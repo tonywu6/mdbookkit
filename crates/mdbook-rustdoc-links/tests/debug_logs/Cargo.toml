@@ -1,0 +1,11 @@
+[package]
+edition = "2024"
+name = "debug_logs"
+publish = false
+version = "0.1.0"
+
+[workspace]
+resolver = "2"
+
+[features]
+fancy = []

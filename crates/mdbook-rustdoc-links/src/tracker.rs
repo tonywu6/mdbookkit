@@ -161,7 +161,6 @@ impl<'a> LinkTracker<'a> {
                     if !state.borrow().has_link() {
                         return Ok(());
                     };
-                    trace!(concat!("abc", env!("CARGO_PKG_REPOSITORY")));
                     trace!("{elem:?}");
 
                     if let Some(href) = elem.get_attribute("href")

@@ -94,8 +94,6 @@ fn run_builder(
         resolve_packages(&metadata, &builder.options, manifest_dir, tracker.notes())?
     };
 
-    debug!("resolved packages: {packages:#?}");
-
     let mut builder = builder;
     if docs_rs == Some(true) {
         load_docs_rs_options(&mut builder, &metadata, &packages)
@@ -104,6 +102,7 @@ fn run_builder(
     }
 
     debug!("resolved options: {builder:#?}");
+    debug!("resolved packages: {packages:#?}");
 
     let Builder { targets, options } = builder;
     let BuildOptions {
@@ -207,7 +206,7 @@ fn run_builder(
         .context("`cargo check` did not succeed")
         .or_else(with_notes!(emit_warning, tracker.notes()))?;
 
-    trace!("{artifacts:?}");
+    trace!("{artifacts:#?}");
 
     for target in artifacts.targets() {
         let Some(docstring) = tracker.rustdoc_input() else {
@@ -888,7 +887,7 @@ fn resolve_prelude(
     Some(lib)
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 struct PackageList(BTreeSet<(String, String)>);
 
 impl PackageList {
@@ -1107,6 +1106,16 @@ impl Debug for PathMapper {
             if self.host.build_dir.as_ref() != Some(&self.host.target_dir) {
                 f.field("build", &self.host.build_dir);
             }
+        }
+        f.finish()
+    }
+}
+
+impl Debug for PackageList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut f = f.debug_set();
+        for (k, v) in self.0.iter() {
+            f.entry(&format_args!("{k}@{v}"));
         }
         f.finish()
     }

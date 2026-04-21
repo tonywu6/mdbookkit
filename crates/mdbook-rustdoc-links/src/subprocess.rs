@@ -141,7 +141,7 @@ impl Subprocess {
             let stderr = String::from_utf8_lossy(&output.stderr);
             let stderr = stderr.trim_end();
             let stderr = if stderr.is_empty() { "(empty)" } else { stderr };
-            let error = status.context(format!("--- stderr\n{stderr}\n---"));
+            let error = status.context(format!("--- stderr\n{stderr}"));
             Err(error)
         } else {
             Ok(output)

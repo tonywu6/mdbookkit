@@ -1,0 +1,1 @@
+- [`fancy`](https://docs.rs/debug_logs/0.1.0/debug_logs/fn.fancy.html "fn debug_logs::fancy")
