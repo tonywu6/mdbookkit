@@ -201,7 +201,7 @@ impl Display for PathStatus {
             PathStatus::Unreachable => "inaccessible",
             PathStatus::Ignored => "ignored by git",
             PathStatus::NotInRepo => "outside of this repo",
-            PathStatus::NotInBook => "not in SUMMARY.md",
+            PathStatus::NotInBook => "not part of the book",
         };
         f.write_str(text)
     }

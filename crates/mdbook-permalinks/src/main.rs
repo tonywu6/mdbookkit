@@ -311,29 +311,26 @@ impl Environment {
 
         trace!(is_index);
 
-        let try_pages = {
-            let path = path
-                .strip_suffix(".html")
-                .inspect(|_| trace!("removing .html suffix"))
-                .unwrap_or(&path);
-            // one does not simply avoid trailing slash issues...
-            // https://github.com/slorber/trailing-slash-guide
-            if is_index {
-                &[
-                    // enforce that index.html pages should consistently
-                    // be addressed with a trailing slash
-                    format!("{path}index.md"),
-                    format!("{path}README.md"),
-                ] as &[_]
-            } else {
-                &[
-                    format!("{path}.md"),
-                    // all major hosting providers implicitly redirect
-                    // /folder to /folder/, so these are okay
-                    format!("{path}/index.md"),
-                    format!("{path}/README.md"),
-                ]
-            }
+        // one does not simply avoid trailing slash issues...
+        // https://github.com/slorber/trailing-slash-guide
+        let try_pages: &[String] = if is_index {
+            // enforce that index.html pages should consistently
+            // be addressed with a trailing slash
+            &[format!("{path}index.md"), format!("{path}README.md")]
+        } else if let Some(path) = path.strip_suffix(".html") {
+            // expect a `*.html` link to point to a `*.md` file
+            // note that because `.html` is explicitly specified here,
+            // index pages are not considered
+            &[format!("{path}.md")]
+        } else {
+            // this is a path without an extension
+            &[
+                format!("{path}.md"),
+                // all major hosting providers implicitly redirect
+                // /folder to /folder/, so these are okay
+                format!("{path}/index.md"),
+                format!("{path}/README.md"),
+            ]
         };
 
         for page in try_pages {
@@ -358,6 +355,7 @@ impl Environment {
         }
 
         if !is_index {
+            // try the unmodified path itself
             let try_file = self.root_dir.join(&path).expect("should be a valid url");
 
             match self.vcs.try_file(&try_file) {

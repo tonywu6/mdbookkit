@@ -1,6 +1,7 @@
 use mdbookkit_testing::{regex::Regex, snapbox::RedactedValue, test_mdbook};
 
 test_mdbook![file_links, exit(0), redacted = [redacted()]];
+test_mdbook![http_links, exit(0), redacted = [redacted()]];
 
 fn redacted() -> Vec<(&'static str, RedactedValue)> {
     vec![
