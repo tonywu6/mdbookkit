@@ -51,6 +51,7 @@ test_mdbook![
     exit(0),
     env = [
         "MDBOOK_LOG" = "warn,mdbook_rustdoc_links=trace",
+        "MDBOOKKIT_TERM_GRAPHICAL" = "",
         "CARGO_TERM_QUIET" = "true"
     ],
     redacted = [redacted()]
