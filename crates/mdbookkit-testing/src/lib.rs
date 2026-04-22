@@ -2,19 +2,21 @@ use std::{borrow::Cow, ffi::OsStr, fmt::Display, path::Path, sync::LazyLock};
 
 use anstyle::RgbColor;
 use anstyle_svg::Palette;
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use camino::{Utf8Path, Utf8PathBuf};
 use regex::Regex;
 use snapbox::{
     Assert, Data, IntoData, RedactedValue, Redactions, assert::DEFAULT_ACTION_ENV, cmd::Command,
-    data::DataFormat, dir::DirRoot,
+    data::DataFormat, dir::DirRoot, utils::current_dir,
 };
 use tap::TryConv;
 
 pub use anyhow;
+pub use camino;
 pub use regex;
 pub use snapbox;
 
+#[derive(Default)]
 pub struct TestBook {
     pub path: TestRoot<'static>,
     pub code: i32,
@@ -30,11 +32,8 @@ impl TestBook {
             .expect("temp dir should have a path")
             .try_conv::<&Utf8Path>()?;
 
-        let _ = self.cargo("clean", self.path.manifest_dir()).output();
-
         let result = self
-            .cargo("bin", &self.path.root_dir)
-            .current_dir(&self.path.root_dir)
+            .cargo("bin", current_dir!())
             .args(["mdbook", "build"])
             .arg(self.path.book_dir())
             .env("MDBOOK_build__build_dir", temp_dir)
@@ -81,7 +80,7 @@ impl TestBook {
         }
 
         if results.iter().any(Result::is_err) {
-            panic!("some snapshots have changed")
+            bail!("some snapshots have changed")
         }
 
         Ok(())
@@ -109,48 +108,22 @@ impl TestBook {
 #[macro_export]
 macro_rules! test_mdbook {
     [
-        @init $name:ident exit($code:literal)
+        $name:ident, exit($code:literal)
         $( , env = [$($env:tt)*] )?
         $( , redacted = [$($redacted:tt)*] )?
-        $( , manifest = $manifest:literal )?
     ] => {
-        $crate::TestBook {
-            path: $crate::TestRoot {
-                name: stringify!($name),
-                root_dir: $crate::snapbox::current_dir!().try_into()?,
-                rust_dir: {
-                    let dir = ".";
-                    $(let dir = $manifest;)?
-                    dir
+        pub fn $name() -> $crate::anyhow::Result<$crate::TestBook> {
+            Ok($crate::TestBook {
+                path: $crate::TestRoot {
+                    name: stringify!($name),
+                    root_dir: $crate::snapbox::current_dir!().try_into()?,
                 },
-            },
-            code: $code,
-            env_vars: $crate::test_mdbook!(@key_values $($($env)*)?),
-            redacted: $crate::test_mdbook!(@key_values $($($redacted)*)?),
+                code: $code,
+                env_vars: $crate::test_mdbook!(@key_values $($($env)*)?),
+                redacted: $crate::test_mdbook!(@key_values $($($redacted)*)?),
+            })
         }
     };
-
-    [$name:ident $(($shared:ident))?, $($args:tt)+] => {
-        #[test]
-        fn $name() -> $crate::anyhow::Result<()> {
-            // must init struct within test to have
-            // "update snapshots" editor action
-            $crate::test_mdbook!(@init $name $($args)+).run()
-        }
-
-        $crate::test_mdbook!(@newtype $name ($($shared)?) ($($args)+));
-    };
-
-    (@newtype $name:ident ($shared:ident) ($($args:tt)+)) => {
-        pub struct $shared($crate::TestBook);
-
-        impl $shared {
-            pub fn book() -> $crate::anyhow::Result<$crate::TestBook> {
-                Ok($crate::test_mdbook!(@init $name $($args)+))
-            }
-        }
-    };
-    (@newtype $name:ident () ($($args:tt)+)) => {};
 
     (@key_values $($key:literal = $val:expr),*) => {
         vec![$(($key, $val)),*]
@@ -163,7 +136,6 @@ macro_rules! test_mdbook {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub struct TestRoot<'a> {
     pub root_dir: Utf8PathBuf,
-    pub rust_dir: &'a str,
     pub name: &'a str,
 }
 
@@ -174,10 +146,6 @@ impl TestRoot<'_> {
 
     pub fn dist_dir(&self) -> Utf8PathBuf {
         self.book_dir().join("out")
-    }
-
-    fn manifest_dir(&self) -> Utf8PathBuf {
-        self.book_dir().join(self.rust_dir)
     }
 
     fn stderr_txt(&self) -> Data {
@@ -222,6 +190,15 @@ impl TestRoot<'_> {
 
     fn test_data(&self, path: impl AsRef<Path>, format: DataFormat) -> Data {
         Data::read_from(&self.book_dir().join_os(path), Some(format))
+    }
+}
+
+impl Default for TestRoot<'static> {
+    fn default() -> Self {
+        Self {
+            root_dir: ".".into(),
+            name: "",
+        }
     }
 }
 

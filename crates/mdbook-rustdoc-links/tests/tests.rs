@@ -8,58 +8,71 @@ use url::Url;
 
 use mdbookkit::markdown::default_markdown_options;
 use mdbookkit_testing::{
+    TestBook,
     regex::Regex,
     snapbox::{IntoData, RedactedValue, Redactions, assert_data_eq},
     test_mdbook,
 };
 
-test_mdbook![rustdoc(RustDoc), exit(0), redacted = [redacted()]];
-test_mdbook![targets, exit(0), redacted = [redacted()]];
-test_mdbook![packages, exit(0), redacted = [redacted()]];
-test_mdbook![preludes, exit(0), redacted = [redacted()]];
-test_mdbook![preludes_implicit, exit(0), redacted = [redacted()]];
-test_mdbook![preludes_bin, exit(0), redacted = [redacted()]];
-test_mdbook![features, exit(0), redacted = [redacted()]];
-test_mdbook![cargo_customize, exit(0), redacted = [redacted()]];
-test_mdbook![runner, exit(0), redacted = [redacted()]];
-test_mdbook![docs_rs, exit(0), redacted = [redacted()]];
-test_mdbook![workspace, exit(0), redacted = [redacted()]];
-test_mdbook![workspace_deps, exit(0), redacted = [redacted()]];
-test_mdbook![workspace_all, exit(0), redacted = [redacted()]];
-test_mdbook![multi_stage, exit(0), redacted = [redacted()]];
-test_mdbook![targets_proc_macro, exit(0), redacted = [redacted()]];
-test_mdbook![packages_dev, exit(0), redacted = [redacted()]];
-test_mdbook![
-    manifest_dir,
-    exit(0),
-    redacted = [redacted()],
-    manifest = "./rust"
-];
+macro_rules! test_case {
+    [$name:ident, $($args:tt)+] => {
+        mod $name {
+            use super::*;
+            test_mdbook![$name, $($args)+, redacted = [redacted()]];
+        }
+        #[test]
+        fn $name() -> Result<()> {
+            run_test($name::$name()?, ".")
+        }
+    };
+}
 
-test_mdbook![preludes_invalid, exit(101), redacted = [redacted()]];
-test_mdbook![compilation_error, exit(101), redacted = [redacted()]];
-test_mdbook![multi_stage_some_failed, exit(0), redacted = [redacted()]];
-test_mdbook![multi_stage_all_failed, exit(101), redacted = [redacted()]];
-test_mdbook![runner_bad_command, exit(101), redacted = [redacted()]];
-test_mdbook![runner_not_found, exit(101), redacted = [redacted()]];
-test_mdbook![manifest_invalid, exit(101), redacted = [redacted()]];
-test_mdbook![packages_invalid, exit(101), redacted = [redacted()]];
-test_mdbook![deserialize_workspace, exit(101), redacted = [redacted()]];
-test_mdbook![deserialize_package, exit(101), redacted = [redacted()]];
-test_mdbook![
+test_case![rustdoc, exit(0)];
+test_case![targets, exit(0)];
+test_case![packages, exit(0)];
+test_case![preludes, exit(0)];
+test_case![preludes_implicit, exit(0)];
+test_case![preludes_bin, exit(0)];
+test_case![features, exit(0)];
+test_case![cargo_customize, exit(0)];
+test_case![runner, exit(0)];
+test_case![docs_rs, exit(0)];
+test_case![workspace, exit(0)];
+test_case![workspace_deps, exit(0)];
+test_case![workspace_all, exit(0)];
+test_case![multi_stage, exit(0)];
+test_case![targets_proc_macro, exit(0)];
+test_case![packages_dev, exit(0)];
+
+test_case![preludes_invalid, exit(101)];
+test_case![compilation_error, exit(101)];
+test_case![multi_stage_some_failed, exit(0)];
+test_case![multi_stage_all_failed, exit(101)];
+test_case![runner_bad_command, exit(101)];
+test_case![runner_not_found, exit(101)];
+test_case![manifest_invalid, exit(101)];
+test_case![packages_invalid, exit(101)];
+test_case![deserialize_workspace, exit(101)];
+test_case![deserialize_package, exit(101)];
+test_case![
     debug_logs,
     exit(0),
     env = [
         "MDBOOK_LOG" = "warn,mdbook_rustdoc_links=trace",
         "MDBOOKKIT_TERM_GRAPHICAL" = "",
         "CARGO_TERM_QUIET" = "true"
-    ],
-    redacted = [redacted()]
+    ]
 ];
 
 #[test]
+fn manifest_dir() -> Result<()> {
+    test_mdbook![manifest_dir, exit(0)];
+    run_test(manifest_dir()?, "rust")
+}
+
+#[test]
 fn rustdoc_parity() -> Result<()> {
-    let book = RustDoc::book()?;
+    let book = rustdoc::rustdoc()?;
 
     book.cargo("clean", book.path.book_dir());
     book.cargo("doc", book.path.book_dir()).assert().success();
@@ -154,6 +167,12 @@ fn rustdoc_parity() -> Result<()> {
     assert_data_eq!(upstream, expected);
 
     Ok(())
+}
+
+fn run_test(book: TestBook, manifest_dir: &str) -> Result<()> {
+    let manifest_dir = book.path.book_dir().join(manifest_dir);
+    let _ = book.cargo("clean", manifest_dir).output();
+    book.run()
 }
 
 fn redacted() -> Vec<(&'static str, RedactedValue)> {

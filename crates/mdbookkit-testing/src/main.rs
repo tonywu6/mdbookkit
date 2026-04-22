@@ -17,11 +17,7 @@ fn summary(book: &Path) -> Result<()> {
     let name = root_dir.file_name().unwrap();
     let root_dir = root_dir.parent().unwrap().to_owned();
 
-    let book = TestRoot {
-        name,
-        root_dir,
-        rust_dir: ".",
-    };
+    let book = TestRoot { name, root_dir };
 
     let book = book
         .expected_pages()?
