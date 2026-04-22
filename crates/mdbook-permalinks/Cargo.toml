@@ -33,6 +33,9 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true, features = ["serde"] }
 
+[dev-dependencies]
+mdbookkit-testing = { workspace = true }
+
 [package.metadata.binstall]
 pkg-fmt = "tgz"
 pkg-url = "{ repo }/releases/download/{ name }-v{ version }/{ name }-{ target }{ archive-suffix }"

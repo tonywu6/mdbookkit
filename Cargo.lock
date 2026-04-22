@@ -964,6 +964,7 @@ dependencies = [
  "mdbook-markdown",
  "mdbook-preprocessor",
  "mdbookkit",
+ "mdbookkit-testing",
  "percent-encoding",
  "serde",
  "tap",
