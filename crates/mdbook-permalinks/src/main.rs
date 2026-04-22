@@ -1,6 +1,6 @@
 #![warn(clippy::unwrap_used)]
 
-use std::{collections::HashSet, fmt::Debug, str::FromStr};
+use std::{collections::HashSet, fmt::Debug};
 
 use anyhow::{Context, Result};
 use git2::Repository;
@@ -493,75 +493,16 @@ impl<'a, 'r> ResolveBook<'a, 'r> {
     }
 }
 
-/// Configuration for the preprocessor.
-///
-/// This is deserialized from book.toml.
-///
-/// Doc comments for attributes populate the `configuration.md` page in the docs.
-#[derive(clap::Parser, Deserialize, Debug, Default)]
+#[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 struct Config {
-    /// Use a custom link format for forges other than GitHub.
-    ///
-    /// Should be a string that contains the following placeholders that will be
-    /// filled in at build time:
-    ///
-    /// - `{tree}` — will be `tree` if the generated URL is for a clickable link, or
-    ///   `raw` if the URL is for a Markdown image
-    /// - `{ref}` — the Git reference (tag or commit ID) resolved at build time
-    /// - `{path}` — path to the linked file relative to repo root, without a leading `/`
-    ///
-    /// For example, the following configures generated links to use GitLab's format:
-    ///
-    /// ```toml
-    /// repo-url-template = "https://gitlab.haskell.org/ghc/ghc/-/{tree}/{ref}/{path}"
-    /// ```
-    ///
-    /// Note that information such as repo owner or name will not be filled in. If URLs to
-    /// your Git forge require such items, you should hard-code them in the pattern.
     #[serde(default)]
-    #[arg(long, value_name("FORMAT"), verbatim_doc_comment)]
     repo_url_template: Option<String>,
-
-    // TODO: cannot use `output.html.site-url` because it is always `/` during `mdbook serve`
-    /// Specify the canonical URL at which you deploy your book.
-    ///
-    /// For example:
-    ///
-    /// ```toml
-    /// book-url = "https://me.github.io/my-awesome-crate/"
-    /// ```
-    ///
-    /// Enables validation of hard-coded links to book pages. The preprocessor will
-    /// warn you about links that are no longer valid at build time.
     #[serde(default)]
-    #[arg(long, value_name("URL"), verbatim_doc_comment)]
     book_url: Option<UrlPrefix>,
-
-    /// Convert some paths to permalinks even if they are under `src/`.
-    ///
-    /// By default, links to files in your book's `src/` directory will not be converted,
-    /// since they are already copied to the output directory. If you want such files
-    /// to always be rendered as permalinks, specify their file extensions here.
-    ///
-    /// For example, to use permalinks for Rust source files even if they are in the book's
-    /// `src/` directory:
-    ///
-    /// ```toml
-    /// always-link = [".rs"]
-    /// ```
     #[serde(default)]
-    #[arg(
-        long,
-        value_delimiter(','),
-        value_name("EXTENSIONS"),
-        verbatim_doc_comment
-    )]
     always_link: Vec<String>,
-
-    /// Exit with a non-zero status code when there are warnings.
     #[serde(default)]
-    #[arg(long, value_enum, value_name("MODE"), default_value_t = Default::default())]
     fail_on_warnings: OnWarning,
 }
 
@@ -575,14 +516,6 @@ impl From<Url> for UrlPrefix {
             url.set_path(&path);
         }
         Self(url)
-    }
-}
-
-impl FromStr for UrlPrefix {
-    type Err = url::ParseError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self::from(s.parse::<Url>()?))
     }
 }
 
@@ -634,36 +567,6 @@ impl UrlSuffix {
         }
 
         url
-    }
-}
-
-impl std::fmt::Debug for Environment {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Self {
-            vcs,
-            root_dir,
-            markdown,
-            config: _,
-        } = self;
-        f.debug_struct("Environment")
-            .field("root_dir", &format_args!("\"{root_dir}\""))
-            .field("vcs", &vcs)
-            .field("markdown", &markdown)
-            .finish_non_exhaustive()
-    }
-}
-
-impl std::fmt::Debug for VersionControl {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Self {
-            root,
-            link,
-            repo: _,
-        } = self;
-        f.debug_struct("VersionControl")
-            .field("root", &format_args!("\"{root}\""))
-            .field("link", &link)
-            .finish_non_exhaustive()
     }
 }
 
