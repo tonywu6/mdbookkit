@@ -9,6 +9,20 @@ use tracing::{debug, trace, trace_span};
 
 use crate::write_str;
 
+pub fn locate_text(source: &str, sliced: &str) -> Option<Range<usize>> {
+    let sliced_lower = sliced.as_ptr();
+    let sliced_upper = unsafe { sliced_lower.add(sliced.len()) };
+    let source_lower = source.as_ptr();
+    let source_upper = unsafe { source_lower.add(source.len()) };
+    if source_lower <= sliced_lower && sliced_upper <= source_upper {
+        let lower = unsafe { sliced_lower.offset_from_unsigned(source_lower) };
+        let upper = unsafe { sliced_upper.offset_from_unsigned(source_lower) };
+        Some(lower..upper)
+    } else {
+        None
+    }
+}
+
 /// _Patch_ a Markdown string, instead of regenerating it entirely, in order to preserve
 /// as much of the original Markdown source as possible, especially with regard to whitespace.
 ///

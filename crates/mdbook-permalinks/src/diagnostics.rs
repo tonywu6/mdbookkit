@@ -1,15 +1,21 @@
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    fmt::{Display, Write},
+};
 
-use tap::{Pipe, TapOptional};
+use tap::TapOptional;
 use url::Url;
 
-use mdbookkit::diagnostics::{
-    Highlight, IssueLevel, IssueReport, IssueReporter, annotate_snippets::AnnotationKind,
+use mdbookkit::{
+    diagnostics::{
+        Highlight, IssueLevel, IssueReport, IssueReporter, Note, annotate_snippets::AnnotationKind,
+    },
+    error::ExpectFmt,
 };
 
 use crate::{
     Environment,
-    link::{LinkStatus, RelativeLink},
+    link::{LinkStatus, PathStatus, RelativeLink},
     page::Pages,
 };
 
@@ -46,49 +52,113 @@ struct LinkDiagnostic<'a> {
 
 impl<'a> LinkDiagnostic<'a> {
     fn emit(&self) -> IssueReport<'a> {
-        IssueReport::level((&self.link.status).into())
-            .title(self.link.status.to_string())
-            .annotations(vec![self.label()])
-            .build()
-    }
-
-    fn label(&self) -> Highlight<'a> {
         let RelativeLink {
-            status, span, link, ..
+            status, span, href, ..
         } = self.link;
-        let path = self.shorten(link);
-        let kind = match status {
-            LinkStatus::Ignored => AnnotationKind::Context,
-            LinkStatus::Unchanged => AnnotationKind::Context,
-            LinkStatus::Rewritten => AnnotationKind::Primary,
-            LinkStatus::Permalink => AnnotationKind::Primary,
-            LinkStatus::Unreachable(..) => AnnotationKind::Primary,
-            LinkStatus::Error(_) => AnnotationKind::Primary,
-        };
-        let text = match status {
-            LinkStatus::Ignored => None,
-            LinkStatus::Unchanged => Some(path.into()),
-            LinkStatus::Permalink => Some(path.into()),
-            LinkStatus::Rewritten => Some(format!("path: {path}\nlink: {:?}", &**link)),
-            LinkStatus::Unreachable(errors) => errors
-                .iter()
-                .filter_map(|(url, err)| self.shorten_url(url).map(|url| (url, err)))
-                .fold(String::new(), |mut msg, (url, err)| {
-                    msg.push_str(&url);
-                    msg.push(' ');
-                    msg.push_str(&err.to_string());
-                    msg.push('\n');
-                    msg
-                })
-                .trim()
-                .to_owned()
-                .pipe(Some),
-            LinkStatus::Error(..) => Some(status.to_string()),
-        };
-        Highlight::span(span.clone())
-            .kind(kind)
-            .maybe_label(text)
-            .build()
+
+        let span = span.any();
+        let href = &**href;
+
+        match status {
+            LinkStatus::Ignored => IssueReport::level(IssueLevel::Note)
+                .title("these links are not processed")
+                .annotations(vec![
+                    Highlight::span(span.clone())
+                        .kind(AnnotationKind::Context)
+                        .build(),
+                ])
+                .build(),
+
+            LinkStatus::Unchanged => IssueReport::level(IssueLevel::Note)
+                .title("these links point to book pages or static files")
+                .annotations(vec![
+                    Highlight::span(span.clone())
+                        .kind(AnnotationKind::Context)
+                        .build(),
+                ])
+                .build(),
+
+            LinkStatus::Rewritten => IssueReport::level(IssueLevel::Note)
+                .title("rewrote this link as a relative path")
+                .annotations(vec![
+                    Highlight::span(span.clone())
+                        .kind(AnnotationKind::Primary)
+                        .label(href)
+                        .build(),
+                ])
+                .notes(vec![Note::note(
+                    format! { "resolved path is {:?}", self.shorten(href) },
+                )])
+                .build(),
+
+            LinkStatus::Permalink => IssueReport::level(IssueLevel::Note)
+                .title("rewrote this link as a permalink")
+                .annotations(vec![
+                    Highlight::span(span.clone())
+                        .kind(AnnotationKind::Primary)
+                        .label(href)
+                        .build(),
+                ])
+                .notes(vec![Note::note(
+                    format! { "resolved path is {:?}",self.shorten(href) },
+                )])
+                .build(),
+
+            LinkStatus::Unreachable(candidates) => {
+                let title = format!("broken link to {href:?}");
+
+                let labels = {
+                    let (link, status) = &candidates[0];
+                    let shortened = self.shorten_url(link);
+                    if !shortened.starts_with('/') && href.strip_suffix(&*shortened) == Some("/") {
+                        vec![
+                            Highlight::span(span.clone())
+                                .kind(AnnotationKind::Primary)
+                                .label(format!("resolves to a path that is {status}"))
+                                .build(),
+                        ]
+                    } else {
+                        vec![
+                            Highlight::span(span.clone())
+                                .kind(AnnotationKind::Primary)
+                                .label(format!("resolves to a path that is {status}:"))
+                                .build(),
+                            Highlight::span(span.clone())
+                                .kind(AnnotationKind::Context)
+                                .label(format!("{shortened:?}"))
+                                .build(),
+                        ]
+                    }
+                };
+
+                let notes = if candidates.len() > 1 {
+                    let mut note = String::from("also tried the following paths");
+                    for (link, status) in candidates.iter().skip(1) {
+                        write!(note, "\n{:?}: path is {status}", self.shorten_url(link))
+                            .expect_fmt();
+                    }
+                    vec![Note::note(note)]
+                } else {
+                    vec![]
+                };
+
+                IssueReport::level(IssueLevel::Warning)
+                    .title(title)
+                    .annotations(labels)
+                    .notes(notes)
+                    .build()
+            }
+
+            LinkStatus::Error(error) => IssueReport::level(IssueLevel::Error)
+                .title("error while resolving this link")
+                .annotations(vec![
+                    Highlight::span(span.clone())
+                        .kind(AnnotationKind::Primary)
+                        .build(),
+                ])
+                .notes(vec![Note::note(error.to_string())])
+                .build(),
+        }
     }
 
     fn shorten<'p>(&self, path: &'p str) -> Cow<'p, str> {
@@ -103,41 +173,36 @@ impl<'a> LinkDiagnostic<'a> {
             url.set_fragment(None);
         });
         if let Some(url) = url {
-            if let Some(shortened) = self.shorten_url(&url) {
-                Cow::Owned(shortened)
-            } else {
-                Cow::Borrowed(path)
-            }
+            self.shorten_url(&url).into_owned().into()
         } else {
             Cow::Borrowed(path)
         }
     }
 
-    fn shorten_url(&self, url: &Url) -> Option<String> {
+    fn shorten_url<'p>(&self, url: &'p Url) -> Cow<'p, str> {
         if let Some(rel) = self.root.make_relative(url)
             && !rel.starts_with("../")
         {
-            Some(rel)
+            Cow::Owned(rel)
         } else if url.scheme() == "file" {
             match url.to_file_path() {
-                Ok(path) => Some(path.display().to_string()),
-                Err(()) => Some(url.path().to_owned()),
+                Ok(path) => Cow::Owned(path.display().to_string()),
+                Err(()) => Cow::Borrowed(url.path()),
             }
         } else {
-            None
+            Cow::Borrowed(url.as_str())
         }
     }
 }
 
-impl From<&LinkStatus> for IssueLevel {
-    fn from(value: &LinkStatus) -> Self {
-        match value {
-            LinkStatus::Ignored => IssueLevel::Note,
-            LinkStatus::Unchanged => IssueLevel::Note,
-            LinkStatus::Rewritten => IssueLevel::Note,
-            LinkStatus::Permalink => IssueLevel::Note,
-            LinkStatus::Unreachable(..) => IssueLevel::Warning,
-            LinkStatus::Error(..) => IssueLevel::Error,
-        }
+impl Display for PathStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let text = match self {
+            PathStatus::Unreachable => "inaccessible",
+            PathStatus::Ignored => "ignored by git",
+            PathStatus::NotInRepo => "outside of this repo",
+            PathStatus::NotInBook => "not in SUMMARY.md",
+        };
+        f.write_str(text)
     }
 }

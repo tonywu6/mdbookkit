@@ -1,23 +1,64 @@
-warning: link inaccessible
- --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:1:3
+warning: broken link to "draft.md"
+ --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:1:6
   |
-1 | - [](../../Cargo.lock)
-  |   ^^^^^^^^^^^^^^^^^^^^ crates/mdbook-permalinks/tests/Cargo.lock does not exist
-2 | - [](//LICENSE-MIT.md)
-  |   ^^^^^^^^^^^^^^^^^^^^ /LICENSE-MIT.md is not in repo
-3 | - [](draft.md)
-  |   ^^^^^^^^^^^^ crates/mdbook-permalinks/tests/file_links/src/draft.md does not exist
-4 | - ![](image.jpeg)
-  |   ^^^^^^^^^^^^^^^ crates/mdbook-permalinks/tests/file_links/src/image.jpeg does not exist
-5 | - ![](../static/shinjuku.jpg)
-  |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ crates/mdbook-permalinks/tests/file_links/static/shinjuku.jpg does not exist
+1 | - [](draft.md)
+  |      ^^^^^^^^
+  |      |
+  |      resolves to a path that is inaccessible:
+  |      "crates/mdbook-permalinks/tests/file_links/src/draft.md"
 
-warning: link inaccessible
- --> crates/mdbook-permalinks/tests/file_links/src/6.gitignored.md:1:3
+warning: broken link to "../../Cargo.lock"
+ --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:2:6
+  |
+2 | - [](../../Cargo.lock)
+  |      ^^^^^^^^^^^^^^^^
+  |      |
+  |      resolves to a path that is inaccessible:
+  |      "crates/mdbook-permalinks/tests/Cargo.lock"
+
+warning: broken link to "/LICENSE-GPL.md"
+ --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:3:6
+  |
+3 | - [](/LICENSE-GPL.md)
+  |      ^^^^^^^^^^^^^^^ resolves to a path that is inaccessible
+
+warning: broken link to "//LICENSE-MIT.md"
+ --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:4:6
+  |
+4 | - [](//LICENSE-MIT.md)
+  |      ^^^^^^^^^^^^^^^^
+  |      |
+  |      resolves to a path that is outside of this repo:
+  |      "/LICENSE-MIT.md"
+
+warning: broken link to "image.jpeg"
+ --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:5:7
+  |
+5 | - ![](image.jpeg)
+  |       ^^^^^^^^^^
+  |       |
+  |       resolves to a path that is inaccessible:
+  |       "crates/mdbook-permalinks/tests/file_links/src/image.jpeg"
+
+warning: broken link to "../static/shinjuku.jpg"
+ --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:6:7
+  |
+6 | - ![](../static/shinjuku.jpg)
+  |       ^^^^^^^^^^^^^^^^^^^^^^
+  |       |
+  |       resolves to a path that is inaccessible:
+  |       "crates/mdbook-permalinks/tests/file_links/static/shinjuku.jpg"
+
+warning: broken link to "/target/.rustc_info.json"
+ --> crates/mdbook-permalinks/tests/file_links/src/6.gitignored.md:1:6
   |
 1 | - [](/target/.rustc_info.json)
-  |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ target/.rustc_info.json is ignored by git
+  |      ^^^^^^^^^^^^^^^^^^^^^^^^ resolves to a path that is ignored by git
+
+warning: broken link to "/target/debug"
+ --> crates/mdbook-permalinks/tests/file_links/src/6.gitignored.md:2:6
+  |
 2 | - [](/target/debug)
-  |   ^^^^^^^^^^^^^^^^^ target/debug is ignored by git
+  |      ^^^^^^^^^^^^^ resolves to a path that is ignored by git
 
  WARN mdbook-permalinks: finished with warnings

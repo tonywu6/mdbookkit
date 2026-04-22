@@ -4,35 +4,22 @@ use mdbook_markdown::pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
 use tracing::trace;
 use url::Url;
 
-#[derive(Debug, Default, Clone, thiserror::Error)]
+#[derive(Debug, Default, Clone)]
 pub enum LinkStatus {
     #[default]
-    #[error("link ignored")]
     Ignored,
-
-    #[error("linking to book page or file")]
     Unchanged,
-    #[error("linking to book page or file, rewritten as paths")]
     Rewritten,
-    #[error("link converted to permalink")]
     Permalink,
-
-    #[error("link inaccessible")]
     Unreachable(Vec<(Url, PathStatus)>),
-
-    #[error("error encountered: {0}")]
     Error(String),
 }
 
-#[derive(Debug, Clone, Copy, thiserror::Error)]
+#[derive(Debug, Clone, Copy)]
 pub enum PathStatus {
-    #[error("does not exist")]
     Unreachable,
-    #[error("is ignored by git")]
     Ignored,
-    #[error("is not in repo")]
     NotInRepo,
-    #[error("is not in SUMMARY.md")]
     NotInBook,
 }
 
@@ -45,10 +32,15 @@ pub enum LinkText<'a> {
 
 pub struct RelativeLink<'a> {
     pub status: LinkStatus,
-    pub span: Range<usize>,
-    pub link: CowStr<'a>,
+    pub href: CowStr<'a>,
+    pub span: SourceSpan,
     pub hint: ContentHint,
     pub title: CowStr<'a>,
+}
+
+pub struct SourceSpan {
+    pub full: Range<usize>,
+    pub link: Option<Range<usize>>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -74,7 +66,7 @@ impl<'a> LinkSpan<'a> {
 
     pub fn span(&self) -> &Range<usize> {
         match &self.0[0] {
-            LinkText::Link(link) => &link.span,
+            LinkText::Link(link) => &link.span.full,
             LinkText::Text(..) => unreachable!("first item in LinkSpan must be a Link"),
         }
     }
@@ -95,34 +87,34 @@ impl<'a> RelativeLink<'a> {
 
     #[inline]
     fn update(&mut self, link: impl Into<CowStr<'a>>) {
-        let old = &*self.link.clone();
-        self.link = link.into();
-        trace!(status = ?self.status, ?old, new = ?&*self.link);
+        let old = &*self.href.clone();
+        self.href = link.into();
+        trace!(status = ?self.status, ?old, new = ?&*self.href);
     }
 
     #[inline]
     pub fn unchanged(&mut self) {
         self.status = LinkStatus::Unchanged;
-        trace!(status = ?self.status, link = ?&*self.link);
+        trace!(status = ?self.status, link = ?&*self.href);
     }
 
     #[inline]
     pub fn unreachable(&mut self, errors: Vec<(Url, PathStatus)>) {
         self.status = LinkStatus::Unreachable(errors);
-        trace!(status = ?self.status, link = ?&*self.link);
+        trace!(status = ?self.status, link = ?&*self.href);
     }
 
     fn emit(&self) -> Tag<'a> {
         match self.hint {
             ContentHint::Tree => Tag::Link {
                 link_type: LinkType::Inline,
-                dest_url: self.link.clone(),
+                dest_url: self.href.clone(),
                 title: self.title.clone(),
                 id: CowStr::Borrowed(""),
             },
             ContentHint::Raw => Tag::Image {
                 link_type: LinkType::Inline,
-                dest_url: self.link.clone(),
+                dest_url: self.href.clone(),
                 title: self.title.clone(),
                 id: CowStr::Borrowed(""),
             },
@@ -153,7 +145,7 @@ impl<'a> Iterator for EmitLinkSpan<'a> {
         for next in self.iter.by_ref() {
             match next {
                 LinkText::Link(link) => {
-                    let span = &link.span;
+                    let span = &link.span.full;
                     match (link.will_emit(), self.opened.is_empty()) {
                         (Some(usage), top_level) => {
                             self.opened.push(usage);
@@ -203,7 +195,7 @@ impl<'a> EmitLinkSpan<'a> {
         let span = links.0.iter().find_map(|link| match &link {
             LinkText::Link(link) => {
                 if link.will_emit().is_some() {
-                    Some(link.span.clone())
+                    Some(link.span.full.clone())
                 } else {
                     None
                 }
@@ -215,5 +207,11 @@ impl<'a> EmitLinkSpan<'a> {
             opened: vec![],
         };
         Some((iter, span))
+    }
+}
+
+impl SourceSpan {
+    pub fn any(&self) -> &Range<usize> {
+        self.link.as_ref().unwrap_or(&self.full)
     }
 }

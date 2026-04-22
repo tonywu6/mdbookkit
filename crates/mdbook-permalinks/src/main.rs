@@ -152,14 +152,14 @@ impl Environment {
         let ticker = ticker!(Level::INFO, "process", "processing links").entered();
 
         for (base, link) in content.links_mut() {
-            let file_url = match if let Some(link) = link.link.strip_prefix('/') {
+            let file_url = match if let Some(link) = link.href.strip_prefix('/') {
                 self.vcs.root.join(link)
             } else {
-                base.join(&link.link)
+                base.join(&link.href)
             } {
                 Ok(url) => url,
                 Err(e) => {
-                    debug!("ignoring unparsable link {:?}: {e}", &*link.link);
+                    debug!("ignoring unparsable link {:?}: {e}", &*link.href);
                     link.status = LinkStatus::Ignored;
                     continue;
                 }
@@ -257,7 +257,7 @@ impl Environment {
         trace!(?should_link);
 
         if !should_link {
-            if link.link.starts_with('/') {
+            if link.href.starts_with('/') {
                 // mdBook doesn't support absolute paths like VS Code does
                 let rewritten = page_url
                     .make_relative(&url_suffix.restored(file_url))
@@ -273,7 +273,7 @@ impl Environment {
                 }
                 Err(err) => {
                     link.status = LinkStatus::Error(format!("{err}"));
-                    debug!(status = ?link.status, link = ?&*link.link);
+                    debug!(status = ?link.status, link = ?&*link.href);
                 }
             }
         }
@@ -463,10 +463,10 @@ impl<'a, 'r> ResolveFile<'a, 'r> {
             ticker_item! {
                 parent, Level::INFO, "file_link",
                 %file_url, %page_url, ?hint,
-                "{:?}", &*link.link
+                "{:?}", &*link.href
             }
         } else {
-            ticker_item!(parent, Level::INFO, "file_link", "{:?}", &*link.link)
+            ticker_item!(parent, Level::INFO, "file_link", "{:?}", &*link.href)
         }
         .entered()
     }
@@ -486,10 +486,10 @@ impl<'a, 'r> ResolveBook<'a, 'r> {
             ticker_item! {
                 parent, Level::INFO, "book_link",
                 %file_url, %page_url, ?path,
-                "{:?}", &*link.link
+                "{:?}", &*link.href
             }
         } else {
-            ticker_item!(parent, Level::INFO, "book_link", "{:?}", &*link.link)
+            ticker_item!(parent, Level::INFO, "book_link", "{:?}", &*link.href)
         }
         .entered()
     }

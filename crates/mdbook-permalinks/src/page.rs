@@ -10,11 +10,13 @@ use tracing::{debug, info, instrument, trace};
 use url::Url;
 
 use mdbookkit::{
-    markdown::{PatchStream, Spanned},
+    markdown::{PatchStream, Spanned, locate_text},
     plural,
 };
 
-use crate::link::{ContentHint, EmitLinkSpan, LinkSpan, LinkStatus, LinkText, RelativeLink};
+use crate::link::{
+    ContentHint, EmitLinkSpan, LinkSpan, LinkStatus, LinkText, RelativeLink, SourceSpan,
+};
 
 pub struct Pages<'a> {
     pages: HashMap<Arc<Url>, Page<'a>>,
@@ -121,7 +123,7 @@ impl<'a> Page<'a> {
         for (event, span) in stream {
             match event {
                 Event::Start(tag @ (Tag::Link { .. } | Tag::Image { .. })) => {
-                    let (hint, link, title) = match tag {
+                    let (hint, dest, title) = match tag {
                         Tag::Link {
                             dest_url, title, ..
                         } => (ContentHint::Tree, dest_url, title),
@@ -133,13 +135,16 @@ impl<'a> Page<'a> {
 
                     let parent = opened.as_ref().map(|link| link.span());
                     trace!(?span, ?parent, ?hint, ">>>");
-                    trace!(?link, " │ ");
+                    trace!(?dest, " │ ");
                     trace!(?title, " │ ");
 
                     let link = RelativeLink {
                         status: LinkStatus::Ignored,
-                        span,
-                        link,
+                        href: dest.clone(),
+                        span: SourceSpan {
+                            full: span,
+                            link: locate_text(source, &dest),
+                        },
                         hint,
                         title,
                     }

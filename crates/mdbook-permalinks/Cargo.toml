@@ -29,7 +29,6 @@ mdbookkit = { workspace = true }
 percent-encoding = { workspace = true }
 serde = { workspace = true }
 tap = { workspace = true }
-thiserror = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true, features = ["serde"] }
 

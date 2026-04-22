@@ -30,7 +30,7 @@ use mdbookkit::{
     },
     emit_debug, emit_trace, emit_warning,
     error::{Break, ExpectFmt},
-    markdown::PatchStream,
+    markdown::{PatchStream, locate_text},
     plural, with_bug_report,
 };
 
@@ -622,20 +622,6 @@ impl<'a> Link<'a> {
 impl SourceSpan {
     fn any(&self) -> &Range<usize> {
         self.dest.as_ref().unwrap_or(&self.full)
-    }
-}
-
-fn locate_text(source: &str, sliced: &str) -> Option<Range<usize>> {
-    let sliced_lower = sliced.as_ptr();
-    let sliced_upper = unsafe { sliced_lower.add(sliced.len()) };
-    let source_lower = source.as_ptr();
-    let source_upper = unsafe { source_lower.add(source.len()) };
-    if source_lower <= sliced_lower && sliced_upper <= source_upper {
-        let lower = unsafe { sliced_lower.offset_from_unsigned(source_lower) };
-        let upper = unsafe { sliced_upper.offset_from_unsigned(source_lower) };
-        Some(lower..upper)
-    } else {
-        None
     }
 }
 
