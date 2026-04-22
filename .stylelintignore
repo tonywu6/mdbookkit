@@ -1,6 +1,6 @@
-node_modules
-build
-dist
-target
-docs/app/dist.css
-docs/src/app
+build/
+dist/
+docs/src/web
+instance/
+node_modules/
+target/

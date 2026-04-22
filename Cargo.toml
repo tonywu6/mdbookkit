@@ -10,7 +10,7 @@ rust-version = "1.89"
 
 [workspace]
 default-members = ["crates/*"]
-members = ["crates/*", "utils/*", "docs"]
+members = ["crates/*", "scripts/*", "docs"]
 resolver = "2"
 
 [workspace.dependencies]

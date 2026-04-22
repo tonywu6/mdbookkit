@@ -1,3 +1,11 @@
+import "scripts/variables.just"
+
+mod check "scripts/check.justfile"
+mod docs
+
+default:
+    just --list
+
 [positional-arguments]
 test *args:
     cargo bin nextest run $@
@@ -9,11 +17,3 @@ cov-report:
 
 cov-clean:
     cargo bin llvm-cov clean
-
-fmt: fmt-cargo fmt-prettier
-
-fmt-cargo:
-    -cargo fmt
-
-fmt-prettier:
-    -pnpm exec prettier --write .

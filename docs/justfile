@@ -1,0 +1,22 @@
+import "../scripts/variables.just"
+
+working_dir := trim_start_match(source_directory(), justfile_directory() + "/")
+cloudflare_env := '--env=""'
+wrangler_flags := f"--cwd {{working_dir}} {{cloudflare_env}}"
+
+build:
+    cargo bin mdbook build
+
+[positional-arguments]
+serve *args:
+    cargo bin mdbook serve $@
+
+[positional-arguments]
+dev *args:
+    pnpm exec wrangler {{wrangler_flags}} dev $@
+
+types:
+    pnpm exec wrangler {{wrangler_flags}} types worker-configuration.d.ts
+
+upload: build
+    pnpm exec wrangler {{wrangler_flags}} versions upload
