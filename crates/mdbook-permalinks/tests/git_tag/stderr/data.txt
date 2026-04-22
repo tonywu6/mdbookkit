@@ -1,0 +1,5 @@
+ INFO mdbook-permalinks: using tag name "v0.1.0" for permalinks
+ INFO mdbook-permalinks:process: started processing links
+ INFO mdbook-permalinks:process:file_link: started processing links "../book.toml"
+ INFO mdbook-permalinks: processed 1 link: 1 link to repo; 0 links to book; 0 inaccessible paths; 0 unchanged
+ INFO mdbook-permalinks: finished

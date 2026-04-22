@@ -133,7 +133,7 @@ macro_rules! test_mdbook {
     }
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TestRoot<'a> {
     pub root_dir: Utf8PathBuf,
     pub name: &'a str,
@@ -148,12 +148,16 @@ impl TestRoot<'_> {
         self.book_dir().join("out")
     }
 
+    pub fn stderr_dir(&self) -> Utf8PathBuf {
+        self.book_dir().join("stderr")
+    }
+
     fn stderr_txt(&self) -> Data {
-        self.test_data("stderr/data.txt", DataFormat::Text)
+        self.test_data(self.stderr_dir().join("data.txt"), DataFormat::Text)
     }
 
     fn stderr_svg(&self) -> Data {
-        self.test_data("stderr/data.svg", DataFormat::TermSvg)
+        self.test_data(self.stderr_dir().join("data.svg"), DataFormat::TermSvg)
     }
 
     pub fn expected_pages(&self) -> Result<impl Iterator<Item = Result<TestPage<'_>>>> {
@@ -188,8 +192,8 @@ impl TestRoot<'_> {
         Ok(text)
     }
 
-    fn test_data(&self, path: impl AsRef<Path>, format: DataFormat) -> Data {
-        Data::read_from(&self.book_dir().join_os(path), Some(format))
+    fn test_data(&self, path: impl AsRef<Utf8Path>, format: DataFormat) -> Data {
+        Data::read_from(self.book_dir().join(path).as_std_path(), Some(format))
     }
 }
 

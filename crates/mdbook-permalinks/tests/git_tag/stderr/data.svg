@@ -1,0 +1,34 @@
+<svg width="936px" height="110px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .fg { fill: #B2B2B2 }
+    .bg { fill: #1A1A1A }
+    .fg-green { fill: #96C475 }
+    .container {
+      padding: 0 10px;
+      line-height: 18px;
+    }
+    .bold { font-weight: bold; }
+    .dimmed { opacity: 0.4; }
+    tspan {
+      font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;
+      white-space: pre;
+      line-height: 18px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" y="0" rx="4.5" class="bg" />
+
+  <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: using tag name "v0.1.0" for permalinks</tspan>
+</tspan>
+    <tspan x="10px" y="46px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>:</tspan><tspan class="bold">process</tspan><tspan>: started </tspan><tspan class="dimmed">processing links</tspan>
+</tspan>
+    <tspan x="10px" y="64px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>:</tspan><tspan class="bold">process</tspan><tspan>:</tspan><tspan class="bold">file_link</tspan><tspan>: started </tspan><tspan class="dimmed">processing links</tspan><tspan> </tspan><tspan class="dimmed">"../book.toml"</tspan>
+</tspan>
+    <tspan x="10px" y="82px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: processed 1 link: 1 link to repo; 0 links to book; 0 inaccessible paths; 0 unchanged</tspan>
+</tspan>
+    <tspan x="10px" y="100px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: finished</tspan>
+</tspan>
+  </text>
+
+</svg>

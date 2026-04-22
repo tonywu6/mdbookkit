@@ -1,0 +1,33 @@
+<svg width="740px" height="110px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .fg { fill: #B2B2B2 }
+    .bg { fill: #1A1A1A }
+    .fg-yellow { fill: #D19A66 }
+    .container {
+      padding: 0 10px;
+      line-height: 18px;
+    }
+    .bold { font-weight: bold; }
+    tspan {
+      font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;
+      white-space: pre;
+      line-height: 18px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" y="0" rx="4.5" class="bg" />
+
+  <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: preprocessor will be disabled</tspan>
+</tspan>
+    <tspan x="10px" y="46px">
+</tspan>
+    <tspan x="10px" y="64px"><tspan>Caused by:</tspan>
+</tspan>
+    <tspan x="10px" y="82px"><tspan>    0: preprocessor expects repo to have at least 1 commit</tspan>
+</tspan>
+    <tspan x="10px" y="100px"><tspan>    1: repo does not contain any commit</tspan>
+</tspan>
+  </text>
+
+</svg>

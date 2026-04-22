@@ -1,0 +1,5 @@
+[preprocessor.permalinks]
+after = ["links"]
+command = "cargo preprocessor"
+
+[output.markdown]

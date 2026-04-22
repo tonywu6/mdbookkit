@@ -1,0 +1,6 @@
+ WARN mdbook-permalinks: preprocessor will be disabled
+
+Caused by:
+    0: failed to determine the remote URL prefix for permalinks
+    1: expected repo to have a remote named `origin`, but found none
+    2: help: set `output.html.git-repository-url` to a GitHub URL, or use `repo-url-template` option

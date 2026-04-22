@@ -1,0 +1,5 @@
+ WARN mdbook-permalinks: preprocessor will be disabled
+
+Caused by:
+    0: preprocessor expects repo to have at least 1 commit
+    1: repo does not contain any commit

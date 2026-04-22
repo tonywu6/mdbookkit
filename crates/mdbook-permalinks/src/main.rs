@@ -406,7 +406,7 @@ impl Environment {
             .inspect(|c| debug!("{c:#?}"))
             .context("failed to read preprocessor config from book.toml")?;
 
-        let vcs = match VersionControl::try_from_git(&config, &book.config) {
+        let vcs = match VersionControl::try_from_git(&config, book) {
             Ok(Ok(vcs)) => vcs,
             Ok(Err(err)) => return Ok(Err(err)),
             Err(err) => return Err(err),

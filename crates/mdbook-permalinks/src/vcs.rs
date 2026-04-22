@@ -1,8 +1,8 @@
 use std::{collections::HashMap, ops::ControlFlow};
 
 use anyhow::{Context, Result, anyhow, bail};
-use git2::{DescribeOptions, Repository};
-use mdbook_preprocessor::config::Config as MDBookConfig;
+use git2::{DescribeOptions, Repository, RepositoryOpenFlags};
+use mdbook_preprocessor::{PreprocessorContext, config::Config as MDBookConfig};
 use tap::{Pipe, Tap};
 use tracing::{debug, info, instrument, trace};
 use url::{Url, form_urlencoded::Serializer as SearchParams};
@@ -19,10 +19,13 @@ use crate::{
 
 impl VersionControl {
     #[instrument(level = "debug", skip_all)]
-    pub fn try_from_git(config: &Config, book: &MDBookConfig) -> Result<Result<Self>> {
-        let repo = match Repository::open_from_env()
-            .context("preprocessor requires a git repository to work")
-            .context("could not find a git repository")
+    pub fn try_from_git(config: &Config, ctx: &PreprocessorContext) -> Result<Result<Self>> {
+        let repo = match Repository::open_ext(
+            &ctx.root,
+            RepositoryOpenFlags::empty(),
+            &[] as &[&std::ffi::OsStr],
+        )
+        .context("preprocessor requires a git repository to work")
         {
             Ok(repo) => repo,
             Err(err) => return config.fail_on_warnings.adjusted(Ok(Err(err))),
@@ -38,9 +41,9 @@ impl VersionControl {
         let Some(reference) =
             get_git_head(&repo).context("could not get a tag or the commit hash to HEAD")?
         else {
-            return config
-                .fail_on_warnings
-                .adjusted(Ok(Err(anyhow!("no commit found in this repo"))));
+            let err = anyhow!("repo does not contain any commit")
+                .context("preprocessor expects repo to have at least 1 commit");
+            return config.fail_on_warnings.adjusted(Ok(Err(err)));
         };
 
         let link = {
@@ -52,13 +55,13 @@ impl VersionControl {
                     reference,
                 }
             } else {
-                let repo = match find_git_remote(&repo, book)
+                let repo = match find_git_remote(&repo, &ctx.config)
                     .context("error while finding a git remote URL")?
                 {
                     Ok(repo) => repo,
                     Err(err) => {
-                        return anyhow!("help: or use `repo-url-template` option")
-                            .context("help: set `output.html.git-repository-url` to a GitHub URL")
+                        return anyhow! { "help: set `output.html.git-repository-url` to a GitHub URL, \
+                                        or use `repo-url-template` option" }
                             .context(err)
                             .context("failed to determine the remote URL prefix for permalinks")
                             .pipe(Err)
@@ -380,14 +383,18 @@ fn find_git_remote(repo: &Repository, config: &MDBookConfig) -> Result<Result<Re
     } else {
         let repo = match repo
             .find_remote("origin")
-            .context("repo does not have remote named `origin`")
+            .context("expected repo to have a remote named `origin`, but found none")
         {
             Ok(repo) => repo,
             Err(err) => return Ok(Err(err)),
         };
         let repo = match repo.url() {
             Some(url) => url,
-            None => return Ok(Err(anyhow!("remote `origin` does not have a URL"))),
+            None => {
+                return anyhow!("expected remote `origin` to have a URL, but found none")
+                    .pipe(Err)
+                    .pipe(Ok);
+            }
         };
         debug!("found {repo:?} via remote `origin`");
         gix_url::parse(repo.into())

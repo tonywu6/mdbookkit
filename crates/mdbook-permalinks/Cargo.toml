@@ -34,6 +34,7 @@ url = { workspace = true, features = ["serde"] }
 
 [dev-dependencies]
 mdbookkit-testing = { workspace = true }
+toml = { workspace = true }
 
 [package.metadata.binstall]
 pkg-fmt = "tgz"

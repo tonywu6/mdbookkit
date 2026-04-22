@@ -1,0 +1,20 @@
+[alias]
+preprocessor = [
+  "run",
+  "--quiet",
+  "--manifest-path",
+  "${PACKAGE_DIR}/Cargo.toml",
+  "--package",
+  "cargo-xtask",
+  "--",
+  "bin",
+  "--cwd",
+  "${PACKAGE_DIR}",
+  "--",
+  "llvm-cov",
+  "run",
+  "--quiet",
+  "--no-report",
+  "--no-cfg-coverage",
+  "--",
+]
