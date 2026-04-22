@@ -1,6 +1,0 @@
----
-source: crates/mdbook-permalinks/src/tests.rs
-assertion_line: 105
-expression: report
----
-
