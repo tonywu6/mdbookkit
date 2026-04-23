@@ -43,6 +43,7 @@ test_case![workspace_all, exit(0)];
 test_case![multi_stage, exit(0)];
 test_case![targets_proc_macro, exit(0)];
 test_case![packages_dev, exit(0)];
+test_case![diagnostics_order, exit(0)];
 
 test_case![preludes_invalid, exit(101)];
 test_case![compilation_error, exit(101)];
