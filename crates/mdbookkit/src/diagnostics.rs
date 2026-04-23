@@ -336,9 +336,7 @@ impl<'a> IssueReporter<'a> {
             }
         }
 
-        sorted.sort_by(|(level1, _, source1), (level2, _, source2)| {
-            (level2, &source1.source_path).cmp(&(level1, &source2.source_path))
-        });
+        sorted.sort_by(|(level1, _, _), (level2, _, _)| level2.cmp(level1));
 
         sorted
             .into_iter()
