@@ -10,7 +10,7 @@ Caused by:
     2: command: cd "[TEST_DIR]/runner_bad_command" && "cargo" "cargo" "metadata" "--format-version" "1"
        
 note: the following options have been specified, which may have caused the error:
-- build.runner
+    - build.runner
 
 ERROR mdbook-rustdoc-links: build failed
 [LLVM_COV_STDERR]

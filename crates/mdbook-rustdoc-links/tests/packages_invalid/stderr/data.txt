@@ -7,7 +7,7 @@ Caused by:
     2: command: cd "[TEST_DIR]/packages_invalid" && "cargo" "tree" "--no-dedupe" "--format" "{p}" "--prefix" "none" "--edges" "normal" "--package" "@@@@@" "--depth" "0"
        
 note: the following options have been specified, which may have caused the error:
-- build.packages
+    - build.packages
 
 ERROR mdbook-rustdoc-links: build failed
 [LLVM_COV_STDERR]

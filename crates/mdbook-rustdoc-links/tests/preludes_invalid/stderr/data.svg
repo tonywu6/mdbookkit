@@ -61,7 +61,7 @@
 </tspan>
     <tspan x="10px" y="388px"><tspan>note: the following options have been specified, which may have caused the error:</tspan>
 </tspan>
-    <tspan x="10px" y="406px"><tspan>- build.preludes</tspan>
+    <tspan x="10px" y="406px"><tspan>    - build.preludes</tspan>
 </tspan>
     <tspan x="10px" y="424px">
 </tspan>

@@ -6,7 +6,7 @@ Caused by:
     2: command: cd "[TEST_DIR]/runner_not_found" && ":"
        
 note: the following options have been specified, which may have caused the error:
-- build.runner
+    - build.runner
 
 ERROR mdbook-rustdoc-links: build failed
 [LLVM_COV_STDERR]

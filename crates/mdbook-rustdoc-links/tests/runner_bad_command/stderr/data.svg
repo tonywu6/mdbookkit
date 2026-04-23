@@ -43,7 +43,7 @@
 </tspan>
     <tspan x="10px" y="226px"><tspan>note: the following options have been specified, which may have caused the error:</tspan>
 </tspan>
-    <tspan x="10px" y="244px"><tspan>- build.runner</tspan>
+    <tspan x="10px" y="244px"><tspan>    - build.runner</tspan>
 </tspan>
     <tspan x="10px" y="262px">
 </tspan>

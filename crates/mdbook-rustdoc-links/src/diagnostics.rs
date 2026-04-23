@@ -121,7 +121,7 @@ impl DiagnosticNotes {
             return None;
         }
         self.visited.options_specified = true;
-        let options = self.print_specified_options()?;
+        let options = self.print_specified_options("")?;
         let note = format! {
             "the following options have been specified, which \
             may have affected link resolution:\n{options}",
@@ -129,13 +129,13 @@ impl DiagnosticNotes {
         Some(note)
     }
 
-    pub fn print_specified_options(&self) -> Option<String> {
+    pub fn print_specified_options(&self, indent: &str) -> Option<String> {
         if self.options_specified.is_empty() {
             return None;
         }
         self.options_specified
             .iter()
-            .map(|opt| format!("- {opt}"))
+            .map(|opt| format!("{indent}- {opt}"))
             .collect::<Vec<_>>()
             .join("\n")
             .pipe(Some)
@@ -245,7 +245,7 @@ impl DiagnosticNotes {
 macro_rules! with_notes {
     ($emit:ident, $hints:expr) => {
         $emit! { "{:?}{}", {
-            if let Some(options) = $hints.print_specified_options() {
+            if let Some(options) = $hints.print_specified_options("    ") {
                 format!("\nnote: the following options have been specified, which may have caused the error:\n{options}\n")
             } else {
                 String::new()

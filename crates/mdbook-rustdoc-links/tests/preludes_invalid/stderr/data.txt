@@ -19,7 +19,7 @@ Caused by:
     2: command: cd "[TEST_DIR]/preludes_invalid" && "rustdoc" "--out-dir" "[TEST_DIR]/preludes_invalid/target/[TEMP_DIR]" "--edition" "2024" "--crate-type" "lib" "--error-format" "json" "-" "--extern" "preludes_invalid=[TEST_DIR]/preludes_invalid/target/debug/deps/libpreludes_invalid-[BUILD_HASH].rmeta" "-L" "dependency=[TEST_DIR]/preludes_invalid/target/debug/deps" "--crate-name" "temporary_crate_0"
        
 note: the following options have been specified, which may have caused the error:
-- build.preludes
+    - build.preludes
 
 ERROR mdbook-rustdoc-links: build failed
 [LLVM_COV_STDERR]
