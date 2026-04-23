@@ -19,7 +19,7 @@ use crate::link::{
 };
 
 pub struct Pages<'a> {
-    pages: HashMap<Arc<Url>, Page<'a>>,
+    pages: Vec<(Arc<Url>, Page<'a>)>,
     markdown: Options,
 }
 
@@ -38,8 +38,8 @@ impl<'a> Pages<'a> {
 
     pub fn paths(&self, root: &Url) -> HashSet<String> {
         self.pages
-            .keys()
-            .filter_map(|url| root.make_relative(url))
+            .iter()
+            .filter_map(|(url, _)| root.make_relative(url))
             .collect()
     }
 
@@ -48,11 +48,11 @@ impl<'a> Pages<'a> {
         debug!(path = ?url.path(), "reading file");
         let stream = Parser::new_ext(source, self.markdown).into_offset_iter();
         let page = Page::read(source, stream)?;
-        self.pages.insert(url.into(), page);
+        self.pages.push((url.into(), page));
         Ok(self)
     }
 
-    pub fn pages(&self) -> impl Iterator<Item = (&Arc<Url>, &Page<'a>)> {
+    pub fn pages(&self) -> impl Iterator<Item = &(Arc<Url>, Page<'a>)> {
         self.pages.iter()
     }
 
@@ -64,6 +64,7 @@ impl<'a> Pages<'a> {
 
     pub fn links_mut(&mut self) -> impl Iterator<Item = (&Arc<Url>, &mut RelativeLink<'a>)> {
         self.pages.iter_mut().flat_map(|(base, page)| {
+            let base = &*base;
             (page.links.iter_mut())
                 .flat_map(move |links| links.links_mut().map(move |link| (base, link)))
         })
