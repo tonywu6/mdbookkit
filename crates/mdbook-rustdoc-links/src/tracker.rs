@@ -700,8 +700,8 @@ impl<'a> IssueReportContext<'a> {
 
         if could_be_a_path {
             let help = {
-                "to indicate that this is a relative path (which will silence this warning),\n\
-                prepend the link with `./`"
+                "if this is meant to be a path to another file, you may prepend \
+                the path with `./`, which will silence this warning"
             };
             let suggestion = IssueReport::level(IssueLevel::Help)
                 .title(help)

@@ -91,8 +91,7 @@ warning: unresolved link to `NotImplemented`
 18 | - [Hasn't been implemented](NotImplemented)
    |                             ^^^^^^^^^^^^^^ no item named `NotImplemented` in scope
    |
-help: to indicate that this is a relative path (which will silence this warning),
-      prepend the link with `./`
+help: if this is meant to be a path to another file, you may prepend the path with `./`, which will silence this warning
    |
 18 | - [Hasn't been implemented](./NotImplemented)
    |                             ++
@@ -103,8 +102,7 @@ warning: unresolved link to `NotImplemented`
 19 | - [Hasn't been implemented](NotImplemented
    |                             ^^^^^^^^^^^^^^ no item named `NotImplemented` in scope
    |
-help: to indicate that this is a relative path (which will silence this warning),
-      prepend the link with `./`
+help: if this is meant to be a path to another file, you may prepend the path with `./`, which will silence this warning
    |
 19 | - [Hasn't been implemented](./NotImplemented
    |                             ++
@@ -126,8 +124,7 @@ warning: unresolved link to `NotImplemented`
 28 | [not-implemented]: NotImplemented
    |                    ^^^^^^^^^^^^^^ no item named `NotImplemented` in scope
    |
-help: to indicate that this is a relative path (which will silence this warning),
-      prepend the link with `./`
+help: if this is meant to be a path to another file, you may prepend the path with `./`, which will silence this warning
    |
 28 | [not-implemented]: ./NotImplemented
    |                    ++
