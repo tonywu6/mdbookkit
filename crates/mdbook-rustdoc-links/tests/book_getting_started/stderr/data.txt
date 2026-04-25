@@ -1,0 +1,7 @@
+warning: unresolved link to `Size`
+ --> rustdoc-links/getting-started.md:1:23
+  |
+1 | A type implementing [`Size`] has a constant size known at compile time.
+  |                       ^^^^ no item named `Size` in scope
+
+ WARN mdbook-rustdoc-links: finished with warnings

@@ -65,6 +65,8 @@ test_case![
     ]
 ];
 
+test_case![book_getting_started, exit(0)];
+
 #[test]
 fn manifest_dir() -> Result<()> {
     test_mdbook![manifest_dir, exit(0)];

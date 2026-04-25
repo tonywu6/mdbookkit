@@ -15,7 +15,7 @@
     }
   </style>
 
-  <rect width="100%" height="100%" y="0" rx="4.5" class="bg" />
+  <rect width="100%" height="100%" y="0"  class="bg" />
 
   <text xml:space="preserve" class="container fg">
     <tspan x="10px" y="28px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: preprocessor will be disabled</tspan>
@@ -24,7 +24,7 @@
 </tspan>
     <tspan x="10px" y="64px"><tspan>Caused by:</tspan>
 </tspan>
-    <tspan x="10px" y="82px"><tspan>    0: preprocessor requires a git repository to work</tspan>
+    <tspan x="10px" y="82px"><tspan>    0: this preprocessor requires a git repository to work</tspan>
 </tspan>
     <tspan x="10px" y="100px"><tspan>    1: could not find repository at '[TEST_DIR]/git_no_repo'; class=Repository (6); code=NotFound (-3)</tspan>
 </tspan>

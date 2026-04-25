@@ -156,14 +156,13 @@ impl BuildConfig {
             book_dir
                 .join(dir)
                 .canonicalize_utf8()
-                .context("while preparing to build docs ...")
                 .context("failed to resolve `manifest-dir` to an absolute path")
                 .or_else(emit_error!())?
         } else {
             default_cargo
                 .workspace(book_dir.as_std_path())
-                .context("while preparing to build docs ...")
-                .context("failed to determine the current Cargo workspace")
+                .context("this preprocessor will run `cargo doc`, which requires a Cargo project")
+                .context("failed to find a Cargo project")
                 .or_else(emit_error!())?
                 .directory()
                 .to_owned()

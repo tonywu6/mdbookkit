@@ -375,4 +375,5 @@ fn render_svg(text: &str) -> String {
             "SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;",
             "Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;",
         )
+        .replace(r#"rx="4.5""#, "")
 }

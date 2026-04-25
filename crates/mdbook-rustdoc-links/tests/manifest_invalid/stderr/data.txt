@@ -1,7 +1,7 @@
-ERROR mdbook-rustdoc-links: failed to determine the current Cargo workspace
+ERROR mdbook-rustdoc-links: failed to find a Cargo project
 
 Caused by:
-    0: while preparing to build docs ...
+    0: this preprocessor will run `cargo doc`, which requires a Cargo project
     1: `cargo locate-project` did not run successfully
     2: --- stderr
        error: failed to parse manifest at `[TEST_DIR]/manifest_invalid/Cargo.toml`

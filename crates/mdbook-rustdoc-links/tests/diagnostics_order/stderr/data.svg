@@ -16,7 +16,7 @@
     }
   </style>
 
-  <rect width="100%" height="100%" y="0" rx="4.5" class="bg" />
+  <rect width="100%" height="100%" y="0"  class="bg" />
 
   <text xml:space="preserve" class="container fg">
     <tspan x="10px" y="28px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to `crate::main`</tspan>

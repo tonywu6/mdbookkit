@@ -25,7 +25,7 @@ impl VersionControl {
             RepositoryOpenFlags::empty(),
             &[] as &[&std::ffi::OsStr],
         )
-        .context("preprocessor requires a git repository to work")
+        .context("this preprocessor requires a git repository to work")
         {
             Ok(repo) => repo,
             Err(err) => return config.fail_on_warnings.adjusted(Ok(Err(err))),
@@ -42,7 +42,7 @@ impl VersionControl {
             get_git_head(&repo).context("could not get a tag or the commit hash to HEAD")?
         else {
             let err = anyhow!("repo does not contain any commit")
-                .context("preprocessor expects repo to have at least 1 commit");
+                .context("this preprocessor expects repo to have at least 1 commit");
             return config.fail_on_warnings.adjusted(Ok(Err(err)));
         };
 
