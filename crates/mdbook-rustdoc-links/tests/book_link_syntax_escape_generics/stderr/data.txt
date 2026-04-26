@@ -1,0 +1,12 @@
+warning: unclosed HTML tag `T`
+ --> rustdoc-links/link-syntax.md:2:30
+  |
+2 | error-handling types, [Option<T>] and [`Result<T, E>`].
+  |                              ^^^
+  |
+help: try marking as source code
+  |
+2 | error-handling types, [`Option<T>`] and [`Result<T, E>`].
+  |                        +         +
+
+ WARN mdbook-rustdoc-links: finished with warnings

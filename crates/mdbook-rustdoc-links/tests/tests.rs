@@ -66,6 +66,8 @@ test_case![
 ];
 
 test_case![book_getting_started, exit(0)];
+test_case![book_link_syntax_escape_generics, exit(0)];
+test_case![book_link_syntax_unsupported_generics, exit(0)];
 
 #[test]
 fn manifest_dir() -> Result<()> {
@@ -77,7 +79,7 @@ fn manifest_dir() -> Result<()> {
 fn rustdoc_parity() -> Result<()> {
     let book = rustdoc::rustdoc()?;
 
-    book.cargo("clean", book.path.book_dir());
+    book.cargo("clean", book.path.book_dir()).assert().success();
     book.cargo("doc", book.path.book_dir()).assert().success();
 
     let base = format! { "https://docs.rs/{}/0.1.0/{}/", book.path.name, book.path.name }

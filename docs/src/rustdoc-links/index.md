@@ -7,9 +7,21 @@
 
 </div>
 
-Link to Rust API docs by name in [mdBook], [_rustdoc_-style][rustdoc].
+Link to Rust API docs by name in [mdBook], à la rustdoc!
 
-Instead of manually finding and pasting URLs, you simply write ...
+> Rustdoc is capable of directly linking to other rustdoc pages using the path of the
+> item as a link. This is referred to as an ["intra-doc link"][intra-doc-link].
+
+This [preprocessor] brings such _intra-doc links_ to mdBook. With it, instead of
+manually finding and pasting documentation URLs into your book:
+
+```md
+The [`option`](https://doc.rust-lang.org/stable/core/option/index.html) and
+[`result`](https://doc.rust-lang.org/stable/core/result/index.html) modules define
+optional and error-handling types ...
+```
+
+You simply write ...
 
 ```md
 The [`option`][std::option] and [`result`][std::result] modules define optional and
@@ -18,7 +30,7 @@ defines Rust's iterator trait, [`Iterator`], which works with the `for` loop to 
 collections. [^1]
 ```
 
-... and you get:
+... and you will get:
 
 <figure class="fig-text">
 
@@ -29,52 +41,9 @@ collections. [^1]
 
 </figure>
 
-<figure>
-
-![screen recording of mdbook-rustdoc-link during mdbook build](media/screencap.webp)
-
-</figure>
-
-> [!NOTE]
->
-> This preprocessor depends on [rust-analyzer] to accurately resolve Rust items.
-
 ## Overview
 
-Follow the [quickstart guide](getting-started.md) to try out the preprocessor.
-
-For **writing documentation** —
-
-- [Supported syntax](supported-syntax.md): Full list of link syntax with examples. Know
-  how to link to additional items such as
-  [functions, macros](supported-syntax.md#functions-and-macros), and
-  [implementors](supported-syntax.md#fully-qualified-paths).
-
-- [Name resolution](name-resolution.md): Understand how the preprocessor finds Rust
-  items, including
-  [when items are gated behind features](name-resolution.md#feature-gated-items).
-
-For **making the preprocessor work with your project** —
-
-- [Workspace layout](workspace-layout.md): Setup and options suitable for [Cargo
-  workspaces][workspaces].
-
-- [Caching](caching.md): If you are working on a large project and processing is taking
-  a long time.
-
-For **additional usage information** —
-
-- [Standalone usage](standalone-usage.md): Use the preprocessor as a standalone command
-  line tool.
-
-- [Continuous integration](continuous-integration.md): Information for running the
-  preprocessor in CI environments, including
-  [logging](continuous-integration.md#logging) and
-  [failing a build when there are bad links](continuous-integration.md#error-handling).
-
-- [Configuration](configuration.md): List of available options.
-
-- [Known issues](known-issues.md) and limitations.
+Follow the [quickstart tutorial](getting-started.md) to try out the preprocessor.
 
 Happy linking!
 
@@ -89,7 +58,7 @@ This project is released under the [Apache 2.0 License](/LICENSE-APACHE.md) and 
 [mdBook]: https://rust-lang.github.io/mdBook/
 [preprocessor]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
 [rust-analyzer]: https://rust-analyzer.github.io/
-[rustdoc]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
+[intra-doc-link]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
 [tour]: https://doc.rust-lang.org/stable/std/#a-tour-of-the-rust-standard-library
 [workspaces]: https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html
 <!-- prettier-ignore-end -->

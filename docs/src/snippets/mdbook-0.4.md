@@ -2,6 +2,6 @@
 >
 > This preprocessor supports mdBook **v0.5**.
 >
-> As of mdBook v0.5.2, it can also be used with mdBook v0.4. However, mdBook v0.4 is no
-> longer supported and the preprocessor is not guaranteed to remain compatible with it
-> in the future.
+> As of mdBook v0.5.2, it is also still compatible with mdBook v0.4, but this is not
+> supported, and the preprocessor is not guaranteed to remain compatible with v0.4 in
+> the future.

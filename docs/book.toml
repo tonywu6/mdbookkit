@@ -33,6 +33,10 @@ runnable = false
 after = ["links"]
 command = "cargo run --package mdbook-rustdoc-links"
 
+[preprocessor.rustdoc-links.build]
+packages = ["annotate-snippets", "tracing-subscriber"]
+preludes = ["std::marker::PhantomData"]
+
 [preprocessor.permalinks]
 after = ["rustdoc-links"]
 always-link = [".rs"]

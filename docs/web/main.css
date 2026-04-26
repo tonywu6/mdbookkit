@@ -153,10 +153,45 @@ body {
   }
 
   details {
-    margin-block: 2rem;
+    > summary {
+      color: var(--links);
+      text-decoration: underline dotted 1px;
+      text-underline-offset: 0.6ex;
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+
+      &::before {
+        content: "⊕ ";
+      }
+
+      > .summary-collapsed {
+        display: inline;
+      }
+
+      > .summary-expanded {
+        display: none;
+      }
+    }
 
     &[open] > summary {
       margin-block-end: 1rem;
+
+      &::before {
+        content: "⊖ ";
+      }
+
+      > .summary-collapsed {
+        display: none;
+      }
+
+      > .summary-expanded {
+        display: inline;
+      }
+    }
+
+    > :not(:first-child) {
+      margin-inline-start: 2ch;
     }
   }
 
@@ -232,6 +267,7 @@ body {
     min-width: 0;
     min-height: 0;
     margin: 1.8rem;
+    overflow-x: auto;
 
     @media screen and (width <= 768px) {
       margin: 0;
@@ -246,6 +282,8 @@ body {
     }
 
     > figcaption {
+      position: sticky;
+      left: 0;
       font-size: 0.8em;
       font-weight: 600;
 
@@ -406,7 +444,7 @@ figure.fig-text {
       padding-inline: 0;
       margin-block-end: 1rem;
 
-      > :not(pre, img, picture, video, :has(img, picture, video)) {
+      > :not(pre, svg, img, picture, video, :has(img, picture, video)) {
         padding-inline: var(--blockquote-padding-inline);
       }
     }

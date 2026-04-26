@@ -6,16 +6,14 @@
 
 - [mdbook-rustdoc-links](rustdoc-links/index.md)
   - [Getting started](rustdoc-links/getting-started.md)
-  - [Motivation](rustdoc-links/motivation.md)
-  - [Supported syntax](rustdoc-links/supported-syntax.md)
+  - [Link syntax](rustdoc-links/link-syntax.md)
   - [Name resolution](rustdoc-links/name-resolution.md)
   - [Workspace layout](rustdoc-links/workspace-layout.md)
-  - [Caching](rustdoc-links/caching.md)
-  - [Standalone usage](rustdoc-links/standalone-usage.md)
   - [Logging](rustdoc-links/logging.md)
   - [Continuous integration](rustdoc-links/continuous-integration.md)
   - [Configuration](rustdoc-links/configuration.md)
   - [Known issues](rustdoc-links/known-issues.md)
+  - [Motivation](rustdoc-links/motivation.md)
   - [CHANGELOG](rustdoc-links/CHANGELOG.md)
 
 ---

@@ -1,0 +1,2 @@
+- This function accepts an [`AsyncFn(T)`].
+- [`<std::net::IpAddr as From<std::net::Ipv6Addr>>::from`]
