@@ -1,4 +1,4 @@
-# Link syntax
+# Writing links
 
 <div class="hidden">
 
@@ -18,7 +18,7 @@ documentation][rustdoc].
 >
 > This page is about correctly formatting Markdown links so that they can be parsed and
 > processed by the preprocessor. For guidance on correctly _naming items_ so that they
-> can be resolved successfully, please see [Name resolution](name-resolution.md).
+> can be resolved successfully, please see [Naming items](naming-items.md).
 
 ## Overview
 

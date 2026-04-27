@@ -6,8 +6,8 @@
 
 - [mdbook-rustdoc-links](rustdoc-links/index.md)
   - [Getting started](rustdoc-links/getting-started.md)
-  - [Link syntax](rustdoc-links/link-syntax.md)
-  - [Name resolution](rustdoc-links/name-resolution.md)
+  - [Writing links](rustdoc-links/writing-links.md)
+  - [Naming items](rustdoc-links/naming-items.md)
   - [Workspace layout](rustdoc-links/workspace-layout.md)
   - [Logging](rustdoc-links/logging.md)
   - [Continuous integration](rustdoc-links/continuous-integration.md)

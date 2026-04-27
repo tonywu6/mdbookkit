@@ -1,4 +1,4 @@
-# Name resolution
+# Naming items
 
 The preprocessor resolves items **in the scope of your crate's "entrypoint."** This is
 usually `lib.rs` or `main.rs` (the [exact rules](#which-entrypoint) are mentioned
