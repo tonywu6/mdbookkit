@@ -46,18 +46,18 @@ command = "cargo run --package mdbook-permalinks"
 [preprocessor.app]
 command = "node scripts/preprocessor.ts"
 
-# [preprocessor.doc]
-# after = ["links"]
-# command = "cargo run -- preprocess"
+[preprocessor.doc]
+after = ["links"]
+command = "cargo run -- preprocess"
 
-# [preprocessor.doc.socials."/"]
-# image = "src/media/social.webp"
-# title = "mdbookkit"
+[preprocessor.doc.socials."/"]
+image = "src/media/social.webp"
+title = "mdbookkit"
 
-# [preprocessor.doc.socials."/rustdoc-links/"]
-# image = "src/rustdoc-links/media/social.webp"
-# title = "mdbook-rustdoc-links"
+[preprocessor.doc.socials."/rustdoc-links/"]
+image = "src/rustdoc-links/media/social.webp"
+title = "mdbook-rustdoc-links"
 
-# [preprocessor.doc.socials."/permalinks/"]
-# image = "src/permalinks/media/social.webp"
-# title = "mdbook-permalinks"
+[preprocessor.doc.socials."/permalinks/"]
+image = "src/permalinks/media/social.webp"
+title = "mdbook-permalinks"

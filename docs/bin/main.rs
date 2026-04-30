@@ -5,6 +5,7 @@ use tracing::error_span;
 use mdbookkit::{emit_error, error::ProgramExit, logging::init_logging};
 
 mod postprocess;
+mod preprocess;
 
 fn main() {
     init_logging();
@@ -12,6 +13,10 @@ fn main() {
     let Program { command } = clap::Parser::parse();
     match command {
         Command::Postprocess { root_dir } => postprocess::run(root_dir),
+        Command::Preprocess { command: None } => preprocess::run(),
+        Command::Preprocess {
+            command: Some(Preprocess::Supports { .. }),
+        } => Ok(()),
     }
     .or_else(emit_error!())
     .exit()
@@ -25,8 +30,18 @@ struct Program {
 
 #[derive(clap::Subcommand, Debug, Clone)]
 enum Command {
+    Preprocess {
+        #[command(subcommand)]
+        command: Option<Preprocess>,
+    },
     Postprocess {
         #[arg(long)]
         root_dir: Option<PathBuf>,
     },
+}
+
+#[derive(clap::Subcommand, Debug, Clone)]
+enum Preprocess {
+    #[clap(hide = true)]
+    Supports { renderer: String },
 }

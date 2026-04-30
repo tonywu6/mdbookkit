@@ -5,11 +5,11 @@ use std::{
     path::PathBuf,
 };
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow};
 use glob::glob;
 use lol_html::{
-    HtmlRewriter, RewriteStrSettings, Settings, element, html_content::ContentType, rewrite_str,
-    text,
+    HtmlRewriter, RewriteStrSettings, Settings, element, errors::RewritingError,
+    html_content::ContentType, rewrite_str, text,
 };
 use minijinja::Environment;
 use serde::Deserialize;
@@ -186,7 +186,9 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
                         Ok(path) => path,
                         Err(()) => return Ok(()),
                     };
-                    let img = image::open(src)?;
+                    let img = image::open(&src)
+                        .with_context(|| src.display().to_string())
+                        .context("Failed to read image")?;
                     elem.set_attribute("width", &img.width().to_string())?;
                     elem.set_attribute("height", &img.height().to_string())?;
                     trace!(?elem);
@@ -241,7 +243,12 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
             ],
             ..Default::default()
         }
-        .pipe(|settings| rewrite_str(&html, settings))?;
+        .pipe(|settings| rewrite_str(&html, settings))
+        .map_err(|err| match err {
+            RewritingError::MemoryLimitExceeded(err) => anyhow!(err),
+            RewritingError::ParsingAmbiguity(err) => anyhow!(err),
+            RewritingError::ContentHandlerError(err) => anyhow!(err),
+        })?;
 
         std::fs::write(file_url.path(), html)?;
     }
