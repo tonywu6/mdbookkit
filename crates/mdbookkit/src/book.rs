@@ -1,5 +1,5 @@
 use std::{
-    borrow::Borrow,
+    borrow::{Borrow, Cow},
     hash::Hash,
     io::{Read, Write},
     path::PathBuf,
@@ -64,7 +64,7 @@ impl PreprocessorHelper for PreprocessorContext {
         T: for<'de> Deserialize<'de> + Default,
     {
         for (idx, name) in names.iter().enumerate() {
-            if let Some(value) = try_get_options(self, name)? {
+            if let Some(value) = try_get_config(self, name)? {
                 if idx != 0 {
                     warn! {
                         "the book.toml section [{deprecated}] is deprecated, \
@@ -104,13 +104,11 @@ impl PreprocessorHelper for PreprocessorContext {
     }
 }
 
-fn try_get_options<T>(ctx: &PreprocessorContext, name: &str) -> Result<Option<T>>
+pub fn try_get_config<T>(ctx: &impl ConfigSource, name: &str) -> Result<Option<T>>
 where
     T: for<'de> Deserialize<'de>,
 {
-    let path = preprocessor_table!(preprocessor.name);
-
-    let table = match ctx.config.get::<toml::Table>(&path)? {
+    let table = match ctx.get_config(name)? {
         None => return Ok(None),
         Some(table) => table,
     }
@@ -121,16 +119,15 @@ where
         Err(error) => error,
     };
 
-    Err(recover_toml_error::<T>(ctx, name).unwrap_or(error))?
+    let source = ctx.get_source()?;
+    Err(recover_toml_error::<T>(&source, name).unwrap_or(error))?
 }
 
-fn recover_toml_error<T>(ctx: &PreprocessorContext, name: &str) -> Result<toml::de::Error>
+fn recover_toml_error<T>(source: &str, name: &str) -> Result<toml::de::Error>
 where
     T: for<'de> Deserialize<'de>,
 {
-    let source = std::fs::read_to_string(ctx.root.join("book.toml"))?;
-
-    let table = toml::de::DeTable::parse(&source)?;
+    let table = toml::de::DeTable::parse(source)?;
     let table = (|| {
         table
             .into_inner()
@@ -148,10 +145,48 @@ where
 
     let table = toml::de::ValueDeserializer::from(table);
     if let Err(mut error) = T::deserialize(table) {
-        error.set_input(Some(&source));
+        error.set_input(Some(source));
         Ok(error)
     } else {
-        bail!("parsing from book.toml did not error")
+        bail!("parsing from TOML source did not error")
+    }
+}
+
+pub trait ConfigSource {
+    fn get_config(&self, preprocessor: &str) -> Result<Option<toml::Table>>;
+    fn get_source(&self) -> Result<Cow<'_, str>>;
+}
+
+impl ConfigSource for PreprocessorContext {
+    fn get_config(&self, name: &str) -> Result<Option<toml::Table>> {
+        match (self.config).get::<toml::Table>(&preprocessor_table!(preprocessor.name))? {
+            None => Ok(None),
+            Some(table) => Ok(Some(table)),
+        }
+    }
+
+    fn get_source(&self) -> Result<Cow<'_, str>> {
+        Ok(std::fs::read_to_string(self.root.join("book.toml"))?.into())
+    }
+}
+
+impl ConfigSource for &str {
+    fn get_config(&self, preprocessor: &str) -> Result<Option<toml::Table>> {
+        let table = toml::from_str::<toml::Value>(self)?;
+        let table = (|| {
+            table
+                .into_table()?
+                .remove("preprocessor")?
+                .into_table()?
+                .remove(preprocessor_table!(preprocessor))?
+                .into_table()
+        })()
+        .context("no such table")?;
+        Ok(Some(table))
+    }
+
+    fn get_source(&self) -> Result<Cow<'_, str>> {
+        Ok((*self).into())
     }
 }
 
@@ -284,6 +319,26 @@ trait TomlTableHelper {
 
 impl<'de> TomlTableHelper for toml::de::DeValue<'de> {
     type TableType = toml::de::DeTable<'de>;
+
+    fn into_table(self) -> Option<Self::TableType> {
+        if let Self::Table(table) = self {
+            Some(table)
+        } else {
+            None
+        }
+    }
+
+    fn as_mut_table(&mut self) -> Option<&mut Self::TableType> {
+        if let Self::Table(table) = self {
+            Some(table)
+        } else {
+            None
+        }
+    }
+}
+
+impl TomlTableHelper for toml::Value {
+    type TableType = toml::Table;
 
     fn into_table(self) -> Option<Self::TableType> {
         if let Self::Table(table) = self {

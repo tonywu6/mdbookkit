@@ -13,6 +13,7 @@ use url::Url;
 
 use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin},
+    config::validate_config_examples,
     diagnostics::IssueReporter,
     emit_error,
     error::{Break, OnWarning, ProgramExit, has_severity},
@@ -37,8 +38,11 @@ fn main() {
     let _span = error_span!({ env!("CARGO_PKG_NAME") }).entered();
     let Program { command } = clap::Parser::parse();
     match command {
-        None => mdbook(),
         Some(Command::Supports { .. }) => Ok(()),
+        Some(Command::ValidateConfig) => {
+            validate_config_examples::<Config>(PREPROCESSOR_NAME).or_else(emit_error!())
+        }
+        None => mdbook(),
     }
     .exit()
 }
@@ -74,6 +78,8 @@ struct Program {
 enum Command {
     #[clap(hide = true)]
     Supports { renderer: String },
+    #[clap(hide = true)]
+    ValidateConfig,
 }
 
 struct Environment {

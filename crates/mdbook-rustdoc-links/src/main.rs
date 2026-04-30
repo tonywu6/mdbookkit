@@ -10,6 +10,7 @@ use tracing::{Level, error_span, info, info_span, warn};
 
 use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin},
+    config::validate_config_examples,
     diagnostics::IssueReporter,
     emit_error,
     error::{Break, PathDebug, ProgramExit, has_severity},
@@ -34,6 +35,9 @@ fn main() {
     let _span = error_span!({ env!("CARGO_PKG_NAME") }).entered();
     match Program::parse().command {
         Some(Command::Supports { .. }) => Ok(()),
+        Some(Command::ValidateConfig) => {
+            validate_config_examples::<Config>(PREPROCESSOR_NAME).or_else(emit_error!())
+        }
         None => mdbook(),
     }
     .exit()
@@ -52,6 +56,8 @@ enum Command {
     /// See <https://rust-lang.github.io/mdBook/for_developers/preprocessors.html#hooking-into-mdbook>
     #[clap(hide = true)]
     Supports { renderer: String },
+    #[clap(hide = true)]
+    ValidateConfig,
 }
 
 fn mdbook() -> Result<(), Break> {

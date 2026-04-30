@@ -76,6 +76,7 @@ pub struct Note<'a> {
     message: Cow<'a, str>,
 }
 
+#[must_use]
 pub struct IssueReporter<'a> {
     pub issues: Vec<IssueReport<'a>>,
     pub source: SourceCode<'a>,

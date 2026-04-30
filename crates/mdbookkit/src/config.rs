@@ -1,8 +1,14 @@
-use std::marker::PhantomData;
+use std::{collections::BTreeMap, marker::PhantomData};
 
+use anyhow::{Result, bail};
 use serde::{
-    Deserialize, Deserializer,
+    Deserialize, Deserializer, Serialize,
     de::value::{EnumAccessDeserializer, MapAccessDeserializer, SeqAccessDeserializer},
+};
+
+use crate::{
+    book::{string_from_stdin, try_get_config},
+    markdown::Spanned,
 };
 
 #[inline]
@@ -78,21 +84,9 @@ where
     deserializer.deserialize_any(Visitor(PhantomData))
 }
 
-pub trait FieldDocs {
-    fn field_docs() -> Vec<FieldDescription>;
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct FieldDescription {
-    pub name: &'static str,
-    pub ty: &'static str,
-    pub doc: &'static [&'static str],
-}
-
 #[macro_export]
 macro_rules! de_struct {
     (@derive $(#[$struct_att_:meta])* [$(($(#[$struct_attr:meta])* $name:ident ($($body:tt)*)))*] []) => {$(
-        de_struct!(@field_docs $name [$($body)*] [] [$($body)*]);
         de_struct!(@deserialize $(#[$struct_attr])* $name ($($body)*));
     )*};
     (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$(#[$field_attr:meta])* $field:ident $(as $type:ty)?, $($rest:tt)*]) => {
@@ -184,50 +178,47 @@ macro_rules! de_struct {
         de_struct!(@result $name [$($item)* ($next: de_struct!(@result $inner [] [$($body)*]))] [])
     };
 
-    (@field_docs $name:ident [$($orig:tt)*] [$(($field:ident, [$($attr:tt)*]))*] []) => {
-        #[automatically_derived]
-        impl $crate::config::FieldDocs for $name {
-            fn field_docs() -> Vec<$crate::config::FieldDescription> {
-                fn type_name<T>(_: Option<T>) -> &'static str {
-                    ::std::any::type_name::<T>()
-                }
-                let ($($field),*) = if let Some(de_struct!(@result Self [] [$($orig)*])) = None {
-                    ($(Some($field)),*)
-                } else {
-                    ($({let $field = None; $field}),*)
-                };
-                vec![$($crate::config::FieldDescription {
-                    name: stringify!($field),
-                    ty: type_name($field),
-                    doc: de_struct!(@doc_string [] [$($attr)*]),
-                }),*]
-            }
-        }
-    };
-    (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$(#[$($attr:tt)*])* $next:ident $(as $type:ty)?, $($rest:tt)*]) => {
-        de_struct!(@field_docs $name [$($orig)*] [$($field)* ($next, [$([$($attr)*])*])] [$($rest)*]);
-    };
-    (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$(#[$($attr:tt)*])* $next:ident $(as $type:ty)?]) => {
-        de_struct!(@field_docs $name [$($orig)*] [$($field)* ($next, [$([$($attr)*])*])] []);
-    };
-    (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$next:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
-        de_struct!(@field_docs $name [$($orig)*] [$($field)*] [$($body)*, $($rest)*]);
-    };
-    (@field_docs $name:ident [$($orig:tt)*] [$($field:tt)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
-        de_struct!(@field_docs $name [$($orig)*] [$($field)*] [$($body)*]);
-    };
-
-    (@doc_string [$($doc:expr)*] []) => {
-        &[$($doc),*]
-    };
-    (@doc_string [$($doc:expr)*] [[doc = $next:expr] $([$($rest:tt)*])*]) => {
-        de_struct!(@doc_string [$($doc)* $next] [$([$($rest)*])*])
-    };
-    (@doc_string [$($doc:expr)*] [[$attr:meta] $([$($rest:tt)*])*]) => {
-        de_struct!(@doc_string [$($doc)*] [$([$($rest)*])*])
-    };
-
     ($(#[$struct_attr:meta])* $name:ident ($($body:tt)*)) => {
         de_struct!(@derive $(#[$struct_attr])* [($(#[$struct_attr])* $name ($($body)*))] [$($body)*]);
     };
+}
+
+#[derive(Deserialize, Serialize, Debug, Default)]
+pub struct ConfigExampleInputs(pub BTreeMap<String, Vec<Spanned<String>>>);
+
+#[derive(Deserialize, Serialize, Debug, Default)]
+pub struct ConfigExampleErrors(pub BTreeMap<String, Vec<Spanned<String>>>);
+
+pub fn validate_config_examples<T>(preprocessor: &str) -> Result<()>
+where
+    T: for<'de> Deserialize<'de>,
+{
+    let input = string_from_stdin()?;
+    let input = serde_json::from_str::<ConfigExampleInputs>(&input)?;
+    let errors = (input.0.into_iter())
+        .filter_map(|(name, examples)| {
+            let errors = examples
+                .into_iter()
+                .filter_map(
+                    |(example, span)| match try_get_config::<T>(&&*example, preprocessor) {
+                        Ok(..) => None,
+                        Err(e) => Some((format!("{e:?}"), span)),
+                    },
+                )
+                .collect::<Vec<_>>();
+            if errors.is_empty() {
+                None
+            } else {
+                Some((name, errors))
+            }
+        })
+        .collect();
+    let errors = ConfigExampleErrors(errors);
+    if errors.0.is_empty() {
+        Ok(())
+    } else {
+        let errors = serde_json::to_string(&errors)?;
+        println!("{errors}");
+        bail!("Some config snippets failed to validate")
+    }
 }
