@@ -633,13 +633,6 @@ struct IssueReportContext<'a> {
 
 impl<'a> IssueReportContext<'a> {
     fn diagnose(&mut self, link: &'a Link<'a>) -> Vec<IssueReport<'a>> {
-        self.stats.processed += 1;
-        if link.href.is_some() {
-            self.stats.resolved += 1
-        } else {
-            self.stats.unresolved += 1;
-        }
-
         let mut issues = Vec::with_capacity(link.diagnostics.len());
         let mut seen = BTreeSet::new();
 
@@ -671,23 +664,31 @@ impl<'a> IssueReportContext<'a> {
             issues.push(issue);
         }
 
-        if !issues.is_empty() {
-            self.stats.has_warnings += 1
-        } else if link.href.is_none() {
-            self.stats.unsupported += 1;
+        let resolved = link.href.is_some();
+        let rustdoc_warnings = !issues.is_empty();
+        let likely_intra_doc = !matches!(link.kind, link_class!(href_defined));
 
-            if !matches!(link.kind, link_class!(href_defined)) {
-                let issue = IssueReport::level(IssueLevel::Warning)
-                    .title("unresolved link")
-                    .annotations(vec![
-                        Highlight::span(link.span.full.clone())
-                            .kind(AnnotationKind::Primary)
-                            .label("rustdoc did not process this link")
-                            .build(),
-                    ])
-                    .build();
-                issues.push(issue);
-            }
+        if resolved {
+            self.stats.resolved += 1;
+        } else if likely_intra_doc || rustdoc_warnings {
+            self.stats.unresolved += 1;
+        }
+
+        if resolved && rustdoc_warnings {
+            self.stats.has_warnings += 1;
+        }
+
+        if likely_intra_doc && !resolved && !rustdoc_warnings {
+            let issue = IssueReport::level(IssueLevel::Warning)
+                .title("unresolved link")
+                .annotations(vec![
+                    Highlight::span(link.span.full.clone())
+                        .kind(AnnotationKind::Primary)
+                        .label("rustdoc did not process this link")
+                        .build(),
+                ])
+                .build();
+            issues.push(issue);
         }
 
         issues
@@ -862,35 +863,28 @@ impl LexicographicOrd for DiagnosticKey<'_> {
 
 #[derive(Debug, Default)]
 pub struct Statistics {
-    processed: usize,
     resolved: usize,
     unresolved: usize,
     has_warnings: usize,
-    unsupported: usize,
 }
 
 impl Display for Statistics {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Self {
-            processed,
             resolved,
             unresolved,
             has_warnings,
-            unsupported,
         } = self;
+        let processed = resolved + unresolved;
         write! { f,
-            "processed {processed}: \
-            {resolved} resolved; \
-            {unresolved} unresolved",
+            "processed {processed}: {resolved} resolved",
             processed = plural!(processed, "link"),
         }?;
-        if has_warnings > &0 {
-            write! { f, "; {}",
-                plural!(has_warnings, "has warnings", "have warnings")
-            }?
+        if *unresolved > 0 {
+            write!(f, "; {unresolved} unresolved")?
         }
-        if unsupported > &0 {
-            write!(f, "; {unsupported} may be unsupported")?
+        if *has_warnings > 0 {
+            write! { f, "; {}",plural!(has_warnings, "has warnings", "have warnings") }?
         }
         Ok(())
     }
