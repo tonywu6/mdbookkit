@@ -577,7 +577,7 @@
 </tspan>
     <tspan x="10px" y="4996px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:3:15: unclosed HTML tag `T`</tspan>
 </tspan>
-    <tspan x="10px" y="5014px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: processed 3 links: 1 resolved; 2 unresolved; 2 have warnings</tspan>
+    <tspan x="10px" y="5014px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: processed 3 links: 1 resolved; 2 unresolved</tspan>
 </tspan>
     <tspan x="10px" y="5032px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: finished with warnings</tspan>
 </tspan>

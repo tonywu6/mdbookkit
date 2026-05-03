@@ -64,6 +64,7 @@ test_case![
         "CARGO_TERM_QUIET" = "true"
     ]
 ];
+test_case![hidden_items, exit(0)];
 
 test_case![book_getting_started, exit(0)];
 test_case![book_link_syntax_escape_generics, exit(0)];

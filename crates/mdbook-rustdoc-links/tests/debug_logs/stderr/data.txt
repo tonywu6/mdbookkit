@@ -275,5 +275,5 @@ Caused by:
  WARN mdbook-rustdoc-links: index.md:2:5: unresolved link to `f80`: no item named `f80` in scope
  WARN mdbook-rustdoc-links: index.md:3:3: unresolved link to `PhantomData`: no item named `PhantomData` in scope
  WARN mdbook-rustdoc-links: index.md:3:15: unclosed HTML tag `T`
- INFO mdbook-rustdoc-links: processed 3 links: 1 resolved; 2 unresolved; 2 have warnings
+ INFO mdbook-rustdoc-links: processed 3 links: 1 resolved; 2 unresolved
  WARN mdbook-rustdoc-links: finished with warnings
