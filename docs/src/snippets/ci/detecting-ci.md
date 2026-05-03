@@ -9,7 +9,7 @@ this variable configured by default.
 
 [^ci-true]:
     Specifically, when `CI` is anything other than `""`, `"0"`, or `"false"`. The logic
-    is encapsulated in the [`is_ci`][crate::env::is_ci] function.
+    is encapsulated in the [`is_ci`][mdbookkit::env::is_ci] function.
 
 <!-- prettier-ignore-start -->
 [github-actions-ci]: https://docs.github.com/en/actions/reference/workflows-and-actions/variables#default-environment-variables

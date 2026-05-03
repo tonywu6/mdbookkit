@@ -54,7 +54,7 @@ cargo install mdbook-rustdoc-links
 
 In your `book.toml`, add the following options:
 
-```toml
+```toml config-example-rustdoc-links
 [preprocessor.rustdoc-links]
 after = ["links"]
 ```

@@ -8,7 +8,7 @@
   - [Getting started](rustdoc-links/getting-started.md)
   - [Writing links](rustdoc-links/writing-links.md)
   - [Naming items](rustdoc-links/naming-items.md)
-  - [Workspace layout](rustdoc-links/workspace-layout.md)
+  - [Cookbook](rustdoc-links/cookbook/index.md)
   - [Logging](rustdoc-links/logging.md)
   - [Continuous integration](rustdoc-links/continuous-integration.md)
   - [Configuration](rustdoc-links/configuration.md)

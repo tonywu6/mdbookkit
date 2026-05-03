@@ -78,15 +78,17 @@ an image.
 For example, the following snippet creates an image wrapped in a clickable link which
 opens the image's page on GitHub:
 
+<!-- prettier-ignore-start -->
 > ```md
 > [![Minato City][minato-city]][minato-city]
 >
-> [minato-city]: /crates/mdbook-permalinks/src/tests/Minato_City,_Tokyo,_Japan.jpg
+> [minato-city]: /crates/mdbook-permalinks/tests/file_links/static/Minato_City,_Tokyo,_Japan.jpg
 > ```
 >
 > [![Minato City][minato-city]][minato-city]
 >
-> [minato-city]: /crates/mdbook-permalinks/src/tests/Minato_City,_Tokyo,_Japan.jpg
+> [minato-city]: /crates/mdbook-permalinks/tests/file_links/static/Minato_City,_Tokyo,_Japan.jpg
+<!-- prettier-ignore-end -->
 
 ## Link validation
 
@@ -98,7 +100,7 @@ The preprocessor validates any path-based links and notifies you if they are bro
 
 <figcaption>
 
-Formatting of diagnostics powered by [miette]
+Formatting of diagnostics powered by [annotate-snippets][annotate_snippets]
 
 </figcaption>
 

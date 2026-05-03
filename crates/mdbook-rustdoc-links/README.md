@@ -32,7 +32,7 @@ an interval](https://docs.rs/tokio/1.48.0/tokio/time/interval/fn.interval.html "
 **Quick access**
 | [Install](https://docs.tonywu.dev/mdbookkit/rustdoc-links/getting-started#install)
 | [Quickstart](https://docs.tonywu.dev/mdbookkit/rustdoc-links/getting-started#configure)
-| [Features](https://docs.tonywu.dev/mdbookkit/rustdoc-links/supported-syntax)
+| [Features](https://docs.tonywu.dev/mdbookkit/rustdoc-links/writing-links)
 | [Options](https://docs.tonywu.dev/mdbookkit/rustdoc-links/configuration)
 
 <!-- prettier-ignore-end -->

@@ -3,7 +3,7 @@
 <div class="hidden">
 
 **For best results, view this page at
-<https://docs.tonywu.dev/mdbookkit/rustdoc-links/link-syntax>.**
+<https://docs.tonywu.dev/mdbookkit/rustdoc-links/writing-links>.**
 
 </div>
 
@@ -22,7 +22,7 @@ documentation][rustdoc].
 
 ## Overview
 
-Examples of the most common link formats:
+Here is a quick look of the most common link formats:
 
 ```md
 - [`std::path`] is a shortcut link

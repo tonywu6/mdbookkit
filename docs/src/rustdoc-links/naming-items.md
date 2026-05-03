@@ -1,174 +1,133 @@
 # Naming items
 
-The preprocessor resolves items **in the scope of your crate's "entrypoint."** This is
-usually `lib.rs` or `main.rs` (the [exact rules](#which-entrypoint) are mentioned
-below).
+When using intra-doc links in doc comments, it is possible to refer to anything [in
+scope][in-scope], such as items defined in the same module, as well as `self`, `crate`,
+etc. But how does this work when the links are in mdBook?
 
-> [!TIP]
->
-> If you use Cargo workspaces, or if your source tree has a custom layout, consult
-> [Workspace layout](workspace-layout.md) for additional instructions.
+## Mental model
 
-For example, with the following as `lib.rs`:
+When using this preprocessor, you may _imagine your book as a standalone, empty crate._
+By default, this "crate" also "depends on" the package(s) in your workspace, as well as
+their dependencies.
 
-<figure>
+This means that, by default, you can always link to the following kinds of items[^1]:
 
-```rs
-use anyhow::Context;
-pub struct Diagnostics {}
-mod error {
-    pub fn is_ci() {}
-}
-```
+- From the prelude, for example:
 
-</figure>
+  > ```md
+  > [`u8`], [`assert!`], [`Option`], [`IntoFuture::Output`]
+  > ```
+  >
+  > [`u8`], [`assert!`], [`Option`], [`IntoFuture::Output`]
 
-Items in the entrypoint can be linked to with just their names:
+- From `std`, by specifying their paths, for example:
+
+  > ```md
+  > - [`std::net::UdpSocket`]
+  > - [`size_of::<T>()`][std::mem::size_of]
+  > ```
+  >
+  > - [`std::net::UdpSocket`]
+  > - [`size_of::<T>()`][std::mem::size_of]
+
+- From any crates in the workspace, including local crates and external dependencies, by
+  specifying their paths, for example:
+
+  > ```md
+  > - [`mdbookkit::env::is_ci`]
+  > - [`Patch`][::annotate_snippets::Patch]
+  > - [`fmt`][fn@tracing_subscriber::fmt]
+  > ```
+  >
+  > - [`mdbookkit::env::is_ci`]
+  > - [`Patch`][::annotate_snippets::Patch]
+  > - [`fmt`][fn@tracing_subscriber::fmt]
+
+  > [!TIP]
+  >
+  > In other words, anything documentable by `cargo doc` can be linked to this way.
+
+## Linking to your own crate
+
+Of course, if you are documenting your own library, it would feel rather clumsy to have
+to repeat the crate name for every link.
+
+Therefore, as a convenience feature, if your workspace consists of a single library
+crate[^2], then by default, everything publicly visible from that crate is implicitly
+introduced into scope.
+
+This means you can link to them without repeating the crate name, or use the `crate::*`
+notation, as if you were writing a doc comment in `lib.rs`. Using this project as an
+example, we have:
 
 > ```md
-> [`Diagnostics`] contains issues detected within Markdown sources.
->
-> This crate uses the [`Context`] trait from [`anyhow`].
+> - [`env::is_ci`]
+> - [`PatchStream`][crate::markdown::PatchStream]
 > ```
 >
-> [`Diagnostics`] contains issues detected within Markdown sources.
->
-> This crate uses the [`Context`] trait from [`anyhow`].
+> - [`env::is_ci`]
+> - [`PatchStream`][crate::markdown::PatchStream]
 
-This includes items from the prelude:
+## Using the `build.preludes` option
 
-> ```md
-> [`FromIterator`] is in the prelude starting from Rust 2021.
-> ```
->
-> [`FromIterator`] is in the prelude starting from Rust 2021.
+If you are documenting a workspace that features multiple libraries, then their exported
+items are not implicitly introduced, as that could create ambiguity.
 
-To distinguish an item as being from your crate rather than from a third-party crate,
-you may write `crate::*`, although this is not required:
+Instead, to make things easier, you may use the `build.preludes` configuration to
+explicitly introduce items into scope.
 
-> ```md
-> The [`is_ci`][crate::env::is_ci] function detects whether the preprocessor is running
-> in a [continuous integration](continuous-integration.md) environment, such that
-> warnings may be promoted to errors.
-> ```
->
-> The [`is_ci`][crate::env::is_ci] function detects whether the preprocessor is running
-> in a [continuous integration](continuous-integration.md) environment, such that
-> warnings may be promoted to errors.
+As an example, with the following `book.toml`:
 
-For everything else, provide its full path, as if you were writing a `use` declaration:
-
-> ```md
-> [`JoinSet`][tokio::task::JoinSet] is analogous to Python's `asyncio.as_completed`.
-> ```
->
-> [`JoinSet`][tokio::task::JoinSet] is analogous to Python's `asyncio.as_completed`.
-
-The preprocessor emits warnings for items that cannot be resolved:
-
-<figure>
-
-![warning emitted when an item cannot be resolved](media/error-reporting.png)
-
-<figcaption>
-
-Formatting of diagnostics powered by [miette]
-
-</figcaption>
-
-</figure>
-
-## Feature-gated items
-
-To link to items that are gated behind features, use the
-[`cargo-features`](configuration.md#cargo-features) option in `book.toml`.
-
-For example, [clap] is known for providing guide-level documentation through docs.rs.
-The tutorial for its Derive API is gated behind the `unstable-doc` feature. To link to
-such items, configure the necessary features:
-
-```toml
+```toml config-example-rustdoc-links
 [preprocessor.rustdoc-links]
-cargo-features = ["clap/unstable-doc"]
+build.preludes = ["tracing_subscriber::*"]
 ```
 
-Then, specify the item as usual:
+Items from the [`tracing_subscriber`] crate can now be linked to without writing out the
+crate name:
 
 > ```md
-> [Tutorial for clap's Derive API][clap::_derive::_tutorial]
+> [`EnvFilter`] implements the [`Layer`] trait.
 > ```
 >
-> [Tutorial for clap's Derive API][clap::_derive::_tutorial]
+> [`EnvFilter`] implements the [`Layer`] trait.
 
-## Which "entrypoint"?
+## Items that cannot be linked to
 
-For this preprocessor, the "entrypoint" is usually `src/lib.rs` or `src/main.rs`.
+Due to some limitations, it is not possible to create links to the following kinds of
+items:
 
-- If your crate has multiple `bin` targets, it will use the first one listed in your
-  `Cargo.toml`.
-- If your crate has both `lib` and `bin`s, it will prefer `lib`.
-- If your crate has custom paths in `Cargo.toml` instead of the default `src/lib.rs` or
-  `src/main.rs`, it will honor that.
+- **Private items.** Even though `rustdoc` is capable of [documenting private
+  items][document-private-items], items must still be publicly reachable for this
+  preprocessor to correctly generate links.
 
-## How it works
+- **Items from binary crates.** Likewise, because items in a `bin` crate cannot be
+  public, it is not possible to link to them.
 
-> [!NOTE]
->
-> The following are implementation details.
+- **Hidden items.** Linking to hidden items will likely fail, unless the item is
+  [re-exported]. This is due to a [quirk in `rustdoc`][rust-issue-81979] where intra-doc
+  links may silently fail to appear.[^3]
 
-The preprocessor parses your book and collects every link that looks like a Rust item.
-Then it synthesizes a Rust function that spells out all the items, which could look
-something like:
+[^1]:
+    To be more precise, the preprocessor is currently
+    [hard-coded to use the 2024 edition prelude](/crates/mdbook-rustdoc-links/src/builder.rs#L230),
+    and `std` is always available.
 
-```rs
-fn __ded48f4d_0c4f_4950_b17d_55fd3b2a0c86__ () {
-    Result::<T, E>;
-    core::net::Ipv4Addr::LOCALHOST;
-    std::vec!();
-    serde::Serialize!();
-    <Vec<()> as IntoIterator>::into_iter;
-    // ...
-}
-```
+[^2]:
+    This also applies if your workspace has multiple crates, but only one library crate
+    as the [default member][default-member].
 
-The preprocessor appends this fake function to your `lib.rs` or `main.rs` (in memory)
-and [sends][didOpen] it to rust-analyzer. Then, for each item that needs to be resolved,
-the preprocessor sends an [external documentation request][externalDocs].
-
-```json
-{
-  "jsonrpc": "2.0",
-  "method": "experimental/externalDocs",
-  "params": {
-    "textDocument": { "uri": "file:///src/lib.rs" },
-    "position": { "line": 6, "character": 17 }
-  }
-}
-```
-
-This process is as if you had typed a name into your source file and used the "Open
-Docs" feature — except it is automated.
-
-<figure id="media-open-docs">
-  <img src="media/open-docs.png" alt="the Open Docs option in VS Code">
-</figure>
-<style>
-  @media screen and (min-width: 768px) {
-    #media-open-docs {
-      height: 250px;
-    }
-  }
-</style>
-
-> Note that the synthesized function is barely valid Rust — `Result::<T, E>;` is a type
-> without a value, and you wouldn't use `serde::Serialize` as a regular macro.
->
-> This is where language servers like rust-analyzer excel — they can [provide maximally
-> useful information out of badly-shaped code][why-lsp].
+[^3]:
+    The quirk is that `rustdoc` will not generate a link if it can't find a
+    corresponding HTML page at the destination, and `rustdoc` does not generate HTML
+    pages for hidden items unless their documentation are inlined elsewhere. Although
+    there is a `--document-hidden-items` toggle, this is not currently provided as an
+    option in this preprocessor.
 
 <!-- prettier-ignore-start -->
-[didOpen]: https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_didOpen
-[externalDocs]: https://rust-analyzer.github.io/book/contributing/lsp-extensions.html#open-external-documentation
-[rustdoc-scoping]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html#valid-links
-[why-lsp]: https://matklad.github.io/2022/04/25/why-lsp.html#Alternative-Theory:~:text=a%20language%20server%20must%20analyze%20any%20invalid%20program%20as%20best%20as%20it%20can.%20Working%20with%20incomplete%20and%20invalid%20programs%20is%20the%20first%20complication%20of%20a%20language%20server%20in%20comparison%20to%20a%20compiler.
+[in-scope]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html#valid-links
+[default-member]: https://doc.rust-lang.org/cargo/reference/workspaces.html#the-default-members-field
+[document-private-items]: https://doc.rust-lang.org/rustdoc/command-line-arguments.html#--document-private-items-show-items-that-are-not-public
+[re-exported]: https://doc.rust-lang.org/rustdoc/write-documentation/re-exports.html
+[rust-issue-81979]: https://github.com/rust-lang/rust/issues/81979
 <!-- prettier-ignore-end -->
