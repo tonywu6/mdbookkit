@@ -148,16 +148,6 @@ impl<'a> LinkDiagnostic<'a> {
                     .notes(notes)
                     .build()
             }
-
-            LinkStatus::Error(error) => IssueReport::level(IssueLevel::Error)
-                .title("error while resolving this link")
-                .annotations(vec![
-                    Highlight::span(span.clone())
-                        .kind(AnnotationKind::Primary)
-                        .build(),
-                ])
-                .notes(vec![Note::note(error.to_string())])
-                .build(),
         }
     }
 

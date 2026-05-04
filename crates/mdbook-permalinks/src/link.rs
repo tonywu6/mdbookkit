@@ -12,7 +12,6 @@ pub enum LinkStatus {
     Rewritten,
     Permalink,
     Unreachable(Vec<(Url, PathStatus)>),
-    Error(String),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -128,7 +127,6 @@ impl<'a> RelativeLink<'a> {
             LinkStatus::Rewritten => Some(self.hint),
             LinkStatus::Permalink => Some(self.hint),
             LinkStatus::Unreachable(_) => None,
-            LinkStatus::Error(_) => None,
         }
     }
 }

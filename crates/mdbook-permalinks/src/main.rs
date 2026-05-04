@@ -25,7 +25,7 @@ use mdbookkit::{
 use self::{
     link::{ContentHint, LinkStatus, PathStatus, RelativeLink},
     page::Pages,
-    vcs::{Permalink, PermalinkFormat},
+    vcs::Permalink,
 };
 
 mod diagnostics;
@@ -273,15 +273,8 @@ impl Environment {
                 link.unchanged();
             }
         } else {
-            match self.vcs.link.to_link(&relative_to_repo.path, hint) {
-                Ok(href) => {
-                    link.permalink(url_suffix.restored(href).as_str().to_owned());
-                }
-                Err(err) => {
-                    link.status = LinkStatus::Error(format!("{err}"));
-                    debug!(status = ?link.status, link = ?&*link.href);
-                }
-            }
+            let href = self.vcs.link.to_link(&relative_to_repo.path, hint);
+            link.permalink(url_suffix.restored(href).as_str().to_owned());
         }
     }
 

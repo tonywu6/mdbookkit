@@ -83,7 +83,6 @@ impl<'a> Pages<'a> {
         let mut rewritten = 0;
         let mut permalink = 0;
         let mut unreachable = 0;
-        let mut error = 0;
         let mut total = 0;
 
         for (_, link) in self.links() {
@@ -94,7 +93,6 @@ impl<'a> Pages<'a> {
                 LinkStatus::Rewritten => rewritten += 1,
                 LinkStatus::Permalink => permalink += 1,
                 LinkStatus::Unreachable(_) => unreachable += 1,
-                LinkStatus::Error(_) => error += 1,
             }
         }
 
@@ -104,7 +102,7 @@ impl<'a> Pages<'a> {
             permalink = plural!(permalink, "link"),
             rewritten = plural!(rewritten, "link"),
             unreachable = plural!(unreachable, "inaccessible path"),
-            unchanged = plural!(unchanged + ignored + error, "unchanged", "unchanged"),
+            unchanged = plural!(unchanged + ignored, "unchanged", "unchanged"),
         );
     }
 }

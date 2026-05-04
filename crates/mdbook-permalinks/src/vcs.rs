@@ -1,15 +1,13 @@
-use std::{collections::HashMap, ops::ControlFlow};
-
 use anyhow::{Context, Result, anyhow, bail};
 use git2::{DescribeOptions, Repository, RepositoryOpenFlags};
 use mdbook_preprocessor::{PreprocessorContext, config::Config as MDBookConfig};
-use tap::{Pipe, Tap};
+use tap::Pipe;
 use tracing::{debug, info, instrument, trace};
-use url::{Url, form_urlencoded::Serializer as SearchParams};
+use url::Url;
 
 use mdbookkit::{
     emit_debug,
-    url::{ExpectUrl, UrlFromPath},
+    url::{UrlFromPath, UrlPattern},
 };
 
 use crate::{
@@ -49,11 +47,18 @@ impl VersionControl {
         let link = {
             if let Some(pat) = &config.repo_url_template {
                 debug!("using explicitly set repo_url_template");
-                Permalink {
-                    template: (pat.parse())
-                        .context("failed to parse `repo-url-template` as a valid URL")?,
-                    reference,
+                let pattern = match pat.parse::<UrlPattern>() {
+                    Ok(pat) => {
+                        if pat.as_url().is_some() {
+                            Ok(pat)
+                        } else {
+                            Err(anyhow!("URL must begin with `https://` or `http://`"))
+                        }
+                    }
+                    Err(e) => Err(anyhow!(e)),
                 }
+                .context("failed to parse `repo-url-template` as a valid URL")?;
+                Permalink { pattern, reference }
             } else {
                 let repo = match find_git_remote(&repo, &ctx.config)
                     .context("error while finding a git remote URL")?
@@ -130,194 +135,59 @@ pub struct TryFile {
     pub metadata: std::fs::Metadata,
 }
 
-pub trait PermalinkFormat {
-    /// Try to convert this path to a permalink
-    fn to_link(&self, path: &str, hint: ContentHint) -> Result<Url>;
-    /// Try to extract a path (relative to repo root) from this link
-    fn to_path(&self, link: &Url) -> Option<(String, ContentHint)>;
-}
-
 #[derive(Debug)]
 pub struct Permalink {
-    pub template: Url,
+    pub pattern: UrlPattern,
     pub reference: String,
 }
 
 impl Permalink {
     /// See <https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content--parameters>
     pub fn github(owner: &str, repo: &str, reference: &str) -> Self {
-        let template = format!("https://github.com/{owner}/{repo}/{{tree}}/{{ref}}/{{path}}")
+        let pattern = format!("https://github.com/{owner}/{repo}/{{tree}}/{{ref}}/{{path}}")
             .parse()
-            .expect_url();
+            .expect("should be a valid pattern");
         let reference = reference.into();
-        Self {
-            template,
-            reference,
-        }
+        Self { pattern, reference }
     }
 }
 
-/// `{` and `}` are always percent-encoded in path [^1].
-///
-/// Encoding characters are always in uppercase [^2].
-///
-/// [^1]: <https://url.spec.whatwg.org/#path-percent-encode-set>
-/// [^2]: <https://url.spec.whatwg.org/#percent-encode>
-macro_rules! encoded_param {
-    ($param:literal) => {
-        concat!("%7B", $param, "%7D")
-    };
-}
-
-impl PermalinkFormat for Permalink {
-    fn to_link(&self, path: &str, hint: ContentHint) -> Result<Url> {
-        let path = self
-            .template
-            .path()
-            .split('/')
-            .map(|segment| match segment {
-                encoded_param!("ref") => &self.reference,
-                encoded_param!("tree") => match hint {
+impl Permalink {
+    /// Try to convert this path to a permalink
+    pub fn to_link(&self, path: &str, hint: ContentHint) -> Url {
+        self.pattern
+            .fill(|group| match group {
+                "ref" => Some(&self.reference),
+                "tree" => Some(match hint {
                     ContentHint::Tree => "tree",
                     ContentHint::Raw => "raw",
-                },
-                encoded_param!("path") => path,
-                _ => segment,
+                }),
+                "path" => Some(path),
+                _ => None,
             })
-            .collect::<Vec<_>>()
-            .join("/");
-
-        let query = self
-            .template
-            .query_pairs()
-            .fold(SearchParams::new(String::new()), |mut search, (k, v)| {
-                match v.as_ref() {
-                    "{ref}" => search.append_pair(&k, &self.reference),
-                    "{tree}" => search.append_pair(&k, "tree"),
-                    "{path}" => search.append_pair(&k, &path),
-                    _ => search.append_pair(&k, &v),
-                };
-                search
-            })
-            .finish()
-            .pipe(|query| if query.is_empty() { None } else { Some(query) });
-
-        let fragment = self.template.fragment();
-
-        self.template
-            .clone()
-            .tap_mut(|u| u.set_path(&path))
-            .tap_mut(|u| u.set_query(query.as_deref()))
-            .tap_mut(|u| u.set_fragment(fragment))
-            .pipe(Ok)
+            .into_url()
+            .expect("should result in a URL")
     }
 
-    // this is kind of messy
-    #[instrument("url_to_path", level = "debug", skip_all, fields(url = format!("{link}")))]
-    fn to_path(&self, link: &Url) -> Option<(String, ContentHint)> {
-        if self.template.origin() != link.origin() {
+    /// Try to extract a path (relative to repo root) from this link
+    pub fn to_path(&self, link: &Url) -> Option<(String, ContentHint)> {
+        let mut groups = self.pattern.exec(Some("path"), link)?;
+
+        if groups.get("ref").map(|s| &**s) != Some("HEAD") {
             return None;
         }
 
-        let mut path = false;
-        let mut hint = ContentHint::Tree;
-
-        let mut match_param = |lhs: &str, rhs: Option<&str>| -> ControlFlow<()> {
-            trace!("match param {lhs:?} .. {rhs:?}");
-            match lhs {
-                encoded_param!("tree") => match rhs {
-                    Some("tree" | "blob") => {
-                        hint = ContentHint::Tree;
-                        ControlFlow::Continue(())
-                    }
-                    Some("raw") => {
-                        hint = ContentHint::Raw;
-                        ControlFlow::Continue(())
-                    }
-                    _ => ControlFlow::Break(()),
-                },
-                encoded_param!("ref") => match rhs {
-                    Some("HEAD") => ControlFlow::Continue(()),
-                    _ => ControlFlow::Break(()),
-                },
-                lhs => match rhs {
-                    Some(rhs) if lhs == rhs => ControlFlow::Continue(()),
-                    _ => ControlFlow::Break(()),
-                },
-            }
+        let hint = match groups.get("tree").map(|s| &**s)? {
+            "tree" | "blob" => ContentHint::Tree,
+            "raw" => ContentHint::Raw,
+            _ => return None,
         };
 
-        let mut lhs = self.template.path().split('/');
-        let mut rhs = link.path().split('/');
-
-        #[allow(clippy::while_let_on_iterator, reason = "symmetry")]
-        while let Some(lhs) = lhs.next() {
-            match lhs {
-                encoded_param!("path") => {
-                    path = true;
-                    break;
-                }
-                lhs => match match_param(lhs, rhs.next()) {
-                    ControlFlow::Continue(()) => {}
-                    ControlFlow::Break(()) => {
-                        trace!("no {{path}} found");
-                        return None;
-                    }
-                },
-            }
-        }
-
-        while let Some(lhs) = lhs.next_back() {
-            match match_param(lhs, rhs.next_back()) {
-                ControlFlow::Continue(()) => {}
-                ControlFlow::Break(()) => {
-                    trace!("insufficient {{path}}");
-                    return None;
-                }
-            }
-        }
-
-        let mut path = if path {
-            Some(rhs.collect::<Vec<_>>().join("/"))
-        } else {
-            None
-        };
-
-        let link_query = link.query_pairs().collect::<HashMap<_, _>>();
-
-        for (k, v) in self.template.query_pairs() {
-            trace!("match query {k:?} .. {v:?}");
-            match v.as_ref() {
-                "{path}" => match link_query.get(&k) {
-                    Some(v) => {
-                        path = if let Some(v) = v.strip_prefix('/') {
-                            Some(v.into())
-                        } else {
-                            Some(v.as_ref().into())
-                        }
-                    }
-                    None => return None,
-                },
-                "{tree}" => match link_query.get(&k).map(|v| &**v) {
-                    Some("tree" | "blob") => {
-                        hint = ContentHint::Tree;
-                    }
-                    Some("raw") => {
-                        hint = ContentHint::Raw;
-                    }
-                    _ => return None,
-                },
-                "{ref}" => match link_query.get(&k).map(|v| &**v) {
-                    Some("HEAD") => {}
-                    _ => return None,
-                },
-                _ => {}
-            }
-        }
+        let path = groups.remove("path")?.into_owned();
 
         debug!(?path, ?hint, "path matched");
 
-        Some((path?, hint))
+        Some((path, hint))
     }
 }
 
@@ -441,7 +311,7 @@ mod tests {
 
     use crate::link::ContentHint;
 
-    use super::{Permalink, PermalinkFormat, find_git_remote, remote_as_github};
+    use super::{Permalink, find_git_remote, remote_as_github};
 
     #[test]
     fn test_github_url_from_book() -> Result<()> {
@@ -501,7 +371,7 @@ mod tests {
     fn test_path_to_link() -> Result<()> {
         let scheme = Permalink::github("lorem", "ipsum", "main");
 
-        let link = scheme.to_link(".editorconfig", ContentHint::Tree)?;
+        let link = scheme.to_link(".editorconfig", ContentHint::Tree);
 
         assert_eq!(
             link.as_str(),
@@ -514,11 +384,11 @@ mod tests {
     #[test]
     fn test_path_to_link_with_suffix() -> Result<()> {
         let scheme = Permalink {
-            template: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
+            pattern: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
             reference: "master".into(),
         };
 
-        let link = scheme.to_link(".editorconfig", ContentHint::Tree)?;
+        let link = scheme.to_link(".editorconfig", ContentHint::Tree);
 
         assert_eq!(
             link.as_str(),
@@ -564,7 +434,7 @@ mod tests {
     #[test]
     fn test_link_to_path_with_suffix() -> Result<()> {
         let scheme = Permalink {
-            template: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
+            pattern: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
             reference: "main".into(),
         };
 
@@ -580,7 +450,7 @@ mod tests {
     #[test]
     fn test_link_to_path_non_head() -> Result<()> {
         let scheme = Permalink {
-            template: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
+            pattern: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
             reference: "main".into(),
         };
 
