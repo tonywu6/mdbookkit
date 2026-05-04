@@ -17,7 +17,7 @@ use mdbookkit::{
     config::value_or_vec,
     de_struct, emit_error,
     error::{Break, OnWarning},
-    url::{UrlPattern, UrlUtil},
+    url::{UrlPath, UrlUtil},
 };
 
 use crate::subprocess::CommandUtil;
@@ -318,13 +318,13 @@ impl CargoOptions {
 }
 
 #[derive(Debug)]
-pub struct BaseUrl(pub UrlPattern);
+pub struct BaseUrl(pub UrlPath);
 
 impl FromStr for BaseUrl {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut pat = s.parse::<UrlPattern>()?;
+        let mut pat = s.parse::<UrlPath>()?;
         pat.ensure_trailing_slash();
         Ok(Self(pat))
     }

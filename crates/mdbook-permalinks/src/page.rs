@@ -6,7 +6,7 @@ use std::{
 use anyhow::{Result, bail};
 use mdbook_markdown::pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
 use tap::Pipe;
-use tracing::{debug, info, instrument, trace};
+use tracing::{debug, info, trace};
 use url::Url;
 
 use mdbookkit::{
@@ -43,9 +43,7 @@ impl<'a> Pages<'a> {
             .collect()
     }
 
-    #[instrument(level = "debug", "page_read", skip_all)]
     pub fn insert(&mut self, url: Url, source: &'a str) -> Result<&mut Self> {
-        debug!(path = ?url.path(), "reading file");
         let stream = Parser::new_ext(source, self.markdown).into_offset_iter();
         let page = Page::read(source, stream)?;
         self.pages.push((url.into(), page));

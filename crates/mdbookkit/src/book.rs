@@ -2,7 +2,7 @@ use std::{
     borrow::{Borrow, Cow},
     hash::Hash,
     io::{Read, Write},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result, bail};
@@ -39,6 +39,11 @@ pub fn book_from_stdin() -> Result<(PreprocessorContext, Book)> {
             }
         }
     }
+}
+
+pub fn utf8_path(path: &Path) -> Result<&str> {
+    path.to_str()
+        .context("path contains non-UTF-8 characters, which is unsupported")
 }
 
 pub trait PreprocessorHelper {

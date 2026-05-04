@@ -1,15 +1,12 @@
 #![warn(clippy::unwrap_used)]
 
-use std::collections::HashMap;
-
-use anyhow::Context;
+use anyhow::{Context, Result};
 use cargo_metadata::camino::Utf8Path;
 use clap::{Parser, Subcommand};
-use tap::Pipe;
 use tracing::{Level, error_span, info, info_span, warn};
 
 use mdbookkit::{
-    book::{BookHelper, PreprocessorHelper, book_from_stdin},
+    book::{BookHelper, PreprocessorHelper, book_from_stdin, utf8_path},
     config::validate_config_examples,
     diagnostics::IssueReporter,
     emit_error,
@@ -76,18 +73,16 @@ fn mdbook() -> Result<(), Break> {
 
     let mut contents = LinkTracker::new(tracker);
 
-    let keys = book
-        .iter_chapters()
-        .map(|(path, chapter)| {
-            info_span!("page_read", path = ?path.debug()).in_scope(|| {
-                contents
-                    .read(&chapter.content)
-                    .context("failed to parse file as markdown")
-                    .or_else(emit_error!())?;
-                Ok(path.clone())
-            })
-        })
-        .collect::<Result<Vec<_>, _>>()?;
+    for (path, ch) in book.iter_chapters() {
+        info_span!("page_read", path = ?path.debug()).in_scope(|| {
+            let path = utf8_path(path).or_else(emit_error!())?;
+            contents
+                .read(&ch.content, path)
+                .context("failed to parse file as markdown")
+                .or_else(emit_error!())?;
+            Ok(())
+        })?;
+    }
 
     let book_dir = <&Utf8Path>::try_from(&*ctx.root)
         .context("book directory path contains non-UTF-8 characters, which is unsupported")
@@ -96,40 +91,28 @@ fn mdbook() -> Result<(), Break> {
     build_docs(builder.resolve(book_dir)?, &mut contents)?;
 
     let ExportedPages {
-        contents,
+        mut contents,
         issues,
         stats,
     } = contents.export();
 
-    {
-        let issues = (book.iter_chapters().zip(issues))
-            .map(|((path, chapter), issues)| IssueReporter {
-                issues,
-                source: (&*chapter.content, path.display()).into(),
-            })
-            .collect::<Vec<_>>()
-            .pipe(IssueReporter::sorted);
-
-        for issues in issues {
-            issues.emit();
-        }
+    for issues in IssueReporter::sorted(issues) {
+        issues.emit();
     }
 
     fail_on_warnings.check().or_else(emit_error!())?;
 
-    {
-        let mut contents = keys.into_iter().zip(contents).collect::<HashMap<_, _>>();
+    book.for_each_page_mut(|path, content| {
+        let key = path.to_str().expect("paths were checked");
+        let out = contents.remove(key).expect("`contents` should have key");
 
-        book.for_each_page_mut(|path, content| {
-            if let Some(output) = contents.remove(path) {
-                *content = output
-                    .with_context(|| path.display().to_string())
-                    .context("error generating output")
-                    .or_else(emit_error!())?;
-            }
-            Ok(())
-        })?;
-    }
+        *content = out
+            .with_context(|| key.to_owned())
+            .context("error generating output")
+            .or_else(emit_error!())?;
+
+        Ok(())
+    })?;
 
     book.to_stdout(&ctx).or_else(emit_error!())?;
 

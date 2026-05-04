@@ -7,7 +7,7 @@ use url::Url;
 
 use mdbookkit::{
     emit_debug,
-    url::{UrlFromPath, UrlPattern},
+    url::{UrlFromPath, UrlPath},
 };
 
 use crate::{
@@ -47,7 +47,7 @@ impl VersionControl {
         let link = {
             if let Some(pat) = &config.repo_url_template {
                 debug!("using explicitly set repo_url_template");
-                let pattern = match pat.parse::<UrlPattern>() {
+                let pattern = match pat.parse::<UrlPath>() {
                     Ok(pat) => {
                         if pat.as_url().is_some() {
                             Ok(pat)
@@ -137,7 +137,7 @@ pub struct TryFile {
 
 #[derive(Debug)]
 pub struct Permalink {
-    pub pattern: UrlPattern,
+    pub pattern: UrlPath,
     pub reference: String,
 }
 
@@ -156,7 +156,7 @@ impl Permalink {
     /// Try to convert this path to a permalink
     pub fn to_link(&self, path: &str, hint: ContentHint) -> Url {
         self.pattern
-            .fill(|group| match group {
+            .fill_pattern(|group| match group {
                 "ref" => Some((&self.reference).into()),
                 "tree" => Some(
                     match hint {
@@ -174,7 +174,7 @@ impl Permalink {
 
     /// Try to extract a path (relative to repo root) from this link
     pub fn to_path(&self, link: &Url) -> Option<(String, ContentHint)> {
-        let mut groups = self.pattern.exec(Some("path"), link)?;
+        let mut groups = self.pattern.test_pattern(Some("path"), link)?;
 
         if groups.get("ref").map(|s| &**s) != Some("HEAD") {
             return None;

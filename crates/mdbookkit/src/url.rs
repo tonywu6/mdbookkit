@@ -2,14 +2,14 @@ use std::{
     borrow::Cow, collections::HashMap, fmt::Debug, ops::ControlFlow, path::Path, str::FromStr,
 };
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use tap::Pipe;
 use url::{Url, form_urlencoded::Serializer as SearchParams};
 
-pub struct UrlPattern(Url);
+pub struct UrlPath(Url);
 
-impl UrlPattern {
-    pub fn fill<'a, F>(&self, mut f: F) -> Self
+impl UrlPath {
+    pub fn fill_pattern<'a, F>(&self, mut f: F) -> Self
     where
         F: for<'b> FnMut(&'b str) -> Option<Cow<'a, str>>,
     {
@@ -40,7 +40,7 @@ impl UrlPattern {
         Self(url)
     }
 
-    pub fn exec<'a, 'b>(
+    pub fn test_pattern<'a, 'b>(
         &'a self,
         catch_all: Option<&'a str>,
         value: &'b Url,
@@ -110,6 +110,14 @@ impl UrlPattern {
         Ok(Self(self.0.join(rhs)?))
     }
 
+    pub fn relative_to(&self, base: &Self) -> Result<String> {
+        let err = || {
+            format! { "cannot make a relative URL from {:?} to {:?}",
+            base.as_str(), self.as_str() }
+        };
+        base.0.make_relative(&self.0).with_context(err)
+    }
+
     pub fn as_str(&self) -> &str {
         self.path_only().unwrap_or_else(|| self.0.as_str())
     }
@@ -130,12 +138,16 @@ impl UrlPattern {
         }
     }
 
+    pub fn empty() -> Self {
+        "".parse().expect_url()
+    }
+
     fn path_only(&self) -> Option<&str> {
         self.0.as_str().strip_prefix("example:")
     }
 }
 
-impl FromStr for UrlPattern {
+impl FromStr for UrlPath {
     type Err = url::ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -143,13 +155,13 @@ impl FromStr for UrlPattern {
     }
 }
 
-impl From<Url> for UrlPattern {
+impl From<Url> for UrlPath {
     fn from(value: Url) -> Self {
         Self(value)
     }
 }
 
-impl Debug for UrlPattern {
+impl Debug for UrlPath {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("UrlPattern")
             .field(&format_args!("{:?}", self.as_str()))
@@ -186,7 +198,7 @@ impl UrlUtil for Url {
     }
 }
 
-impl UrlUtil for UrlPattern {
+impl UrlUtil for UrlPath {
     fn ensure_trailing_slash(&mut self) {
         self.0.ensure_trailing_slash();
     }

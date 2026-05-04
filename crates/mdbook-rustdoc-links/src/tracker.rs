@@ -1,6 +1,6 @@
 use std::{
     cell::RefCell,
-    collections::BTreeSet,
+    collections::{BTreeSet, HashMap},
     fmt::{Debug, Display, Write},
     ops::{ControlFlow, Range},
 };
@@ -26,12 +26,15 @@ use url::Url;
 use mdbookkit::{
     cmp::{Lexicographic, LexicographicOrd},
     diagnostics::{
-        Highlight, IssueLevel, IssueReport, Note, Suggestion, annotate_snippets::AnnotationKind,
+        Highlight, IssueLevel, IssueReport, IssueReporter, Note, SourceCode, Suggestion,
+        annotate_snippets::AnnotationKind,
     },
     emit_debug, emit_trace, emit_warning,
     error::{Break, ExpectFmt},
     markdown::{PatchStream, locate_text},
-    plural, with_bug_report,
+    plural,
+    url::UrlPath,
+    with_bug_report,
 };
 
 use crate::{
@@ -52,12 +55,13 @@ pub struct LinkTracker<'a> {
 #[derive(Debug)]
 struct Page<'a> {
     text: &'a str,
+    base: UrlPath,
     link_end: usize,
 }
 
 #[derive(Debug)]
 struct Link<'a> {
-    href: Option<String>,
+    href: Option<UrlPath>,
     kind: LinkType,
     span: SourceSpan,
     dest: CowStr<'a>,
@@ -90,7 +94,9 @@ impl<'a> LinkTracker<'a> {
         }
     }
 
-    pub fn read(&mut self, text: &'a str) -> Result<()> {
+    pub fn read(&mut self, text: &'a str, path: &str) -> Result<()> {
+        let base = path.parse()?;
+
         let mut state = None;
 
         for (event, span) in markdown(text).into_offset_iter() {
@@ -113,6 +119,7 @@ impl<'a> LinkTracker<'a> {
 
         self.pages.push(Page {
             text,
+            base,
             link_end: self.links.len(),
         });
 
@@ -271,8 +278,8 @@ impl<'a> LinkTracker<'a> {
     }
 
     pub fn export<'d: 'a>(&'d self) -> ExportedPages<'d> {
-        let mut contents = Vec::with_capacity(self.pages.len());
-        let mut issues = Vec::with_capacity(self.pages.len());
+        let mut contents = HashMap::with_capacity(self.pages.len());
+        let mut reporters = Vec::with_capacity(self.pages.len());
 
         let links = self.pages.iter().scan(0usize, |start, page| {
             let links = &self.links[*start..page.link_end];
@@ -286,18 +293,28 @@ impl<'a> LinkTracker<'a> {
             stats: Default::default(),
         };
 
+        let base_url = UrlPath::empty();
+
         for (page, links) in links {
-            let page_issues = links
+            let path = (page.base.relative_to(&base_url))
+                .unwrap_or_else(|_| page.base.as_str().to_owned());
+
+            let source = SourceCode {
+                source_code: page.text,
+                source_path: path.clone().into(),
+            };
+
+            let issues = links
                 .iter()
                 .flat_map(|link| ctx.diagnose(link))
                 .chain(self.link_summary(links))
                 .collect();
 
-            issues.push(page_issues);
+            reporters.push(IssueReporter { issues, source });
 
             let patches = links.iter().filter_map(|link| {
                 let span = link.span.full.clone();
-                let link = link.export()?;
+                let link = link.export(&page.base)?;
                 Some((link, span))
             });
 
@@ -305,12 +322,12 @@ impl<'a> LinkTracker<'a> {
                 .into_string()
                 .map_err(<_>::into);
 
-            contents.push(text);
+            contents.insert(path, text);
         }
 
         ExportedPages {
             contents,
-            issues,
+            issues: reporters,
             stats: ctx.stats,
         }
     }
@@ -339,9 +356,9 @@ impl<'a> LinkTracker<'a> {
     }
 }
 
-fn resolve_url(base: &BaseUrl, output: &BuildOutput<'_>, href: &str) -> Result<String> {
-    if href.parse::<Url>().is_ok() {
-        return Ok(href.to_owned());
+fn resolve_url(base: &BaseUrl, output: &BuildOutput<'_>, href: &str) -> Result<UrlPath> {
+    if let Ok(href) = href.parse::<Url>() {
+        return Ok(href.into());
     }
 
     let (name, version, href) = if let Some(href) = href.strip_prefix("../")
@@ -355,7 +372,7 @@ fn resolve_url(base: &BaseUrl, output: &BuildOutput<'_>, href: &str) -> Result<S
     };
 
     let url = (base.0)
-        .fill(|group| match group {
+        .fill_pattern(|group| match group {
             "pkg_name" => Some(name.as_str().into()),
             "version" => Some(version.to_string().into()),
 
@@ -363,12 +380,12 @@ fn resolve_url(base: &BaseUrl, output: &BuildOutput<'_>, href: &str) -> Result<S
         })
         .join(href)?;
 
-    Ok(url.as_str().to_owned())
+    Ok(url)
 }
 
 pub struct ExportedPages<'a> {
-    pub contents: Vec<Result<String>>,
-    pub issues: Vec<Vec<IssueReport<'a>>>,
+    pub contents: HashMap<String, Result<String>>,
+    pub issues: Vec<IssueReporter<'a>>,
     pub stats: Statistics,
 }
 
@@ -616,7 +633,7 @@ impl<'a> Link<'a> {
         Ok(self)
     }
 
-    fn export(&'a self) -> Option<impl Iterator<Item = Event<'a>>> {
+    fn export(&'a self, base: &UrlPath) -> Option<impl Iterator<Item = Event<'a>>> {
         let Self {
             href,
             title,
@@ -625,10 +642,15 @@ impl<'a> Link<'a> {
         } = self;
 
         let href = href.as_ref()?;
+        let href = if let Ok(path) = href.relative_to(base) {
+            CowStr::Boxed(path.into())
+        } else {
+            CowStr::Borrowed(href.as_str())
+        };
 
         let iter = std::iter::once(Event::Start(Tag::Link {
             link_type: Inline,
-            dest_url: CowStr::Borrowed(href.as_str()),
+            dest_url: href,
             title: title.clone(),
             id: CowStr::Borrowed(""),
         }))
@@ -956,7 +978,7 @@ mod tests {
 
     fn test_link_spans(text: &str, expected: Data) -> Result<()> {
         let mut tracker = LinkTracker::default();
-        tracker.read(text)?;
+        tracker.read(text, "index.md")?;
         let span = tracker.links[0].span.clone();
         let report = print_link_spans(span);
         let report = issue_to_report(report, (text, "<anon>").into());

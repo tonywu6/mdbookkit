@@ -8,15 +8,15 @@ use mdbook_markdown::pulldown_cmark;
 use mdbook_preprocessor::{PreprocessorContext, book::Book};
 use serde::Deserialize;
 use tap::{Pipe, Tap};
-use tracing::{Level, debug, error_span, info, span::EnteredSpan, trace, warn};
+use tracing::{Level, debug, error_span, info, info_span, span::EnteredSpan, trace, warn};
 use url::Url;
 
 use mdbookkit::{
-    book::{BookHelper, PreprocessorHelper, book_from_stdin},
+    book::{BookHelper, PreprocessorHelper, book_from_stdin, utf8_path},
     config::validate_config_examples,
     diagnostics::IssueReporter,
     emit_error,
-    error::{Break, OnWarning, ProgramExit, has_severity},
+    error::{Break, OnWarning, PathDebug, ProgramExit, has_severity},
     logging::init_logging,
     ticker, ticker_item,
     url::{ExpectUrl, UrlFromPath},
@@ -100,17 +100,14 @@ impl Environment {
         let mut contents = Pages::new(self.markdown);
 
         for (path, ch) in book.iter_chapters() {
-            let path = (path.to_str())
-                .with_context(|| path.display().to_string())
-                .context("path contains non-UTF-8 characters, which is unsupported:")
-                .or_else(emit_error!())?;
-
-            let url = self.root_dir.join(path).expect_url();
-
-            (contents.insert(url, &ch.content))
-                .with_context(|| path.to_owned())
-                .context("failed to parse file as markdown:")
-                .or_else(emit_error!())?;
+            info_span!("page_read", path = ?path.debug()).in_scope(|| {
+                let path = utf8_path(path).or_else(emit_error!())?;
+                let url = self.root_dir.join(path).expect_url();
+                (contents.insert(url, &ch.content))
+                    .context("failed to parse file as markdown")
+                    .or_else(emit_error!())?;
+                Ok(())
+            })?;
         }
 
         self.resolve(&mut contents);
