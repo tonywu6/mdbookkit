@@ -1,6 +1,7 @@
 use std::{
     borrow::Cow,
     fmt::Debug,
+    ops::Deref,
     path::Path,
     process::{self, Command},
     str::FromStr,
@@ -8,7 +9,10 @@ use std::{
 
 use anyhow::{Context, Result, anyhow};
 use cargo_metadata::camino::{Utf8Path, Utf8PathBuf};
-use serde::{Deserialize, Deserializer, de::value::MapAccessDeserializer};
+use serde::{
+    Deserialize, Deserializer,
+    de::{IntoDeserializer, value::MapAccessDeserializer},
+};
 use shlex::Shlex;
 use tap::Pipe;
 use tracing::debug;
@@ -16,6 +20,7 @@ use tracing::debug;
 use mdbookkit::{
     config::value_or_vec,
     de_struct, emit_error,
+    env::is_ci,
     error::{Break, OnWarning},
     url::{UrlPath, UrlUtil},
 };
@@ -33,9 +38,9 @@ de_struct!(
             #[serde(default)]
             build_options
         )),
-        tracker(TrackerConfig(
-            #[serde(default)]
-            base_url
+        env(EnvConfig(
+            #[serde(default, deserialize_with = "base_url_config")]
+            base_url as BaseUrlConfig
         )),
         #[serde(default)]
         fail_on_warnings
@@ -81,7 +86,7 @@ de_struct!(
 #[derive(Debug, Default)]
 pub struct Config {
     pub builder: BuilderConfig,
-    pub tracker: TrackerConfig,
+    pub env: EnvConfig,
     pub fail_on_warnings: OnWarning,
 }
 
@@ -119,6 +124,31 @@ pub struct FeatureSelection {
     pub no_default_features: Option<bool>,
 }
 
+#[derive(Debug, Clone)]
+pub enum PackageSpec {
+    Name(String),
+    Selector(PackageSelector),
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "kebab-case")]
+pub struct PackageSelector {
+    #[serde(default)]
+    pub name: Option<String>,
+    #[serde(default)]
+    pub workspace: WorkspaceMember,
+    #[serde(default)]
+    pub dependencies: bool,
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+pub enum WorkspaceMember {
+    None,
+    #[default]
+    Default,
+    All,
+}
+
 #[derive(Debug, Default)]
 pub struct CargoOptions {
     pub toolchain: Option<String>,
@@ -127,9 +157,21 @@ pub struct CargoOptions {
 }
 
 #[derive(Debug, Default)]
-pub struct TrackerConfig {
-    pub base_url: BaseUrl,
+pub struct EnvConfig {
+    pub base_url: BaseUrlConfig,
 }
+
+#[derive(Deserialize, Debug, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+pub struct BaseUrlConfig {
+    #[serde(default)]
+    dev: BaseUrl,
+    #[serde(default)]
+    release: BaseUrl,
+}
+
+#[derive(Debug, Clone)]
+pub struct BaseUrl(pub UrlPath);
 
 #[derive(Debug)]
 pub struct BuildConfigResolved {
@@ -265,61 +307,6 @@ impl FeatureSelection {
     }
 }
 
-#[derive(Debug, Clone)]
-pub enum PackageSpec {
-    Name(String),
-    Selector(PackageSelector),
-}
-
-#[derive(Deserialize, Debug, Clone)]
-#[serde(rename_all = "kebab-case")]
-pub struct PackageSelector {
-    #[serde(default)]
-    pub name: Option<String>,
-    #[serde(default)]
-    pub workspace: WorkspaceMember,
-    #[serde(default)]
-    pub dependencies: bool,
-}
-
-#[derive(Debug, Default, Clone, Copy)]
-pub enum WorkspaceMember {
-    None,
-    #[default]
-    Default,
-    All,
-}
-
-impl CargoOptions {
-    pub fn command(&self, subcommand: &str) -> Command {
-        let mut command = Command::new("cargo");
-        command
-            .args(self.toolchain())
-            .arg(subcommand)
-            .args(&self.cargo_args);
-        command
-    }
-
-    pub fn toolchain(&self) -> Option<String> {
-        self.toolchain.as_ref().map(|t| format!("+{t}"))
-    }
-
-    fn workspace(&self, cwd: &Path) -> Result<LocateProject> {
-        self.command("locate-project")
-            .arg("--message-format=json")
-            .arg("--workspace")
-            .current_dir(cwd)
-            .run()
-            .checked()
-            .context("`cargo locate-project` did not run successfully")?
-            .pipe(LocateProject::parse)
-            .context("could not parse output of `cargo locate-project`")
-    }
-}
-
-#[derive(Debug)]
-pub struct BaseUrl(pub UrlPath);
-
 impl FromStr for BaseUrl {
     type Err = anyhow::Error;
 
@@ -346,6 +333,80 @@ impl<'de> Deserialize<'de> for BaseUrl {
     {
         (String::deserialize(deserializer)?.parse::<Self>())
             .map_err(|err| serde::de::Error::custom(format_args!("{err:?}")))
+    }
+}
+
+fn base_url_config<'de, D>(deserializer: D) -> Result<BaseUrlConfig, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct Visitor;
+
+    impl<'de> serde::de::Visitor<'de> for Visitor {
+        type Value = BaseUrlConfig;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("a string or a map")
+        }
+
+        fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+        where
+            A: serde::de::MapAccess<'de>,
+        {
+            Self::Value::deserialize(MapAccessDeserializer::new(map))
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            let url = BaseUrl::deserialize(v.into_deserializer())?;
+            Ok(Self::Value {
+                dev: url.clone(),
+                release: url.clone(),
+            })
+        }
+    }
+
+    deserializer.deserialize_any(Visitor)
+}
+
+impl Deref for BaseUrlConfig {
+    type Target = BaseUrl;
+
+    fn deref(&self) -> &Self::Target {
+        if is_ci().is_some() {
+            &self.release
+        } else {
+            &self.dev
+        }
+    }
+}
+
+impl CargoOptions {
+    pub fn command(&self, subcommand: &str) -> Command {
+        let mut command = Command::new("cargo");
+        command
+            .args(self.toolchain())
+            .arg(subcommand)
+            .args(&self.cargo_args);
+        command
+    }
+
+    pub fn toolchain(&self) -> Option<String> {
+        self.toolchain.as_ref().map(|t| format!("+{t}"))
+    }
+
+    fn workspace(&self, cwd: &Path) -> Result<LocateProject> {
+        self.command("locate-project")
+            .arg("--message-format=json")
+            .arg("--workspace")
+            .current_dir(cwd)
+            .run()
+            .checked()
+            .context("`cargo locate-project` did not run successfully")?
+            .pipe(LocateProject::parse)
+            .context("could not parse output of `cargo locate-project`")
     }
 }
 

@@ -65,7 +65,7 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
                 let image = book_toml_path.join(&image)?;
                 let image = src_dir
                     .make_relative(&image)
-                    .context("Failed to make relative path to image")?;
+                    .context("failed to make relative path to image")?;
                 book_url.join(&image)?
             };
             let metadata = PageMetadata {
@@ -123,7 +123,7 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
 
         let pathname = out_dir
             .make_relative(&file_url)
-            .context("Failed to get page pathname")?
+            .context("failed to get page pathname")?
             .replace("index.html", "")
             .replace(".html", "")
             .pipe(|p| format!("/{p}"));
@@ -188,7 +188,7 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
                     };
                     let img = image::open(&src)
                         .with_context(|| src.display().to_string())
-                        .context("Failed to read image")?;
+                        .context("failed to read image")?;
                     elem.set_attribute("width", &img.width().to_string())?;
                     elem.set_attribute("height", &img.height().to_string())?;
                     trace!(?elem);

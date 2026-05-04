@@ -40,8 +40,9 @@ use mdbookkit::{
 use crate::{
     builder::BuildOutput,
     diagnostics::{DiagnosticNotes, RustcDiagnostic, SourceMap, report_level},
+    env::Environment,
     markdown::markdown,
-    options::{BaseUrl, TrackerConfig},
+    options::BaseUrl,
 };
 
 #[derive(Debug, Default)]
@@ -49,7 +50,7 @@ pub struct LinkTracker<'a> {
     links: Vec<Link<'a>>,
     pages: Vec<Page<'a>>,
     notes: DiagnosticNotes,
-    options: TrackerConfig,
+    env: Environment,
 }
 
 #[derive(Debug)]
@@ -85,12 +86,12 @@ struct SourceSpan {
 }
 
 impl<'a> LinkTracker<'a> {
-    pub fn new(options: TrackerConfig) -> Self {
+    pub fn new(env: Environment) -> Self {
         Self {
             links: Default::default(),
             pages: Default::default(),
             notes: Default::default(),
-            options,
+            env,
         }
     }
 
@@ -185,7 +186,7 @@ impl<'a> LinkTracker<'a> {
                         && let Some(link) = state.borrow_mut().link()
                         && !eq_escaped(&link.dest, &href)
                     {
-                        if let Ok(url) = resolve_url(&self.options.base_url, &output, &href)
+                        if let Ok(url) = resolve_url(self.env.base_url(), &output, &href)
                             .with_context(|| format!("could not convert to a full URL: {href:?}"))
                             .or_else(with_bug_report!(emit_warning))
                         {
@@ -273,10 +274,6 @@ impl<'a> LinkTracker<'a> {
         }
     }
 
-    pub fn notes(&mut self) -> &mut DiagnosticNotes {
-        &mut self.notes
-    }
-
     pub fn export<'d: 'a>(&'d self) -> ExportedPages<'d> {
         let mut contents = HashMap::with_capacity(self.pages.len());
         let mut reporters = Vec::with_capacity(self.pages.len());
@@ -330,6 +327,14 @@ impl<'a> LinkTracker<'a> {
             issues: reporters,
             stats: ctx.stats,
         }
+    }
+
+    pub fn notes(&mut self) -> &mut DiagnosticNotes {
+        &mut self.notes
+    }
+
+    pub fn env(&self) -> &Environment {
+        &self.env
     }
 
     fn link_summary(&self, links: &'a [Link<'a>]) -> Option<IssueReport<'a>> {

@@ -16,12 +16,14 @@ use mdbookkit::{
 
 use self::{
     builder::build_docs,
+    env::Environment,
     options::Config,
     tracker::{ExportedPages, LinkTracker},
 };
 
 mod builder;
 mod diagnostics;
+mod env;
 mod markdown;
 mod options;
 mod subprocess;
@@ -64,14 +66,16 @@ fn mdbook() -> Result<(), Break> {
 
     let Config {
         builder,
-        tracker,
+        env,
         fail_on_warnings,
     } = ctx
         .preprocessor(&[PREPROCESSOR_NAME, "mdbook-rustdoc-link"])
         .context("failed to read preprocessor config from book.toml")
         .or_else(emit_error!())?;
 
-    let mut contents = LinkTracker::new(tracker);
+    let env = Environment::new(env, &ctx).or_else(emit_error!())?;
+
+    let mut contents = LinkTracker::new(env);
 
     for (path, ch) in book.iter_chapters() {
         info_span!("page_read", path = ?path.debug()).in_scope(|| {

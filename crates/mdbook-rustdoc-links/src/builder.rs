@@ -208,6 +208,8 @@ fn run_builder(
 
     trace!("{artifacts:#?}");
 
+    let html_dir = tracker.env().base_dir();
+
     for target in artifacts.targets() {
         let Some(docstring) = tracker.rustdoc_input() else {
             break;
@@ -334,6 +336,26 @@ fn run_builder(
         };
 
         tracker.rustdoc_output(output);
+
+        if let Some(output) = html_dir.as_deref() {
+            let source = metadata.target_directory.as_std_path();
+            let source = if let Some(target) = target.as_deref() {
+                source.join(target).join("doc")
+            } else {
+                source.join("doc")
+            };
+
+            let output = if let Some(target) = target.as_deref() {
+                output.join(target)
+            } else {
+                output.to_owned()
+            };
+
+            symlink_dir_all(&source, &output)
+                .context("could not create a symlink as required by the `base-url` option")
+                .or_else(emit_warning!())
+                .ok();
+        }
     }
 
     Ok(())
@@ -1013,14 +1035,26 @@ impl CargoMetadataUtil for Subprocess {
     }
 }
 
-fn symlink_dir_all(existing: impl AsRef<Path>, link: impl AsRef<Path>) -> std::io::Result<()> {
-    if let Some(parent) = link.as_ref().parent() {
-        std::fs::create_dir_all(parent)?;
+pub fn symlink_dir_all(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Result<()> {
+    if let Some(parent) = target.as_ref().parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("{:?}", parent.debug()))
+            .context("could not create intermediate directories:")?;
     }
-    match symlink_dir(existing, link) {
+
+    match symlink_dir(&source, &target) {
         Ok(()) => Ok(()),
-        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Ok(()),
-        Err(e) => Err(e),
+
+        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+            std::fs::remove_file(&target)
+                .with_context(|| format!("{:?}", target.as_ref().debug()))
+                .context("could not remove existing symlink:")?;
+            symlink_dir_all(source, target)
+        }
+
+        Err(e) => Err(e)
+            .with_context(|| format!("target: {:?}", target.as_ref().debug()))
+            .with_context(|| format!("source: {:?}", source.as_ref().debug()))?,
     }
 }
 

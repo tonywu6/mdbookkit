@@ -1,4 +1,5 @@
 /build
 /dist/mdbookkit
 /src/web
+/src/api
 /web/loader.*

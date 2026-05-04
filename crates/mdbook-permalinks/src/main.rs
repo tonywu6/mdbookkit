@@ -232,14 +232,6 @@ impl Environment {
             trace!(?url_suffix);
         }
 
-        let relative_to_repo = match self.vcs.try_file(&file_url) {
-            Ok(path) => path,
-            Err(err) => {
-                link.unreachable(vec![(file_url, err)]);
-                return;
-            }
-        };
-
         let relative_to_book = self
             .root_dir
             .make_relative(&file_url)
@@ -270,6 +262,14 @@ impl Environment {
                 link.unchanged();
             }
         } else {
+            let relative_to_repo = match self.vcs.try_file(&file_url) {
+                Ok(path) => path,
+                Err(err) => {
+                    link.unreachable(vec![(file_url, err)]);
+                    return;
+                }
+            };
+
             let href = self.vcs.link.to_link(&relative_to_repo.path, hint);
             link.permalink(url_suffix.restored(href).as_str().to_owned());
         }
@@ -410,11 +410,7 @@ impl Environment {
 
         let markdown = book.markdown_options();
 
-        let root_dir = (book.root)
-            .canonicalize()
-            .context("failed to locate book root")?
-            .join(&book.config.book.src)
-            .to_directory_url();
+        let root_dir = book.src_root()?.to_directory_url();
 
         Ok(Ok(Self {
             vcs,

@@ -156,7 +156,7 @@ impl<'a> Page<'a> {
                 event @ Event::End(end @ (TagEnd::Link | TagEnd::Image)) => {
                     let Some(mut items) = opened.take() else {
                         debug!(?span, "unexpected {end:?}");
-                        bail!("Markdown stream malformed at byte position {span:?}");
+                        bail!("markdown stream malformed at byte position {span:?}");
                     };
 
                     trace!(?span, "<<<");

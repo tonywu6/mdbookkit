@@ -6,6 +6,7 @@ use anyhow::{Context, Result};
 use tap::Pipe;
 use url::{Url, form_urlencoded::Serializer as SearchParams};
 
+#[derive(Clone)]
 pub struct UrlPath(Url);
 
 impl UrlPath {

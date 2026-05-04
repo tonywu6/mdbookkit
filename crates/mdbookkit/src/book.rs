@@ -52,6 +52,8 @@ pub trait PreprocessorHelper {
         T: for<'de> Deserialize<'de> + Default;
 
     fn markdown_options(&self) -> MarkdownOptions;
+
+    fn src_root(&self) -> Result<PathBuf>;
 }
 
 macro_rules! preprocessor_table {
@@ -106,6 +108,12 @@ impl PreprocessorHelper for PreprocessorContext {
             options.insert(MarkdownOptions::ENABLE_DEFINITION_LIST);
         }
         options
+    }
+
+    fn src_root(&self) -> Result<PathBuf> {
+        Ok((self.root.canonicalize())
+            .context("failed to locate book directory")?
+            .join(&self.config.book.src))
     }
 }
 

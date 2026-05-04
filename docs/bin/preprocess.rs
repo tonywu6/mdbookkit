@@ -21,7 +21,7 @@ use mdbookkit::{
 };
 
 pub fn run() -> Result<()> {
-    let (ctx, mut book) = book_from_stdin().context("Failed to read from mdBook")?;
+    let (ctx, mut book) = book_from_stdin().context("failed to read from mdBook")?;
 
     let mut global = BookState::default();
 
