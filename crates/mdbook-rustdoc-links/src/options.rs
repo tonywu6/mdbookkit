@@ -3,6 +3,7 @@ use std::{
     fmt::Debug,
     path::Path,
     process::{self, Command},
+    str::FromStr,
 };
 
 use anyhow::{Context, Result, anyhow};
@@ -16,6 +17,7 @@ use mdbookkit::{
     config::value_or_vec,
     de_struct, emit_error,
     error::{Break, OnWarning},
+    url::{UrlPattern, UrlUtil},
 };
 
 use crate::subprocess::CommandUtil;
@@ -23,13 +25,17 @@ use crate::subprocess::CommandUtil;
 de_struct!(
     #[serde(rename_all = "kebab-case", deny_unknown_fields)]
     Config(
-        build(BuildConfig(
+        builder(BuilderConfig(
             #[serde(default)]
             manifest_dir,
             #[serde(default, deserialize_with = "value_or_vec")]
             build as Vec<Builder>,
             #[serde(default)]
             build_options
+        )),
+        tracker(TrackerConfig(
+            #[serde(default)]
+            base_url
         )),
         #[serde(default)]
         fail_on_warnings
@@ -74,12 +80,13 @@ de_struct!(
 
 #[derive(Debug, Default)]
 pub struct Config {
-    pub build: BuildConfig,
+    pub builder: BuilderConfig,
+    pub tracker: TrackerConfig,
     pub fail_on_warnings: OnWarning,
 }
 
 #[derive(Debug, Default)]
-pub struct BuildConfig {
+pub struct BuilderConfig {
     manifest_dir: Option<Utf8PathBuf>,
     build: Vec<Builder>,
     build_options: BuildOptions,
@@ -119,13 +126,18 @@ pub struct CargoOptions {
     pub runner: CommandRunner,
 }
 
+#[derive(Debug, Default)]
+pub struct TrackerConfig {
+    pub base_url: BaseUrl,
+}
+
 #[derive(Debug)]
 pub struct BuildConfigResolved {
     pub manifest_dir: Utf8PathBuf,
     pub builders: Vec<Builder>,
 }
 
-impl BuildConfig {
+impl BuilderConfig {
     pub fn resolve(self, book_dir: &Utf8Path) -> Result<BuildConfigResolved, Break> {
         let Self {
             manifest_dir,
@@ -302,6 +314,38 @@ impl CargoOptions {
             .context("`cargo locate-project` did not run successfully")?
             .pipe(LocateProject::parse)
             .context("could not parse output of `cargo locate-project`")
+    }
+}
+
+#[derive(Debug)]
+pub struct BaseUrl(pub UrlPattern);
+
+impl FromStr for BaseUrl {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut pat = s.parse::<UrlPattern>()?;
+        pat.ensure_trailing_slash();
+        Ok(Self(pat))
+    }
+}
+
+impl Default for BaseUrl {
+    fn default() -> Self {
+        // https://doc.rust-lang.org/cargo/reference/unstable.html#rustdoc-map
+        "https://docs.rs/{pkg_name}/{version}"
+            .parse()
+            .expect("should be valid")
+    }
+}
+
+impl<'de> Deserialize<'de> for BaseUrl {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        (String::deserialize(deserializer)?.parse::<Self>())
+            .map_err(|err| serde::de::Error::custom(format_args!("{err:?}")))
     }
 }
 
@@ -486,10 +530,9 @@ impl<'de> Deserialize<'de> for CustomCommand {
     {
         let mut args = command_line_args(deserializer)?.into_iter();
 
-        let program = args
-            .next()
+        let program = (args.next())
             .context("unexpected empty command")
-            .map_err(serde::de::Error::custom)?;
+            .map_err(|e| serde::de::Error::custom(format_args!("{e:?}")))?;
 
         let mut cmd = Command::new(program);
 

@@ -66,14 +66,15 @@ fn mdbook() -> Result<(), Break> {
         .or_else(emit_error!())?;
 
     let Config {
-        build,
+        builder,
+        tracker,
         fail_on_warnings,
     } = ctx
         .preprocessor(&[PREPROCESSOR_NAME, "mdbook-rustdoc-link"])
         .context("failed to read preprocessor config from book.toml")
         .or_else(emit_error!())?;
 
-    let mut contents = LinkTracker::default();
+    let mut contents = LinkTracker::new(tracker);
 
     let keys = book
         .iter_chapters()
@@ -92,7 +93,7 @@ fn mdbook() -> Result<(), Break> {
         .context("book directory path contains non-UTF-8 characters, which is unsupported")
         .or_else(emit_error!())?;
 
-    build_docs(build.resolve(book_dir)?, &mut contents)?;
+    build_docs(builder.resolve(book_dir)?, &mut contents)?;
 
     let ExportedPages {
         contents,

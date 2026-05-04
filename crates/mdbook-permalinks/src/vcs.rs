@@ -157,12 +157,15 @@ impl Permalink {
     pub fn to_link(&self, path: &str, hint: ContentHint) -> Url {
         self.pattern
             .fill(|group| match group {
-                "ref" => Some(&self.reference),
-                "tree" => Some(match hint {
-                    ContentHint::Tree => "tree",
-                    ContentHint::Raw => "raw",
-                }),
-                "path" => Some(path),
+                "ref" => Some((&self.reference).into()),
+                "tree" => Some(
+                    match hint {
+                        ContentHint::Tree => "tree",
+                        ContentHint::Raw => "raw",
+                    }
+                    .into(),
+                ),
+                "path" => Some(path.into()),
                 _ => None,
             })
             .into_url()

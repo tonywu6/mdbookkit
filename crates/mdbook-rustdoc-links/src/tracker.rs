@@ -38,6 +38,7 @@ use crate::{
     builder::BuildOutput,
     diagnostics::{DiagnosticNotes, RustcDiagnostic, SourceMap, report_level},
     markdown::markdown,
+    options::{BaseUrl, TrackerConfig},
 };
 
 #[derive(Debug, Default)]
@@ -45,6 +46,7 @@ pub struct LinkTracker<'a> {
     links: Vec<Link<'a>>,
     pages: Vec<Page<'a>>,
     notes: DiagnosticNotes,
+    options: TrackerConfig,
 }
 
 #[derive(Debug)]
@@ -55,7 +57,7 @@ struct Page<'a> {
 
 #[derive(Debug)]
 struct Link<'a> {
-    href: Option<Url>,
+    href: Option<String>,
     kind: LinkType,
     span: SourceSpan,
     dest: CowStr<'a>,
@@ -79,6 +81,15 @@ struct SourceSpan {
 }
 
 impl<'a> LinkTracker<'a> {
+    pub fn new(options: TrackerConfig) -> Self {
+        Self {
+            links: Default::default(),
+            pages: Default::default(),
+            notes: Default::default(),
+            options,
+        }
+    }
+
     pub fn read(&mut self, text: &'a str) -> Result<()> {
         let mut state = None;
 
@@ -167,7 +178,7 @@ impl<'a> LinkTracker<'a> {
                         && let Some(link) = state.borrow_mut().link()
                         && !eq_escaped(&link.dest, &href)
                     {
-                        if let Ok(url) = resolve_url(&output, &href)
+                        if let Ok(url) = resolve_url(&self.options.base_url, &output, &href)
                             .with_context(|| format!("could not convert to a full URL: {href:?}"))
                             .or_else(with_bug_report!(emit_warning))
                         {
@@ -328,6 +339,33 @@ impl<'a> LinkTracker<'a> {
     }
 }
 
+fn resolve_url(base: &BaseUrl, output: &BuildOutput<'_>, href: &str) -> Result<String> {
+    if href.parse::<Url>().is_ok() {
+        return Ok(href.to_owned());
+    }
+
+    let (name, version, href) = if let Some(href) = href.strip_prefix("../")
+        && let Some((lib, _)) = href.split_once('/')
+        && let Some(package) = output.crates.get(lib)
+    {
+        let Package { name, version, .. } = &output.metadata[package];
+        (name, version, href)
+    } else {
+        bail!("unsupported link format")
+    };
+
+    let url = (base.0)
+        .fill(|group| match group {
+            "pkg_name" => Some(name.as_str().into()),
+            "version" => Some(version.to_string().into()),
+
+            _ => None,
+        })
+        .join(href)?;
+
+    Ok(url.as_str().to_owned())
+}
+
 pub struct ExportedPages<'a> {
     pub contents: Vec<Result<String>>,
     pub issues: Vec<Vec<IssueReport<'a>>>,
@@ -379,24 +417,6 @@ fn eq_escaped(original: &str, encoded: &str) -> bool {
     };
     let decoded = decode_html_entities(&decoded);
     original == decoded
-}
-
-fn resolve_url(output: &BuildOutput<'_>, href: &str) -> Result<Url> {
-    if let Ok(url) = href.parse() {
-        return Ok(url);
-    }
-
-    let path = if let Some(href) = href.strip_prefix("../")
-        && let Some((lib, _)) = href.split_once('/')
-        && let Some(package) = output.crates.get(lib)
-    {
-        let Package { name, version, .. } = &output.metadata[package];
-        format!("/{name}/{version}/{href}")
-    } else {
-        bail!("unsupported link format")
-    };
-
-    Ok("https://docs.rs".parse::<Url>()?.join(&path)?)
 }
 
 fn locate_diagnostic(diag: &Diagnostic) -> Option<usize> {

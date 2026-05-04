@@ -11,17 +11,21 @@ pub struct UrlPattern(Url);
 impl UrlPattern {
     pub fn fill<'a, F>(&self, mut f: F) -> Self
     where
-        F: for<'b> FnMut(&'b str) -> Option<&'a str>,
+        F: for<'b> FnMut(&'b str) -> Option<Cow<'a, str>>,
     {
         let path = (self.0.path().split('/'))
-            .map(|segment| decode_group(segment).and_then(&mut f).unwrap_or(segment))
+            .map(|segment| {
+                decode_group(segment)
+                    .and_then(&mut f)
+                    .unwrap_or(Cow::Borrowed(segment))
+            })
             .collect::<Vec<_>>()
             .join("/");
 
         let query = (self.0.query_pairs())
             .fold(SearchParams::new(String::new()), |mut search, (k, v)| {
                 if let Some(v) = decode_group(v.as_ref()).and_then(&mut f) {
-                    search.append_pair(&k, v);
+                    search.append_pair(&k, &v);
                 } else {
                     search.append_pair(&k, &v);
                 }
@@ -100,6 +104,10 @@ impl UrlPattern {
         }
 
         Some(captured)
+    }
+
+    pub fn join(&self, rhs: &str) -> Result<Self, url::ParseError> {
+        Ok(Self(self.0.join(rhs)?))
     }
 
     pub fn as_str(&self) -> &str {
