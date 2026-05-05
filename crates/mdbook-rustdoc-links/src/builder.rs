@@ -208,8 +208,6 @@ fn run_builder(
 
     trace!("{artifacts:#?}");
 
-    let html_dir = tracker.env().base_dir();
-
     for target in artifacts.targets() {
         let Some(docstring) = tracker.rustdoc_input() else {
             break;
@@ -333,29 +331,10 @@ fn run_builder(
                     .or_else(emit_warning!())?
             },
             stderr: result.output.stderr,
+            target,
         };
 
         tracker.rustdoc_output(output);
-
-        if let Some(output) = html_dir.as_deref() {
-            let source = metadata.target_directory.as_std_path();
-            let source = if let Some(target) = target.as_deref() {
-                source.join(target).join("doc")
-            } else {
-                source.join("doc")
-            };
-
-            let output = if let Some(target) = target.as_deref() {
-                output.join(target)
-            } else {
-                output.to_owned()
-            };
-
-            symlink_dir_all(&source, &output)
-                .context("could not create a symlink as required by the `base-url` option")
-                .or_else(emit_warning!())
-                .ok();
-        }
     }
 
     Ok(())
@@ -415,6 +394,7 @@ pub struct BuildOutput<'a> {
     pub crates: &'a BTreeMap<Arc<str>, PackageId>,
     pub stdout: String,
     pub stderr: Vec<u8>,
+    pub target: Option<Arc<str>>,
 }
 
 struct CargoRecorder {
@@ -1036,11 +1016,13 @@ impl CargoMetadataUtil for Subprocess {
 }
 
 pub fn symlink_dir_all(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Result<()> {
-    if let Some(parent) = target.as_ref().parent() {
+    let mkdir = if let Some(parent) = target.as_ref().parent() {
+        // this could fail due to a parent being a symlink
+        // don't bail early unless `symlink_dir` actually fails
         std::fs::create_dir_all(parent)
-            .with_context(|| format!("{:?}", parent.debug()))
-            .context("could not create intermediate directories:")?;
-    }
+    } else {
+        Ok(())
+    };
 
     match symlink_dir(&source, &target) {
         Ok(()) => Ok(()),
@@ -1052,9 +1034,14 @@ pub fn symlink_dir_all(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Re
             symlink_dir_all(source, target)
         }
 
-        Err(e) => Err(e)
-            .with_context(|| format!("target: {:?}", target.as_ref().debug()))
-            .with_context(|| format!("source: {:?}", source.as_ref().debug()))?,
+        Err(e) => if let Err(mkdir) = mkdir {
+            Err(e).context(mkdir)
+        } else {
+            Err(anyhow!(e))
+        }
+        .with_context(|| format!("target: {:?}", target.as_ref().debug()))
+        .with_context(|| format!("source: {:?}", source.as_ref().debug()))
+        .context("could not create symlink")?,
     }
 }
 

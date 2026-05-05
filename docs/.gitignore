@@ -2,4 +2,6 @@
 /dist/mdbookkit
 /src/web
 /src/api
+/src/api/**/*
 /web/loader.*
+tests

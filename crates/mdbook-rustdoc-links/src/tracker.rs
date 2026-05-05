@@ -3,6 +3,7 @@ use std::{
     collections::{BTreeSet, HashMap},
     fmt::{Debug, Display, Write},
     ops::{ControlFlow, Range},
+    path::PathBuf,
 };
 
 use anyhow::{Context, Result, bail};
@@ -33,12 +34,12 @@ use mdbookkit::{
     error::{Break, ExpectFmt},
     markdown::{PatchStream, locate_text},
     plural,
-    url::UrlPath,
+    url::{UrlPath, UrlUtil},
     with_bug_report,
 };
 
 use crate::{
-    builder::BuildOutput,
+    builder::{BuildOutput, symlink_dir_all},
     diagnostics::{DiagnosticNotes, RustcDiagnostic, SourceMap, report_level},
     env::Environment,
     markdown::markdown,
@@ -50,6 +51,7 @@ pub struct LinkTracker<'a> {
     links: Vec<Link<'a>>,
     pages: Vec<Page<'a>>,
     notes: DiagnosticNotes,
+    symlinks: HashMap<PathBuf, PathBuf>,
     env: Environment,
 }
 
@@ -91,6 +93,7 @@ impl<'a> LinkTracker<'a> {
             links: Default::default(),
             pages: Default::default(),
             notes: Default::default(),
+            symlinks: Default::default(),
             env,
         }
     }
@@ -272,6 +275,18 @@ impl<'a> LinkTracker<'a> {
                 link.diagnostics.push(diag);
             }
         }
+
+        if let Some(dst) = self.env.base_dir() {
+            let src = output.metadata.target_directory.as_std_path();
+
+            let (src, dst) = if let Some(target) = output.target.as_deref() {
+                (src.join(target).join("doc"), dst.join(target))
+            } else {
+                (src.join("doc"), dst)
+            };
+
+            self.symlinks.insert(src, dst);
+        }
     }
 
     pub fn export<'d: 'a>(&'d self) -> ExportedPages<'d> {
@@ -329,12 +344,28 @@ impl<'a> LinkTracker<'a> {
         }
     }
 
-    pub fn notes(&mut self) -> &mut DiagnosticNotes {
-        &mut self.notes
+    pub fn symlink_docs(&self) -> Result<()> {
+        let mut symlinks = self.symlinks.iter().collect::<Vec<_>>();
+
+        // ensure that parent dir is linked first, if any
+        // for example, build may result in:
+        // 1. target/doc => src/api
+        // 2. target/aarch64-apple-darwin/doc => src/api/aarch64-apple-darwin
+        // then 1. must be linked before 2.
+        symlinks.sort_by(|(_, dst1), (_, dst2)| {
+            dst1.components().count().cmp(&dst2.components().count())
+        });
+
+        for (source, target) in symlinks {
+            symlink_dir_all(source, target)
+                .context("could not create a symlink as required by the `base-url` option")?;
+        }
+
+        Ok(())
     }
 
-    pub fn env(&self) -> &Environment {
-        &self.env
+    pub fn notes(&mut self) -> &mut DiagnosticNotes {
+        &mut self.notes
     }
 
     fn link_summary(&self, links: &'a [Link<'a>]) -> Option<IssueReport<'a>> {
@@ -376,14 +407,20 @@ fn resolve_url(base: &BaseUrl, output: &BuildOutput<'_>, href: &str) -> Result<U
         bail!("unsupported link format")
     };
 
-    let url = (base.0)
-        .fill_pattern(|group| match group {
-            "pkg_name" => Some(name.as_str().into()),
-            "version" => Some(version.to_string().into()),
+    let url = (base.0).fill_pattern(|group| match group {
+        "pkg_name" => Some(name.as_str().into()),
+        "version" => Some(version.to_string().into()),
+        _ => None,
+    });
 
-            _ => None,
-        })
-        .join(href)?;
+    let url = if !url.is_url()
+        && let Some(target) = output.target.as_deref()
+    {
+        url.join(target)?.with_trailing_slash()
+    } else {
+        url
+    }
+    .join(href)?;
 
     Ok(url)
 }

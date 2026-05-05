@@ -24,7 +24,7 @@ impl Environment {
     }
 
     pub fn base_dir(&self) -> Option<PathBuf> {
-        if self.base_url().0.as_url().is_none() {
+        if !self.base_url().0.is_url() {
             let path = (self.base_url().0.as_str())
                 .trim_start_matches('/')
                 .trim_end_matches('/');

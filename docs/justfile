@@ -12,7 +12,7 @@ postprocess:
 
 [positional-arguments]
 serve *args:
-    cargo bin mdbook serve $@
+    cargo bin mdbook serve --watcher native $@
 
 [positional-arguments]
 dev *args:

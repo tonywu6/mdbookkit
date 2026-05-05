@@ -9,7 +9,7 @@ use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin, utf8_path},
     config::validate_config_examples,
     diagnostics::IssueReporter,
-    emit_error,
+    emit_error, emit_warning,
     error::{Break, PathDebug, ProgramExit, has_severity},
     logging::init_logging,
 };
@@ -75,12 +75,12 @@ fn mdbook() -> Result<(), Break> {
 
     let env = Environment::new(env, &ctx).or_else(emit_error!())?;
 
-    let mut contents = LinkTracker::new(env);
+    let mut tracker = LinkTracker::new(env);
 
     for (path, ch) in book.iter_chapters() {
         info_span!("page_read", path = ?path.debug()).in_scope(|| {
             let path = utf8_path(path).or_else(emit_error!())?;
-            contents
+            tracker
                 .read(&ch.content, path)
                 .context("failed to parse file as markdown")
                 .or_else(emit_error!())?;
@@ -92,19 +92,21 @@ fn mdbook() -> Result<(), Break> {
         .context("book directory path contains non-UTF-8 characters, which is unsupported")
         .or_else(emit_error!())?;
 
-    build_docs(builder.resolve(book_dir)?, &mut contents)?;
+    build_docs(builder.resolve(book_dir)?, &mut tracker)?;
 
     let ExportedPages {
         mut contents,
         issues,
         stats,
-    } = contents.export();
+    } = tracker.export();
 
     for issues in IssueReporter::sorted(issues) {
         issues.emit();
     }
 
     fail_on_warnings.check().or_else(emit_error!())?;
+
+    tracker.symlink_docs().or_else(emit_warning!()).ok();
 
     book.for_each_page_mut(|path, content| {
         let key = path.to_str().expect("paths were checked");

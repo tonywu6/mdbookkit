@@ -70,6 +70,26 @@ test_case![book_getting_started, exit(0)];
 test_case![book_link_syntax_escape_generics, exit(0)];
 test_case![book_link_syntax_unsupported_generics, exit(0)];
 
+test_case![base_url, exit(0), env = ["CI" = "1"]];
+
+#[test]
+fn base_url_local() -> Result<()> {
+    test_mdbook![base_url_local, exit(0), redacted = [redacted()]];
+    run_test(base_url_local()?, ".")?;
+
+    let book = base_url_local()?;
+    let root = book.path.book_dir();
+    for path in [
+        "src/api/x86_64-unknown-linux-gnu/utf8parse/struct.Parser.html",
+        "src/api/aarch64-unknown-linux-gnu/pin_project_lite/macro.pin_project.html",
+        "src/api/base_url_local/fn.fun.html",
+    ] {
+        assert!(root.join(path).exists(), "{path} doesn't exist");
+    }
+
+    Ok(())
+}
+
 #[test]
 fn manifest_dir() -> Result<()> {
     test_mdbook![manifest_dir, exit(0)];

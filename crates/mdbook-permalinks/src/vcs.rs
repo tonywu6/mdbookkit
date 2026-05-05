@@ -49,7 +49,7 @@ impl VersionControl {
                 debug!("using explicitly set repo_url_template");
                 let pattern = match pat.parse::<UrlPath>() {
                     Ok(pat) => {
-                        if pat.as_url().is_some() {
+                        if pat.is_url() {
                             Ok(pat)
                         } else {
                             Err(anyhow!("URL must begin with `https://` or `http://`"))

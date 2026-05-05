@@ -123,20 +123,12 @@ impl UrlPath {
         self.path_only().unwrap_or_else(|| self.0.as_str())
     }
 
-    pub fn as_url(&self) -> Option<&Url> {
-        if self.path_only().is_none() {
-            Some(&self.0)
-        } else {
-            None
-        }
+    pub fn is_url(&self) -> bool {
+        self.path_only().is_none()
     }
 
     pub fn into_url(self) -> Option<Url> {
-        if self.as_url().is_some() {
-            Some(self.0)
-        } else {
-            None
-        }
+        if self.is_url() { Some(self.0) } else { None }
     }
 
     pub fn empty() -> Self {
@@ -189,6 +181,14 @@ fn decode_group(segment: &str) -> Option<&str> {
 
 pub trait UrlUtil {
     fn ensure_trailing_slash(&mut self);
+
+    fn with_trailing_slash(mut self) -> Self
+    where
+        Self: Sized,
+    {
+        self.ensure_trailing_slash();
+        self
+    }
 }
 
 impl UrlUtil for Url {

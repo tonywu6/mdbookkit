@@ -1,0 +1,4 @@
+- [`utf8parse::Parser`](https://example.org/api/utf8parse/struct.Parser.html "struct utf8parse::Parser")
+- [`utf8parse::Receiver::codepoint`](https://example.org/api/utf8parse/trait.Receiver.html#tymethod.codepoint "method utf8parse::Receiver::codepoint")
+- [`pin_project_lite`](https://example.org/api/pin_project_lite/index.html "mod pin_project_lite")
+- [`crate::fun`](https://example.org/api/base_url/fn.fun.html "fn base_url::fun")

@@ -1,0 +1,11 @@
+[preprocessor.rustdoc-links]
+after = ["links"]
+command = "cargo preprocessor"
+
+base-url.release = "https://example.org/api"
+
+[build]
+build-dir = "dist"
+create-missing = false
+
+[output.markdown]

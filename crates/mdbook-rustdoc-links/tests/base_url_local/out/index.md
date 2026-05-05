@@ -1,0 +1,4 @@
+- [`utf8parse::Parser`](api/x86_64-unknown-linux-gnu/utf8parse/struct.Parser.html "struct utf8parse::Parser")
+- [`utf8parse::Receiver::codepoint`](api/x86_64-unknown-linux-gnu/utf8parse/trait.Receiver.html#tymethod.codepoint "method utf8parse::Receiver::codepoint")
+- [`pin_project_lite`](api/aarch64-unknown-linux-gnu/pin_project_lite/index.html "mod pin_project_lite")
+- [`crate::fun`](api/base_url_local/fn.fun.html "fn base_url_local::fun")
