@@ -191,7 +191,7 @@ impl Environment {
                 let dest = ResolveFile {
                     hint,
                     url_suffix,
-                    is_vcs: true,
+                    check_mode: true,
                     file_url: url,
                     page_url,
                     page_paths,
@@ -204,7 +204,7 @@ impl Environment {
                 let dest = ResolveFile {
                     hint: link.hint,
                     url_suffix,
-                    is_vcs: false,
+                    check_mode: false,
                     file_url,
                     page_url,
                     page_paths,
@@ -224,13 +224,15 @@ impl Environment {
             page_paths,
             hint,
             url_suffix,
-            is_vcs,
+            check_mode,
             link,
         }: ResolveFile,
     ) {
         if url_suffix.query.is_some() || url_suffix.fragment.is_some() {
             trace!(?url_suffix);
         }
+
+        let relative_to_repo = self.vcs.try_file(&file_url);
 
         let relative_to_book = self
             .root_dir
@@ -239,20 +241,27 @@ impl Environment {
 
         trace!(?relative_to_book);
 
-        let should_link = is_vcs.tap(|r| trace!(is_vcs = r))
-            || relative_to_book
-                .starts_with("../")
-                .tap(|r| trace!(not_in_book = r))
-            || (relative_to_book.ends_with(".md") && !page_paths.contains(&relative_to_book))
-                .tap(|r| trace!(book_assets = r))
-            || (self.config.always_link.iter())
-                .any(|suffix| file_url.path().ends_with(suffix))
-                .tap(|r| trace!(always_link = r));
+        let not_in_book = relative_to_book.starts_with("../");
 
-        trace!(?should_link);
+        // the markdown file is in book src/ but not in SUMMARY.md
+        let not_in_tree =
+            relative_to_book.ends_with(".md") && !page_paths.contains(&relative_to_book);
+
+        let always_link = (self.config.always_link)
+            .iter()
+            .any(|suffix| file_url.path().ends_with(suffix));
+
+        let should_link = check_mode || not_in_book || not_in_tree || always_link;
+
+        trace! { should_link, check_mode, not_in_book, not_in_tree, always_link };
 
         if !should_link {
-            if link.href.starts_with('/') {
+            if let Err(err @ (PathStatus::Unreachable | PathStatus::NotInRepo)) = relative_to_repo {
+                // at this point `not_in_book` is false
+                // it is okay for `err` to be `Ignored` because the file
+                // will be copied to output anyway
+                link.unreachable(vec![(file_url, err)]);
+            } else if link.href.starts_with('/') {
                 // mdBook doesn't support absolute paths like VS Code does
                 let rewritten = page_url
                     .make_relative(&url_suffix.restored(file_url))
@@ -262,16 +271,15 @@ impl Environment {
                 link.unchanged();
             }
         } else {
-            let relative_to_repo = match self.vcs.try_file(&file_url) {
-                Ok(path) => path,
+            match relative_to_repo {
+                Ok(file) => {
+                    let href = self.vcs.link.to_link(&file.path, hint);
+                    link.permalink(url_suffix.restored(href).as_str().to_owned());
+                }
                 Err(err) => {
                     link.unreachable(vec![(file_url, err)]);
-                    return;
                 }
-            };
-
-            let href = self.vcs.link.to_link(&relative_to_repo.path, hint);
-            link.permalink(url_suffix.restored(href).as_str().to_owned());
+            }
         }
     }
 
@@ -427,7 +435,8 @@ struct ResolveFile<'a, 'r> {
     page_paths: &'a HashSet<String>,
     hint: ContentHint,
     url_suffix: UrlSuffix,
-    is_vcs: bool,
+    /// the link was written as an http url rather than a path
+    check_mode: bool,
     link: &'a mut RelativeLink<'r>,
 }
 
