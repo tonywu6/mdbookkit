@@ -55,7 +55,7 @@ macro_rules! lexicographic_ordering {
     ( $type:ty ) => {
         impl Ord for $type {
             fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-                $crate::cmp::Lexicographic(self).cmp(&$crate::cmp::Lexicographic(other))
+                $crate::util::Lexicographic(self).cmp(&$crate::util::Lexicographic(other))
             }
         }
 

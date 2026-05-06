@@ -3,12 +3,12 @@ use std::{
     collections::{BTreeSet, HashMap},
     fmt::{Debug, Display, Write},
     ops::{ControlFlow, Range},
-    path::PathBuf,
 };
 
 use anyhow::{Context, Result, bail};
 use cargo_metadata::{
     Package,
+    camino::Utf8PathBuf,
     diagnostic::{Diagnostic, DiagnosticSpan},
 };
 use html_escape::decode_html_entities;
@@ -25,7 +25,6 @@ use tracing::{debug, instrument, trace, warn};
 use url::Url;
 
 use mdbookkit::{
-    cmp::{Lexicographic, LexicographicOrd},
     diagnostics::{
         Highlight, IssueLevel, IssueReport, IssueReporter, Note, SourceCode, Suggestion,
         annotate_snippets::AnnotationKind,
@@ -35,6 +34,7 @@ use mdbookkit::{
     markdown::{PatchStream, locate_text},
     plural,
     url::{UrlPath, UrlUtil},
+    util::{Lexicographic, LexicographicOrd},
     with_bug_report,
 };
 
@@ -51,7 +51,7 @@ pub struct LinkTracker<'a> {
     links: Vec<Link<'a>>,
     pages: Vec<Page<'a>>,
     notes: DiagnosticNotes,
-    symlinks: HashMap<PathBuf, PathBuf>,
+    symlinks: HashMap<Utf8PathBuf, Utf8PathBuf>,
     env: Environment,
 }
 
@@ -277,7 +277,7 @@ impl<'a> LinkTracker<'a> {
         }
 
         if let Some(dst) = self.env.base_dir() {
-            let src = output.metadata.target_directory.as_std_path();
+            let src = &output.metadata.target_directory;
 
             let (src, dst) = if let Some(target) = output.target.as_deref() {
                 (src.join(target).join("doc"), dst.join(target))
@@ -366,6 +366,10 @@ impl<'a> LinkTracker<'a> {
 
     pub fn notes(&mut self) -> &mut DiagnosticNotes {
         &mut self.notes
+    }
+
+    pub fn env(&self) -> &Environment {
+        &self.env
     }
 
     fn link_summary(&self, links: &'a [Link<'a>]) -> Option<IssueReport<'a>> {

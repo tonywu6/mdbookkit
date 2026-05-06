@@ -14,12 +14,12 @@ use bon::Builder;
 use tap::{Pipe, Tap};
 
 use crate::{
-    cmp::{Lexicographic, LexicographicOrd},
     emit_debug,
     env::{MDBOOKKIT_TERM_GRAPHICAL, TruthyStr, is_colored, is_logging},
     error::put_severity,
     lexicographic_ordering,
     logging::stderr,
+    util::{Lexicographic, LexicographicOrd},
 };
 
 #[derive(Builder, Debug)]

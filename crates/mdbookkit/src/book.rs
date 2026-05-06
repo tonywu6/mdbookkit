@@ -17,7 +17,7 @@ use serde_json::{Value, json};
 use tap::{Pipe, Tap};
 use tracing::warn;
 
-use crate::markdown::default_markdown_options;
+use crate::{error::WithPathDebug, markdown::default_markdown_options};
 
 pub fn string_from_stdin() -> Result<String> {
     Ok(Vec::new()
@@ -43,6 +43,7 @@ pub fn book_from_stdin() -> Result<(PreprocessorContext, Book)> {
 
 pub fn utf8_path(path: &Path) -> Result<&str> {
     path.to_str()
+        .with_path_context(path)
         .context("path contains non-UTF-8 characters, which is unsupported")
 }
 
@@ -53,7 +54,7 @@ pub trait PreprocessorHelper {
 
     fn markdown_options(&self) -> MarkdownOptions;
 
-    fn src_root(&self) -> Result<PathBuf>;
+    fn src_path(&self) -> Result<PathBuf>;
 }
 
 macro_rules! preprocessor_table {
@@ -110,7 +111,7 @@ impl PreprocessorHelper for PreprocessorContext {
         options
     }
 
-    fn src_root(&self) -> Result<PathBuf> {
+    fn src_path(&self) -> Result<PathBuf> {
         Ok((self.root.canonicalize())
             .context("failed to locate book directory")?
             .join(&self.config.book.src))

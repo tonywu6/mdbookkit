@@ -197,6 +197,25 @@ impl PathDebug for Path {
     }
 }
 
+pub trait WithPathDebug<T> {
+    fn with_path_context(self, path: impl AsRef<Path>) -> Result<T>;
+}
+
+impl<T, E> WithPathDebug<T> for Result<T, E>
+where
+    Result<T, E>: Context<T, E>,
+{
+    fn with_path_context(self, path: impl AsRef<Path>) -> Result<T> {
+        self.with_context(|| format!("{:?}", path.as_ref().debug()))
+    }
+}
+
+impl<T> WithPathDebug<T> for Option<T> {
+    fn with_path_context(self, path: impl AsRef<Path>) -> Result<T> {
+        self.with_context(|| format!("{:?}", path.as_ref().debug()))
+    }
+}
+
 pub struct EmitEvent<F1, F2, F3, F4> {
     pub trace: F1,
     pub debug: F2,

@@ -21,7 +21,7 @@ use tracing::{Level, debug, info, info_span, instrument, trace, warn};
 use mdbookkit::{
     emit_debug, emit_error, emit_warning,
     env::is_logging,
-    error::{Break, ExpectFmt, PathDebug},
+    error::{Break, ExpectFmt, PathDebug, WithPathDebug},
     ticker, ticker_event,
 };
 
@@ -326,8 +326,8 @@ fn run_builder(
             stdout: {
                 let path = tempdir.path().join(crate_name!()).join("index.html");
                 std::fs::read_to_string(&path)
-                    .with_context(|| format!("expected {:?}", path.debug()))
-                    .context("failed to read from `rustdoc` output")
+                    .with_path_context(&path)
+                    .context("failed to read from `rustdoc` output from file")
                     .or_else(emit_warning!())?
             },
             stderr: result.output.stderr,
@@ -1029,7 +1029,7 @@ pub fn symlink_dir_all(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Re
 
         Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
             std::fs::remove_file(&target)
-                .with_context(|| format!("{:?}", target.as_ref().debug()))
+                .with_path_context(target.as_ref())
                 .context("could not remove existing symlink:")?;
             symlink_dir_all(source, target)
         }

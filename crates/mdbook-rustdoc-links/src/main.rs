@@ -1,8 +1,8 @@
 #![warn(clippy::unwrap_used)]
 
+use std::path::PathBuf;
+
 use anyhow::{Context, Result};
-use cargo_metadata::camino::Utf8Path;
-use clap::{Parser, Subcommand};
 use tracing::{Level, error_span, info, info_span, warn};
 
 use mdbookkit::{
@@ -32,23 +32,25 @@ mod tracker;
 fn main() {
     init_logging();
     let _span = error_span!({ env!("CARGO_PKG_NAME") }).entered();
-    match Program::parse().command {
+    let Program { command } = clap::Parser::parse();
+    match command {
         Some(Command::Supports { .. }) => Ok(()),
         Some(Command::ValidateConfig) => {
             validate_config_examples::<Config>(PREPROCESSOR_NAME).or_else(emit_error!())
         }
+
         None => mdbook(),
     }
     .exit()
 }
 
-#[derive(Parser, Debug, Clone)]
+#[derive(clap::Parser, Debug, Clone)]
 struct Program {
     #[command(subcommand)]
     command: Option<Command>,
 }
 
-#[derive(Subcommand, Debug, Clone)]
+#[derive(clap::Subcommand, Debug, Clone)]
 enum Command {
     /// Support command for mdBook.
     ///
@@ -57,6 +59,14 @@ enum Command {
     Supports { renderer: String },
     #[clap(hide = true)]
     ValidateConfig,
+}
+
+#[derive(clap::Parser, Debug, Clone)]
+struct MarkdownCommand {
+    #[arg(short, long)]
+    config: Option<PathBuf>,
+    #[clap(required(true))]
+    files: Vec<PathBuf>,
 }
 
 fn mdbook() -> Result<(), Break> {
@@ -88,11 +98,7 @@ fn mdbook() -> Result<(), Break> {
         })?;
     }
 
-    let book_dir = <&Utf8Path>::try_from(&*ctx.root)
-        .context("book directory path contains non-UTF-8 characters, which is unsupported")
-        .or_else(emit_error!())?;
-
-    build_docs(builder.resolve(book_dir)?, &mut tracker)?;
+    build_docs(builder.resolve(tracker.env().book_dir())?, &mut tracker)?;
 
     let ExportedPages {
         mut contents,

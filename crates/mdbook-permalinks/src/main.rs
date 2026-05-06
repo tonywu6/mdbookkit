@@ -418,7 +418,7 @@ impl Environment {
 
         let markdown = book.markdown_options();
 
-        let root_dir = book.src_root()?.to_directory_url();
+        let root_dir = book.src_path()?.to_directory_url();
 
         Ok(Ok(Self {
             vcs,
