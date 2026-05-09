@@ -10,7 +10,8 @@ When using this preprocessor, you may _imagine your book as a standalone, empty 
 By default, this "crate" also "depends on" the package(s) in your workspace, as well as
 their dependencies.
 
-This means that, by default, you can always link to the following kinds of items[^1]:
+This means that, by default, you can always link to the following kinds of
+items[^prelude]:
 
 - From the prelude, for example:
 
@@ -53,10 +54,10 @@ Of course, if you are documenting your own library, it would feel rather clumsy 
 to repeat the crate name for every link.
 
 Therefore, as a convenience feature, if your workspace consists of a single library
-crate[^2], then by default, everything publicly visible from that crate is implicitly
-introduced into scope.
+crate[^default-member], then by default, everything publicly visible from that crate is
+implicitly introduced into scope.
 
-This means you can link to them without repeating the crate name, or use the `crate::*`
+This means you can link to them without repeating the crate name, and use the `crate::*`
 notation, as if you were writing a doc comment in `lib.rs`. Using this project as an
 example, we have:
 
@@ -70,21 +71,21 @@ example, we have:
 
 ## Using the `build.preludes` option
 
-If you are documenting a workspace that features multiple libraries, then their exported
-items are not implicitly introduced, as that could create ambiguity.
+If you are documenting a workspace that features multiple libraries, then items from
+them are not implicitly introduced, as that could create ambiguity.
 
 Instead, to make things easier, you may use the `build.preludes` configuration to
 explicitly introduce items into scope.
 
 As an example, with the following `book.toml`:
 
-```toml config-example-rustdoc-links
+```toml config-example
 [preprocessor.rustdoc-links]
 build.preludes = ["tracing_subscriber::*"]
 ```
 
-Items from the [`tracing_subscriber`] crate can now be linked to without writing out the
-crate name:
+Items from the [`tracing_subscriber`] crate can now be linked to without having to write
+out the crate name:
 
 > ```md
 > [`EnvFilter`] implements the [`Layer`] trait.
@@ -106,18 +107,84 @@ items:
 
 - **Hidden items.** Linking to hidden items will likely fail, unless the item is
   [re-exported]. This is due to a [quirk in `rustdoc`][rust-issue-81979] where intra-doc
-  links may silently fail to appear.[^3]
+  links may silently fail to appear.[^cargo-doc-quirk]
 
-[^1]:
+## Under the hood
+
+The preprocessor receives the full text of your book content from mdBook, from which it
+collects all the links that look like Rust item and need to be converted.
+
+**The preprocessor then runs `cargo doc` in your Cargo workspace.** Without going into
+too much details, running `cargo doc` prepares the necessary files, such as compiler
+artifacts for your crates and dependencies, so that items can be _correctly_ resolved in
+the next steps.
+
+The preprocessor then **synthesizes a Rust snippet** containing the links it collected
+from your book, which would look something like this:
+
+```rs
+//! - [`IntoFuture::Output`]
+//! - [`std::net::UdpSocket`]
+//! - [`option`][std::option]
+//! - [The `fmt` module][mod@fmt]
+use tracing_subscriber::*; // from `build.preludes`
+```
+
+(This is effectively a temporary `lib.rs` file, hence the concept of a
+["standalone, empty crate!"](#mental-model))
+
+The preprocessor then **invokes [`rustdoc`] with this snippet,** alongside things such
+as the artifacts produced by `cargo doc`. If written as a shell command, this would look
+something like:
+
+```sh
+rustdoc --out-dir "/tmp/temporary_crate_0/doc" --crate-type lib --error-format json \
+  --extern "tracing_subscriber=/target/debug/deps/libtracing_subscriber.rmeta" \
+  --extern "awesome_crate=/target/debug/deps/libawesome_crate.rmeta" \
+  -L "dependency=/target/debug/deps" \
+  /tmp/temporary_crate_0/src/lib.rs
+```
+
+> [!TIP]
+>
+> If you are curious, try running `mdbook serve` with the environment variable
+> `MDBOOK_LOG` set to `info,mdbook_rustdoc_links=debug`, for example:
+>
+> ```sh
+> MDBOOK_LOG=info,mdbook_rustdoc_links=debug mdbook serve
+> ```
+>
+> The preprocessor will print out extra information, including the command-line
+> arguments that it supplies to `cargo doc` and `rustdoc`.
+
+The preprocessor then parses the HTML output produced by `rustdoc`, which would include
+something like:
+
+<!-- prettier-ignore-start -->
+```html
+<li><a href="https://doc.rust-lang.org/1.95.0/core/future/into_future/trait.IntoFuture.html#associatedtype.Output">
+  <code>IntoFuture::Output</code>
+</a></li>
+<li><a href="../tracing_subscriber/fmt/index.html">
+  The <code>fmt</code> module
+</a></li>
+```
+<!-- prettier-ignore-end -->
+
+From here, the preprocessor will then have enough information to construct the full URL
+of each link that needs to be resolved, and finally return them to mdBook to continue
+the build process. Voila!
+
+[^prelude]:
     To be more precise, the preprocessor is currently
     [hard-coded to use the 2024 edition prelude](/crates/mdbook-rustdoc-links/src/builder.rs#L230),
     and `std` is always available.
 
-[^2]:
+[^default-member]:
     This also applies if your workspace has multiple crates, but only one library crate
     as the [default member][default-member].
 
-[^3]:
+[^cargo-doc-quirk]:
     The quirk is that `rustdoc` will not generate a link if it can't find a
     corresponding HTML page at the destination, and `rustdoc` does not generate HTML
     pages for hidden items unless their documentation are inlined elsewhere. Although
@@ -130,4 +197,5 @@ items:
 [document-private-items]: https://doc.rust-lang.org/rustdoc/command-line-arguments.html#--document-private-items-show-items-that-are-not-public
 [re-exported]: https://doc.rust-lang.org/rustdoc/write-documentation/re-exports.html
 [rust-issue-81979]: https://github.com/rust-lang/rust/issues/81979
+[`rustdoc`]: https://doc.rust-lang.org/rustdoc
 <!-- prettier-ignore-end -->

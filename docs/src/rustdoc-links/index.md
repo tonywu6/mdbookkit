@@ -7,13 +7,18 @@
 
 </div>
 
-Link to Rust API docs by name in [mdBook], à la rustdoc!
+Documenting your Rust project using [mdBook]? Link to your API docs à la rustdoc!
 
 > Rustdoc is capable of directly linking to other rustdoc pages using the path of the
 > item as a link. This is referred to as an ["intra-doc link"][intra-doc-link].
 
-This [preprocessor] brings such _intra-doc links_ to mdBook. With it, instead of
-manually finding and pasting documentation URLs into your book:
+This [preprocessor] brings such _intra-doc links_ to mdBook. With it, you can
+effortlessly add hyperlinks from your book to documentation hosted on
+[docs.rs](https://docs.rs), as well as to Rust's
+[Standard Library documentation](https://doc.rust-lang.org/stable/std).
+
+Instead of finding and pasting URLs into your book, which can be tedious and
+error-prone:
 
 ```md
 The [`option`](https://doc.rust-lang.org/stable/core/option/index.html) and
@@ -45,6 +50,10 @@ collections. [^1]
 
 Follow the [quickstart tutorial](getting-started.md) to try out the preprocessor.
 
+> [!TIP]
+>
+> This preprocessor does _**not**_ require a nightly compiler to function.
+
 Happy linking!
 
 ## License
@@ -57,8 +66,6 @@ This project is released under the [Apache 2.0 License](/LICENSE-APACHE.md) and 
 <!-- prettier-ignore-start -->
 [mdBook]: https://rust-lang.github.io/mdBook/
 [preprocessor]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
-[rust-analyzer]: https://rust-analyzer.github.io/
 [intra-doc-link]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
 [tour]: https://doc.rust-lang.org/stable/std/#a-tour-of-the-rust-standard-library
-[workspaces]: https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html
 <!-- prettier-ignore-end -->

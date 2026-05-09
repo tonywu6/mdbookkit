@@ -1,14 +1,15 @@
 # Getting started
 
-This tutorial will walk you through the setup necessary to use this preprocessor and be
-able to use rustdoc-style intra-doc links in your mdBook project.
+This tutorial will walk you through the steps necessary to use the preprocessor. After
+which, you will be writing some links in an mdBook project to see how the preprocessor
+works.
 
 ## Prerequisites
 
 This tutorial assumes that:
 
-- You already have a working book. If you need to, feel free to follow [mdBook's
-  tutorial][mdbook-tutorial] to first create a book.
+- You already have a working mdBook project. If you need to, feel free to follow
+  [mdBook's tutorial][mdbook-tutorial] to first create a book.
 
 - You already have a Cargo [project][cargo-project], and your book is in the project's
   directory.
@@ -16,7 +17,7 @@ This tutorial assumes that:
   <details>
     <summary>Explanation</summary>
 
-  Under the hood, the preprocessor runs [`cargo doc`] to be able to correctly generate
+  Under the hood, the preprocessor runs [`cargo doc`] so that it can correctly generate
   links, which requires the presence of a Cargo project. Outside of a Cargo project,
   this preprocessor isn't really useful.
 
@@ -28,7 +29,7 @@ This tutorial assumes that:
 
 ## Install
 
-A [preprocessor] is just an executable that mdBook will run during builds to customize
+A ["preprocessor"] is just an executable that mdBook will run during builds to customize
 the build process. You can build and install this preprocessor from source using
 `cargo`:
 
@@ -52,9 +53,9 @@ cargo install mdbook-rustdoc-links
 
 ## Configure
 
-In your `book.toml`, add the following options:
+In your `book.toml`, add the following options to enable the preprocessor:
 
-```toml config-example-rustdoc-links
+```toml config-example
 [preprocessor.rustdoc-links]
 after = ["links"]
 ```
@@ -82,7 +83,7 @@ see text embedded using the [`{{#include}}` directive][mdbook-include].
 
 ## Write
 
-You are now ready to use [intra-doc links][intra-doc-link] in your book.
+You are now ready to add intra-doc links to your book.
 
 For this tutorial, add the following Markdown paragraph to any page:
 
@@ -90,9 +91,14 @@ For this tutorial, add the following Markdown paragraph to any page:
 A type implementing [`Sized`] has a constant size known at compile time.
 ```
 
-In this example, ``[`Sized`]`` is the intra-doc link. If you had used `cargo doc`
-before, then this syntax likely looks familiar, because this is one of the link syntax
-that `cargo doc` (i.e. rustdoc) supports.
+In this example, ``[`Sized`]`` is the [intra-doc link][intra-doc-link]. If you've used
+`cargo doc` before, then this notation may already look familiar. You may also have seen
+this type of notation in [doc comments][doc-comment] in Rust source code.
+
+> [!TIP]
+>
+> If you are not yet familiar with how documenting Rust code works, feel free to review
+> the relevant chapter in [the book][publishing-to-crates-io] first!
 
 You may now run `mdbook serve`. In the rendered page, you should see the following text
 containing the desired link:
@@ -103,16 +109,29 @@ A type implementing [`Sized`] has a constant size known at compile time.
 
 </figure>
 
-This preprocessor is not magic. During the build process, it gathers all the links in
-your book that may need conversion, then simply calls out to `cargo doc` to do the
-actual link resolution work.
+Feel free to keep `mdbook serve` running and add more intra-doc links to the document,
+and see how or if they can be converted to links! Here are some example sentences:
 
-This means that any item that you can put in [doc comments][doc-comment] that can be
-rendered successfully by `cargo doc`, you can put in your book. This includes links to
-your own packages, to [`std`] and [`core`], and to your packages' dependencies (and even
-their transitive dependencies!)
+```md
+- The first collection type we'll look at is [`Vec<T>`], also known as a vector.
+- We'll need the [`std::env::args`] function provided in Rust's standard library.
+- To create a new thread, we call the [`thread::spawn`][std::thread::spawn] function and
+  pass it a closure.
+```
 
-But what if an item cannot be linked? For example,
+<details>
+  <summary>Here's how they would look like when rendered</summary>
+
+- The first collection type we'll look at is [`Vec<T>`], also known as a vector.
+- We'll need the [`std::env::args`] function provided in Rust's standard library.
+- To create a new thread, we call the [`thread::spawn`][std::thread::spawn] function and
+  pass it a closure.
+
+</details>
+
+## Check
+
+But what happens if an item cannot be resolved? For example,
 
 - You may have made a typo when naming the item; or
 - The item you previously linked to has moved during an incompatible update, and you
@@ -151,12 +170,13 @@ Formatting of diagnostics powered by [annotate-snippets][annotate_snippets]
 [`cargo init`]: https://doc.rust-lang.org/cargo/commands/cargo-init.html
 [cargo-binstall]: https://github.com/cargo-bins/cargo-binstall
 [cargo-project]: https://doc.rust-lang.org/cargo/guide/why-cargo-exists.html
-[doc-comment]: https://doc.rust-lang.org/reference/comments.html#doc-comments
 [gh-releases]: https://github.com/tonywu6/mdbookkit/releases
 [intra-doc-link]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
 [mdbook-include]: https://rust-lang.github.io/mdBook/format/mdbook.html#including-files
 [mdbook-links]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html#:~:text=The%20following%20preprocessors%20are%20built%2Din%20and%20included%20by%20default:
 [mdbook-tutorial]: https://rust-lang.github.io/mdBook/guide/creating.html
-[preprocessor]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
+["preprocessor"]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
 [rustdoc-lints]: https://doc.rust-lang.org/rustdoc/lints.html
+[doc-comment]: https://doc.rust-lang.org/reference/comments.html#doc-comments
+[publishing-to-crates-io]: https://doc.rust-lang.org/book/ch14-02-publishing-to-crates-io.html
 <!-- prettier-ignore-end -->

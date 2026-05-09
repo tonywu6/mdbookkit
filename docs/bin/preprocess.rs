@@ -1,7 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
     io::Write,
-    ops::Range,
     process::{Command, Stdio},
 };
 
@@ -89,16 +88,13 @@ struct BookState {
 
 #[derive(Default)]
 struct PageState {
-    mermaid: Option<Range<usize>>,
-    config_example: Option<Spanned<&'static str>>,
+    mermaid: Option<Spanned<()>>,
+    config_example: Option<Spanned<()>>,
 }
 
 enum Place<'a> {
     Mermaid(CowStr<'a>),
-    ConfigExample {
-        package: &'static str,
-        text: CowStr<'a>,
-    },
+    ConfigExample(CowStr<'a>),
 }
 
 impl BookState {
@@ -131,7 +127,14 @@ impl BookState {
                 .into_iter();
                 Some((repl, span))
             }
-            Place::ConfigExample { package, text } => {
+            Place::ConfigExample(text) => {
+                let package = if path.starts_with("rustdoc-links") {
+                    "mdbook-rustdoc-links"
+                } else if path.starts_with("permalinks") {
+                    "mdbook-permalinks"
+                } else {
+                    panic!("config examples are not available in {path:?}")
+                };
                 self.config_examples
                     .entry(package)
                     .or_default()
@@ -151,21 +154,17 @@ impl PageState {
             Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(tag))) => {
                 let tags = tag.split(' ').map(|tag| tag.trim()).collect::<HashSet<_>>();
                 if tags.contains("mermaid") {
-                    self.mermaid = Some(span)
-                } else if tags.contains("toml") {
-                    if tags.contains("config-example-rustdoc-links") {
-                        self.config_example = Some(("mdbook-rustdoc-links", span))
-                    } else if tags.contains("config-example-permalinks") {
-                        self.config_example = Some(("mdbook-permalinks", span))
-                    }
+                    self.mermaid = Some(((), span))
+                } else if tags.contains("toml") && tags.contains("config-example") {
+                    self.config_example = Some(((), span))
                 }
             }
             Event::Text(text) => {
-                if let Some(span) = self.mermaid.take() {
+                if let Some(((), span)) = self.mermaid.take() {
                     return Some((Place::Mermaid(text), span));
                 }
-                if let Some((package, span)) = self.config_example.take() {
-                    return Some((Place::ConfigExample { package, text }, span));
+                if let Some(((), span)) = self.config_example.take() {
+                    return Some((Place::ConfigExample(text), span));
                 }
             }
             Event::End(TagEnd::CodeBlock) => {
