@@ -17,6 +17,9 @@ Caused by:
     2: command exited with exit status: 101
     3: command: cd "[TEST_DIR]/multi_stage_some_failed" && "cargo" "check" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"
        
+note: the following options have been specified, which may have caused the error:
+    - build.targets
+
  WARN mdbook-rustdoc-links: build #1 has failed
  WARN mdbook-rustdoc-links: some builds have failed
 warning: unresolved link to `crate::arm64_only`
@@ -25,6 +28,8 @@ warning: unresolved link to `crate::arm64_only`
 2 | - [`crate::arm64_only`]
   |     ^^^^^^^^^^^^^^^^^ no item named `arm64_only` in module `temporary_crate_0`
   |
+  = note: the following options have been specified, which may have affected link resolution:
+          - build.targets
   = note: in order to resolve links, the preprocessor creates a temporary crate;
           the following prelude has been implicitly added to the temporary crate:
           `use multi_stage_some_failed::*;`

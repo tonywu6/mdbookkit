@@ -8,6 +8,7 @@ warning: unresolved link to `utf8_width::get_width`
           - build.packages
           - build.runner
           - build.rustdoc-args
+          - build.targets
           - build.toolchain
 
 warning: unresolved link to `utf8parse::Parser`

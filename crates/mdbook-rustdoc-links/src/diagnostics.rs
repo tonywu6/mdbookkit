@@ -11,7 +11,7 @@ use mdbookkit::diagnostics::{
     Highlight, IssueLevel, IssueReport, Note, Suggestion, annotate_snippets::AnnotationKind,
 };
 
-use crate::options::{BuildOptions, CargoOptions, FeatureSelection};
+use crate::options::{BuildOptions, Builder, CargoOptions, FeatureSelection};
 
 pub struct RustcDiagnostic<'a, 'r> {
     pub diagnostic: &'a Diagnostic,
@@ -172,7 +172,8 @@ impl DiagnosticNotes {
         Some(note)
     }
 
-    pub fn mark_option_specified(&mut self, options: &BuildOptions) {
+    pub fn mark_option_specified(&mut self, builder: &Builder) {
+        let Builder { targets, options } = builder;
         let BuildOptions {
             packages,
             preludes,
@@ -182,6 +183,9 @@ impl DiagnosticNotes {
             cargo,
             docs_rs,
         } = options;
+        if !targets.is_empty() {
+            self.options_specified.insert("build.targets");
+        }
         if !packages.is_empty() {
             self.options_specified.insert("build.packages");
         }

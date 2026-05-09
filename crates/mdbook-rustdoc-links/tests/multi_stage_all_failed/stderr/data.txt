@@ -17,6 +17,9 @@ Caused by:
     2: command exited with exit status: 101
     3: command: cd "[TEST_DIR]/multi_stage_all_failed" && "cargo" "check" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"
        
+note: the following options have been specified, which may have caused the error:
+    - build.targets
+
  WARN mdbook-rustdoc-links: build #1 has failed
  WARN mdbook-rustdoc-links: `cargo check` did not succeed
 
@@ -35,6 +38,9 @@ Caused by:
     2: command exited with exit status: 101
     3: command: cd "[TEST_DIR]/multi_stage_all_failed" && "cargo" "check" "--message-format" "json" "--target" "x86_64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"
        
+note: the following options have been specified, which may have caused the error:
+    - build.targets
+
  WARN mdbook-rustdoc-links: build #2 has failed
 ERROR mdbook-rustdoc-links: all builds have failed
 [LLVM_COV_STDERR]

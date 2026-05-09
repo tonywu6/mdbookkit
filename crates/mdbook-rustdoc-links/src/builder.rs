@@ -62,7 +62,7 @@ fn run_builder(
     builder: Builder,
     tracker: &mut LinkTracker<'_>,
 ) -> Result<(), Break> {
-    tracker.notes().mark_option_specified(&builder.options);
+    tracker.notes().mark_option_specified(&builder);
 
     let BuildOptions {
         ref packages,
