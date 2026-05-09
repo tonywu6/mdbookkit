@@ -1,3 +1,3 @@
-- [`utf8_width::get_width`](https://docs.rs/utf8-width/0.1.8/aarch64-unknown-linux-gnu/utf8_width/fn.get_width.html "fn utf8_width::get_width")
-- [`crate::legacy`](https://docs.rs/cargo_customize/0.1.0/aarch64-unknown-linux-gnu/cargo_customize/fn.legacy.html "fn cargo_customize::legacy")
-- [`crate::helper`](https://docs.rs/cargo_customize/0.1.0/aarch64-unknown-linux-gnu/cargo_customize/fn.helper.html "fn cargo_customize::helper")
+- [`utf8_width::get_width`](https://docs.rs/utf8-width/0.1.8/x86_64-unknown-linux-gnu/utf8_width/fn.get_width.html "fn utf8_width::get_width")
+- [`crate::legacy`](https://docs.rs/cargo_customize/0.1.0/x86_64-unknown-linux-gnu/cargo_customize/fn.legacy.html "fn cargo_customize::legacy")
+- [`crate::helper`](https://docs.rs/cargo_customize/0.1.0/x86_64-unknown-linux-gnu/cargo_customize/fn.helper.html "fn cargo_customize::helper")

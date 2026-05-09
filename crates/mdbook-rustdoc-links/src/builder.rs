@@ -208,7 +208,7 @@ fn run_builder(
 
     trace!("{artifacts:#?}");
 
-    for target in artifacts.targets() {
+    for target in artifacts.targets(&targets) {
         let Some(docstring) = tracker.rustdoc_input() else {
             break;
         };
@@ -579,11 +579,25 @@ impl CargoRecorder {
         }
     }
 
-    fn targets(&self) -> Vec<Option<Arc<str>>> {
+    fn targets(&self, specified: &[String]) -> Vec<Option<Arc<str>>> {
         if self.targets.is_empty() {
             vec![None]
         } else {
-            self.targets.iter().cloned().map(Some).collect()
+            let mut targets = self.targets.iter().cloned().map(Some).collect::<Vec<_>>();
+            targets.sort_by(|t1, t2| {
+                let t1 = t1.as_deref().expect("mapped to Some(..)");
+                let t2 = t2.as_deref().expect("mapped to Some(..)");
+                match (
+                    specified.iter().position(|s| *s == t1),
+                    specified.iter().position(|s| *s == t2),
+                ) {
+                    (Some(o1), Some(o2)) => o1.cmp(&o2),
+                    (Some(_), None) => std::cmp::Ordering::Less,
+                    (None, Some(_)) => std::cmp::Ordering::Greater,
+                    (None, None) => std::cmp::Ordering::Equal,
+                }
+            });
+            targets
         }
     }
 
