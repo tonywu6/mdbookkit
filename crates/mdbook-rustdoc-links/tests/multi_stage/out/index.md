@@ -1,5 +1,5 @@
-- [`crate::amd64_only`](https://docs.rs/multi_stage/0.1.0/multi_stage/fn.amd64_only.html "fn multi_stage::amd64_only")
-- [`crate::arm64_only`](https://docs.rs/multi_stage/0.1.0/multi_stage/fn.arm64_only.html "fn multi_stage::arm64_only")
+- [`crate::amd64_only`](https://docs.rs/multi_stage/0.1.0/x86_64-unknown-linux-gnu/multi_stage/fn.amd64_only.html "fn multi_stage::amd64_only")
+- [`crate::arm64_only`](https://docs.rs/multi_stage/0.1.0/aarch64-unknown-linux-gnu/multi_stage/fn.arm64_only.html "fn multi_stage::arm64_only")
 - [`anstyle_parse::Utf8Parser`](https://docs.rs/anstyle-parse/1.0.0/anstyle_parse/struct.Utf8Parser.html "struct anstyle_parse::Utf8Parser")
 - [`utf8_width::get_width`]
   - This link should not resolve because the package is not selected by `build.packages`

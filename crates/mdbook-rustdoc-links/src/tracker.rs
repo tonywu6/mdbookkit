@@ -417,13 +417,12 @@ fn resolve_url(base: &BaseUrl, output: &BuildOutput<'_>, href: &str) -> Result<U
         _ => None,
     });
 
-    let url = if !url.is_url()
-        && let Some(target) = output.target.as_deref()
-    {
-        url.join(target)?.with_trailing_slash()
+    let url = if let Some(target) = output.target.as_deref() {
+        url.join(target)?
     } else {
         url
     }
+    .with_trailing_slash()
     .join(href)?;
 
     Ok(url)

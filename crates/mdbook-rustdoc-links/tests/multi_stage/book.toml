@@ -15,7 +15,6 @@ toolchain = "nightly"
 
 [[preprocessor.rustdoc-links.build]]
 packages = ["anstyle-parse"]
-targets = ["host-tuple"]
 
 [[preprocessor.rustdoc-links.build]]
 packages = [{ dependencies = false }]

@@ -1,2 +1,2 @@
-- [`amd64_only`](https://docs.rs/targets/0.1.0/targets/fn.amd64_only.html "fn targets::amd64_only")
-- [`arm64_only`](https://docs.rs/targets/0.1.0/targets/fn.arm64_only.html "fn targets::arm64_only")
+- [`amd64_only`](https://docs.rs/targets/0.1.0/x86_64-unknown-linux-gnu/targets/fn.amd64_only.html "fn targets::amd64_only")
+- [`arm64_only`](https://docs.rs/targets/0.1.0/aarch64-unknown-linux-gnu/targets/fn.arm64_only.html "fn targets::arm64_only")
