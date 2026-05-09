@@ -29,7 +29,8 @@ process.
 
 ## Specifying features
 
-Use `build.features` to enable additionally features:
+Use `build.features` to enable additional features. Items gated behind these features
+will now be compiled, and you can refer to them in your book.
 
 ```toml config-example
 [preprocessor.rustdoc-links]
@@ -56,17 +57,112 @@ build.no-default-features = true
 
 ## Specifying targets
 
-## Reusing `docs.rs` options
+Use `build.targets` to enable additional targets. Items enabled for these targets will
+now be compiled, and you can refer to them in your book.
+
+```toml config-example
+[preprocessor.rustdoc-links]
+build.targets = ["aarch64-unknown-linux-gnu"]
+```
+
+This option corresponds to the [`--target` option of `cargo doc`][`--target`]. In this
+example, the preprocessor will run `cargo doc --target aarch64-unknown-linux-gnu`.
+
+Specifying multiple targets is supported, which allows you to refer to items enabled by
+any of them:
+
+```toml config-example
+[preprocessor.rustdoc-links]
+build.targets = ["x86_64-pc-windows-msvc", "aarch64-unknown-linux-gnu"]
+```
+
+In this case, the preprocessor will run
+`cargo doc --target x86_64-pc-windows-msvc --target aarch64-unknown-linux-gnu` (which
+builds documentation for both targets at the same time).
+
+### Caveats
+
+> [!IMPORTANT]
+
+When `targets` are specified, the preprocessor will _always_ include the target triples
+in links that point to docs.rs, even for items that aren't actually platform-specific.
+For example, <br>
+<a href="https://docs.rs/url/2.5.8/url/index.html"><code>https://docs.rs/url/2.5.8/url/index.html</code></a>
+becomes <br>
+<a href="https://docs.rs/url/2.5.8/x86_64-unknown-linux-gnu/url/index.html"><code>https://docs.rs/url/2.5.8<strong>/x86_64-unknown-linux-gnu</strong>/url/index.html</code></a>.
+
+In many cases, this should be okay. However, in some situations, this could affect how
+the resulting links behave when opened.
+
+When referring to items from your own crates, as long as you [ensure][docs-rs-metadata]
+that docs for the corresponding targets are also built on docs.rs, links should be
+accessible.
+
+When referring to items from dependencies, it is possible that docs.rs will not have a
+version of the docs for the specific package/target combination that you are using. For
+example, you may have specified `build.targets = ["x86_64-unknown-linux-musl"]` while
+many dependencies may not have docs built for that target.
+
+When this happens, docs.rs will redirect[^docs-rs-default-redirect] such links to the
+search interface of the default target of the corresponding crates. For example, the
+link: <br>
+<code><https://docs.rs/nix/0.31.2/x86_64-pc-windows-msvc/nix/kmod/index.html></code>
+should[^docs-rs-issue-3329] redirect to <br>
+<code><https://docs.rs/nix/0.31.2/nix/?search=kmod></code>.
+
+If you would like to avoid such redirects, one possible remedy is to always include a
+widely-available target, such as `x86_64-unknown-linux-gnu`[^docs-rs-default-target], as
+the first target in the option, which has priority:
+
+```toml config-example
+[preprocessor.rustdoc-links]
+build.targets = ["x86_64-unknown-linux-gnu", "aarch64-nintendo-switch-freestanding"]
+```
+
+In this example, all items that are available on `x86_64-unknown-linux-gnu`, _including
+items that are not platform-specific,_ will resolve to links that contain
+`x86_64-unknown-linux-gnu`. Items that are only enabled on later targets will use those
+targets instead. This should ensure the generated links are accessible without
+redirects.
+
+> [!TIP]
+>
+> Specifying multiple targets this way causes `cargo doc` to compile same packages
+> multiple times, which could slow down the build process. If you would like to avoid
+> this, you can combine the [`build.packages`](package-selection.md) option with the
+> "multi-stage build" feature. See [below](#multi-stage-builds) for some examples.
+
+## Reusing docs.rs options
+
+## Advanced configuration
 
 ## Multi-stage builds
 
 ## Cross compilation
 
-[^rustdoc-conditional]: From the [`rustdoc` book][cfg-doc]
+[^rustdoc-conditional]: Excerpt from the [`rustdoc` book][cfg-doc]
+
+[^docs-rs-issue-3329]:
+    Currently, a bug has prevented docs.rs from doing so. See [docs.rs issue
+    #3329][docs-rs-issue-3329] for more details.
+
+[^docs-rs-default-redirect]:
+    Note that docs.rs currently does not support the "opposite" behavior: redirecting
+    from the default target to a known item in a more specific target. Therefore,
+    including target triples in links was favored over omitting them. See [docs.rs issue
+    #3329][docs-rs-issue-3329] for more details.
+
+[^docs-rs-default-target]:
+    [Starting on 2026-05-01][docs-rs-default-target], `x86_64-unknown-linux-gnu` is the
+    default target that docs.rs will build docs for if one isn't specified.
 
 <!-- prettier-ignore-start -->
 [cfg-doc]: https://doc.rust-lang.org/stable/rustdoc/advanced-features.html#cfgdoc-documenting-platform-specific-or-feature-specific-information
 [`--features`]: https://doc.rust-lang.org/stable/cargo/commands/cargo-doc.html#option-cargo-doc---features
 [`--all-features`]: https://doc.rust-lang.org/stable/cargo/commands/cargo-doc.html#option-cargo-doc---all-features
 [`--no-default-features`]: https://doc.rust-lang.org/stable/cargo/commands/cargo-doc.html#option-cargo-doc---no-default-features
+[`--target`]: https://doc.rust-lang.org/stable/cargo/commands/cargo-doc.html#option-cargo-doc---target
+[docs-rs-metadata]: https://docs.rs/about/metadata
+[docs-rs-issue-3329]: https://github.com/rust-lang/docs.rs/issues/3329
+[docs-rs-default-target]: https://blog.rust-lang.org/2026/04/04/docsrs-only-default-targets/
 <!-- prettier-ignore-end -->

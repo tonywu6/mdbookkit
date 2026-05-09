@@ -34,7 +34,7 @@ after = ["links"]
 command = "cargo run --package mdbook-rustdoc-links"
 
 [preprocessor.rustdoc-links.build]
-packages = ["annotate-snippets", "tracing-subscriber", "mdbookkit"]
+packages = ["annotate-snippets", "tracing-subscriber", "mdbookkit", "url"]
 preludes = ["std::marker::PhantomData", "mdbookkit::*", "tracing_subscriber::*"]
 
 [preprocessor.permalinks]
