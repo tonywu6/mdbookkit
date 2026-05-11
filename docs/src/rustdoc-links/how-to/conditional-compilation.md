@@ -24,13 +24,13 @@ Unfortunately, due to the way the preprocessor works, this is unsupported. This 
 will not help if you are trying to mention items from dependencies that are
 conditionally-compiled.
 
-In lieu of this, the preprocessor offer several options to control the compilation
-process.
+In lieu of `#[cfg(doc)]`, the preprocessor offer several options to control the
+compilation process.
 
 ## Specifying features
 
-Use `build.features` to enable additional features. Items gated behind these features
-will now be compiled, and you can refer to them in your book.
+Use `build.features` to enable additional features. This option corresponds to the
+[`--feature` option in `cargo doc`][`--features`].
 
 ```toml config-example
 [preprocessor.rustdoc-links]
@@ -38,8 +38,7 @@ build.features = ["fancy", "clap/unstable-doc"]
 # cargo doc --features fancy --features clap/unstable-doc
 ```
 
-This option corresponds to the [`--feature` option of `cargo doc`][`--features`]. This
-example enables the `fancy` feature for your local package and the `unstable-doc`
+This example enables the `fancy` feature for your local package and the `unstable-doc`
 feature of the `clap` package.
 
 You can also use `build.all-features` and `build.no-default-features`, which correspond
@@ -57,16 +56,14 @@ build.no-default-features = true
 
 ## Specifying targets
 
-Use `build.targets` to enable additional targets. Items enabled for these targets will
-now be compiled, and you can refer to them in your book.
+Use `build.targets` to enable additional targets. This option corresponds to the
+[`--target` option in `cargo doc`][`--target`].
 
 ```toml config-example
 [preprocessor.rustdoc-links]
 build.targets = ["aarch64-unknown-linux-gnu"]
+# cargo doc --target aarch64-unknown-linux-gnu
 ```
-
-This option corresponds to the [`--target` option of `cargo doc`][`--target`]. In this
-example, the preprocessor will run `cargo doc --target aarch64-unknown-linux-gnu`.
 
 Specifying multiple targets is supported, which allows you to refer to items enabled by
 any of them:
@@ -80,13 +77,13 @@ In this case, the preprocessor will run
 `cargo doc --target x86_64-pc-windows-msvc --target aarch64-unknown-linux-gnu` (which
 builds documentation for both targets at the same time).
 
-### Caveats
+### Caveat: target-aware links
 
 > [!IMPORTANT]
 
 When `targets` are specified, the preprocessor will _always_ include the target triples
 in links that point to docs.rs, even for items that aren't actually platform-specific.
-For example, <br>
+That is, a link like <br>
 <a href="https://docs.rs/url/2.5.8/url/index.html"><code>https://docs.rs/url/2.5.8/url/index.html</code></a>
 becomes <br>
 <a href="https://docs.rs/url/2.5.8/x86_64-unknown-linux-gnu/url/index.html"><code>https://docs.rs/url/2.5.8<strong>/x86_64-unknown-linux-gnu</strong>/url/index.html</code></a>.
@@ -99,9 +96,7 @@ that docs for the corresponding targets are also built on docs.rs, links should 
 accessible.
 
 When referring to items from dependencies, it is possible that docs.rs will not have a
-version of the docs for the specific package/target combination that you are using. For
-example, you may have specified `build.targets = ["x86_64-unknown-linux-musl"]` while
-many dependencies may not have docs built for that target.
+version of the docs for the specific package/target combination that you are using.
 
 When this happens, docs.rs will redirect[^docs-rs-default-redirect] such links to the
 search interface of the default target of the corresponding crates. For example, the
@@ -120,27 +115,95 @@ build.targets = ["x86_64-unknown-linux-gnu", "aarch64-nintendo-switch-freestandi
 ```
 
 In this example, all items that are available on `x86_64-unknown-linux-gnu`, _including
-items that are not platform-specific,_ will resolve to links that contain
+items that are not platform-specific,_ will generate URLs containing
 `x86_64-unknown-linux-gnu`. Items that are only enabled on later targets will use those
 targets instead. This should ensure the generated links are accessible without
 redirects.
 
 > [!TIP]
 >
-> Specifying multiple targets this way causes `cargo doc` to compile same packages
+> Specifying multiple targets this way causes `cargo doc` to compile the same packages
 > multiple times, which could slow down the build process. If you would like to avoid
 > this, you can combine the [`build.packages`](package-selection.md) option with the
 > "multi-stage build" feature. See [below](#multi-stage-builds) for some examples.
 
 ## Reusing docs.rs options
 
-## Advanced configuration
+docs.rs allows you to customize builds using the
+[`[package.metadata.docs.rs]`][docs-rs-metadata] table in your crate's `Cargo.toml`. The
+build options that this preprocessor supports are largely modeled after those that
+docs.rs supports.
+
+If you would like to reuse your docs.rs configuration rather than duplicating them, you
+can use the `build.docs-rs` flag:
+
+```toml config-example
+[preprocessor.rustdoc-links]
+build.docs-rs = true
+```
 
 ## Multi-stage builds
 
-## Cross compilation
+To support even finer customization, the preprocessor is capable of running the
+resolution process multiple times, each using different options. This is known as a
+"multi-stage build."
 
-[^rustdoc-conditional]: Excerpt from the [`rustdoc` book][cfg-doc]
+The idea behind multi-stage builds is that the preprocessor can generate only a subset
+of the links during each stage. As long as all links are resolved at the end of the
+build process, the build would be considered successful.
+
+As a rather contrived example, suppose you are using the [`nix`] crate for
+platform-specific Linux APIs over a few platforms, and you'd like to refer to them in
+your documentation. Suppose your project also uses a number of other platform-agnostic
+dependencies. While it is possible to simply add the needed targets to
+[`build.targets`](#specifying-targets), that may result in the preprocessor taking a
+long time to finish, as it has to unnecessarily rebuild docs for those dependencies.
+
+In previous examples, build options are specified under the `build` _table,_ that is:
+
+```toml config-example
+[preprocessor.rustdoc-links.build]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-unknown-freebsd", "aarch64-apple-ios"]
+```
+
+To enable multi-stage builds, change `[preprocessor.rustdoc-links.build]` to an array:
+
+```diff
+- [preprocessor.rustdoc-links.build]
++ [[preprocessor.rustdoc-links.build]]
+```
+
+You can then repeat the section multiple times, each with different configurations. For
+example:
+
+```toml config-example
+[[preprocessor.rustdoc-links.build]]
+targets = ["x86_64-unknown-linux-gnu"]
+packages = [{ workspace = true }]
+docs-rs = true
+
+[[preprocessor.rustdoc-links.build]]
+targets = ["x86_64-unknown-linux-gnu", "x86_64-unknown-freebsd", "aarch64-apple-ios"]
+packages = ["nix"]
+```
+
+In this example, the preprocessor does 2 rounds of resolution:
+
+1. It first runs `cargo doc` on your local packages using the `x86_64-unknown-linux-gnu`
+   target (inheriting your docs.rs config); this only resolves links that point to your
+   1st-party APIs.
+
+2. It then repeats the process a second time, but only for the `nix` package, using 3
+   targets, resolving the remaining links that refer to `nix`.
+
+> [!TIP]
+>
+> You can read more about the equivalent ways to write TOML tables and arrays in the
+> [TOML specification][toml-spec].
+
+[^rustdoc-conditional]:
+    You can learn more about how rustdoc itself handles conditional compilation in the
+    [`rustdoc` book][cfg-doc].
 
 [^docs-rs-issue-3329]:
     Currently, a bug has prevented docs.rs from doing so. See [docs.rs issue
@@ -165,4 +228,6 @@ redirects.
 [docs-rs-metadata]: https://docs.rs/about/metadata
 [docs-rs-issue-3329]: https://github.com/rust-lang/docs.rs/issues/3329
 [docs-rs-default-target]: https://blog.rust-lang.org/2026/04/04/docsrs-only-default-targets/
+[`nix`]: https://docs.rs/nix/
+[toml-spec]: https://toml.io/en/v1.1.0
 <!-- prettier-ignore-end -->

@@ -58,7 +58,7 @@ pub fn run() -> Result<()> {
             let result = serde_json::from_slice::<ConfigExampleErrors>(&result.stdout)?;
             for (path, errors) in result.0 {
                 for (error, span) in errors {
-                    let issue = IssueReport::level(IssueLevel::Warning)
+                    let issue = IssueReport::level(IssueLevel::Error)
                         .title("invalid config snippet")
                         .annotations(vec![
                             Highlight::span(span).kind(AnnotationKind::Context).build(),
