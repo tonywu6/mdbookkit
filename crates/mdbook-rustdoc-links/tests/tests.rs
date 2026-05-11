@@ -52,6 +52,7 @@ test_case![multi_stage_some_failed, exit(0)];
 test_case![multi_stage_all_failed, exit(101)];
 test_case![runner_bad_command, exit(101)];
 test_case![runner_not_found, exit(101)];
+test_case![runner_unreliable_exit, exit(101)];
 test_case![manifest_invalid, exit(101)];
 test_case![packages_invalid, exit(101)];
 test_case![deserialize_workspace, exit(101)];

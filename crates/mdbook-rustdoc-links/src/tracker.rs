@@ -155,12 +155,6 @@ impl<'a> LinkTracker<'a> {
 
     #[instrument("debug", skip_all)]
     pub fn rustdoc_output(&mut self, output: BuildOutput<'_>) {
-        let BuildOutput {
-            ref stdout,
-            ref stderr,
-            ..
-        } = output;
-
         struct State<'r, 'a> {
             links: &'r mut Vec<Link<'a>>,
             row: Option<usize>,
@@ -230,7 +224,7 @@ impl<'a> LinkTracker<'a> {
             ..Default::default()
         }
         .pipe(|cb| HtmlRewriter::new(cb, |_: &[u8]| ()))
-        .pipe(|mut wr| wr.write(stdout.as_bytes()).and_then(|_| wr.end()))
+        .pipe(|mut wr| wr.write(output.stdout.as_bytes()).and_then(|_| wr.end()))
         .context("unexpected error from HtmlRewriter")
         .or_else(emit_debug!())
         .ok();
@@ -253,15 +247,11 @@ impl<'a> LinkTracker<'a> {
             }
         }
 
-        for line in String::from_utf8_lossy(stderr).lines() {
-            if let Ok(diag) = serde_json::from_str::<Diagnostic>(line)
-                .with_context(|| line.to_owned())
-                .context("could not parse line as diagnostic")
-                .or_else(emit_debug!())
-                && let Ok(line) = locate_diagnostic(&diag)
-                    .with_context(|| format!("{diag:?}"))
-                    .context("could not determine primary line")
-                    .or_else(emit_trace!())
+        for diag in output.stderr {
+            if let Ok(line) = locate_diagnostic(&diag)
+                .with_context(|| format!("{diag:?}"))
+                .context("could not determine primary line")
+                .or_else(emit_trace!())
                 && let Ok(link) = (self.links.get_mut(line))
                     .with_context(|| format!("{diag:?}"))
                     .with_context(|| format!("line {line}"))

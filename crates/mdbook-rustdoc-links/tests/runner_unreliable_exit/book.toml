@@ -3,8 +3,8 @@ after = ["links"]
 command = "cargo preprocessor"
 
 [preprocessor.rustdoc-links.build]
-packages = ["cats"]
-targets = ["aarch64-unknown-linux-gnu"]
+preludes = ['std; compile_error!("sup")']
+runner = "bash bin/runner.sh $@"
 
 [build]
 build-dir = "dist"

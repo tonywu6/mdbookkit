@@ -12,7 +12,7 @@ use anyhow::{Context, Result, anyhow, bail};
 use cargo_metadata::{
     PackageId,
     camino::{Utf8Path, Utf8PathBuf},
-    diagnostic::Diagnostic,
+    diagnostic::{Diagnostic, DiagnosticLevel},
 };
 use tap::{Pipe, Tap, TapFallible};
 use tempfile::TempDir;
@@ -22,7 +22,7 @@ use mdbookkit::{
     emit_debug, emit_error, emit_warning,
     env::is_logging,
     error::{Break, ExpectFmt, PathDebug, WithPathDebug},
-    ticker, ticker_event,
+    ticker, ticker_event, with_bug_report,
 };
 
 use crate::{
@@ -248,10 +248,19 @@ fn run_builder(
                 crate_name += 1;
             }
 
+            let Some(lib) = artifacts.get_lib(name, &target) else {
+                continue;
+            };
+
+            if let Some(dir) = lib.parent()
+                && !library_paths.contains(dir)
+            {
+                library_paths.insert(dir.to_owned());
+            }
+
             if let Some(doc) = (artifacts.get_doc(name, &target))
                 .as_ref()
                 .and_then(|dir| dir.parent())
-                && let Some(lib) = artifacts.get_lib(name, &target)
             {
                 symlink_dir_all(doc, tempdir.path().join(name))
                     .with_context(|| doc.to_owned())
@@ -260,12 +269,6 @@ fn run_builder(
                     .ok();
 
                 rustdoc.arg("--extern").arg(format!("{name}={lib}"));
-
-                if let Some(parent) = lib.parent()
-                    && !library_paths.contains(parent)
-                {
-                    library_paths.insert(parent.to_owned());
-                }
             }
         }
 
@@ -303,8 +306,32 @@ fn run_builder(
             .context("`rustdoc` did not succeed")
             .or_else(with_notes!(emit_warning, tracker.notes()))?;
 
-        if let Some(status) = result.status {
-            let stderr = rustc_json_error(&result.output.stderr);
+        let stderr = String::from_utf8_lossy(&result.output.stderr)
+            .lines()
+            .filter_map(|line| {
+                serde_json::from_str::<Diagnostic>(line)
+                    .with_context(|| line.to_owned())
+                    .context("could not parse line as diagnostic")
+                    .or_else(emit_debug!())
+                    .ok()
+            })
+            .collect::<Vec<_>>();
+
+        let status = if let Some(status) = result.status {
+            Some(status)
+        } else if stderr
+            .iter()
+            .any(|diag| diag.level == DiagnosticLevel::Error)
+        {
+            (result.repr.as_context())
+                .context("rustdoc finished with errors")
+                .pipe(Some)
+        } else {
+            None
+        };
+
+        if let Some(status) = status {
+            let stderr = print_rustc_json(&stderr);
             let stderr = stderr.trim_end();
             let stderr = if stderr.is_empty() { "(empty)" } else { stderr };
             return Err(status)
@@ -328,9 +355,9 @@ fn run_builder(
                 std::fs::read_to_string(&path)
                     .with_path_context(&path)
                     .context("failed to read from `rustdoc` output from file")
-                    .or_else(emit_warning!())?
+                    .or_else(with_bug_report!(emit_error))?
             },
-            stderr: result.output.stderr,
+            stderr,
             target,
         };
 
@@ -393,7 +420,7 @@ pub struct BuildOutput<'a> {
     pub metadata: &'a cargo_metadata::Metadata,
     pub crates: &'a BTreeMap<Arc<str>, PackageId>,
     pub stdout: String,
-    pub stderr: Vec<u8>,
+    pub stderr: Vec<Diagnostic>,
     pub target: Option<Arc<str>>,
 }
 
@@ -1000,22 +1027,16 @@ impl Default for CargoProgress {
     }
 }
 
-fn rustc_json_error(stderr: &[u8]) -> String {
-    String::from_utf8_lossy(stderr)
-        .lines()
-        .fold(String::new(), |mut error, line| {
-            if let Ok(diag) = serde_json::from_str::<Diagnostic>(line) {
-                if let Some(rendered) = diag.rendered {
-                    write!(&mut error, "{}", rendered)
-                } else {
-                    writeln!(&mut error, "{}", diag.message.trim())
-                }
-            } else {
-                writeln!(&mut error, "{line}")
-            }
-            .expect_fmt();
-            error
-        })
+fn print_rustc_json(items: &[Diagnostic]) -> String {
+    items.iter().fold(String::new(), |mut error, diag| {
+        if let Some(rendered) = &diag.rendered {
+            write!(&mut error, "{}", rendered)
+        } else {
+            writeln!(&mut error, "{}", diag.message.trim())
+        }
+        .expect_fmt();
+        error
+    })
 }
 
 trait CargoMetadataUtil {
