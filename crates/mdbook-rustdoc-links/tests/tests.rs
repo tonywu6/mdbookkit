@@ -32,6 +32,7 @@ test_case![targets, exit(0)];
 test_case![targets_proc_macro, exit(0)];
 test_case![targets_preserve_order, exit(0)];
 test_case![packages, exit(0)];
+test_case![packages_unspecified, exit(0)];
 test_case![preludes, exit(0)];
 test_case![preludes_implicit, exit(0)];
 test_case![preludes_bin, exit(0)];
@@ -46,6 +47,10 @@ test_case![multi_stage, exit(0)];
 test_case![packages_dev, exit(0)];
 test_case![diagnostics_order, exit(0)];
 
+test_case![packages_invalid, exit(101)];
+test_case![packages_empty_list, exit(101)];
+test_case![features_resolver_quirk, exit(101)];
+test_case![features_resolver_quirk_fix, exit(0)];
 test_case![preludes_invalid, exit(101)];
 test_case![compilation_error, exit(101)];
 test_case![multi_stage_some_failed, exit(0)];
@@ -54,7 +59,6 @@ test_case![runner_bad_command, exit(101)];
 test_case![runner_not_found, exit(101)];
 test_case![runner_unreliable_exit, exit(101)];
 test_case![manifest_invalid, exit(101)];
-test_case![packages_invalid, exit(101)];
 test_case![deserialize_workspace, exit(101)];
 test_case![deserialize_package, exit(101)];
 test_case![
@@ -62,8 +66,7 @@ test_case![
     exit(0),
     env = [
         "MDBOOK_LOG" = "warn,mdbook_rustdoc_links=trace",
-        "MDBOOKKIT_TERM_GRAPHICAL" = "",
-        "CARGO_TERM_QUIET" = "true"
+        "MDBOOKKIT_TERM_GRAPHICAL" = ""
     ]
 ];
 test_case![hidden_items, exit(0)];

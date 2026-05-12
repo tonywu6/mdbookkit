@@ -11,7 +11,10 @@ use anyhow::{Context, Result, anyhow};
 use cargo_metadata::camino::{Utf8Path, Utf8PathBuf};
 use serde::{
     Deserialize, Deserializer,
-    de::{IntoDeserializer, value::MapAccessDeserializer},
+    de::{
+        IntoDeserializer,
+        value::{MapAccessDeserializer, SeqAccessDeserializer},
+    },
 };
 use shlex::Shlex;
 use tap::Pipe;
@@ -53,10 +56,10 @@ de_struct!(
         #[serde(default)]
         targets,
         options(BuildOptions(
-            #[serde(default, deserialize_with = "value_or_vec")]
-            packages as Vec<PackageSpec>,
             #[serde(default)]
             preludes,
+            #[serde(default, deserialize_with = "deserialize_package_list")]
+            packages as Option<Vec<PackageSpec>>,
             features(FeatureSelection(
                 #[serde(default)]
                 features,
@@ -106,8 +109,8 @@ pub struct Builder {
 /// <https://github.com/rust-lang/docs.rs/blob/c173de9/crates/lib/metadata/lib.rs#L103-L147>
 #[derive(Debug, Default)]
 pub struct BuildOptions {
-    pub packages: Vec<PackageSpec>,
     pub preludes: Option<Vec<String>>,
+    pub packages: Option<Vec<PackageSpec>>,
     pub features: FeatureSelection,
 
     pub rustc_args: Vec<String>,
@@ -130,7 +133,7 @@ pub enum PackageSpec {
     Selector(PackageSelector),
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Default, Clone)]
 #[serde(rename_all = "kebab-case")]
 pub struct PackageSelector {
     #[serde(default)]
@@ -264,7 +267,7 @@ impl BuildOptions {
                 cargo: _,
                 docs_rs,
             } = other;
-            extend!(self, packages);
+            extend!(self, packages?);
             extend!(self, preludes?);
             extend!(self, rustc_args);
             extend!(self, rustdoc_args);
@@ -501,6 +504,54 @@ impl Clone for CustomCommand {
     }
 }
 
+fn deserialize_package_list<'de, D>(deserializer: D) -> Result<Option<Vec<PackageSpec>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct Visitor;
+
+    const UNSPECIFIED: &str = "unspecified";
+
+    impl<'de> serde::de::Visitor<'de> for Visitor {
+        type Value = Option<Vec<PackageSpec>>;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            write!(formatter, "a list of package spec, or {UNSPECIFIED:?}")
+        }
+
+        fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
+        where
+            A: serde::de::SeqAccess<'de>,
+        {
+            let deserializer = SeqAccessDeserializer::new(seq);
+            let deserialized = Vec::<_>::deserialize(deserializer)?;
+            if !deserialized.is_empty() {
+                Ok(Some(deserialized))
+            } else {
+                let err = format! { "package list cannot be `[]`\nhelp: to run `cargo doc` \
+                without specifying any package, use `packages = {UNSPECIFIED:?}`\n\
+                this will build docs for all packages and dependencies" };
+                Err(serde::de::Error::custom(err))
+            }
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+        where
+            E: serde::de::Error,
+        {
+            if v == UNSPECIFIED {
+                Ok(Some(vec![]))
+            } else {
+                let unexpected = serde::de::Unexpected::Str(v);
+                let expected = format!("{UNSPECIFIED:?}");
+                Err(serde::de::Error::invalid_value(unexpected, &&*expected))
+            }
+        }
+    }
+
+    deserializer.deserialize_any(Visitor)
+}
+
 impl<'de> Deserialize<'de> for WorkspaceMember {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -689,6 +740,7 @@ impl Builder {
                     f.entry(&feature);
                 }
 
+                let packages = packages.as_deref().unwrap_or_default();
                 if packages.len() > 3 {
                     non_exhaustive = true
                 }

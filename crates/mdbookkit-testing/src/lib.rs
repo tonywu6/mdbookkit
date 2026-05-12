@@ -73,7 +73,13 @@ impl TestBook {
             }
         }
 
-        for result in results.iter() {
+        match (&results[0], &results[1]) {
+            (_, Err(txt)) => eprintln!("{txt}"),
+            (Err(svg), Ok(())) => eprintln!("{svg}"),
+            (Ok(()), Ok(())) => {}
+        }
+
+        for result in results[2..].iter() {
             if let Err(error) = result {
                 eprintln!("{error}")
             }

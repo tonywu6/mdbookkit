@@ -8,7 +8,7 @@ version = "0.1.0"
 fancy = []
 
 [workspace]
-resolver = "2"
+resolver = "3"
 
 [package.metadata.docs.rs]
 default-target = "aarch64-unknown-linux-gnu"

@@ -1,4 +1,4 @@
-<svg width="1448px" height="506px" xmlns="http://www.w3.org/2000/svg">
+<svg width="1768px" height="506px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -63,7 +63,7 @@
 </tspan>
     <tspan x="10px" y="406px"><tspan>    2: command exited with exit status: 101</tspan>
 </tspan>
-    <tspan x="10px" y="424px"><tspan>    3: command: cd "[TEST_DIR]/compilation_error" &amp;&amp; "cargo" "check" "--message-format" "json" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"</tspan>
+    <tspan x="10px" y="424px"><tspan>    3: command: cd "[TEST_DIR]/compilation_error" &amp;&amp; "cargo" "check" "--message-format" "json" "--package" "compilation_error@0.1.0" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"</tspan>
 </tspan>
     <tspan x="10px" y="442px"><tspan>       </tspan>
 </tspan>

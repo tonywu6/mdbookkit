@@ -6,8 +6,8 @@ pub struct Earth {
 
 #[doc = include_str!("1.basic.md")]
 pub mod _basic {}
-#[doc = include_str!("2.extern-crates.md")]
-pub mod _extern_crates {}
+#[doc = include_str!("2.crates.md")]
+pub mod _crates {}
 #[doc = include_str!("3.lints.md")]
 pub mod _lints {}
 #[doc = include_str!("4.known-issues.md")]

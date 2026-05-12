@@ -1,4 +1,4 @@
- WARN mdbook-rustdoc-links: could not determine the workspace layout via cargo
+ WARN mdbook-rustdoc-links: error while resolving package versions
 
 Caused by:
     0: failed to spawn command

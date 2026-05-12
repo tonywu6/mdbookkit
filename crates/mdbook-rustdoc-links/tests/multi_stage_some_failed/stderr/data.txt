@@ -15,7 +15,7 @@ Caused by:
        [CARGO_STDERR]
        error: could not compile `multi_stage_some_failed` (lib) due to 1 previous error
     2: command exited with exit status: 101
-    3: command: cd "[TEST_DIR]/multi_stage_some_failed" && "cargo" "check" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"
+    3: command: cd "[TEST_DIR]/multi_stage_some_failed" && "cargo" "check" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--package" "multi_stage_some_failed@0.1.0" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"
        
 note: the following options have been specified, which may have caused the error:
     - build.targets

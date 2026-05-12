@@ -186,7 +186,7 @@ impl DiagnosticNotes {
         if !targets.is_empty() {
             self.options_specified.insert("build.targets");
         }
-        if !packages.is_empty() {
+        if packages.is_some() {
             self.options_specified.insert("build.packages");
         }
         if preludes.is_some() {

@@ -1,7 +1,7 @@
 # Summary
 
 - [](1.basic.md)
-- [](2.extern-crates.md)
+- [](2.crates.md)
 - [](3.lints.md)
 - [](4.known-issues.md)
 - [](5.syntax.md)

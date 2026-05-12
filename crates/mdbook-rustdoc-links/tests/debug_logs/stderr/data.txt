@@ -18,13 +18,15 @@ DEBUG mdbook-rustdoc-links: resolved manifest dir: [TEST_DIR]/debug_logs
  INFO mdbook-rustdoc-links:build:prepare: started instance=1 preparing
  INFO mdbook-rustdoc-links:build:prepare: cargo metadata instance=1 preparing
 DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "cargo" "metadata" "--format-version" "1" instance=1
+ INFO mdbook-rustdoc-links:build:prepare: resolving packages instance=1 preparing
+DEBUG mdbook-rustdoc-links:build:resolve_packages: running: cd "[TEST_DIR]/debug_logs" && "cargo" "tree" "--no-dedupe" "--format" "{p}" "--prefix" "none" "--edges" "normal" "--package" "debug_logs" "--depth" "0" instance=1
 DEBUG mdbook-rustdoc-links:build: resolved options: Builder {
     targets: [
         "aarch64-unknown-linux-gnu",
     ],
     options: BuildOptions {
-        packages: [],
         preludes: None,
+        packages: None,
         features: FeatureSelection {
             features: [],
             all_features: None,
@@ -42,18 +44,20 @@ DEBUG mdbook-rustdoc-links:build: resolved options: Builder {
         docs_rs: None,
     },
 } instance=1
-DEBUG mdbook-rustdoc-links:build: resolved packages: {} instance=1
+DEBUG mdbook-rustdoc-links:build: resolved packages: {
+    debug_logs@0.1.0,
+} instance=1
 DEBUG mdbook-rustdoc-links:build: resolved preludes: [
     "debug_logs::*",
 ] instance=1
 DEBUG mdbook-rustdoc-links:build: resolved path mappings: PathMapper {
     target: "[TEST_DIR]/debug_logs/target",
 } instance=1
-DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "cargo" "doc" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'" instance=1
+DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "cargo" "doc" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--no-deps" "--package" "debug_logs@0.1.0" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'" instance=1
  INFO mdbook-rustdoc-links:build:cargo-doc: started instance=1 cargo doc
 TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: [], filenames: ["[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/doc/debug_logs/index.html"], executable: None, fresh: false }) instance=1
 TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=1
-DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "cargo" "check" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'" instance=1
+DEBUG mdbook-rustdoc-links:build: running: cd "[TEST_DIR]/debug_logs" && "cargo" "check" "--message-format" "json" "--target" "aarch64-unknown-linux-gnu" "--package" "debug_logs@0.1.0" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'" instance=1
  INFO mdbook-rustdoc-links:build:cargo-check: started instance=1 cargo check
 TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: [], filenames: ["[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/debug/deps/libdebug_logs-[BUILD_HASH].rmeta"], executable: None, fresh: false }) instance=1
 TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=1
@@ -145,16 +149,18 @@ DEBUG mdbook-rustdoc-links:build:resolve_packages: running: cd "[TEST_DIR]/debug
 DEBUG mdbook-rustdoc-links:build: resolved options: Builder {
     targets: [],
     options: BuildOptions {
-        packages: [
-            Selector(
-                PackageSelector {
-                    name: None,
-                    workspace: Default,
-                    dependencies: false,
-                },
-            ),
-        ],
         preludes: None,
+        packages: Some(
+            [
+                Selector(
+                    PackageSelector {
+                        name: None,
+                        workspace: Default,
+                        dependencies: false,
+                    },
+                ),
+            ],
+        ),
         features: FeatureSelection {
             features: [
                 "fancy",

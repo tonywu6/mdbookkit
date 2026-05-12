@@ -4,6 +4,7 @@ command = "cargo preprocessor"
 
 [preprocessor.rustdoc-links.build]
 features = ["fancy", "anstyle-parse/utf8"]
+packages = "unspecified"
 
 [build]
 build-dir = "dist"

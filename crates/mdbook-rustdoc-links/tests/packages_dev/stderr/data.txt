@@ -1,6 +1,6 @@
- WARN mdbook-rustdoc-links: could not determine the versions of these packages after excluding dev and build dependencies: {
+ WARN mdbook-rustdoc-links: could not determine the versions of these packages: {
     "pin-project-lite",
-}
+} note: dev and build dependencies are excluded
 warning: unresolved link to `pin_project_lite`
  --> index.md:1:3
   |

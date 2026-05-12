@@ -1,4 +1,4 @@
- WARN mdbook-rustdoc-links: could not obtain info about the packages to build docs for
+ WARN mdbook-rustdoc-links: error while resolving package versions
 
 Caused by:
     0: --- stderr

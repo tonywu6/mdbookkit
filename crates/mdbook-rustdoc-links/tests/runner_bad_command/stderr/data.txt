@@ -1,4 +1,4 @@
- WARN mdbook-rustdoc-links: could not determine the workspace layout via cargo
+ WARN mdbook-rustdoc-links: error while resolving package versions
 
 Caused by:
     0: --- stderr
@@ -7,7 +7,7 @@ Caused by:
        help: view all installed commands with `cargo --list`
        help: find a package to install `cargo` with `cargo search cargo-cargo`
     1: command exited with exit status: 101
-    2: command: cd "[TEST_DIR]/runner_bad_command" && "cargo" "cargo" "metadata" "--format-version" "1"
+    2: command: cd "[TEST_DIR]/runner_bad_command" && "cargo" "cargo" "tree" "--no-dedupe" "--format" "{p}" "--prefix" "none" "--edges" "normal" "--package" "runner_bad_command" "--depth" "0"
        
 note: the following options have been specified, which may have caused the error:
     - build.runner

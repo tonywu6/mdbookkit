@@ -1,0 +1,11 @@
+[package]
+edition = "2024"
+name = "features_resolver_quirk_fix"
+publish = false
+version = "0.1.0"
+
+[workspace]
+resolver = "3"
+
+[dependencies]
+anstyle-parse = { version = "=1.0.0", default-features = false }

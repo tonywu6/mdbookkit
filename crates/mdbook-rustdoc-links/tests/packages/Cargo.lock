@@ -17,7 +17,7 @@ version = "0.1.0"
 dependencies = [
  "anstyle-parse",
  "pin-project-lite",
- "utf8-width",
+ "tap",
 ]
 
 [[package]]
@@ -27,10 +27,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
 
 [[package]]
-name = "utf8-width"
-version = "0.1.8"
+name = "tap"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1292c0d970b54115d14f2492fe0170adf21d68a1de108eebc51c1df4f346a091"
+checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 
 [[package]]
 name = "utf8parse"

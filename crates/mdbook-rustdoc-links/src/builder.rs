@@ -65,7 +65,6 @@ fn run_builder(
     tracker.notes().mark_option_specified(&builder);
 
     let BuildOptions {
-        ref packages,
         ref features,
         ref cargo,
         docs_rs,
@@ -87,9 +86,7 @@ fn run_builder(
         .context("failed to learn about the workspace via cargo")
         .or_else(with_notes!(emit_warning, tracker.notes()))?;
 
-    let packages = if packages.is_empty() {
-        Default::default()
-    } else {
+    let packages = {
         ticker_event!(&ticker, Level::INFO, "resolving packages");
         resolve_packages(&metadata, &builder.options, manifest_dir, tracker.notes())?
     };
@@ -722,13 +719,18 @@ fn resolve_packages(
     options: &BuildOptions,
     manifest_dir: &Utf8Path,
     notes: &DiagnosticNotes,
-) -> Result<PackageList, Break> {
+) -> Result<PackageResolution, Break> {
     let BuildOptions {
         packages,
         features,
         cargo,
         ..
     } = options;
+
+    let packages = match packages.as_deref() {
+        None => &[PackageSpec::Selector(Default::default())],
+        Some(packages) => packages,
+    };
 
     let pkgs = packages.iter().flat_map(|spec| match spec {
         PackageSpec::Name(name) => vec![(name, false)],
@@ -791,7 +793,7 @@ fn resolve_packages(
             Ok(String::from_utf8(stdout)?)
         })
         .collect::<Result<Vec<_>>>()
-        .context("could not obtain info about the packages to build docs for")
+        .context("error while resolving package versions")
         .or_else(with_notes!(emit_warning, notes))?
         .iter()
         .flat_map(|output| {
@@ -814,17 +816,17 @@ fn resolve_packages(
     let unresolved = trees.into_values().flatten().collect::<BTreeSet<_>>();
 
     if !unresolved.is_empty() {
-        warn! { "could not determine the versions of these packages after \
-        excluding dev and build dependencies: {unresolved:#?}" };
+        warn! { "could not determine the versions of these packages: {unresolved:#?} \
+        note: dev and build dependencies are excluded" };
     }
 
-    Ok(PackageList(resolved))
+    Ok(PackageResolution(resolved))
 }
 
 fn load_docs_rs_options(
     builder: &mut Builder,
     metadata: &cargo_metadata::Metadata,
-    packages: &PackageList,
+    packages: &PackageResolution,
 ) -> Result<()> {
     let selected = if packages.is_empty() {
         metadata.workspace_default_packages()
@@ -898,7 +900,7 @@ fn load_docs_rs_options(
 fn resolve_prelude(
     tracker: &mut LinkTracker<'_>,
     metadata: &cargo_metadata::Metadata,
-    packages: &PackageList,
+    packages: &PackageResolution,
 ) -> Option<String> {
     let default_packages = metadata.workspace_default_packages();
     if default_packages.len() != 1 {
@@ -931,9 +933,9 @@ fn resolve_prelude(
 }
 
 #[derive(Default)]
-struct PackageList(BTreeSet<(String, String)>);
+struct PackageResolution(BTreeSet<(String, String)>);
 
-impl PackageList {
+impl PackageResolution {
     fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -1167,7 +1169,7 @@ impl Debug for PathMapper {
     }
 }
 
-impl Debug for PackageList {
+impl Debug for PackageResolution {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut f = f.debug_set();
         for (k, v) in self.0.iter() {
