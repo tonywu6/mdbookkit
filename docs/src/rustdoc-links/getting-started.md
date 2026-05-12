@@ -92,8 +92,8 @@ A type implementing [`Sized`] has a constant size known at compile time.
 ```
 
 In this example, ``[`Sized`]`` is the [intra-doc link][intra-doc-link]. If you've used
-`cargo doc` before, then this notation may already look familiar. You may also have seen
-this type of notation in [doc comments][doc-comment] in Rust source code.
+`cargo doc` before, then this notation may already look familiar to you. You may also
+have seen this type of notation in [doc comments][doc-comment] in Rust source code.
 
 > [!TIP]
 >

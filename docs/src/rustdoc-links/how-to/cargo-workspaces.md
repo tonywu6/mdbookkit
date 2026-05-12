@@ -1,7 +1,7 @@
 # How to use the preprocessor in a workspace
 
-The preprocessor behaves in a [Cargo workspace][workspace] largely no differently than
-in a package.
+How the preprocessor functions in a [Cargo workspace][workspace] is largely no
+differently than when you use it with a single package.
 
 There is however a subtle difference: When using the preprocessor to document a single
 library package, the preprocessor has a default configuration that allows you to use the

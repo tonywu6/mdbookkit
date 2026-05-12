@@ -7,8 +7,9 @@ etc. But how does this work when the links are in mdBook?
 ## Mental model
 
 When using this preprocessor, you may _imagine your book as a standalone, empty crate._
-By default, this "crate" also "depends on" the package(s) in your workspace, as well as
-their dependencies.
+By default, this "crate" also "depends on" your local package. If you are working with a
+[Cargo workspace](how-to/cargo-workspaces.md), then it "depends on" all default members
+in the workspace.
 
 This means that, by default, you can always link to the following kinds of
 items[^prelude]:
@@ -31,24 +32,17 @@ items[^prelude]:
   > - [`std::net::UdpSocket`]
   > - [`size_of::<T>()`][std::mem::size_of]
 
-- From any crates in the workspace, including local crates and external dependencies, by
-  specifying their paths, for example:
+- From crate(s) in your project, for example:
 
   > ```md
   > - [`mdbookkit::env::is_ci`]
-  > - [`Patch`][::annotate_snippets::Patch]
-  > - [`fmt`][fn@tracing_subscriber::fmt]
+  > - [`mdbookkit::markdown::PatchStream`]
   > ```
   >
   > - [`mdbookkit::env::is_ci`]
-  > - [`Patch`][::annotate_snippets::Patch]
-  > - [`fmt`][fn@tracing_subscriber::fmt]
+  > - [`mdbookkit::markdown::PatchStream`]
 
-  > [!TIP]
-  >
-  > In other words, anything documentable by `cargo doc` can be linked to this way.
-
-## Linking to your own crate
+## Referring to your own crate
 
 Of course, if you are documenting your own library, it would feel rather clumsy to have
 to repeat the crate name for every link.
@@ -77,21 +71,40 @@ them are not implicitly introduced, as that could create ambiguity.
 Instead, to make things easier, you may use the `build.preludes` configuration to
 explicitly introduce items into scope.
 
-As an example, with the following `book.toml`:
+As an example, assuming the crate `tracing_subscriber` is in your workspace. With the
+following `book.toml`:
 
 ```toml config-example
 [preprocessor.rustdoc-links]
 build.preludes = ["tracing_subscriber::*"]
 ```
 
-Items from the [`tracing_subscriber`] crate can now be linked to without having to write
-out the crate name:
+Items from that crate can now be linked to without having to write out the crate name:
 
 > ```md
 > [`EnvFilter`] implements the [`Layer`] trait.
 > ```
 >
 > [`EnvFilter`] implements the [`Layer`] trait.
+
+## Referring to dependencies
+
+Of course, for more comprehensive documentation, you might wish to mention the APIs that
+your libraries depend on as well.
+
+The preprocessor provides the `build.packages` option that allows you to build docs for
+extra packages. You may then refer to items in such packages using the same syntax:
+
+> ```md
+> - [`Patch`][::annotate_snippets::Patch]
+> - [`fmt`][fn@tracing_subscriber::fmt]
+> ```
+>
+> - [`Patch`][::annotate_snippets::Patch]
+> - [`fmt`][fn@tracing_subscriber::fmt]
+
+To learn how to use the option, please see the dedicated
+[How-to guide](how-to/package-selection.md)!
 
 ## Items that cannot be linked to
 

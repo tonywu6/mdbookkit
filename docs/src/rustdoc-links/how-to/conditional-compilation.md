@@ -1,4 +1,4 @@
-# Conditional compilation
+# How to refer to conditionally compiled items
 
 The preprocessor has some support for generating links to items that are platform- or
 feature-specific. You can configure the [features](#specifying-features) to enable when
@@ -144,7 +144,7 @@ build.docs-rs = true
 
 ## Multi-stage builds
 
-To support even finer customization, the preprocessor is capable of running the
+Finally, to support even finer customization, the preprocessor is capable of running the
 resolution process multiple times, each using different options. This is known as a
 "multi-stage build."
 
@@ -158,13 +158,6 @@ your documentation. Suppose your project also uses a number of other platform-ag
 dependencies. While it is possible to simply add the needed targets to
 [`build.targets`](#specifying-targets), that may result in the preprocessor taking a
 long time to finish, as it has to unnecessarily rebuild docs for those dependencies.
-
-In previous examples, build options are specified under the `build` _table,_ that is:
-
-```toml config-example
-[preprocessor.rustdoc-links.build]
-targets = ["x86_64-unknown-linux-gnu", "x86_64-unknown-freebsd", "aarch64-apple-ios"]
-```
 
 To enable multi-stage builds, change `[preprocessor.rustdoc-links.build]` to an array:
 
@@ -187,6 +180,44 @@ targets = ["x86_64-unknown-linux-gnu", "x86_64-unknown-freebsd", "aarch64-apple-
 packages = ["nix"]
 ```
 
+> [!TIP]
+>
+> <details>
+>   <summary>TOML syntax primer</summary>
+>
+> In previous examples, options were written like:
+>
+> ```toml config-example
+> [preprocessor.rustdoc-links]
+> build.features = ["..."]
+> ```
+>
+> The `build.features` syntax implicitly defines a `build` [table][toml-table] under the
+> `preprocessor.rustdoc-links` table. This is equivalent to:
+>
+> ```toml config-example
+> [preprocessor.rustdoc-links]
+> [preprocessor.rustdoc-links.build]
+> features = ["..."]
+> ```
+>
+> To enable multi-stage builds, the `build` table becomes an [array of
+> tables][toml-array-of-tables] instead:
+>
+> ```toml config-example
+> [preprocessor.rustdoc-links]
+>
+> [[preprocessor.rustdoc-links.build]]
+> targets = ["..."]
+>
+> [[preprocessor.rustdoc-links.build]]
+> targets = ["..."]
+> ```
+>
+> For more details, feel free to check out the complete [TOML specification][toml-spec]!
+>
+> </details>
+
 In this example, the preprocessor does 2 rounds of resolution:
 
 1. It first runs `cargo doc` on your local packages using the `x86_64-unknown-linux-gnu`
@@ -195,11 +226,6 @@ In this example, the preprocessor does 2 rounds of resolution:
 
 2. It then repeats the process a second time, but only for the `nix` package, using 3
    targets, resolving the remaining links that refer to `nix`.
-
-> [!TIP]
->
-> You can read more about the equivalent ways to write TOML tables and arrays in the
-> [TOML specification][toml-spec].
 
 [^rustdoc-conditional]:
     You can learn more about how rustdoc itself handles conditional compilation in the
@@ -229,5 +255,7 @@ In this example, the preprocessor does 2 rounds of resolution:
 [docs-rs-issue-3329]: https://github.com/rust-lang/docs.rs/issues/3329
 [docs-rs-default-target]: https://blog.rust-lang.org/2026/04/04/docsrs-only-default-targets/
 [`nix`]: https://docs.rs/nix/
+[toml-table]: https://toml.io/en/v1.1.0#table
+[toml-array-of-tables]: https://toml.io/en/v1.1.0#array-of-tables
 [toml-spec]: https://toml.io/en/v1.1.0
 <!-- prettier-ignore-end -->

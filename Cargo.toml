@@ -11,7 +11,7 @@ rust-version = "1.89"
 [workspace]
 default-members = ["crates/*"]
 members = ["crates/*", "scripts/*", "docs"]
-resolver = "2"
+resolver = "3"
 
 [workspace.dependencies]
 anyhow = "1.0.102"

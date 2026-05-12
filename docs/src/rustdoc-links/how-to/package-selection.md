@@ -1,31 +1,26 @@
-# How to choose the packages to build docs for
+# How to create links to additional packages
 
-Without explicit configuration, the preprocessor will always build documentation for all
-packages and dependencies in your workspace by running `cargo doc` without specifying
-the packages to build. If the workspace contains many packages, this could take a very
-long time.
+Without explicit configuration, the preprocessor will only build documentation for your
+local packages, but not your dependencies. If you would like to refer to more than that,
+then you can use the `build.packages` option to explicitly specify the packages to run
+`cargo doc` on.
 
-> [!NOTE]
->
-> This is true even if your book is within a member package! This is because the
-> preprocessor always runs `cargo doc` from your workspace's root directory (where the
-> root `Cargo.toml` is). This differs from [how `cargo doc` normally
-> behaves][cargo-doc-package-selection].
-
-If you are only ever documenting a few of the packages in your book, then you can use
-the `build.packages` option to explicitly specify the packages to run `cargo doc` on.
-
-You can specify the names of the packages to build. This includes direct and transitive
-dependencies.[^cargo-doc-dev-deps] Note that names should be **package names, _not_
-crate names.**
+The option should be specified as an array. You can explicitly specify the names of the
+packages:
 
 ```toml config-example
 [preprocessor.rustdoc-links]
 build.packages = ["serde_json", "tracing-subscriber"]
 ```
 
-When the `build.packages` option has been specified, docs for your **local packages are
-<br> _no longer_ built by default.**
+Both direct and transitive dependencies are supported[^cargo-doc-dev-deps], as are local
+packages. Note that names should be **package names, _not_ crate names.**
+
+> [!IMPORTANT]
+>
+> If the `build.packages` option is specified, then docs for your **local packages are
+> <br> _no longer_ built by default.** You can add them back using the following special
+> syntax.
 
 Specify `{ workspace = true }` to build docs for all [**default** workspace
 members][default-member]:
@@ -81,6 +76,5 @@ build.packages = [
 
 <!-- prettier-ignore-start -->
 [cargo-doc-dev-deps]: https://github.com/rust-lang/cargo/issues/11105
-[cargo-doc-package-selection]: https://doc.rust-lang.org/cargo/commands/cargo-doc.html#package-selection
 [default-member]: https://doc.rust-lang.org/cargo/reference/workspaces.html#the-default-members-field
 <!-- prettier-ignore-end -->
