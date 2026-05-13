@@ -1,6 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
-    io::Write,
+    fmt::Write as _,
+    io::Write as _,
     process::{Command, Stdio},
 };
 
@@ -15,7 +16,7 @@ use mdbookkit::{
         Highlight, IssueLevel, IssueReport, IssueReporter, Note, SourceCode,
         annotate_snippets::AnnotationKind,
     },
-    error::OnWarning,
+    error::{ExpectFmt, OnWarning},
     markdown::{PatchStream, Spanned},
 };
 
@@ -89,12 +90,20 @@ struct BookState {
 #[derive(Default)]
 struct PageState {
     mermaid: Option<Spanned<()>>,
-    config_example: Option<Spanned<()>>,
+    config_example: Option<Spanned<ConfigSnippet>>,
+}
+
+enum ConfigSnippet {
+    Full,
+    Diff,
 }
 
 enum Place<'a> {
     Mermaid(CowStr<'a>),
-    ConfigExample(CowStr<'a>),
+    ConfigExample {
+        kind: ConfigSnippet,
+        text: CowStr<'a>,
+    },
 }
 
 impl BookState {
@@ -127,7 +136,7 @@ impl BookState {
                 .into_iter();
                 Some((repl, span))
             }
-            Place::ConfigExample(text) => {
+            Place::ConfigExample { kind, text } => {
                 let package = if path.starts_with("rustdoc-links") {
                     "mdbook-rustdoc-links"
                 } else if path.starts_with("permalinks") {
@@ -135,13 +144,33 @@ impl BookState {
                 } else {
                     panic!("config examples are not available in {path:?}")
                 };
+                let text = match kind {
+                    ConfigSnippet::Full => text.into_string(),
+                    ConfigSnippet::Diff => text
+                        .lines()
+                        .filter_map(|line| {
+                            if let Some(line) = line.strip_prefix("  ") {
+                                Some(line)
+                            } else if let Some(line) = line.strip_prefix("+ ") {
+                                Some(line)
+                            } else if line.starts_with("- ") {
+                                None
+                            } else {
+                                Some(line)
+                            }
+                        })
+                        .fold(String::new(), |mut out, line| {
+                            writeln!(out, "{line}").expect_fmt();
+                            out
+                        }),
+                };
                 self.config_examples
                     .entry(package)
                     .or_default()
                     .0
                     .entry(path)
                     .or_default()
-                    .push((text.into_string(), span));
+                    .push((text, span));
                 None
             }
         }
@@ -155,16 +184,21 @@ impl PageState {
                 let tags = tag.split(' ').map(|tag| tag.trim()).collect::<HashSet<_>>();
                 if tags.contains("mermaid") {
                     self.mermaid = Some(((), span))
-                } else if tags.contains("toml") && tags.contains("config-example") {
-                    self.config_example = Some(((), span))
+                } else if tags.contains("config-example") {
+                    let kind = if tags.contains("diff") {
+                        ConfigSnippet::Diff
+                    } else {
+                        ConfigSnippet::Full
+                    };
+                    self.config_example = Some((kind, span))
                 }
             }
             Event::Text(text) => {
                 if let Some(((), span)) = self.mermaid.take() {
                     return Some((Place::Mermaid(text), span));
                 }
-                if let Some(((), span)) = self.config_example.take() {
-                    return Some((Place::ConfigExample(text), span));
+                if let Some((kind, span)) = self.config_example.take() {
+                    return Some((Place::ConfigExample { kind, text }, span));
                 }
             }
             Event::End(TagEnd::CodeBlock) => {

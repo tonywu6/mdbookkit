@@ -63,14 +63,14 @@ after = ["links"]
 <details>
   <summary>Explanation</summary>
 
-```diff
+```diff config-example
 + [preprocessor.rustdoc-links]
 ```
 
 Adding this table tells mdBook to execute the command `mdbook-rustdoc-links` during
 builds.
 
-```diff
+```diff config-example
   [preprocessor.rustdoc-links]
 + after = ["links"]
 ```

@@ -161,7 +161,7 @@ long time to finish, as it has to unnecessarily rebuild docs for those dependenc
 
 To enable multi-stage builds, change `[preprocessor.rustdoc-links.build]` to an array:
 
-```diff
+```diff config-example
 - [preprocessor.rustdoc-links.build]
 + [[preprocessor.rustdoc-links.build]]
 ```
