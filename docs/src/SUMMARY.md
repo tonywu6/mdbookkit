@@ -9,7 +9,7 @@
   - [Writing links](rustdoc-links/writing-links.md)
   - [Naming items](rustdoc-links/naming-items.md)
   - [How to ...](rustdoc-links/how-to/index.md)
-    - [Refer to dependencies](rustdoc-links/how-to/package-selection.md)
+    - [Link to more packages](rustdoc-links/how-to/package-selection.md)
     - [Cargo workspaces](rustdoc-links/how-to/cargo-workspaces.md)
     - [Conditional compilation](rustdoc-links/how-to/conditional-compilation.md)
     - [Local development](rustdoc-links/how-to/local-development.md)

@@ -39,7 +39,7 @@ build.features = ["fancy", "clap/unstable-doc"]
 ```
 
 This example enables the `fancy` feature for your local package and the `unstable-doc`
-feature of the `clap` package.
+feature of the `clap` package[^cargo-dep-feature].
 
 You can also use `build.all-features` and `build.no-default-features`, which correspond
 to the [`--all-features`] and [`--no-default-features`] options, respectively.
@@ -245,6 +245,12 @@ In this example, the preprocessor does 2 rounds of resolution:
     [Starting on 2026-05-01][docs-rs-default-target], `x86_64-unknown-linux-gnu` is the
     default target that docs.rs will build docs for if one isn't specified.
 
+[^cargo-dep-feature]:
+    It is currently not possible to specify features from dependencies if you also use
+    the [`build.packages`](package-selection.md) to only select dependencies. A
+    workaround is to include at least one workspace member in `packages`. See [cargo
+    issue#16990][cargo-issue-16990] for more details.
+
 <!-- prettier-ignore-start -->
 [cfg-doc]: https://doc.rust-lang.org/stable/rustdoc/advanced-features.html#cfgdoc-documenting-platform-specific-or-feature-specific-information
 [`--features`]: https://doc.rust-lang.org/stable/cargo/commands/cargo-doc.html#option-cargo-doc---features
@@ -258,4 +264,5 @@ In this example, the preprocessor does 2 rounds of resolution:
 [toml-table]: https://toml.io/en/v1.1.0#table
 [toml-array-of-tables]: https://toml.io/en/v1.1.0#array-of-tables
 [toml-spec]: https://toml.io/en/v1.1.0
+[cargo-issue-16990]: https://github.com/rust-lang/cargo/issues/16990
 <!-- prettier-ignore-end -->

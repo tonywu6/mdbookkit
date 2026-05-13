@@ -109,8 +109,8 @@ A type implementing [`Sized`] has a constant size known at compile time.
 
 </figure>
 
-Feel free to keep `mdbook serve` running and add more intra-doc links to the document,
-and see how or if they can be converted to links! Here are some example sentences:
+Feel free to keep `mdbook serve` running and add more items to the document, and see how
+they are converted to links! Here are some example sentences:
 
 ```md
 - The first collection type we'll look at is [`Vec<T>`], also known as a vector.

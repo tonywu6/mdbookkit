@@ -129,8 +129,7 @@ collects all the links that look like Rust item and need to be converted.
 
 **The preprocessor then runs `cargo doc` in your Cargo workspace.** Without going into
 too much details, running `cargo doc` prepares the necessary files, such as compiler
-artifacts for your crates and dependencies, so that items can be _correctly_ resolved in
-the next steps.
+artifacts and HTML files, so that items can be _correctly_ resolved in the next steps.
 
 The preprocessor then **synthesizes a Rust snippet** containing the links it collected
 from your book, which would look something like this:
