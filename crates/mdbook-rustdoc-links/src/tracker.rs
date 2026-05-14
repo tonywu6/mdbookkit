@@ -30,7 +30,7 @@ use mdbookkit::{
         annotate_snippets::AnnotationKind,
     },
     emit_debug, emit_trace, emit_warning,
-    error::{Break, ExpectFmt},
+    error::ExpectFmt,
     markdown::{PatchStream, locate_text},
     plural,
     url::{UrlPath, UrlUtil},
@@ -572,7 +572,7 @@ impl<'a> Link<'a> {
     }
 
     #[instrument(level = "debug", skip_all, fields(link = ?&*self.dest, span = ?self.span.full))]
-    fn normalized(mut self) -> Result<Self, Break> {
+    fn normalized(mut self) -> Result<Self, ()> {
         let Self {
             kind,
             dest,

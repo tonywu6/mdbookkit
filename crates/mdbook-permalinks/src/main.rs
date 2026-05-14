@@ -16,7 +16,7 @@ use mdbookkit::{
     config::validate_config_examples,
     diagnostics::IssueReporter,
     emit_error,
-    error::{Break, OnWarning, PathDebug, ProgramExit, has_severity},
+    error::{OnWarning, PathDebug, ProgramExit, has_severity},
     logging::init_logging,
     ticker, ticker_item,
     url::{ExpectUrl, UrlFromPath},
@@ -47,7 +47,7 @@ fn main() {
     .exit()
 }
 
-fn mdbook() -> Result<(), Break> {
+fn mdbook() -> Result<(), ()> {
     let (ctx, book) = book_from_stdin()
         .context("failed to read from mdBook")
         .or_else(emit_error!())?;
@@ -96,7 +96,7 @@ struct VersionControl {
 }
 
 impl Environment {
-    fn process(self: Environment, mut book: Book) -> Result<Book, Break> {
+    fn process(self: Environment, mut book: Book) -> Result<Book, ()> {
         let mut contents = Pages::new(self.markdown);
 
         for (path, ch) in book.iter_chapters() {

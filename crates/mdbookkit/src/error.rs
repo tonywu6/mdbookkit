@@ -216,22 +216,13 @@ impl<T> WithPathDebug<T> for Option<T> {
     }
 }
 
-pub struct EmitEvent<F1, F2, F3, F4> {
-    pub trace: F1,
-    pub debug: F2,
-    pub warn: F3,
-    pub error: F4,
-}
-
-pub struct Break;
-
 #[macro_export]
 macro_rules! emit_trace {
     ($fmt:literal $($args:tt)*) => {{
         |e| {
             let e = ::anyhow::Error::from(e);
             ::tracing::trace!($fmt, e $($args)*);
-            Err($crate::error::Break)
+            Err(())
         }
     }};
     () => {
@@ -245,7 +236,7 @@ macro_rules! emit_debug {
         |e| {
             let e = ::anyhow::Error::from(e);
             ::tracing::debug!($fmt, e $($args)*);
-            Err($crate::error::Break)
+            Err(())
         }
     }};
     () => {
@@ -259,7 +250,7 @@ macro_rules! emit_warning {
         |e| {
             let e = ::anyhow::Error::from(e);
             ::tracing::warn!($fmt, e $($args)*);
-            Err($crate::error::Break)
+            Err(())
         }
     }};
     () => {
@@ -273,7 +264,7 @@ macro_rules! emit_error {
         |e| {
             let e = ::anyhow::Error::from(e);
             ::tracing::error!($fmt, e $($args)*);
-            Err($crate::error::Break)
+            Err(())
         }
     }};
     () => {
@@ -295,7 +286,7 @@ pub trait ProgramExit {
     fn exit(self) -> !;
 }
 
-impl ProgramExit for Result<(), Break> {
+impl ProgramExit for Result<(), ()> {
     fn exit(self) -> ! {
         match self {
             Ok(()) => exit(0),

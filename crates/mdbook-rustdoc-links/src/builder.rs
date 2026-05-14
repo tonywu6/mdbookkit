@@ -21,7 +21,7 @@ use tracing::{Level, debug, info, info_span, instrument, trace, warn};
 use mdbookkit::{
     emit_debug, emit_error, emit_warning,
     env::is_logging,
-    error::{Break, ExpectFmt, PathDebug, WithPathDebug},
+    error::{ExpectFmt, PathDebug, WithPathDebug},
     ticker, ticker_event, with_bug_report,
 };
 
@@ -35,7 +35,7 @@ use crate::{
     with_notes,
 };
 
-pub fn build_docs(options: BuildConfigResolved, tracker: &mut LinkTracker) -> Result<(), Break> {
+pub fn build_docs(options: BuildConfigResolved, tracker: &mut LinkTracker) -> Result<(), ()> {
     let BuildConfigResolved {
         manifest_dir,
         builders,
@@ -61,7 +61,7 @@ fn run_builder(
     manifest_dir: &Utf8Path,
     builder: Builder,
     tracker: &mut LinkTracker<'_>,
-) -> Result<(), Break> {
+) -> Result<(), ()> {
     tracker.notes().mark_option_specified(&builder);
 
     let BuildOptions {
@@ -385,7 +385,7 @@ impl BuildCounter {
         }
     }
 
-    fn postbuild(&mut self, id: usize, result: Result<(), Break>) {
+    fn postbuild(&mut self, id: usize, result: Result<(), ()>) {
         if result.is_err() {
             self.num_failed += 1;
         }
@@ -719,7 +719,7 @@ fn resolve_packages(
     options: &BuildOptions,
     manifest_dir: &Utf8Path,
     notes: &DiagnosticNotes,
-) -> Result<PackageResolution, Break> {
+) -> Result<PackageResolution, ()> {
     let BuildOptions {
         packages,
         features,
@@ -868,7 +868,7 @@ fn load_docs_rs_options(
         .with_context(package_name)
         .context("failed to deserialize config from the [package.metadata.docs.rs] table")?;
 
-    builder.options.assign(&options);
+    builder.options.extend(&options);
 
     if builder.targets.is_empty() {
         if let Some(target) = default_target {

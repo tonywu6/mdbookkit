@@ -24,7 +24,7 @@ use mdbookkit::{
     config::value_or_vec,
     de_struct, emit_error,
     env::is_ci,
-    error::{Break, OnWarning},
+    error::OnWarning,
     url::{UrlPath, UrlUtil},
 };
 
@@ -183,7 +183,7 @@ pub struct BuildConfigResolved {
 }
 
 impl BuilderConfig {
-    pub fn resolve(self, book_dir: &Utf8Path) -> Result<BuildConfigResolved, Break> {
+    pub fn resolve(self, book_dir: &Utf8Path) -> Result<BuildConfigResolved, ()> {
         let Self {
             manifest_dir,
             build,
@@ -197,7 +197,7 @@ impl BuilderConfig {
         }
         .into_iter()
         .map(|mut builder| {
-            builder.options.assign(&build_options);
+            builder.options.extend(&build_options);
             builder
         })
         .collect::<Vec<_>>();
@@ -235,7 +235,7 @@ impl BuilderConfig {
 }
 
 impl BuildOptions {
-    pub fn assign(&mut self, other: &Self) {
+    pub fn extend(&mut self, other: &Self) {
         macro_rules! assign_if {
             ( $lhs:expr, $value:ident, $empty:ident ) => {
                 if $lhs.$value.$empty() {

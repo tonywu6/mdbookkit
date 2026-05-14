@@ -40,7 +40,7 @@ pub struct PatchStream<'a, S> {
 
 impl<'a, 'b, E, S> Iterator for PatchStream<'a, S>
 where
-    E: Iterator<Item = Event<'b>>,
+    E: IntoIterator<Item = Event<'b>>,
     S: Iterator<Item = Spanned<E>>,
 {
     type Item = Result<Cow<'a, str>, Error>;
@@ -68,9 +68,9 @@ where
             return Some(Err(Error::FormatFailed(Default::default())));
         }
 
-        let patch = match trace_span!("chunk", ?span)
-            .in_scope(|| String::new().pipe(|mut out| cmark(events, &mut out).and(Ok(out))))
-        {
+        let patch = match trace_span!("chunk", ?span).in_scope(|| {
+            String::new().pipe(|mut out| cmark(events.into_iter(), &mut out).and(Ok(out)))
+        }) {
             Err(error) => return Some(Err(error)),
             Ok(patch) => patch,
         };

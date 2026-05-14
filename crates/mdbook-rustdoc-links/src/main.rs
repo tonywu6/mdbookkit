@@ -10,7 +10,7 @@ use mdbookkit::{
     config::validate_config_examples,
     diagnostics::IssueReporter,
     emit_error, emit_warning,
-    error::{Break, PathDebug, ProgramExit, has_severity},
+    error::{PathDebug, ProgramExit, has_severity},
     logging::init_logging,
 };
 
@@ -69,7 +69,7 @@ struct MarkdownCommand {
     files: Vec<PathBuf>,
 }
 
-fn mdbook() -> Result<(), Break> {
+fn mdbook() -> Result<(), ()> {
     let (ctx, mut book) = book_from_stdin()
         .context("failed to read from mdBook")
         .or_else(emit_error!())?;
