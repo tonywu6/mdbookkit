@@ -254,7 +254,7 @@ If you don't specify a namespace, and the item is indeed ambiguous, rustdoc will
 a warning:
 
 <figure>
-{{#include media/ambiguous-link.svg}}
+{{#include _media/ambiguous-link.svg}}
 </figure>
 
 ## Caveats & tips

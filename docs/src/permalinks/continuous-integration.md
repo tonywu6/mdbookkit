@@ -5,7 +5,7 @@ in terms of error handling, logging, etc.
 
 ## Detecting CI
 
-{{#include ../snippets/ci/detecting-ci.md}}
+{{#include ../_snippets/ci/detecting-ci.md}}
 
 ## Linking to Git tags
 
@@ -32,7 +32,7 @@ See [Logging](logging.md).
 
 ## Error handling
 
-{{#include ../snippets/ci/error-handling.md}}
+{{#include ../_snippets/ci/error-handling.md}}
 
 <!-- prettier-ignore-start -->
 [`RUST_LOG`]: https://docs.rs/env_logger/latest/env_logger/#enabling-logging

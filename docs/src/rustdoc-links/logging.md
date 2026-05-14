@@ -5,7 +5,7 @@ preprocessor emits logs and diagnostic information.
 
 ## Output style
 
-{{#include ../snippets/logging/output-style.md}}
+{{#include ../_snippets/logging/output-style.md}}
 
 <figure>
 
@@ -33,7 +33,7 @@ The same diagnostics emitted as logs
 
 ## `MDBOOK_LOG`
 
-{{#include ../snippets/logging/env-var.md}}
+{{#include ../_snippets/logging/env-var.md}}
 
 ## Link report
 

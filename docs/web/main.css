@@ -101,7 +101,7 @@ body {
   h3,
   h4,
   h5 {
-    code {
+    code:not(:first-child, :last-child) {
       color: var(--inline-code-color);
     }
   }

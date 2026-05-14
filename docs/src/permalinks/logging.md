@@ -5,11 +5,11 @@ preprocessor emits logs and diagnostic information.
 
 ## Output style
 
-{{#include ../snippets/logging/output-style.md}}
+{{#include ../_snippets/logging/output-style.md}}
 
 <figure>
 
-![miette warnings](media/error-reporting.png)
+![miette warnings](_media/error-reporting.png)
 
 <figcaption>
 
@@ -21,7 +21,7 @@ Diagnostics are displayed in a graphical manner by default.
 
 <figure>
 
-![tracing logs](media/diagnostics-tracing.png)
+![tracing logs](_media/diagnostics-tracing.png)
 
 <figcaption>
 
@@ -33,4 +33,4 @@ The same diagnostics emitted as logs
 
 ## `MDBOOK_LOG`
 
-{{#include ../snippets/logging/env-var.md}}
+{{#include ../_snippets/logging/env-var.md}}

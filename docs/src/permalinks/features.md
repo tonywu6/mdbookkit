@@ -96,7 +96,7 @@ The preprocessor validates any path-based links and notifies you if they are bro
 
 <figure>
 
-![warnings emitted for broken links](media/error-reporting.png)
+![warnings emitted for broken links](_media/error-reporting.png)
 
 <figcaption>
 

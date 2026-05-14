@@ -5,7 +5,7 @@ in terms of error handling, logging, etc.
 
 ## Detecting CI
 
-{{#include ../snippets/ci/detecting-ci.md}}
+{{#include ../_snippets/ci/detecting-ci.md}}
 
 ## Installing rust-analyzer
 
@@ -32,7 +32,7 @@ See [Logging](logging.md).
 
 ## Error handling
 
-{{#include ../snippets/ci/error-handling.md}}
+{{#include ../_snippets/ci/error-handling.md}}
 
 [^ra-on-path]:
     You may alternatively specify a command to use for rust-analyzer via the

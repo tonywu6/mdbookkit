@@ -6,7 +6,7 @@ When the preprocessor fails to resolve some items, it emits warnings that look l
 
 <figure>
 
-![emitted warning](media/error-reporting.png)
+![emitted warning](_media/error-reporting.png)
 
 </figure>
 

@@ -88,6 +88,10 @@ That is, a link like <br>
 becomes <br>
 <a href="https://docs.rs/url/2.5.8/x86_64-unknown-linux-gnu/url/index.html"><code>https://docs.rs/url/2.5.8<strong>/x86_64-unknown-linux-gnu</strong>/url/index.html</code></a>.
 
+This is to ensure that platform-specific links correctly point to the right version of
+the online docs; without an explicit target, links will always point to the crate's
+default target, where the item may not exist.
+
 In many cases, this should be okay. However, in some situations, this could affect how
 the resulting links behave when opened.
 
@@ -245,11 +249,7 @@ In this example, the preprocessor does 2 rounds of resolution:
     [Starting on 2026-05-01][docs-rs-default-target], `x86_64-unknown-linux-gnu` is the
     default target that docs.rs will build docs for if one isn't specified.
 
-[^cargo-dep-feature]:
-    It is currently not possible to specify features from dependencies if you also use
-    the [`build.packages`](package-selection.md) to only select dependencies. A
-    workaround is to include at least one workspace member in `packages`. See [cargo
-    issue#16990][cargo-issue-16990] for more details.
+[^cargo-dep-feature]: {{#include ../_snippets/cargo-features-quirk.md}}
 
 <!-- prettier-ignore-start -->
 [cfg-doc]: https://doc.rust-lang.org/stable/rustdoc/advanced-features.html#cfgdoc-documenting-platform-specific-or-feature-specific-information
@@ -264,5 +264,4 @@ In this example, the preprocessor does 2 rounds of resolution:
 [toml-table]: https://toml.io/en/v1.1.0#table
 [toml-array-of-tables]: https://toml.io/en/v1.1.0#array-of-tables
 [toml-spec]: https://toml.io/en/v1.1.0
-[cargo-issue-16990]: https://github.com/rust-lang/cargo/issues/16990
 <!-- prettier-ignore-end -->
