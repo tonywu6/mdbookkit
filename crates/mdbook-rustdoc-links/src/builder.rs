@@ -868,7 +868,7 @@ fn load_docs_rs_options(
         .with_context(package_name)
         .context("failed to deserialize config from the [package.metadata.docs.rs] table")?;
 
-    builder.options.extend(&options);
+    builder.options.prepend(&options);
 
     if builder.targets.is_empty() {
         if let Some(target) = default_target {
@@ -890,8 +890,8 @@ fn load_docs_rs_options(
             builder.targets.extend(targets);
         }
     } else {
-        info! { "ignoring target-related options in [package.metadata.docs.rs] since \
-        `targets` has been defined in build config" }
+        info! { "ignoring target-related options in [package.metadata.docs.rs] because \
+        `build.targets` has been defined in book.toml" }
     }
 
     Ok(())

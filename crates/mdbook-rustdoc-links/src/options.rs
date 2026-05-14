@@ -197,7 +197,7 @@ impl BuilderConfig {
         }
         .into_iter()
         .map(|mut builder| {
-            builder.options.extend(&build_options);
+            builder.options.prepend(&build_options);
             builder
         })
         .collect::<Vec<_>>();
@@ -235,7 +235,7 @@ impl BuilderConfig {
 }
 
 impl BuildOptions {
-    pub fn extend(&mut self, other: &Self) {
+    pub fn prepend(&mut self, other: &Self) {
         macro_rules! assign_if {
             ( $lhs:expr, $value:ident, $empty:ident ) => {
                 if $lhs.$value.$empty() {
@@ -245,12 +245,12 @@ impl BuildOptions {
         }
         macro_rules! extend {
             ( $lhs:expr, $value:ident ) => {
-                $lhs.$value.extend_from_slice(&$value);
+                $lhs.$value.splice(0..0, $value.clone());
             };
             ( $lhs:expr, $value:ident ? ) => {
                 if let Some(rhs) = $value {
                     if let Some(ref mut lhs) = $lhs.$value {
-                        lhs.extend_from_slice(rhs);
+                        lhs.splice(0..0, rhs.clone());
                     } else {
                         $lhs.$value = $value.clone();
                     }
