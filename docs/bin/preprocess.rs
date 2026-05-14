@@ -2,6 +2,7 @@ use std::{
     collections::{HashMap, HashSet},
     fmt::Write as _,
     io::Write as _,
+    ops::Range,
     process::{Command, Stdio},
 };
 
@@ -88,22 +89,24 @@ struct BookState {
 }
 
 #[derive(Default)]
-struct PageState {
-    mermaid: Option<Spanned<()>>,
-    config_example: Option<Spanned<ConfigSnippet>>,
+struct PageState<'a> {
+    mermaid: Option<TextContent<'a>>,
+    config_snippet: Option<ConfigSnippet<'a>>,
 }
 
-enum ConfigSnippet {
-    Full,
-    Diff,
+struct TextContent<'a> {
+    text: Vec<CowStr<'a>>,
+    span: Range<usize>,
 }
 
-enum Place<'a> {
-    Mermaid(CowStr<'a>),
-    ConfigExample {
-        kind: ConfigSnippet,
-        text: CowStr<'a>,
-    },
+enum ConfigSnippet<'a> {
+    Full(TextContent<'a>),
+    Diff(TextContent<'a>),
+}
+
+enum Element<'a> {
+    Mermaid(TextContent<'a>),
+    ConfigSnippet(ConfigSnippet<'a>),
 }
 
 impl BookState {
@@ -119,24 +122,23 @@ impl BookState {
         }
     }
 
-    fn consume<'a>(
-        &mut self,
-        path: String,
-        (place, span): Spanned<Place<'a>>,
-    ) -> Option<Spanned<std::vec::IntoIter<Event<'a>>>> {
-        match place {
-            Place::Mermaid(text) => {
-                let repl = vec![
+    fn consume<'a>(&mut self, path: String, elem: Element<'a>) -> Option<Spanned<Vec<Event<'a>>>> {
+        match elem {
+            Element::Mermaid(TextContent { text, span }) => {
+                let repl = [
                     Event::Start(Tag::HtmlBlock),
                     Event::Html(CowStr::Borrowed("<pre class=\"mermaid\">")),
-                    Event::Html(text),
+                ]
+                .into_iter()
+                .chain(text.into_iter().map(Event::Html))
+                .chain([
                     Event::Html(CowStr::Borrowed("</pre>")),
                     Event::End(TagEnd::HtmlBlock),
-                ]
-                .into_iter();
+                ])
+                .collect();
                 Some((repl, span))
             }
-            Place::ConfigExample { kind, text } => {
+            Element::ConfigSnippet(elem) => {
                 let package = if path.starts_with("rustdoc-links") {
                     "mdbook-rustdoc-links"
                 } else if path.starts_with("permalinks") {
@@ -144,25 +146,28 @@ impl BookState {
                 } else {
                     panic!("config examples are not available in {path:?}")
                 };
-                let text = match kind {
-                    ConfigSnippet::Full => text.into_string(),
-                    ConfigSnippet::Diff => text
-                        .lines()
-                        .filter_map(|line| {
-                            if let Some(line) = line.strip_prefix("  ") {
-                                Some(line)
-                            } else if let Some(line) = line.strip_prefix("+ ") {
-                                Some(line)
-                            } else if line.starts_with("- ") {
-                                None
-                            } else {
-                                Some(line)
-                            }
-                        })
-                        .fold(String::new(), |mut out, line| {
-                            writeln!(out, "{line}").expect_fmt();
-                            out
-                        }),
+                let (text, span) = match elem {
+                    ConfigSnippet::Full(TextContent { text, span }) => (text.join(""), span),
+                    ConfigSnippet::Diff(TextContent { text, span }) => {
+                        let text = (text.iter())
+                            .flat_map(|text| text.lines())
+                            .filter_map(|line| {
+                                if let Some(line) = line.strip_prefix("  ") {
+                                    Some(line)
+                                } else if let Some(line) = line.strip_prefix("+ ") {
+                                    Some(line)
+                                } else if line.starts_with("- ") {
+                                    None
+                                } else {
+                                    Some(line)
+                                }
+                            })
+                            .fold(String::new(), |mut out, line| {
+                                writeln!(out, "{line}").expect_fmt();
+                                out
+                            });
+                        (text, span)
+                    }
                 };
                 self.config_examples
                     .entry(package)
@@ -177,32 +182,40 @@ impl BookState {
     }
 }
 
-impl PageState {
-    fn scan<'a>(&mut self, (event, span): Spanned<Event<'a>>) -> Option<Spanned<Place<'a>>> {
+impl<'a> PageState<'a> {
+    fn scan(&mut self, (event, span): Spanned<Event<'a>>) -> Option<Element<'a>> {
         match event {
             Event::Start(Tag::CodeBlock(CodeBlockKind::Fenced(tag))) => {
                 let tags = tag.split(' ').map(|tag| tag.trim()).collect::<HashSet<_>>();
                 if tags.contains("mermaid") {
-                    self.mermaid = Some(((), span))
+                    self.mermaid = Some(TextContent { span, text: vec![] })
                 } else if tags.contains("config-example") {
-                    let kind = if tags.contains("diff") {
-                        ConfigSnippet::Diff
+                    let text = TextContent { span, text: vec![] };
+                    let elem = if tags.contains("diff") {
+                        ConfigSnippet::Diff(text)
                     } else {
-                        ConfigSnippet::Full
+                        ConfigSnippet::Full(text)
                     };
-                    self.config_example = Some((kind, span))
+                    self.config_snippet = Some(elem)
                 }
             }
-            Event::Text(text) => {
-                if let Some(((), span)) = self.mermaid.take() {
-                    return Some((Place::Mermaid(text), span));
-                }
-                if let Some((kind, span)) = self.config_example.take() {
-                    return Some((Place::ConfigExample { kind, text }, span));
+            Event::Text(chunk) => {
+                if let Some(TextContent { ref mut text, .. }) = self.mermaid {
+                    text.push(chunk);
+                } else if let Some(ConfigSnippet::Diff(TextContent { ref mut text, .. }))
+                | Some(ConfigSnippet::Full(TextContent { ref mut text, .. })) =
+                    self.config_snippet
+                {
+                    text.push(chunk);
                 }
             }
             Event::End(TagEnd::CodeBlock) => {
-                self.mermaid = None;
+                if let Some(elem) = self.mermaid.take() {
+                    return Some(Element::Mermaid(elem));
+                }
+                if let Some(elem) = self.config_snippet.take() {
+                    return Some(Element::ConfigSnippet(elem));
+                }
             }
             _ => {}
         };

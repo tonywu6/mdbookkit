@@ -26,7 +26,7 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
     let jinja =
         Environment::new().tap_mut(|env| env.add_template("index.html", OPEN_GRAPH).unwrap());
 
-    let root_dir = std::fs::canonicalize(root_dir)?.to_directory_url();
+    let root_dir = root_dir.canonicalize()?.to_directory_url();
 
     let book_toml_path = root_dir.join("book.toml")?;
 
