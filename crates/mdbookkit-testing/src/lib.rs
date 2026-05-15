@@ -41,6 +41,7 @@ impl TestBook {
                 ("MDBOOK_LOG", "warn,mdbookkit::diagnostics=info"),
                 ("MDBOOKKIT_TERM_GRAPHICAL", "ascii"),
                 ("FORCE_COLOR", "1"),
+                ("CARGO_TERM_COLOR", "never"),
                 ("RUST_BACKTRACE", "0"),
                 ("CI", ""),
             ]))

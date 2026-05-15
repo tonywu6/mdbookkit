@@ -480,7 +480,6 @@ impl CommandRunner {
     }
 }
 
-#[derive(Debug)]
 pub struct CustomCommand(pub Command);
 
 impl Clone for CustomCommand {
@@ -777,5 +776,13 @@ impl Builder {
                 }
             }
         }
+    }
+}
+
+impl Debug for CustomCommand {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("CustomCommand")
+            .field(&format_args!("{:?}", self.0))
+            .finish()
     }
 }

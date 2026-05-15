@@ -176,14 +176,7 @@ DEBUG mdbook-rustdoc-links:build: resolved options: Builder {
             runner: CommandRunner(
                 Some(
                     CustomCommand(
-                        Command {
-                            program: "bash",
-                            args: [
-                                "bash",
-                                "-c",
-                                "$*",
-                            ],
-                        },
+                        "bash" "-c" "$*",
                     ),
                 ),
             ),

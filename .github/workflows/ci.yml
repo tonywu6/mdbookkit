@@ -26,9 +26,6 @@ on:
       macos:
         default: false
         type: boolean
-      toolchain:
-        default: stable
-        type: string
 
 env:
   CARGO_TERM_COLOR: always
@@ -74,10 +71,17 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
-          toolchain: ${{ github.event_name == 'schedule' && 'nightly' || inputs.toolchain || 'stable' }}
+          toolchain: stable
           targets: x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu
           components: rust-src, llvm-tools
-        id: rustup
+        id: rustup-stable
+
+      - uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: nightly
+          targets: x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu
+          components: rust-src, llvm-tools
+        id: rustup-nightly
 
       - uses: taiki-e/install-action@v2
         with:
@@ -93,7 +97,7 @@ jobs:
           deps: |
             ${{runner.os}}
             ${{runner.arch}}
-            ${{steps.rustup.outputs.cachekey}}
+            ${{steps.rustup-stable.outputs.cachekey}}
             ${{hashFiles('**/Cargo.toml')}}
             ${{hashFiles('**/Cargo.lock')}}
             ${{github.workflow}}
