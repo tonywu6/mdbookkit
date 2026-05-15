@@ -83,6 +83,9 @@ jobs:
           components: rust-src, llvm-tools
         id: rustup-nightly
 
+      - run: rustup default stable
+        shell: bash
+
       - uses: taiki-e/install-action@v2
         with:
           tool: |
