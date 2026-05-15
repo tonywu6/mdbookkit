@@ -13,7 +13,7 @@ test *args:
 [positional-arguments]
 cov *args:
     #!/usr/bin/env bash
-    source <(cargo llvm-cov show-env --sh)
+    source <(cargo bin -- llvm-cov show-env --sh)
     cargo bin -- llvm-cov clean --workspace
     just test $@
     cargo bin -- llvm-cov report --html

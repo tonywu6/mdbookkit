@@ -83,7 +83,7 @@ jobs:
             cargo-binstall
             just@1.51.0
 
-      - uses: tonywu6/cache-hit-please@33199e37604407cf26aadfd1a49d1fc2d1e55081
+      - uses: tonywu6/cache-hit-please@v1.1.1
         id: cache
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
