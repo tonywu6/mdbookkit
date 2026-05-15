@@ -1,4 +1,4 @@
-<svg width="16451px" height="5024px" xmlns="http://www.w3.org/2000/svg">
+<svg width="16451px" height="5042px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -569,15 +569,17 @@
 </tspan>
     <tspan x="10px" y="4924px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: build #2 done</tspan>
 </tspan>
-    <tspan x="10px" y="4942px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:2:5: unresolved link to `f80`: no item named `f80` in scope</tspan>
+    <tspan x="10px" y="4942px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:1:5: 1 link resolved: https://docs.rs/debug_logs/0.1.0/debug_logs/fn.fancy.html</tspan>
 </tspan>
-    <tspan x="10px" y="4960px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:3:3: unresolved link to `PhantomData`: no item named `PhantomData` in scope</tspan>
+    <tspan x="10px" y="4960px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:2:5: unresolved link to `f80`: no item named `f80` in scope</tspan>
 </tspan>
-    <tspan x="10px" y="4978px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:3:15: unclosed HTML tag `T`</tspan>
+    <tspan x="10px" y="4978px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:3:3: unresolved link to `PhantomData`: no item named `PhantomData` in scope</tspan>
 </tspan>
-    <tspan x="10px" y="4996px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: processed 3 links: 1 resolved; 2 unresolved</tspan>
+    <tspan x="10px" y="4996px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:3:15: unclosed HTML tag `T`</tspan>
 </tspan>
-    <tspan x="10px" y="5014px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: finished with warnings</tspan>
+    <tspan x="10px" y="5014px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: processed 3 links: 1 resolved; 2 unresolved</tspan>
+</tspan>
+    <tspan x="10px" y="5032px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: finished with warnings</tspan>
 </tspan>
   </text>
 

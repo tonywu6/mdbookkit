@@ -89,6 +89,7 @@ use tracing_subscriber::{
 use crate::{
     env::{MDBOOK_LOG, is_colored, is_logging},
     error::EventLevelLayer,
+    level_enabled,
 };
 
 use self::writer::{MultiProgressTicker, MultiProgressWriter};
@@ -113,7 +114,68 @@ macro_rules! is_branded {
     }};
 }
 
-macro_rules! metadata_for {
+pub fn init_logging() {
+    let logger = tracing_subscriber::fmt::layer()
+        .compact()
+        .without_time()
+        .with_file(level_enabled!(Level::TRACE))
+        .with_line_number(level_enabled!(Level::TRACE))
+        .with_target(is_colored() && level_enabled!(Level::DEBUG))
+        .with_ansi(is_colored())
+        .with_writer(|| TICKER.writer())
+        .with_filter(if TICKER.is_enabled() {
+            Some(filter_fn(|metadata| !is_branded!(metadata)))
+        } else {
+            None
+        });
+
+    let ticker = TickerLayer.with_filter(if !TICKER.is_enabled() {
+        Some(filter_fn(|metadata| !metadata.is_event()))
+    } else {
+        None
+    });
+
+    tracing_subscriber::registry()
+        // don't globally filter events, or else in case warnings are suppressed,
+        // the preprocessor will no longer exit with failure when running in CI
+        .with(logger.with_filter(ENV_FILTER.filter.clone()))
+        .with(ticker.with_filter(ENV_FILTER.filter.clone()))
+        .with(EventLevelLayer)
+        .init();
+}
+
+static ENV_FILTER: LazyLock<EnvFilterStore> = LazyLock::new(|| {
+    let filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::INFO.into())
+        .parse_lossy(MDBOOK_LOG.as_deref().unwrap_or_default());
+    let access = tracing_subscriber::registry().with(filter.clone());
+    EnvFilterStore { access, filter }
+});
+
+struct EnvFilterStore {
+    access: tracing_subscriber::layer::Layered<EnvFilter, tracing_subscriber::Registry>,
+    filter: EnvFilter,
+}
+
+#[doc(hidden)]
+#[inline(always)]
+pub fn level_enabled(level: Option<&tracing::Metadata<'_>>) -> bool {
+    if let Some(metadata) = level {
+        ENV_FILTER.access.enabled(metadata)
+    } else {
+        false
+    }
+}
+
+#[macro_export]
+macro_rules! level_enabled {
+    ( $level:expr ) => {{ $crate::logging::level_enabled(Some($crate::callsite!($level))) }};
+    ( dyn $metadata:expr ) => {{ $crate::logging::level_enabled($metadata) }};
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! callsite {
     ( $level:expr ) => {{
         static CALLSITE: ::tracing::callsite::DefaultCallsite =
             ::tracing::callsite::DefaultCallsite::new(&METADATA);
@@ -133,43 +195,54 @@ macro_rules! metadata_for {
     }};
 }
 
-pub fn init_logging() {
-    let filter = EnvFilter::builder()
-        .with_default_directive(LevelFilter::INFO.into())
-        .parse_lossy(MDBOOK_LOG.as_deref().unwrap_or_default());
-
-    let logger = tracing_subscriber::fmt::layer()
-        .compact()
-        .without_time()
-        .with_file(level_enabled(metadata_for!(Level::TRACE), &filter))
-        .with_line_number(level_enabled(metadata_for!(Level::TRACE), &filter))
-        .with_target(is_colored() && level_enabled(metadata_for!(Level::DEBUG), &filter))
-        .with_ansi(is_colored())
-        .with_writer(|| TICKER.writer())
-        .with_filter(if TICKER.is_enabled() {
-            Some(filter_fn(|metadata| !is_branded!(metadata)))
-        } else {
-            None
-        });
-
-    let ticker = TickerLayer.with_filter(if !TICKER.is_enabled() {
-        Some(filter_fn(|metadata| !metadata.is_event()))
-    } else {
-        None
-    });
-
-    tracing_subscriber::registry()
-        .with(EventLevelLayer)
-        .with(filter)
-        .with(logger)
-        .with(ticker)
-        .init();
+#[macro_export]
+macro_rules! emit {
+    () => {
+        $crate::logging::EmitCallsite {
+            trace: |args| ::tracing::trace!("{args}"),
+            debug: |args| ::tracing::debug!("{args}"),
+            info: |args| ::tracing::info!("{args}"),
+            warn: |args| ::tracing::warn!("{args}"),
+            error: |args| ::tracing::error!("{args}"),
+            trace_metadata: $crate::callsite!(::tracing::Level::TRACE),
+            debug_metadata: $crate::callsite!(::tracing::Level::DEBUG),
+            info_metadata: $crate::callsite!(::tracing::Level::INFO),
+            warn_metadata: $crate::callsite!(::tracing::Level::WARN),
+            error_metadata: $crate::callsite!(::tracing::Level::ERROR),
+        }
+    };
 }
 
-fn level_enabled(level: &tracing::Metadata<'_>, filter: &EnvFilter) -> bool {
-    tracing_subscriber::registry()
-        .with(filter.clone())
-        .enabled(level)
+#[doc(hidden)]
+#[must_use]
+pub struct EmitCallsite {
+    pub trace: fn(std::fmt::Arguments<'_>),
+    pub debug: fn(std::fmt::Arguments<'_>),
+    pub info: fn(std::fmt::Arguments<'_>),
+    pub warn: fn(std::fmt::Arguments<'_>),
+    pub error: fn(std::fmt::Arguments<'_>),
+    pub trace_metadata: &'static tracing::Metadata<'static>,
+    pub debug_metadata: &'static tracing::Metadata<'static>,
+    pub info_metadata: &'static tracing::Metadata<'static>,
+    pub warn_metadata: &'static tracing::Metadata<'static>,
+    pub error_metadata: &'static tracing::Metadata<'static>,
+}
+
+impl EmitCallsite {
+    #[inline(always)]
+    pub fn level_enabled(&self, level: Level) -> bool {
+        if level_enabled(Some(self.trace_metadata)) {
+            level <= Level::TRACE
+        } else if level_enabled(Some(self.debug_metadata)) {
+            level <= Level::DEBUG
+        } else if level_enabled(Some(self.info_metadata)) {
+            level <= Level::INFO
+        } else if level_enabled(Some(self.warn_metadata)) {
+            level <= Level::WARN
+        } else {
+            level <= Level::ERROR
+        }
+    }
 }
 
 macro_rules! derive_event {

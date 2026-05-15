@@ -9,7 +9,7 @@ use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin, utf8_path},
     config::validate_config_examples,
     diagnostics::IssueReporter,
-    emit_error, emit_warning,
+    emit, emit_error, emit_warning,
     error::{PathDebug, ProgramExit, has_severity},
     logging::init_logging,
 };
@@ -107,7 +107,7 @@ fn mdbook() -> Result<(), ()> {
     } = tracker.export();
 
     for issues in IssueReporter::sorted(issues) {
-        issues.emit();
+        issues.emit(emit!());
     }
 
     fail_on_warnings.check().or_else(emit_error!())?;

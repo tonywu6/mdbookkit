@@ -18,7 +18,7 @@ use crate::{
     env::{MDBOOKKIT_TERM_GRAPHICAL, TruthyStr, is_colored, is_logging},
     error::put_severity,
     lexicographic_ordering,
-    logging::stderr,
+    logging::{EmitCallsite, stderr},
     util::{Lexicographic, LexicographicOrd},
 };
 
@@ -89,7 +89,7 @@ pub struct SourceCode<'a> {
 }
 
 impl<'a> IssueReporter<'a> {
-    pub fn emit(self) {
+    pub fn emit(self, emit: EmitCallsite) {
         let source = self.source.clone();
         if let Some(style) = is_graphical() {
             let renderer = if is_colored() {
@@ -98,11 +98,9 @@ impl<'a> IssueReporter<'a> {
                 Renderer::plain()
             }
             .decor_style(style);
-            for report in self
-                .issues
-                .into_iter()
+            for report in (self.issues.into_iter())
                 // filtering done manually
-                .filter(|issue| tracing_level_enabled(issue.level.into()))
+                .filter(|issue| emit.level_enabled(issue.level.into()))
                 .inspect(|issue| put_severity(issue.level.into()))
                 .map(|issue| issue_to_report(issue, source.clone()))
             {
@@ -113,23 +111,9 @@ impl<'a> IssueReporter<'a> {
         } else {
             for issue in self.issues {
                 // filtering done by tracing
-                issue_to_traces(issue, source.clone());
+                issue_to_traces(issue, source.clone(), &emit);
             }
         }
-    }
-}
-
-fn tracing_level_enabled(level: tracing::Level) -> bool {
-    if tracing::enabled!(target: module_path!(), tracing::Level::TRACE) {
-        level <= tracing::Level::TRACE
-    } else if tracing::enabled!(target: module_path!(), tracing::Level::DEBUG) {
-        level <= tracing::Level::DEBUG
-    } else if tracing::enabled!(target: module_path!(), tracing::Level::INFO) {
-        level <= tracing::Level::INFO
-    } else if tracing::enabled!(target: module_path!(), tracing::Level::WARN) {
-        level <= tracing::Level::WARN
-    } else {
-        level <= tracing::Level::ERROR
     }
 }
 
@@ -182,14 +166,14 @@ pub fn issue_to_report<'a>(issue: IssueReport<'a>, source: SourceCode<'a>) -> Ve
     sections
 }
 
-pub fn issue_to_traces<'a>(issue: IssueReport<'a>, source: SourceCode<'a>) {
+pub fn issue_to_traces<'a>(issue: IssueReport<'a>, source: SourceCode<'a>, emit: &EmitCallsite) {
     struct IssueFormatter<'a> {
         issue: IssueReport<'a>,
         source: SourceCode<'a>,
     }
 
     impl<'a> Display for IssueFormatter<'a> {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        fn fmt<'d>(&'d self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             let Self { issue, source } = self;
 
             let IssueReport {
@@ -198,17 +182,34 @@ pub fn issue_to_traces<'a>(issue: IssueReport<'a>, source: SourceCode<'a>) {
 
             let path = &source.source_path;
 
-            if let Some(Highlight { span, label, .. }) = annotations
-                .iter()
-                .find(|anno| matches!(anno.kind, AnnotationKind::Primary))
-                && let Some((line, col)) = byte_to_line_col(source.source_code, span.start)
-            {
-                write!(f, "{path}:{line}:{col}: {title}")?;
-                if let Some(label) = label {
-                    write!(f, ": {label}")?;
+            let span_info =
+                |span: Option<&'d Highlight<'_>>| -> Option<(usize, usize, Option<&'d str>)> {
+                    let Highlight { span, label, .. } = span?;
+                    let (line, col) = byte_to_line_col(source.source_code, span.start)?;
+                    Some((line, col, label.as_deref()))
+                };
+
+            if annotations.len() == 1 {
+                if let Some((line, col, label)) = span_info(annotations.iter().next()) {
+                    write!(f, "{path}:{line}:{col}: {title}")?;
+                    if let Some(label) = label {
+                        write!(f, ": {label}")?;
+                    }
+                } else {
+                    write!(f, "{path}: {title}")?;
                 }
             } else {
-                write!(f, "{path}: {title}")?;
+                if let Some((line, col, _)) = span_info(annotations.iter().next()) {
+                    write!(f, "{path}:{line}:{col}: {title}")?;
+                } else {
+                    write!(f, "{path}: {title}")?;
+                }
+                for (line, col, label) in annotations.iter().filter_map(|span| {
+                    let (line, col, label) = span_info(Some(span))?;
+                    Some((line, col, label?))
+                }) {
+                    write!(f, "\n  {path}:{line}:{col}: {label}")?;
+                }
             }
 
             Ok(())
@@ -219,11 +220,11 @@ pub fn issue_to_traces<'a>(issue: IssueReport<'a>, source: SourceCode<'a>) {
     let formatter = IssueFormatter { issue, source };
 
     match level {
-        IssueLevel::Error => tracing::error!("{formatter}"),
-        IssueLevel::Warning => tracing::warn!("{formatter}"),
-        IssueLevel::Info => tracing::info!("{formatter}"),
-        IssueLevel::Help => tracing::info!("{formatter}"),
-        IssueLevel::Note => tracing::debug!("{formatter}"),
+        IssueLevel::Error => (emit.error)(format_args!("{formatter}")),
+        IssueLevel::Warning => (emit.warn)(format_args!("{formatter}")),
+        IssueLevel::Info => (emit.info)(format_args!("{formatter}")),
+        IssueLevel::Help => (emit.info)(format_args!("{formatter}")),
+        IssueLevel::Note => (emit.debug)(format_args!("{formatter}")),
     }
 }
 

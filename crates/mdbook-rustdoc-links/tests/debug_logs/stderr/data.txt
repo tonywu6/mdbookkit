@@ -271,6 +271,7 @@ TRACE mdbook-rustdoc-links:build:debug: could not determine primary line
 Caused by:
     Diagnostic { message: "3 warnings emitted", code: None, level: Warning, spans: [], children: [], rendered: Some("warning: 3 warnings emitted/n\n") } instance=2
  INFO mdbook-rustdoc-links: build #2 done
+DEBUG mdbook-rustdoc-links: index.md:1:5: 1 link resolved: https://docs.rs/debug_logs/0.1.0/debug_logs/fn.fancy.html
  WARN mdbook-rustdoc-links: index.md:2:5: unresolved link to `f80`: no item named `f80` in scope
  WARN mdbook-rustdoc-links: index.md:3:3: unresolved link to `PhantomData`: no item named `PhantomData` in scope
  WARN mdbook-rustdoc-links: index.md:3:15: unclosed HTML tag `T`

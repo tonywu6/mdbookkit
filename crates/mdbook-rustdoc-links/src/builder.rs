@@ -22,7 +22,7 @@ use mdbookkit::{
     emit_debug, emit_error, emit_warning,
     env::is_logging,
     error::{ExpectFmt, PathDebug, WithPathDebug},
-    ticker, ticker_event, with_bug_report,
+    level_enabled, ticker, ticker_event, with_bug_report,
 };
 
 use crate::{
@@ -336,7 +336,7 @@ fn run_builder(
                 .context("`rustdoc` did not succeed")
                 .or_else(with_notes!(emit_warning, tracker.notes()))?;
         } else {
-            if tracing::enabled!(Level::TRACE) {
+            if level_enabled!(Level::TRACE) {
                 let stderr = String::from_utf8_lossy(&result.output.stderr);
                 let stderr = stderr.trim_end();
                 let stderr = if stderr.is_empty() { "(empty)" } else { stderr };
@@ -974,7 +974,7 @@ impl CargoProgress {
     ) -> JoinHandle<Option<Vec<String>>> {
         let term_progress = self.term_progress;
         let line_ending = if term_progress { b'\r' } else { b'\n' };
-        let visible = !ticker.is_disabled();
+        let visible = level_enabled!(dyn ticker.metadata());
 
         std::thread::spawn(move || {
             let mut buffer = vec![];

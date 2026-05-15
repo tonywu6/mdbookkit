@@ -15,8 +15,9 @@ use mdbookkit::{
     book::{BookHelper, PreprocessorHelper, book_from_stdin, utf8_path},
     config::validate_config_examples,
     diagnostics::IssueReporter,
-    emit_error,
+    emit, emit_error,
     error::{OnWarning, PathDebug, ProgramExit, has_severity},
+    level_enabled,
     logging::init_logging,
     ticker, ticker_item,
     url::{ExpectUrl, UrlFromPath},
@@ -113,7 +114,7 @@ impl Environment {
         self.resolve(&mut contents);
 
         for issues in self.issues(&contents, |_| true).pipe(IssueReporter::sorted) {
-            issues.emit();
+            issues.emit(emit!());
         }
 
         contents.log_stats();
@@ -458,7 +459,7 @@ impl<'a, 'r> ResolveFile<'a, 'r> {
             link,
             ..
         } = self;
-        if tracing::enabled!(Level::DEBUG) {
+        if level_enabled!(Level::DEBUG) {
             ticker_item! {
                 parent, Level::INFO, "file_link",
                 %file_url, %page_url, ?hint,
@@ -481,7 +482,7 @@ impl<'a, 'r> ResolveBook<'a, 'r> {
             link,
             ..
         } = self;
-        if tracing::enabled!(Level::DEBUG) {
+        if level_enabled!(Level::DEBUG) {
             ticker_item! {
                 parent, Level::INFO, "book_link",
                 %file_url, %page_url, ?path,

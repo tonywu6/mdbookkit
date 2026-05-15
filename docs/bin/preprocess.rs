@@ -17,6 +17,7 @@ use mdbookkit::{
         Highlight, IssueLevel, IssueReport, IssueReporter, Note, SourceCode,
         annotate_snippets::AnnotationKind,
     },
+    emit,
     error::{ExpectFmt, OnWarning},
     markdown::{PatchStream, Spanned},
 };
@@ -71,7 +72,7 @@ pub fn run() -> Result<()> {
                         issues: vec![issue],
                         source: global.source(&path),
                     }
-                    .emit();
+                    .emit(emit!());
                 }
             }
         }
