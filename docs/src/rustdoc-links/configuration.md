@@ -2,8 +2,9 @@
 
 This page documents all the options that you can use to customize the preprocessor.
 
-Each heading below corresponds to a configuration key. Unless otherwise specified, the
-key is always under the `[preprocessor.rustdoc-links]` table.
+Options are specified through your `book.toml` file. Each heading below corresponds to a
+configuration key. Unless otherwise specified, the option should be added under the
+`[preprocessor.rustdoc-links]` table.
 
 ## `[build]`
 
@@ -30,11 +31,9 @@ targets = ["aarch64-unknown-linux-gnu", "aarch64-apple-darwin"]
 - type: array of strings ([target triples])
 - default: host platform
 
-Build API docs for specific targets.
-
-Useful for documenting platform-specific items. See the
+Build API docs for specific targets. See the
 [conditional compilation guide](how-to/conditional-compilation.md#specifying-targets)
-for more details.
+for more info.
 
 Should be an array of [target triples], such as `"x86_64-unknown-linux-gnu"`.
 
@@ -62,11 +61,9 @@ build.features = ["foo", "bar", "serde/derive"]
 - type: array of strings
 - default: none
 
-Enable extra features when building API docs.
-
-Useful for documenting feature-gated items. See the
+Build API docs with extra Cargo features enabled. See the
 [conditional compilation guide](how-to/conditional-compilation.md#specifying-features)
-for more details.
+more info.
 
 > [!NOTE]
 >
@@ -87,11 +84,9 @@ build.all-features = true
 - type: boolean
 - default: `false`
 
-Pass the `--all-features` flag to `cargo doc` when building API docs.
-
-See the
+Pass the `--all-features` flag to `cargo doc` when building API docs. See the
 [conditional compilation guide](how-to/conditional-compilation.md#specifying-features)
-for more details.
+for more info.
 
 ### `build.no-default-features`
 
@@ -108,11 +103,9 @@ build.no-default-features = true
 - type: boolean
 - default: `false`
 
-Pass the `--no-default-features` flag to `cargo doc` when building API docs.
-
-See the
+Pass the `--no-default-features` flag to `cargo doc` when building API docs. See the
 [conditional compilation guide](how-to/conditional-compilation.md#specifying-features)
-for more details.
+for more info.
 
 ### `build.packages`
 
@@ -140,15 +133,16 @@ packages = [{ workspace = true, dependencies = true }]
 
 </details></p>
 
-- type: either an array of strings (package names) and/or selectors, or `"unspecified"`
+- type: either an array of strings (package names) and/or
+  [selectors](how-to/package-selection.md#documenting-workspace-packages), or
+  [`"unspecified"`](how-to/package-selection.md#documenting-everything)
 - default: selects the default members of your workspace
 
-Build docs only for specific packages. You can only create links to crates from packages
-whose docs have been built.
+Build API docs only for specific packages. You can only create links to crates from
+packages whose docs have been built.
 
-Useful if you would like to refer to e.g. dependencies in your documentation. See the
-[package selection guide](how-to/package-selection.md) for more details and possible
-values.
+See the [package selection guide](how-to/package-selection.md) for more info, as well as
+the possible values that you can include in the array.
 
 If unset, the preprocessor only build docs for your workspace packages (specifically,
 the [`default-members`] in your workspace).
@@ -178,7 +172,7 @@ Introduce additional items into scope when resolving links. **See
 Should be an array of paths that are valid to be placed in a [`use` declaration][`use`],
 _without the leading `use` or the ending semicolon_.
 
-Any item introduced through this option you may then refer to in your docs without
+Any item introduced through this option, you can then refer to in your docs without
 writing out their full paths. For example:
 
 | Configuration                       | Effect                                                                                                    |
@@ -191,8 +185,10 @@ If unset, the default value of this option depends on your workspace layout:
 
 - If you have a single package that is a library, then as a
   [convenience feature](naming-items.md#referring-to-your-own-crate), this option
-  implicitly introduces every item exported from your library into scope, so that you
-  don't have to repeat the crate name for every link.
+  implicitly introduces every item exported from your library into scope.
+
+  This also means you can use the `[crate::*]` syntax to refer to items from your
+  library.
 
 - If your workspace has more than 1 default members, or if your package isn't a library,
   then this option by default does nothing.
@@ -204,7 +200,7 @@ If unset, the default value of this option depends on your workspace layout:
 
 ```toml config-example
 [preprocessor.rustdoc-links]
-build.cargo-args = ["--frozen"]
+build.cargo-args = "--frozen"
 ```
 
 <figure>
@@ -222,7 +218,7 @@ cargo-args = [
 <figcaption>
 
 This example emulates how docs.rs handles broken links in API docs. See the
-[self-hosting guide](how-to/self-hosting-cargo-docs.md#caveats) for more details.
+[self-hosting guide](how-to/self-hosting-cargo-docs.md#caveats) for more info.
 
 </figcaption>
 
@@ -263,9 +259,9 @@ rustc-args = "-C debug-assertions --verbose"
 - type: string or array of strings
 - default: none
 
-Extra flags to pass to `rustc` when running `cargo doc` and `cargo check`. See the
-[Cargo book](https://doc.rust-lang.org/cargo/reference/config.html#buildrustflags) for
-more details.
+Extra
+[flags to pass to `rustc`](https://doc.rust-lang.org/cargo/reference/config.html#buildrustflags)
+when running `cargo doc` and `cargo check`.
 
 Can be either an array of strings or a space-delimited string.
 
@@ -284,9 +280,9 @@ build.rustdoc-args = ["--test", "--sysroot", "/path/to/sysroot"]
 - type: string or array of strings
 - default: none
 
-Extra flags to pass to `rustdoc` when running `cargo doc`. See the
-[Cargo book](https://doc.rust-lang.org/cargo/reference/config.html#buildrustdocflags)
-for more details.
+Extra
+[flags to pass to `rustdoc`](https://doc.rust-lang.org/cargo/reference/config.html#buildrustdocflags)
+when running `cargo doc`.
 
 Can be either an array of strings or a space-delimited string.
 
@@ -309,9 +305,9 @@ Inherit build options from your docs.rs configuration, which are defined in the
 [`[package.metadata.docs.rs]` table](https://docs.rs/about/metadata) in your
 `Cargo.toml` file.
 
-This option is useful if you are already customizing your docs.rs builds, and you would
-like to avoid repeating yourself. The preprocessor models most of its build options
-after what docs.rs uses.
+The preprocessor models most of its build options after what docs.rs accepts. This
+toggle may be useful if you are already customizing your docs.rs builds, and you would
+like to reuse the same options for the preprocessor.
 
 If you specify `build.docs-rs = true` but also specify individual options in
 `book.toml`, options in `book.toml` take precedence, according to the following rules:
@@ -331,8 +327,8 @@ higher precedence:
 - [`cargo-args`](#buildcargo-args)
 
 The [`build.targets`](#buildtargets) will inherit from the combination of the following
-docs.rs options _only if_ `build.targets` is not specified in `book.toml`; otherwise,
-target-related options from docs.rs are ignored:
+docs.rs options _only if `build.targets` is not specified in `book.toml`_. If you
+already specifies `build.targets`, then target-related options from docs.rs are ignored.
 
 - `default-target`
 - `targets`
@@ -341,14 +337,15 @@ target-related options from docs.rs are ignored:
 > [!NOTE]
 >
 > docs.rs doesn't support reading options from the workspace manifest (i.e. from a
-> `[workspace.metadata.docs.rs]` table). For this reason, the preprocessor also does not
-> support such usage.
+> `[workspace.metadata.docs.rs]` table), nor does Cargo automatically inherit metadata
+> from it. For this reason, you should not place docs.rs options there, and this
+> preprocessor does not support such usage.
 >
 > The preprocessor will report an error if it finds multiple packages that specify
-> docs.rs options (which would cause ambiguity), or if there is no package that does.
-> For this option to work, there must be exactly 1 package with that defines the
-> `[package.metadata.docs.rs]` table after
-> [filtering is done via the `build.packages` option](#buildpackages).
+> docs.rs options at the same time (which would cause ambiguity), or if there is no
+> package that does. For this option to work, after
+> [filtering via the `build.packages` option](#buildpackages), there must be exactly 1
+> package whose `Cargo.toml` defines the `[package.metadata.docs.rs]` table.
 
 ### `build.toolchain`
 
@@ -382,13 +379,13 @@ If you specify `preprocessor.rustdoc-link.build` as a TOML array instead of a ta
 enable the multi-stage build mode. In this mode, the preprocessor resolves links over
 multiple "passes." **See the
 [conditional compilation guide](how-to/conditional-compilation.md#multi-stage-builds)
-for more details.**
+for more info.**
 
 Each item in the array should be a table. In each table, you can individually specify
 any [`[build]` options documented above](#build).
 
-Primarily useful if you need to document multiple packages and/or platforms, and they
-have possibly conflicting build requirements. For example:
+This is primarily useful if you need to document multiple packages and/or platforms, and
+they have possibly conflicting build requirements. For example:
 
 ```toml config-example
 [[preprocessor.rustdoc-links.build]]
@@ -407,24 +404,10 @@ packages = ["security-framework"]
 
 ## `build-options`
 
-<p><details>
-  <summary>Example usage</summary>
-
-```toml config-example
-[preprocessor.rustdoc-links]
-build-options = { toolchain = "nightly" }
-build = [
-  { targets = ["aarch64-unknown-linux-gnu"] },
-  { targets = ["wasm32-wasip2"], no-default-features = true },
-]
-```
-
-</details></p>
-
 - type: table
 - default: none
 
-Use the `build-options` table to define shared options if you enable
+Use the `build-options` table to define shared options if you are using
 [multi-stage builds](#build-1). Options in `build-options` will be merged into each item
 in the `[[build]]` array.
 
@@ -437,6 +420,31 @@ in the `[[build]]` array.
 
 - You cannot specify `targets` in `build-options`. Instead, specify it in each
   `[[build]]` table.
+
+For example, the following configuration snippets are equivalent to each other:
+
+```toml config-example
+[preprocessor.rustdoc-links]
+build = [
+  { targets = ["aarch64-unknown-linux-gnu"], rustc-args = ["--cfg", "mdbook"] },
+  { targets = ["wasm32-wasip2"], no-default-features = true },
+]
+build-options.toolchain = "nightly"
+build-options.rustc-args = "-C opt-level=3"
+```
+
+```toml config-example
+[[preprocessor.rustdoc-links.build]]
+targets = ["aarch64-unknown-linux-gnu"]
+toolchain = "nightly"
+rustc-args = ["-C", "opt-level=3", "--cfg", "mdbook"]
+
+[[preprocessor.rustdoc-links.build]]
+targets = ["wasm32-wasip2"]
+no-default-features = true
+toolchain = "nightly"
+rustc-args = ["-C", "opt-level=3"]
+```
 
 ## `base-url`
 
@@ -490,12 +498,11 @@ base-url.dev = "/api"
 
 Generate links with an alternative prefix.
 
-By default, the preprocessor generates links that open in [docs.rs](https://docs.rs).
-This option allows you to override this, if your API docs are hosted elsewhere.
+By default, the preprocessor generates links that open on [docs.rs](https://docs.rs). If
+your API docs are hosted elsewhere, you can use this option to make links point to
+another location.
 
 Possible formats are:
-
-[abcdef]
 
 - a URL, such as `https://example.org`.
 - a path, such as `/api`.
@@ -506,8 +513,8 @@ the item being linked to:
 - `{pkg_name}`, the name of the package being linked to
 - `{version}`, the version of the package, _as defined in `Cargo.lock`_
 
-Using a path for `base-url` has 2 main use cases. Please see the respective guides for
-more details:
+Using a path for `base-url` has 2 main use cases. Please see their respective guides for
+more info:
 
 - [You would like to preview API docs during local development](how-to/local-development.md)
 - [You would like to self-host your API docs](how-to/self-hosting-cargo-docs.md)
@@ -542,11 +549,13 @@ manifest-dir = "../crates/library"
 
 </details></p>
 
-- type: string (a directory path[^relative-path])
+- type: string (a directory path)
 - default: determined at runtime
 
 If set, the preprocessor uses this path as the working directory when spawning `cargo`
 commands.
+
+Relative paths are resolved relative to the directory that your `book.toml` file is in.
 
 Note that most of the time, you do not need to set this. As long as your book lives
 anywhere within a Cargo workspace, the preprocessor will automatically determine the
@@ -586,10 +595,6 @@ potential issues, but keep `mdbook serve` running during local development.
 
 Log messages and diagnostics at the error severity always cause the preprocessor to
 fail, regardless of this option.
-
-[^relative-path]:
-    Relative paths are resolved relative to the directory that your `book.toml` file is
-    in.
 
 <!-- prettier-ignore-start -->
 [target triples]: https://doc.rust-lang.org/stable/cargo/appendix/glossary.html#target

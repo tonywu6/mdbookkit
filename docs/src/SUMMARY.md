@@ -1,6 +1,8 @@
 # Summary
 
-[mdbookkit](index.md)
+<!-- [mdbookkit](index.md) -->
+
+[mdbookkit]
 
 ---
 
@@ -13,27 +15,32 @@
     - [Cargo workspaces](rustdoc-links/how-to/cargo-workspaces.md)
     - [Conditional compilation](rustdoc-links/how-to/conditional-compilation.md)
     - [Local development](rustdoc-links/how-to/local-development.md)
-    - [Configure for CI/CD]()
+    - [Configure for CI/CD](rustdoc-links/how-to/continuous-integration.md)
     - [Self-host API docs](rustdoc-links/how-to/self-hosting-cargo-docs.md)
   - [Configuration](rustdoc-links/configuration.md)
     - [Environment variables](rustdoc-links/configuration/environment-variables.md)
-  - [Known issues](rustdoc-links/known-issues.md)
+  - [Common issues]()
   - [Motivation](rustdoc-links/motivation.md)
-  - [CHANGELOG](rustdoc-links/CHANGELOG.md)
+  <!-- - [CHANGELOG](rustdoc-links/CHANGELOG.md) -->
 
 ---
 
-- [mdbook-permalinks](permalinks/index.md)
+<!-- - [mdbook-permalinks](permalinks/index.md) -->
+
+- [mdbook-permalinks]()
   - [Getting started](permalinks/getting-started.md)
   - [Features](permalinks/features.md)
-  - [More ways to link](permalinks/more-ways-to-link.md)
-  - [Logging](permalinks/logging.md)
-  - [Continuous integration](permalinks/continuous-integration.md)
-  - [Configuration](permalinks/configuration.md)
-  - [Known issues](permalinks/known-issues.md)
-  - [CHANGELOG](permalinks/CHANGELOG.md)
+  - [More ways to link]()
+  <!-- - [More ways to link](permalinks/more-ways-to-link.md) -->
+  - [How to ...]()
+    - [Configure for CI/CD]()
+  - [Configuration]()
+    - [Environment variables]()
+  - [Common issues]()
+  <!-- - [CHANGELOG](permalinks/CHANGELOG.md) -->
 
 ---
 
+<!--
 [](_internal/mdbook-rustdoc-links-README.md) [](_internal/mdbook-permalinks-README.md)
-[](_internal/mdbookkit-README.md)
+[](_internal/mdbookkit-README.md) -->
