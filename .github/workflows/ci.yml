@@ -32,8 +32,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  MDBOOK_LOG: debug
-  RUST_BACKTRACE: "1"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
@@ -82,7 +80,7 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: |
-            cargo-binstall@1.19.1
+            cargo-binstall
             just@1.51.0
 
       - uses: tonywu6/cache-hit-please@33199e37604407cf26aadfd1a49d1fc2d1e55081
@@ -108,9 +106,10 @@ jobs:
 
       - name: Test
         run: |
-          just cov
+          just cov --no-fail-fast
 
-      - uses: actions/upload-artifact@v7
+      - name: Upload coverage
+        uses: actions/upload-artifact@v7
         with:
           name: llvm-cov
           path: target/llvm-cov/html

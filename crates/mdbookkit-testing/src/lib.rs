@@ -248,7 +248,7 @@ impl TestPage<'_> {
 
 fn load_env<'a>(vars: &[(&'a str, &str)]) -> impl Iterator<Item = (&'a str, impl AsRef<OsStr>)> {
     vars.iter().map(|(key, default)| {
-        let val = if let Some(overridden) = std::env::var_os(key) {
+        let val = if let Some(overridden) = std::env::var_os(format!("TESTING_{key}")) {
             eprintln!(
                 "--- overriding env var {key:?} = {:?} (over {default:?})",
                 &*overridden.to_string_lossy()
