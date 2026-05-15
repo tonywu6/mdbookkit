@@ -16,6 +16,7 @@ use mdbookkit::{
     config::validate_config_examples,
     diagnostics::IssueReporter,
     emit, emit_error,
+    env::is_logging,
     error::{OnWarning, PathDebug, ProgramExit, has_severity},
     level_enabled,
     logging::init_logging,
@@ -451,7 +452,7 @@ struct ResolveBook<'a, 'r> {
 
 impl<'a, 'r> ResolveFile<'a, 'r> {
     #[inline]
-    fn span(&self, parent: impl Into<Option<tracing::Id>>) -> EnteredSpan {
+    fn span(&self, ticker: &tracing::Span) -> EnteredSpan {
         let Self {
             file_url,
             page_url,
@@ -459,14 +460,16 @@ impl<'a, 'r> ResolveFile<'a, 'r> {
             link,
             ..
         } = self;
-        if level_enabled!(Level::DEBUG) {
+        if !is_logging() {
+            ticker_item!(ticker, Level::INFO, "file_link", "{:?}", &*link.href)
+        } else if level_enabled!(Level::TRACE) {
             ticker_item! {
-                parent, Level::INFO, "file_link",
+                ticker, Level::TRACE, "file_link",
                 %file_url, %page_url, ?hint,
                 "{:?}", &*link.href
             }
         } else {
-            ticker_item!(parent, Level::INFO, "file_link", "{:?}", &*link.href)
+            ticker_item!(ticker, Level::DEBUG, "file_link", "{:?}", &*link.href)
         }
         .entered()
     }
@@ -474,7 +477,7 @@ impl<'a, 'r> ResolveFile<'a, 'r> {
 
 impl<'a, 'r> ResolveBook<'a, 'r> {
     #[inline]
-    fn span(&self, parent: impl Into<Option<tracing::Id>>) -> EnteredSpan {
+    fn span(&self, ticker: &tracing::Span) -> EnteredSpan {
         let Self {
             file_url,
             page_url,
@@ -482,14 +485,16 @@ impl<'a, 'r> ResolveBook<'a, 'r> {
             link,
             ..
         } = self;
-        if level_enabled!(Level::DEBUG) {
+        if !is_logging() {
+            ticker_item!(ticker, Level::INFO, "book_link", "{:?}", &*link.href)
+        } else if level_enabled!(Level::TRACE) {
             ticker_item! {
-                parent, Level::INFO, "book_link",
+                ticker, Level::TRACE, "book_link",
                 %file_url, %page_url, ?path,
                 "{:?}", &*link.href
             }
         } else {
-            ticker_item!(parent, Level::INFO, "book_link", "{:?}", &*link.href)
+            ticker_item!(ticker, Level::DEBUG, "book_link", "{:?}", &*link.href)
         }
         .entered()
     }
