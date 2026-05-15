@@ -75,6 +75,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
           toolchain: ${{ github.event_name == 'schedule' && 'nightly' || inputs.toolchain || 'stable' }}
+          targets: x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu
+          components: rust-src, llvm-tools
         id: rustup
 
       - uses: taiki-e/install-action@v2
@@ -103,10 +105,12 @@ jobs:
       - name: Prepare binaries
         run: |
           cargo bin -- --install
+        shell: bash
 
       - name: Test
         run: |
           just cov --no-fail-fast
+        shell: bash
 
       - name: Upload coverage
         uses: actions/upload-artifact@v7

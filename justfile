@@ -13,6 +13,7 @@ test *args:
 [positional-arguments]
 cov *args:
     #!/usr/bin/env bash
+    set -euo pipefail
     source <(cargo bin -- llvm-cov show-env --sh)
     cargo bin -- llvm-cov clean --workspace
     just test $@
