@@ -10,9 +10,17 @@ use mdbookkit::markdown::default_markdown_options;
 use mdbookkit_testing::{
     TestBook,
     regex::Regex,
-    snapbox::{IntoData, RedactedValue, Redactions, assert_data_eq},
+    snapbox::{IntoData, RedactedValue, Redactions, assert_data_eq, cmd::Command},
     test_mdbook,
 };
+
+#[test]
+fn warm_up() {
+    Command::new(env!("CARGO"))
+        .args(["build"])
+        .assert()
+        .success();
+}
 
 macro_rules! test_case {
     [$name:ident, $($args:tt)+] => {

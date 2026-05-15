@@ -9,5 +9,4 @@ Caused by:
     help: to run `cargo doc` without specifying any package, use `packages = "unspecified"`
     this will build docs for all packages and dependencies
     
-[LLVM_COV_STDERR]
 ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status

@@ -23,5 +23,4 @@ Caused by:
     3: command: cd "[TEST_DIR]/compilation_error" && "cargo" "check" "--message-format" "json" "--package" "compilation_error@0.1.0" "--config" "term.color = 'never'" "--config" "term.progress.when = 'never'"
        
 ERROR mdbook-rustdoc-links: build failed
-[LLVM_COV_STDERR]
 ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status

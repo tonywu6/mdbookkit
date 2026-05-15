@@ -14,6 +14,14 @@ use mdbookkit_testing::{
 };
 use tap::{Conv, TryConv};
 
+#[test]
+fn warm_up() {
+    Command::new(env!("CARGO"))
+        .args(["build"])
+        .assert()
+        .success();
+}
+
 macro_rules! test_case {
     [$name:ident, $($args:tt)+] => {
         #[test]

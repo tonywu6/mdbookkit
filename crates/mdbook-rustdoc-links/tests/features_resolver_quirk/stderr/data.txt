@@ -11,5 +11,4 @@ note: the following options have been specified, which may have caused the error
     - build.packages
 
 ERROR mdbook-rustdoc-links: build failed
-[LLVM_COV_STDERR]
 ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status

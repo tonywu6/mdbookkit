@@ -1,23 +1,5 @@
 [alias]
-preprocessor = [
-  "run",
-  "--quiet",
-  "--manifest-path",
-  "../../Cargo.toml",
-  "--package",
-  "cargo-xtask",
-  "--",
-  "bin",
-  "--cwd",
-  "../..",
-  "--",
-  "llvm-cov",
-  "run",
-  "--quiet",
-  "--no-report",
-  "--no-cfg-coverage",
-  "--",
-]
+preprocessor = ["run", "--quiet", "--manifest-path", "../../Cargo.toml", "--"]
 
 [term]
 # flaky cargo logs such as "Blocking waiting for ..."
