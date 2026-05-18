@@ -777,6 +777,13 @@ fn resolve_packages(
             .options("--format", ["{p}"])
             .options("--prefix", ["none"])
             .options("--edges", ["normal"])
+            .tap_mut(
+                // https://github.com/babashka/process/discussions/179#discussioncomment-14367528
+                #[cfg(windows)]
+                |cmd| cmd.env("MSYS", "noglob").pipe(drop),
+                #[cfg(not(windows))]
+                |_| (),
+            )
     };
 
     let resolved = trees
@@ -1061,13 +1068,45 @@ pub fn symlink_dir_all(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Re
         Ok(())
     };
 
-    match symlink_dir(&source, &target) {
+    #[cfg(not(windows))]
+    fn symlink_dir(existing: &Path, link: &Path) -> std::io::Result<()> {
+        std::os::unix::fs::symlink(existing, link)
+    }
+    /// On Windows, symlink creation is a privileged action[^1], which requires the user
+    /// to either enable Developer Mode[^2] or run the program with elevated privileges.
+    ///
+    /// We first try to create a symlink, and then fall back to creating an [NTFS junction]
+    /// if symlinking is not possible.
+    ///
+    /// [NTFS junction]: https://learn.microsoft.com/en-us/windows/win32/FileIO/hard-links-and-junctions#junctions
+    /// [^1]: https://doc.rust-lang.org/std/os/windows/fs/fn.symlink_dir.html#limitations
+    /// [^2]: https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/
+    #[cfg(windows)]
+    fn symlink_dir(existing: &Path, link: &Path) -> std::io::Result<()> {
+        std::os::windows::fs::symlink_dir(existing, link)
+            .or_else(|_| junction::create(existing, link))
+    }
+
+    #[cfg(not(windows))]
+    fn remove_symlink(path: &Path) -> std::io::Result<()> {
+        std::fs::remove_file(path)
+    }
+    /// On Windows, [RemoveDirectory] can be used to either remove a directory symlink
+    /// or an NTFS junction.
+    ///
+    /// [RemoveDirectory]: https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-removedirectoryw#remarks
+    #[cfg(windows)]
+    fn remove_symlink(path: &Path) -> std::io::Result<()> {
+        std::fs::remove_dir(path)
+    }
+
+    match symlink_dir(source.as_ref(), target.as_ref()) {
         Ok(()) => Ok(()),
 
         Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
-            std::fs::remove_file(&target)
-                .with_path_context(target.as_ref())
-                .context("could not remove existing symlink:")?;
+            remove_symlink(target.as_ref())
+                .with_path_context(&target)
+                .context("failed to remove existing symlink at:")?;
             symlink_dir_all(source, target)
         }
 
@@ -1078,15 +1117,8 @@ pub fn symlink_dir_all(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Re
         }
         .with_context(|| format!("target: {:?}", target.as_ref().debug()))
         .with_context(|| format!("source: {:?}", source.as_ref().debug()))
-        .context("could not create symlink")?,
+        .context("failed to create symlink")?,
     }
-}
-
-fn symlink_dir(existing: impl AsRef<Path>, link: impl AsRef<Path>) -> std::io::Result<()> {
-    #[cfg(unix)]
-    return std::os::unix::fs::symlink(existing, link);
-    #[cfg(windows)]
-    return std::os::windows::fs::symlink_dir(existing, link);
 }
 
 impl Debug for CargoRecorder {

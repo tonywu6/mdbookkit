@@ -4,8 +4,10 @@ use std::{
 };
 
 use anyhow::{Result, anyhow};
-use tap::Pipe;
-use tracing::debug;
+use tap::{Pipe, Tap};
+use tracing::{Level, debug, trace};
+
+use mdbookkit::level_enabled;
 
 use crate::options::CommandRunner;
 
@@ -72,6 +74,16 @@ impl CommandUtil for Command {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
+            .tap_mut(
+                #[cfg(windows)]
+                |cmd| {
+                    if let Some(path) = std::env::var_os("PATH") {
+                        cmd.env("PATH", path);
+                    }
+                },
+                #[cfg(not(windows))]
+                |_| (),
+            )
             .spawn();
         Subprocess { repr, proc }
     }
@@ -137,11 +149,34 @@ impl Subprocess {
 
     pub fn checked(self) -> Result<process::Output> {
         let SubprocessResult { output, status, .. } = self.result()?;
+
+        if level_enabled!(Level::TRACE) {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let stdout = stdout.trim_end();
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let stderr = stderr.trim_end();
+            trace!("--- stderr\n{stderr}");
+            trace!("--- stdout\n{stdout}");
+        }
+
         if let Some(status) = status {
             let stderr = String::from_utf8_lossy(&output.stderr);
             let stderr = stderr.trim_end();
-            let stderr = if stderr.is_empty() { "(empty)" } else { stderr };
-            let error = status.context(format!("--- stderr\n{stderr}"));
+
+            let error = if stderr.is_empty() {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                let stdout = stdout.trim_end();
+
+                if stdout.is_empty() {
+                    "--- stderr\n(empty)\n--- stdout\n(empty)".into()
+                } else {
+                    format!("--- stderr\n(empty)\n--- stdout\n{stdout}")
+                }
+            } else {
+                format!("--- stderr\n{stderr}")
+            };
+
+            let error = status.context(error);
             Err(error)
         } else {
             Ok(output)

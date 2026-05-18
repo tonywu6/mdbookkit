@@ -43,6 +43,10 @@ impl TestBook {
             })
             .chain(path_env);
 
+        #[cfg(windows)]
+        let path_env =
+            std::iter::once(OsStr::new("C:\\Program Files\\Git\\bin").to_owned()).chain(path_env);
+
         let path_env = std::env::join_paths(path_env)?;
 
         let temp_dir = DirRoot::mutable_temp()?;
@@ -115,7 +119,7 @@ impl TestBook {
 
     pub fn assert(&self) -> Result<Assert> {
         let mut redactions = Redactions::new();
-        redactions.insert("[TEST_DIR]", self.path.root_dir.as_str().to_owned())?;
+        redactions.insert("[TEST_DIR]", normalize_paths(self.path.root_dir.as_str()))?;
         redactions.insert("[ELAPSED]", Regex::new(r"in (?<redacted>\d+\.\d+s)")?)?;
         for (placeholder, matcher) in &self.redacted {
             redactions.insert(placeholder, matcher.clone())?;
@@ -297,7 +301,7 @@ impl AssertUtil for Assert {
         let format = likely_format(&expected);
         let expected = text_fallback(expected);
         let actual = actual.as_ref();
-        let actual = normalize_path_separators(actual);
+        let actual = normalize_paths(actual);
         let actual = &*actual;
         if format == DataFormat::TermSvg {
             let rendered = self.redactions().redact(actual.trim_end());
@@ -346,10 +350,14 @@ pub fn default_assert() -> Assert {
     Assert::new().action_env(DEFAULT_ACTION_ENV)
 }
 
-fn normalize_path_separators(text: &str) -> Cow<'_, str> {
-    static REGEX: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r"([\p{L}\p{N}])\\([\p{L}\p{N}])").unwrap());
-    REGEX.replace_all(text, "$1/$2")
+fn normalize_paths(text: &str) -> String {
+    static DRIVE_LETTER: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"(?i)(\b|/)[CDE]:[\\/]{1,2}").unwrap());
+    static PATH_SEPARATOR: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"([\p{L}\p{N}.])\\{1,2}([\p{L}\p{N}.])").unwrap());
+    let text = DRIVE_LETTER.replace_all(text, "/");
+    let text = PATH_SEPARATOR.replace_all(&text, "$1/$2");
+    text.into_owned()
 }
 
 fn render_svg(text: &str) -> String {

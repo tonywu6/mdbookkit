@@ -15,16 +15,19 @@ use mdbookkit_testing::{
 };
 
 macro_rules! test_case {
-    [$name:ident, $($args:tt)+] => {
+    [$name:ident, redacted = [$($redacted:tt)+], $($args:tt)+] => {
         mod $name {
             use super::*;
-            test_mdbook![$name, $($args)+, redacted = [redacted()]];
+            test_mdbook![$name, $($args)+, redacted = [$($redacted)+]];
         }
         #[test]
         fn $name() -> Result<()> {
             run_test($name::$name()?, ".")
         }
     };
+    [$name:ident, $($args:tt)+] => {
+        test_case![$name, redacted = [redacted()], $($args)+];
+    }
 }
 
 test_case![rustdoc, exit(0)];
@@ -61,26 +64,50 @@ test_case![compilation_error, exit(101)];
 test_case![multi_stage_some_failed, exit(0)];
 test_case![multi_stage_all_failed, exit(101)];
 test_case![runner_bad_command, exit(101)];
-test_case![runner_not_found, exit(101)];
+test_case![
+    runner_not_found,
+    redacted = [{
+        let mut redacted = redacted();
+        redacted.push((
+            "[ENOENT]",
+            Regex::new(r"No such file or directory \(os error 2\)|program not found")
+                .unwrap()
+                .into(),
+        ));
+        redacted
+    }],
+    exit(101)
+];
 test_case![runner_unreliable_exit, exit(101)];
 test_case![manifest_invalid, exit(101)];
 test_case![deserialize_workspace, exit(101)];
 test_case![deserialize_package, exit(101)];
-test_case![
-    debug_logs,
-    exit(0),
-    env = [
-        "MDBOOK_LOG" = "warn,mdbook_rustdoc_links=trace",
-        "MDBOOKKIT_TERM_GRAPHICAL" = "",
-        // flaky cargo logs
-        "CARGO_TERM_QUIET" = "true"
-    ]
-];
 test_case![hidden_items, exit(0)];
 
 test_case![book_getting_started, exit(0)];
 test_case![book_link_syntax_escape_generics, exit(0)];
 test_case![book_link_syntax_unsupported_generics, exit(0)];
+
+test_case![
+    debug_logs,
+    redacted = [{
+        let mut redacted = redacted();
+        redacted.retain(|(k, _)| *k != "[COMMAND_DEBUG]");
+        redacted.push((
+            "[COMMAND_DEBUG]",
+            Regex::new(r"(?:command|running): (?<redacted>.+)")
+                .unwrap()
+                .into(), // windows
+        ));
+        redacted
+    }],
+    exit(0),
+    env = [
+        "MDBOOK_LOG" = "warn,mdbook_rustdoc_links=trace",
+        "MDBOOKKIT_TERM_GRAPHICAL" = "",
+        "CARGO_TERM_QUIET" = "true" // flaky cargo logs
+    ]
+];
 
 test_case![base_url, exit(0), env = ["CI" = "1"]];
 
@@ -159,6 +186,7 @@ fn rustdoc_parity() -> Result<()> {
                     return Ok(());
                 }
                 let title = elem.get_attribute("title").unwrap_or_default();
+                let title = title.replace("\r\n", "\n"); // windows
                 writeln!(upstream, "{href} {title:?}",)?;
                 Ok(())
             })],
@@ -241,5 +269,15 @@ fn redacted() -> Vec<(&'static str, RedactedValue)> {
             .unwrap()
             .into(),
         ),
+        (
+            "[EXIT_CODE]",
+            Regex::new(r"exit (status|code):").unwrap().into(),
+        ), // windows
+        (
+            "[COMMAND_DEBUG]",
+            Regex::new(r": (?<redacted>(?:command|running):(?: cd .+? &&)?)")
+                .unwrap()
+                .into(),
+        ), // windows
     ]
 }

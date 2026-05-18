@@ -33,6 +33,7 @@ tracing = { workspace = true }
 url = { workspace = true, features = ["serde"] }
 
 [dev-dependencies]
+mdbookkit = { workspace = true, features = ["_testing"] }
 mdbookkit-testing = { workspace = true }
 
 [package.metadata.binstall]

@@ -7,4 +7,4 @@ Caused by:
       |                     ^
     invalid type: integer `1`, expected package spec
     
-ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

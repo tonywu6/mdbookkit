@@ -15,11 +15,11 @@ Caused by:
          |         ^^^ expected one of `::`, `;`, or `as`
        
        error: aborting due to 2 previous errors
-    1: command exited with exit status: 1
-    2: command: cd "[TEST_DIR]/preludes_invalid" && "rustdoc" "--out-dir" "[TEST_DIR]/preludes_invalid/target/[TEMP_DIR]" "--edition" "2024" "--crate-type" "lib" "--error-format" "json" "-" "--extern" "preludes_invalid=[TEST_DIR]/preludes_invalid/target/debug/deps/libpreludes_invalid-[BUILD_HASH].rmeta" "-L" "dependency=[TEST_DIR]/preludes_invalid/target/debug/deps" "--crate-name" "temporary_crate_0"
+    1: command exited with [EXIT_CODE] 1
+    2: [COMMAND_DEBUG] "rustdoc" "--out-dir" "[TEST_DIR]/preludes_invalid/target/[TEMP_DIR]" "--edition" "2024" "--crate-type" "lib" "--error-format" "json" "-" "--extern" "preludes_invalid=[TEST_DIR]/preludes_invalid/target/debug/deps/libpreludes_invalid-[BUILD_HASH].rmeta" "-L" "dependency=[TEST_DIR]/preludes_invalid/target/debug/deps" "--crate-name" "temporary_crate_0"
        
 note: the following options have been specified, which may have caused the error:
     - build.preludes
 
 ERROR mdbook-rustdoc-links: build failed
-ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

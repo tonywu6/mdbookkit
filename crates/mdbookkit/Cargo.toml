@@ -15,7 +15,7 @@ documentation = "https://docs.tonywu.dev/mdbookkit/"
 readme = "README.md"
 
 [dependencies]
-annotate-snippets = "0.12.15"
+annotate-snippets = "0.12.16"
 anyhow = { workspace = true }
 bon = "3.9.1"
 clap = { workspace = true }
@@ -31,3 +31,6 @@ toml = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 url = { workspace = true }
+
+[features]
+_testing = ["annotate-snippets/testing-colors"]

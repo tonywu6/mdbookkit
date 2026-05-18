@@ -8,7 +8,7 @@ Caused by:
        
        Caused by:
          `resolver` setting `000` is not valid, valid options are "1", "2" or "3"
-    3: command exited with exit status: 101
-    4: command: cd "[TEST_DIR]/manifest_invalid" && "cargo" "locate-project" "--message-format=json" "--workspace"
+    3: command exited with [EXIT_CODE] 101
+    4: [COMMAND_DEBUG] "cargo" "locate-project" "--message-format=json" "--workspace"
        
-ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with exit status: 1 status
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status
