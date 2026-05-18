@@ -1,7 +1,3 @@
-[preprocessor.rustdoc-links]
-after = ["links"]
-command = "cargo preprocessor"
-
 [preprocessor.rustdoc-links.build-options]
 runner = "bash -c $*"
 rustdoc-args = [
@@ -20,8 +16,9 @@ packages = ["anstyle-parse"]
 packages = [{ dependencies = false }]
 targets = ["aarch64-unknown-linux-gnu", "x86_64-unknown-linux-gnu"]
 
+[output.markdown]
+
 [build]
 build-dir = "dist"
 create-missing = false
-
-[output.markdown]
+use-default-preprocessors = true

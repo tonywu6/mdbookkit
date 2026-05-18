@@ -26,6 +26,25 @@ pub struct TestBook {
 
 impl TestBook {
     pub fn run(&self) -> Result<()> {
+        let path_env = std::env::var_os("PATH");
+        let path_env = (path_env.iter())
+            .flat_map(std::env::split_paths)
+            .map(|path| path.into_os_string());
+
+        let path_env = std::env::vars_os()
+            .filter_map(|(k, v)| {
+                if k.as_encoded_bytes().starts_with(b"CARGO_BIN_EXE_")
+                    && let Some(dir) = Path::new(&v).parent()
+                {
+                    Some(dir.as_os_str().to_owned())
+                } else {
+                    None
+                }
+            })
+            .chain(path_env);
+
+        let path_env = std::env::join_paths(path_env)?;
+
         let temp_dir = DirRoot::mutable_temp()?;
         let temp_dir = temp_dir
             .path()
@@ -36,6 +55,7 @@ impl TestBook {
             .cargo("bin", current_dir!())
             .args(["mdbook", "build"])
             .arg(self.path.book_dir())
+            .env("PATH", path_env)
             .env("MDBOOK_build__build_dir", temp_dir)
             .envs(load_env(&[
                 ("MDBOOK_LOG", "warn,mdbookkit::diagnostics=info"),
@@ -97,10 +117,6 @@ impl TestBook {
         let mut redactions = Redactions::new();
         redactions.insert("[TEST_DIR]", self.path.root_dir.as_str().to_owned())?;
         redactions.insert("[ELAPSED]", Regex::new(r"in (?<redacted>\d+\.\d+s)")?)?;
-        redactions.insert(
-            "[LLVM_COV_STDERR]",
-            Regex::new(r"(?<redacted>error: process didn't exit successfully:.*)")?,
-        )?;
         for (placeholder, matcher) in &self.redacted {
             redactions.insert(placeholder, matcher.clone())?;
         }

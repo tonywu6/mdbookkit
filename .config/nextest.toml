@@ -1,15 +1,6 @@
-experimental = ["setup-scripts"]
-
 [test-groups]
 mdbook-rustdoc-links-rustdoc = { max-threads = 1 }
 
 [[profile.default.overrides]]
 filter = 'package(mdbook-rustdoc-links) and test(rustdoc)'
 test-group = 'mdbook-rustdoc-links-rustdoc'
-
-[[profile.default.scripts]]
-filter = "kind(test) and not test(=warm_up)"
-setup = ["warm-up"]
-
-[scripts.setup.warm-up]
-command = ["cargo", "bin", "nextest", "run", "-E", "test(=warm_up)"]

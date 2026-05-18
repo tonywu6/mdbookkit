@@ -1,10 +1,9 @@
 [preprocessor.rustdoc-links]
-after = ["links"]
-command = "cargo preprocessor"
 manifest-dir = "rust"
+
+[output.markdown]
 
 [build]
 build-dir = "dist"
 create-missing = false
-
-[output.markdown]
+use-default-preprocessors = true

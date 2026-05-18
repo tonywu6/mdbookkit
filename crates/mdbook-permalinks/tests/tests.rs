@@ -2,25 +2,16 @@ use anyhow::{Context, Result};
 
 use mdbookkit_testing::{
     TestBook, TestRoot,
-    camino::{Utf8Path, Utf8PathBuf},
+    camino::Utf8Path,
     regex::Regex,
     snapbox::{
         RedactedValue,
         cmd::Command,
         dir::{DirFixture, DirRoot},
-        utils::current_dir,
     },
     test_mdbook,
 };
-use tap::{Conv, TryConv};
-
-#[test]
-fn warm_up() {
-    Command::new(env!("CARGO"))
-        .args(["build"])
-        .assert()
-        .success();
-}
+use tap::TryConv;
 
 macro_rules! test_case {
     [$name:ident, $($args:tt)+] => {
@@ -116,21 +107,6 @@ where
         .write_to_path(book.path.book_dir().as_std_path())
         .context("failed to initialize temp dir")?;
 
-    {
-        let package_dir = current_dir!()
-            .join("..")
-            .canonicalize()?
-            .try_conv::<Utf8PathBuf>()?;
-        let cargo_conf_path = book.path.book_dir().join(".cargo/config.toml");
-        let cargo_conf = std::fs::read_to_string(&cargo_conf_path)?
-            .replace(r#""${PACKAGE_DIR}""#, &toml_str(&package_dir))
-            .replace(
-                r#""${PACKAGE_DIR}/Cargo.toml""#,
-                &toml_str(package_dir.join("Cargo.toml")),
-            );
-        std::fs::write(cargo_conf_path, cargo_conf)?;
-    }
-
     setup(&book.path)?;
 
     book.run()?;
@@ -159,8 +135,4 @@ fn redacted() -> Vec<(&'static str, RedactedValue)> {
             env!("CARGO_PKG_REPOSITORY").into(),
         ),
     ]
-}
-
-fn toml_str<S: AsRef<str>>(s: S) -> String {
-    s.as_ref().conv::<toml::Value>().to_string()
 }

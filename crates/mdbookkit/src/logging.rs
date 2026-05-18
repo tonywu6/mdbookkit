@@ -138,9 +138,9 @@ pub fn init_logging() {
     tracing_subscriber::registry()
         // don't globally filter events, or else in case warnings are suppressed,
         // the preprocessor will no longer exit with failure when running in CI
+        .with(EventLevelLayer)
         .with(logger.with_filter(ENV_FILTER.filter.clone()))
         .with(ticker.with_filter(ENV_FILTER.filter.clone()))
-        .with(EventLevelLayer)
         .init();
 }
 

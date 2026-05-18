@@ -24,13 +24,13 @@
 </tspan>
     <tspan x="10px" y="64px"><tspan>Caused by:</tspan>
 </tspan>
-    <tspan x="10px" y="82px"><tspan>    TOML parse error at line 12, column 17</tspan>
+    <tspan x="10px" y="82px"><tspan>    TOML parse error at line 8, column 17</tspan>
 </tspan>
-    <tspan x="10px" y="100px"><tspan>       |</tspan>
+    <tspan x="10px" y="100px"><tspan>      |</tspan>
 </tspan>
-    <tspan x="10px" y="118px"><tspan>    12 |   { workspace = "crates/*" },</tspan>
+    <tspan x="10px" y="118px"><tspan>    8 |   { workspace = "crates/*" },</tspan>
 </tspan>
-    <tspan x="10px" y="136px"><tspan>       |                 ^^^^^^^^^^</tspan>
+    <tspan x="10px" y="136px"><tspan>      |                 ^^^^^^^^^^</tspan>
 </tspan>
     <tspan x="10px" y="154px"><tspan>    unknown variant `crates/*`, expected one of `default`, `all`, `none`</tspan>
 </tspan>

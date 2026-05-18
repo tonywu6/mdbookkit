@@ -1,13 +1,10 @@
-[preprocessor.rustdoc-links]
-after = ["links"]
-command = "cargo preprocessor"
-
 [preprocessor.rustdoc-links.build]
 packages = ["cats"]
 targets = ["aarch64-unknown-linux-gnu"]
 
+[output.markdown]
+
 [build]
 build-dir = "dist"
 create-missing = false
-
-[output.markdown]
+use-default-preprocessors = true

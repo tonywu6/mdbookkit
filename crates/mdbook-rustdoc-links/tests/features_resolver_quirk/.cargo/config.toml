@@ -1,6 +1,0 @@
-[alias]
-preprocessor = ["run", "--quiet", "--manifest-path", "../../Cargo.toml", "--"]
-
-[term]
-# flaky cargo logs such as "Blocking waiting for ..."
-quiet = true

@@ -10,17 +10,9 @@ use mdbookkit::markdown::default_markdown_options;
 use mdbookkit_testing::{
     TestBook,
     regex::Regex,
-    snapbox::{IntoData, RedactedValue, Redactions, assert_data_eq, cmd::Command},
+    snapbox::{IntoData, RedactedValue, Redactions, assert_data_eq},
     test_mdbook,
 };
-
-#[test]
-fn warm_up() {
-    Command::new(env!("CARGO"))
-        .args(["build"])
-        .assert()
-        .success();
-}
 
 macro_rules! test_case {
     [$name:ident, $($args:tt)+] => {
@@ -57,7 +49,12 @@ test_case![diagnostics_order, exit(0)];
 
 test_case![packages_invalid, exit(101)];
 test_case![packages_empty_list, exit(101)];
-test_case![features_resolver_quirk, exit(101)];
+test_case![
+    features_resolver_quirk,
+    exit(101),
+    // flaky cargo logs such as "Blocking waiting for ..."
+    env = ["CARGO_TERM_QUIET" = "true"]
+];
 test_case![features_resolver_quirk_fix, exit(0)];
 test_case![preludes_invalid, exit(101)];
 test_case![compilation_error, exit(101)];
@@ -74,7 +71,9 @@ test_case![
     exit(0),
     env = [
         "MDBOOK_LOG" = "warn,mdbook_rustdoc_links=trace",
-        "MDBOOKKIT_TERM_GRAPHICAL" = ""
+        "MDBOOKKIT_TERM_GRAPHICAL" = "",
+        // flaky cargo logs
+        "CARGO_TERM_QUIET" = "true"
     ]
 ];
 test_case![hidden_items, exit(0)];

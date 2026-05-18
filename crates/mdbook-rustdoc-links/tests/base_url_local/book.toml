@@ -1,7 +1,4 @@
 [preprocessor.rustdoc-links]
-after = ["links"]
-command = "cargo preprocessor"
-
 base-url = "/api"
 
 [[preprocessor.rustdoc-links.build]]
@@ -15,8 +12,9 @@ targets = ["aarch64-unknown-linux-gnu"]
 [[preprocessor.rustdoc-links.build]]
 packages = [{ workspace = true, dependencies = false }]
 
+[output.markdown]
+
 [build]
 build-dir = "dist"
 create-missing = false
-
-[output.markdown]
+use-default-preprocessors = true

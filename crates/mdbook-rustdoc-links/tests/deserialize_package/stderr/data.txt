@@ -1,9 +1,9 @@
 ERROR mdbook-rustdoc-links: failed to read preprocessor config from book.toml
 
 Caused by:
-    TOML parse error at line 6, column 21
+    TOML parse error at line 2, column 21
       |
-    6 | packages = ["itoa", 1]
+    2 | packages = ["itoa", 1]
       |                     ^
     invalid type: integer `1`, expected package spec
     

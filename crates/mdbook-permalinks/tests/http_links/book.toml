@@ -1,12 +1,10 @@
 [preprocessor.permalinks]
-after = ["links"]
-command = "cargo preprocessor"
-
 book-url = "https://example.org/book"
 repo-url-template = "https://git.example.org/{tree}/{ref}/{path}"
+
+[output.markdown]
 
 [build]
 build-dir = "dist"
 create-missing = false
-
-[output.markdown]
+use-default-preprocessors = true

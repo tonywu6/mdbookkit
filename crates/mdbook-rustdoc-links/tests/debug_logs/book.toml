@@ -1,7 +1,3 @@
-[preprocessor.rustdoc-links]
-after = ["links"]
-command = "cargo preprocessor"
-
 [[preprocessor.rustdoc-links.build]]
 targets = ["aarch64-unknown-linux-gnu"]
 
@@ -10,8 +6,9 @@ features = ["fancy"]
 packages = [{ workspace = true, dependencies = false }]
 runner = "bash -c $*"
 
+[output.markdown]
+
 [build]
 build-dir = "dist"
 create-missing = false
-
-[output.markdown]
+use-default-preprocessors = true

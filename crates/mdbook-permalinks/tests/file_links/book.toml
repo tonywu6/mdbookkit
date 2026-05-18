@@ -1,9 +1,8 @@
 [preprocessor.permalinks]
-after = ["links"]
-command = "cargo preprocessor"
+
+[output.markdown]
 
 [build]
 build-dir = "dist"
 create-missing = false
-
-[output.markdown]
+use-default-preprocessors = true

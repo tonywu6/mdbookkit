@@ -24,11 +24,11 @@
 </tspan>
     <tspan x="10px" y="64px"><tspan>Caused by:</tspan>
 </tspan>
-    <tspan x="10px" y="82px"><tspan>    TOML parse error at line 6, column 12</tspan>
+    <tspan x="10px" y="82px"><tspan>    TOML parse error at line 2, column 12</tspan>
 </tspan>
     <tspan x="10px" y="100px"><tspan>      |</tspan>
 </tspan>
-    <tspan x="10px" y="118px"><tspan>    6 | packages = []</tspan>
+    <tspan x="10px" y="118px"><tspan>    2 | packages = []</tspan>
 </tspan>
     <tspan x="10px" y="136px"><tspan>      |            ^^</tspan>
 </tspan>
