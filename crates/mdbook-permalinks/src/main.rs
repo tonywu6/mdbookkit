@@ -150,8 +150,6 @@ impl Environment {
     }
 
     fn resolve(&self, content: &mut Pages<'_>) {
-        self.validate();
-
         let page_paths = &content.paths(&self.root_dir);
 
         let ticker = ticker!(Level::INFO, "process", "processing links").entered();
@@ -390,20 +388,6 @@ impl Environment {
         }
 
         link.unreachable(not_found);
-    }
-
-    #[inline]
-    fn validate(&self) {
-        debug_assert!(
-            self.root_dir.as_str().ends_with('/'),
-            "book_src should have a trailing slash, got {}",
-            self.root_dir
-        );
-        debug_assert!(
-            self.vcs.root.as_str().ends_with('/'),
-            "vcs_root should have a trailing slash, got {}",
-            self.vcs.root
-        );
     }
 
     fn new(book: &PreprocessorContext) -> Result<Result<Self>> {

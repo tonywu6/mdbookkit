@@ -18,6 +18,7 @@ use crate::error::WithPathDebug;
 pub struct UrlPath(Url);
 
 impl UrlPath {
+    #[inline]
     pub fn fill_pattern<'a, F>(&self, mut f: F) -> Self
     where
         F: for<'b> FnMut(&'b str) -> Option<Cow<'a, str>>,
@@ -49,6 +50,7 @@ impl UrlPath {
         Self(url)
     }
 
+    #[inline]
     pub fn test_pattern<'a, 'b>(
         &'a self,
         catch_all: Option<&'a str>,
@@ -115,10 +117,12 @@ impl UrlPath {
         Some(captured)
     }
 
+    #[inline]
     pub fn join(&self, rhs: &str) -> Result<Self, url::ParseError> {
         Ok(Self(self.0.join(rhs)?))
     }
 
+    #[inline]
     pub fn relative_to(&self, base: &Self) -> Result<String> {
         let err = || {
             format! { "cannot make a relative URL from {:?} to {:?}",
@@ -127,18 +131,22 @@ impl UrlPath {
         base.0.make_relative(&self.0).with_context(err)
     }
 
+    #[inline]
     pub fn as_str(&self) -> &str {
         self.path_only().unwrap_or_else(|| self.0.as_str())
     }
 
+    #[inline]
     pub fn is_url(&self) -> bool {
         self.path_only().is_none()
     }
 
+    #[inline]
     pub fn into_url(self) -> Option<Url> {
         if self.is_url() { Some(self.0) } else { None }
     }
 
+    #[inline]
     pub fn empty() -> Self {
         "".parse().expect_url()
     }
@@ -190,6 +198,7 @@ fn decode_group(segment: &str) -> Option<&str> {
 pub trait UrlUtil {
     fn ensure_trailing_slash(&mut self);
 
+    #[inline]
     fn with_trailing_slash(mut self) -> Self
     where
         Self: Sized,
@@ -200,6 +209,7 @@ pub trait UrlUtil {
 }
 
 impl UrlUtil for Url {
+    #[inline]
     fn ensure_trailing_slash(&mut self) {
         if let Ok(mut paths) = self.path_segments_mut() {
             paths.pop_if_empty().push("");
@@ -208,6 +218,7 @@ impl UrlUtil for Url {
 }
 
 impl UrlUtil for UrlPath {
+    #[inline]
     fn ensure_trailing_slash(&mut self) {
         self.0.ensure_trailing_slash();
     }
@@ -218,9 +229,23 @@ pub trait ExpectUrl<T> {
 }
 
 impl<T> ExpectUrl<T> for Result<T, url::ParseError> {
-    #[inline(always)]
+    #[inline]
     fn expect_url(self) -> T {
         self.expect("should be a valid URL")
+    }
+}
+
+pub trait ExpectPath {
+    fn expect_path(&self) -> Utf8PathBuf;
+}
+
+impl ExpectPath for Url {
+    #[inline]
+    fn expect_path(&self) -> Utf8PathBuf {
+        self.to_file_path()
+            .expect("should be a file: url")
+            .into_utf8_path_buf()
+            .expect("url is already in utf-8")
     }
 }
 
@@ -231,12 +256,12 @@ pub trait UrlFromPath {
 }
 
 impl<P: AsRef<Path> + ?Sized> UrlFromPath for P {
-    #[inline(always)]
+    #[inline]
     fn to_directory_url(&self) -> Url {
         Url::from_directory_path(self).expect("should be a valid absolute path")
     }
 
-    #[inline(always)]
+    #[inline]
     fn to_file_url(&self) -> Url {
         Url::from_file_path(self).expect("should be a valid absolute path")
     }
@@ -251,7 +276,7 @@ impl ToUtf8Path for &Path {
     #[inline]
     fn to_utf8_path(&self) -> Result<&Utf8Path> {
         Utf8Path::from_path(self)
-            .with_path_context(self)
+            .with_path_debug(self)
             .context(UTF8_PATH_ERROR)
     }
 
@@ -265,7 +290,7 @@ impl ToUtf8Path for PathBuf {
     #[inline]
     fn to_utf8_path(&self) -> Result<&Utf8Path> {
         Utf8Path::from_path(self.as_path())
-            .with_path_context(self)
+            .with_path_debug(self)
             .context(UTF8_PATH_ERROR)
     }
 

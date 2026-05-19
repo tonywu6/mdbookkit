@@ -21,7 +21,7 @@ use tracing::{Level, debug, info, info_span, instrument, trace, warn};
 use mdbookkit::{
     emit_debug, emit_error, emit_warning,
     env::is_logging,
-    error::{ExpectFmt, PathDebug, WithPathDebug},
+    error::{ExpectFmt, WithPathDebug},
     level_enabled,
     subprocess::{CommandUtil, Subprocess},
     ticker, ticker_event, with_bug_report,
@@ -352,7 +352,7 @@ fn run_builder(
             stdout: {
                 let path = tempdir.path().join(crate_name!()).join("index.html");
                 std::fs::read_to_string(&path)
-                    .with_path_context(&path)
+                    .with_path_debug(&path)
                     .context("failed to read from `rustdoc` output from file")
                     .or_else(with_bug_report!(emit_error))?
             },
@@ -1107,7 +1107,7 @@ pub fn symlink_dir_all(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Re
 
         Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
             remove_symlink(target.as_ref())
-                .with_path_context(&target)
+                .with_path_debug(&target)
                 .context("failed to remove existing symlink at:")?;
             symlink_dir_all(source, target)
         }
@@ -1117,8 +1117,8 @@ pub fn symlink_dir_all(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Re
         } else {
             Err(anyhow!(e))
         }
-        .with_context(|| format!("target: {:?}", target.as_ref().debug()))
-        .with_context(|| format!("source: {:?}", source.as_ref().debug()))
+        .with_path_label(&target, "target")
+        .with_path_label(&source, "source")
         .context("failed to create symlink")?,
     }
 }

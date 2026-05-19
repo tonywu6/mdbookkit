@@ -188,21 +188,31 @@ impl PathDebug for Path {
 }
 
 pub trait WithPathDebug<T> {
-    fn with_path_context(self, path: impl AsRef<Path>) -> Result<T>;
+    fn with_path_label(self, path: impl AsRef<Path>, label: &str) -> Result<T>;
+
+    #[inline]
+    fn with_path_debug(self, path: impl AsRef<Path>) -> Result<T>
+    where
+        Self: Sized,
+    {
+        self.with_path_label(path, "path")
+    }
 }
 
 impl<T, E> WithPathDebug<T> for Result<T, E>
 where
     Result<T, E>: Context<T, E>,
 {
-    fn with_path_context(self, path: impl AsRef<Path>) -> Result<T> {
-        self.with_context(|| format!("{:?}", path.as_ref().debug()))
+    #[inline]
+    fn with_path_label(self, path: impl AsRef<Path>, label: &str) -> Result<T> {
+        self.with_context(|| format!("{label}: {:?}", path.as_ref().debug()))
     }
 }
 
 impl<T> WithPathDebug<T> for Option<T> {
-    fn with_path_context(self, path: impl AsRef<Path>) -> Result<T> {
-        self.with_context(|| format!("{:?}", path.as_ref().debug()))
+    #[inline]
+    fn with_path_label(self, path: impl AsRef<Path>, label: &str) -> Result<T> {
+        self.with_context(|| format!("{label}: {:?}", path.as_ref().debug()))
     }
 }
 

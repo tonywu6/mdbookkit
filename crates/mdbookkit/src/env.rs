@@ -70,13 +70,13 @@ impl<S: Deref<Target = str>> TruthyStr for Option<S> {
     }
 }
 
-pub fn locate_project(cargo: Option<Command>) -> Result<Utf8PathBuf> {
+pub fn locate_project(command: Option<Command>) -> Result<Utf8PathBuf> {
     #[derive(Deserialize)]
     struct LocateProject {
         root: Utf8PathBuf,
     }
 
-    let output = cargo
+    let output = command
         .unwrap_or_else(|| Command::new("cargo").flag("locate-project", true))
         .args(["--message-format=json", "--workspace"])
         .run()
@@ -88,7 +88,7 @@ pub fn locate_project(cargo: Option<Command>) -> Result<Utf8PathBuf> {
         .context("`cargo locate-project` returned unsupported data")?;
 
     let root = (root.parent())
-        .with_path_context(&root)
+        .with_path_debug(&root)
         .context("path to Cargo.toml should have a parent")?;
 
     Ok(root.to_owned())

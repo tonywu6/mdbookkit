@@ -24,7 +24,7 @@ use mdbookkit::{
     env::locate_project,
     error::{ExpectFmt, OnWarning, WithPathDebug},
     markdown::{PatchStream, Spanned},
-    url::{ExpectUrl, UrlFromPath},
+    url::{ExpectPath, ExpectUrl, UrlFromPath},
 };
 
 pub fn run() -> Result<()> {
@@ -44,15 +44,15 @@ pub fn run() -> Result<()> {
                         .expect_url()
                         .join(name)
                         .expect_url()
-                        .path()
-                        .to_owned()
+                        .expect_path()
+                        .into_string()
                         .into()
                 }
             }
         });
         jinja.set_loader(|name| {
             match std::fs::read_to_string(name)
-                .with_path_context(name)
+                .with_path_debug(name)
                 .context("could not load template")
             {
                 Ok(template) => Ok(Some(template)),
@@ -75,7 +75,7 @@ pub fn run() -> Result<()> {
 
         if let Ok(rendered) = jinja
             .render_named_str(&path, content, ())
-            .with_path_context(&path)
+            .with_path_debug(&path)
             .context("failed to render page content using minijinja")
             .or_else(emit_warning!())
         {
@@ -106,7 +106,7 @@ pub fn run() -> Result<()> {
         if !stream.is_empty()
             && let Ok(rendered) = PatchStream::new(content, stream.into_iter())
                 .into_string()
-                .with_path_context(&path)
+                .with_path_debug(&path)
                 .context("failed to patch page content")
                 .or_else(emit_warning!())
         {

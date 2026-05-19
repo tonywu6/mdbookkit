@@ -7,7 +7,7 @@ use url::Url;
 
 use mdbookkit::{
     emit_debug,
-    url::{UrlFromPath, UrlPath},
+    url::{ExpectPath, UrlFromPath, UrlPath},
 };
 
 use crate::{
@@ -107,11 +107,7 @@ impl VersionControl {
             return Err(PathStatus::NotInRepo);
         }
 
-        if let Ok(metadata) = file
-            .to_file_path()
-            .expect("should be a file: url")
-            .symlink_metadata()
-        {
+        if let Ok(metadata) = file.expect_path().symlink_metadata() {
             if !(self.repo.is_path_ignored(&path))
                 .with_context(|| format!("error testing if {path:?} is ignored"))
                 .or_else(emit_debug!())

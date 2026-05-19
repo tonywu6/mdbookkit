@@ -44,3 +44,6 @@ mdbook = { version = "0.5.2" }
 
 [profile.dev.package.mdbookkit-docs]
 opt-level = 3
+
+[profile.release]
+lto = "fat"
