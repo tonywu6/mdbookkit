@@ -26,7 +26,7 @@
 </tspan>
     <tspan x="10px" y="82px"><tspan>    0: this preprocessor will run `cargo doc`, which requires a Cargo project</tspan>
 </tspan>
-    <tspan x="10px" y="100px"><tspan>    1: `cargo locate-project` did not run successfully</tspan>
+    <tspan x="10px" y="100px"><tspan>    1: `cargo locate-project` did not succeed</tspan>
 </tspan>
     <tspan x="10px" y="118px"><tspan>    2: --- stderr</tspan>
 </tspan>

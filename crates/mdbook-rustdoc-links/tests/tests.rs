@@ -90,17 +90,6 @@ test_case![book_link_syntax_unsupported_generics, exit(0)];
 
 test_case![
     debug_logs,
-    redacted = [{
-        let mut redacted = redacted();
-        redacted.retain(|(k, _)| *k != "[COMMAND_DEBUG]");
-        redacted.push((
-            "[COMMAND_DEBUG]",
-            Regex::new(r"(?:command|running): (?<redacted>.+)")
-                .unwrap()
-                .into(), // windows
-        ));
-        redacted
-    }],
     exit(0),
     env = [
         "MDBOOK_LOG" = "warn,mdbook_rustdoc_links=trace",

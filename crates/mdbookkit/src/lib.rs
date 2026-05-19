@@ -8,5 +8,6 @@ pub mod env;
 pub mod error;
 pub mod logging;
 pub mod markdown;
+pub mod subprocess;
 pub mod url;
 pub mod util;

@@ -1027,6 +1027,7 @@ dependencies = [
  "annotate-snippets",
  "anyhow",
  "bon",
+ "camino",
  "clap",
  "console",
  "indicatif",
@@ -1047,8 +1048,10 @@ name = "mdbookkit-docs"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "camino",
  "clap",
  "glob",
+ "heck",
  "image",
  "lol_html",
  "mdbook-markdown",

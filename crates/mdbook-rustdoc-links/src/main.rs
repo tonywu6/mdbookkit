@@ -6,12 +6,13 @@ use anyhow::{Context, Result};
 use tracing::{Level, error_span, info, info_span, warn};
 
 use mdbookkit::{
-    book::{BookHelper, PreprocessorHelper, book_from_stdin, utf8_path},
+    book::{BookHelper, PreprocessorHelper, book_from_stdin},
     config::validate_config_examples,
     diagnostics::IssueReporter,
     emit, emit_error, emit_warning,
     error::{PathDebug, ProgramExit, has_severity},
     logging::init_logging,
+    url::ToUtf8Path,
 };
 
 use self::{
@@ -89,9 +90,9 @@ fn mdbook() -> Result<(), ()> {
 
     for (path, ch) in book.iter_chapters() {
         info_span!("page_read", path = ?path.debug()).in_scope(|| {
-            let path = utf8_path(path).or_else(emit_error!())?;
+            let path = path.to_utf8_path().or_else(emit_error!())?;
             tracker
-                .read(&ch.content, path)
+                .read(&ch.content, path.as_str())
                 .context("failed to parse file as markdown")
                 .or_else(emit_error!())?;
             Ok(())

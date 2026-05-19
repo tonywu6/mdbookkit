@@ -1,10 +1,18 @@
 use std::{
-    borrow::Cow, collections::HashMap, fmt::Debug, ops::ControlFlow, path::Path, str::FromStr,
+    borrow::Cow,
+    collections::HashMap,
+    fmt::Debug,
+    ops::ControlFlow,
+    path::{Path, PathBuf},
+    str::FromStr,
 };
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow};
+use camino::{Utf8Path, Utf8PathBuf};
 use tap::Pipe;
 use url::{Url, form_urlencoded::Serializer as SearchParams};
+
+use crate::error::WithPathDebug;
 
 #[derive(Clone)]
 pub struct UrlPath(Url);
@@ -233,3 +241,41 @@ impl<P: AsRef<Path> + ?Sized> UrlFromPath for P {
         Url::from_file_path(self).expect("should be a valid absolute path")
     }
 }
+
+pub trait ToUtf8Path {
+    fn to_utf8_path(&self) -> Result<&Utf8Path>;
+    fn into_utf8_path_buf(self) -> Result<Utf8PathBuf>;
+}
+
+impl ToUtf8Path for &Path {
+    #[inline]
+    fn to_utf8_path(&self) -> Result<&Utf8Path> {
+        Utf8Path::from_path(self)
+            .with_path_context(self)
+            .context(UTF8_PATH_ERROR)
+    }
+
+    #[inline]
+    fn into_utf8_path_buf(self) -> Result<Utf8PathBuf> {
+        Ok(self.to_utf8_path()?.to_owned())
+    }
+}
+
+impl ToUtf8Path for PathBuf {
+    #[inline]
+    fn to_utf8_path(&self) -> Result<&Utf8Path> {
+        Utf8Path::from_path(self.as_path())
+            .with_path_context(self)
+            .context(UTF8_PATH_ERROR)
+    }
+
+    #[inline]
+    fn into_utf8_path_buf(self) -> Result<Utf8PathBuf> {
+        match Utf8PathBuf::from_path_buf(self) {
+            Ok(path) => Ok(path),
+            Err(bad) => Err(anyhow!("{:?}", bad.display())).context(UTF8_PATH_ERROR),
+        }
+    }
+}
+
+static UTF8_PATH_ERROR: &str = "path contains non-UTF-8 characters, which is unsupported";

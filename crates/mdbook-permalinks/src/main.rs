@@ -12,7 +12,7 @@ use tracing::{Level, debug, error_span, info, info_span, span::EnteredSpan, trac
 use url::Url;
 
 use mdbookkit::{
-    book::{BookHelper, PreprocessorHelper, book_from_stdin, utf8_path},
+    book::{BookHelper, PreprocessorHelper, book_from_stdin},
     config::validate_config_examples,
     diagnostics::IssueReporter,
     emit, emit_error,
@@ -21,7 +21,7 @@ use mdbookkit::{
     level_enabled,
     logging::init_logging,
     ticker, ticker_item,
-    url::{ExpectUrl, UrlFromPath},
+    url::{ExpectUrl, ToUtf8Path, UrlFromPath},
 };
 
 use self::{
@@ -103,8 +103,8 @@ impl Environment {
 
         for (path, ch) in book.iter_chapters() {
             info_span!("page_read", path = ?path.debug()).in_scope(|| {
-                let path = utf8_path(path).or_else(emit_error!())?;
-                let url = self.root_dir.join(path).expect_url();
+                let path = path.to_utf8_path().or_else(emit_error!())?;
+                let url = self.root_dir.join(path.as_str()).expect_url();
                 (contents.insert(url, &ch.content))
                     .context("failed to parse file as markdown")
                     .or_else(emit_error!())?;

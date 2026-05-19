@@ -67,7 +67,7 @@ more info.
 
 > [!NOTE]
 >
-> {{#include _snippets/cargo-features-quirk.md}}
+> {% include "_snippets/cargo-features-quirk.md" %}
 
 ### `build.all-features`
 

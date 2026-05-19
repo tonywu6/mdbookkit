@@ -2,10 +2,11 @@ use std::{
     borrow::{Borrow, Cow},
     hash::Hash,
     io::{Read, Write},
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
 use anyhow::{Context, Result, bail};
+use camino::Utf8PathBuf;
 use mdbook_markdown::pulldown_cmark::Options as MarkdownOptions;
 use mdbook_preprocessor::{
     PreprocessorContext,
@@ -17,7 +18,7 @@ use serde_json::{Value, json};
 use tap::{Pipe, Tap};
 use tracing::warn;
 
-use crate::{error::WithPathDebug, markdown::default_markdown_options};
+use crate::{markdown::default_markdown_options, url::ToUtf8Path};
 
 pub fn string_from_stdin() -> Result<String> {
     Ok(Vec::new()
@@ -41,12 +42,6 @@ pub fn book_from_stdin() -> Result<(PreprocessorContext, Book)> {
     }
 }
 
-pub fn utf8_path(path: &Path) -> Result<&str> {
-    path.to_str()
-        .with_path_context(path)
-        .context("path contains non-UTF-8 characters, which is unsupported")
-}
-
 pub trait PreprocessorHelper {
     fn preprocessor<T>(&self, names: &[&str]) -> Result<T>
     where
@@ -54,7 +49,7 @@ pub trait PreprocessorHelper {
 
     fn markdown_options(&self) -> MarkdownOptions;
 
-    fn src_path(&self) -> Result<PathBuf>;
+    fn src_path(&self) -> Result<Utf8PathBuf>;
 }
 
 macro_rules! preprocessor_table {
@@ -111,10 +106,11 @@ impl PreprocessorHelper for PreprocessorContext {
         options
     }
 
-    fn src_path(&self) -> Result<PathBuf> {
-        Ok((self.root.canonicalize())
+    fn src_path(&self) -> Result<Utf8PathBuf> {
+        (self.root.canonicalize())
             .context("failed to locate book directory")?
-            .join(&self.config.book.src))
+            .join(&self.config.book.src)
+            .into_utf8_path_buf()
     }
 }
 

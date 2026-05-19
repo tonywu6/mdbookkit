@@ -22,7 +22,9 @@ use mdbookkit::{
     emit_debug, emit_error, emit_warning,
     env::is_logging,
     error::{ExpectFmt, PathDebug, WithPathDebug},
-    level_enabled, ticker, ticker_event, with_bug_report,
+    level_enabled,
+    subprocess::{CommandUtil, Subprocess},
+    ticker, ticker_event, with_bug_report,
 };
 
 use crate::{
@@ -30,7 +32,7 @@ use crate::{
     options::{
         BuildConfigResolved, BuildOptions, Builder, PackageSelector, PackageSpec, WorkspaceMember,
     },
-    subprocess::{CommandUtil, Subprocess},
+    subprocess::CommandRunnerUtil,
     tracker::LinkTracker,
     with_notes,
 };

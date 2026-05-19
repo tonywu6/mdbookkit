@@ -15,6 +15,7 @@ resolver = "3"
 
 [workspace.dependencies]
 anyhow = "1.0.102"
+camino = "1.2.2"
 cargo-run-bin = { version = "=1.7.5", default-features = false }
 clap = { version = "4.6.0", features = ["derive"] }
 indicatif = "0.18.4"
@@ -40,3 +41,6 @@ url = "2.5.8"
 cargo-llvm-cov = { version = "0.8.5" }
 cargo-nextest = { version = "0.9.132" }
 mdbook = { version = "0.5.2" }
+
+[profile.dev.package.mdbookkit-docs]
+opt-level = 3

@@ -1,11 +1,4 @@
-use std::{
-    borrow::Cow,
-    fmt::Debug,
-    ops::Deref,
-    path::Path,
-    process::{self, Command},
-    str::FromStr,
-};
+use std::{borrow::Cow, fmt::Debug, ops::Deref, path::Path, process::Command, str::FromStr};
 
 use anyhow::{Context, Result, anyhow};
 use cargo_metadata::camino::{Utf8Path, Utf8PathBuf};
@@ -17,18 +10,16 @@ use serde::{
     },
 };
 use shlex::Shlex;
-use tap::Pipe;
+use tap::{Pipe, Tap};
 use tracing::debug;
 
 use mdbookkit::{
     config::value_or_vec,
     de_struct, emit_error,
-    env::is_ci,
+    env::{is_ci, locate_project},
     error::OnWarning,
     url::{UrlPath, UrlUtil},
 };
-
-use crate::subprocess::CommandUtil;
 
 de_struct!(
     #[serde(rename_all = "kebab-case", deny_unknown_fields)]
@@ -221,8 +212,6 @@ impl BuilderConfig {
                 .context("this preprocessor will run `cargo doc`, which requires a Cargo project")
                 .context("failed to find a Cargo project")
                 .or_else(emit_error!())?
-                .directory()
-                .to_owned()
         };
 
         debug!("resolved manifest dir: {manifest_dir}");
@@ -400,33 +389,11 @@ impl CargoOptions {
         self.toolchain.as_ref().map(|t| format!("+{t}"))
     }
 
-    fn workspace(&self, cwd: &Path) -> Result<LocateProject> {
-        self.command("locate-project")
-            .arg("--message-format=json")
-            .arg("--workspace")
-            .current_dir(cwd)
-            .run()
-            .checked()
-            .context("`cargo locate-project` did not run successfully")?
-            .pipe(LocateProject::parse)
-            .context("could not parse output of `cargo locate-project`")
-    }
-}
-
-#[derive(Deserialize)]
-struct LocateProject {
-    root: Utf8PathBuf,
-}
-
-impl LocateProject {
-    fn directory(&self) -> &Utf8Path {
-        (self.root.parent()).expect("path to Cargo.toml should have a parent")
-    }
-
-    fn parse(output: process::Output) -> Result<Self> {
-        let process::Output { stdout, .. } = output;
-        let output = String::from_utf8(stdout)?;
-        Ok(serde_json::from_str(&output)?)
+    fn workspace(&self, cwd: &Path) -> Result<Utf8PathBuf> {
+        let command = self
+            .command("locate-project")
+            .tap_mut(|cmd| cmd.current_dir(cwd).pipe(drop));
+        locate_project(Some(command))
     }
 }
 

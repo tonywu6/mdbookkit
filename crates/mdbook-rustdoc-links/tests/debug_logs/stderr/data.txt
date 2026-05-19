@@ -12,26 +12,11 @@ TRACE mdbook-rustdoc-links:page_read:normalized: link >>> span=0..32 dest="Phant
 TRACE mdbook-rustdoc-links:page_read:normalized: link +++ span=1..12 event=Text(Borrowed("PhantomData")) parent=0..32 path="index.md" link="PhantomData<T>" span=24..40
 TRACE mdbook-rustdoc-links:page_read:normalized: link +++ span=12..15 event=InlineHtml(Borrowed("<T>")) parent=0..32 path="index.md" link="PhantomData<T>" span=24..40
 TRACE mdbook-rustdoc-links:page_read:normalized: link <<< span=0..32 path="index.md" link="PhantomData<T>" span=24..40
-DEBUG mdbook-rustdoc-links: running: [COMMAND_DEBUG]
-TRACE mdbook-rustdoc-links: --- stderr
-
-TRACE mdbook-rustdoc-links: --- stdout
-{"root":"[TEST_DIR]/debug_logs/Cargo.toml"}
 DEBUG mdbook-rustdoc-links: resolved manifest dir: [TEST_DIR]/debug_logs
  INFO mdbook-rustdoc-links: running build #1 [aarch64-unknown-linux-gnu]
  INFO mdbook-rustdoc-links:build:prepare: started instance=1 preparing
  INFO mdbook-rustdoc-links:build:prepare: cargo metadata instance=1 preparing
-DEBUG mdbook-rustdoc-links:build: running: [COMMAND_DEBUG]
-TRACE mdbook-rustdoc-links:build: --- stderr
- instance=1
-TRACE mdbook-rustdoc-links:build: --- stdout
-{"packages":[{"name":"debug_logs","version":"0.1.0","id":"path+file://[TEST_DIR]/debug_logs#0.1.0","license":null,"license_file":null,"description":null,"source":null,"dependencies":[],"targets":[{"kind":["lib"],"crate_types":["lib"],"name":"debug_logs","src_path":"[TEST_DIR]/debug_logs/src/lib.rs","edition":"2024","doc":true,"doctest":true,"test":true}],"features":{"fancy":[]},"manifest_path":"[TEST_DIR]/debug_logs/Cargo.toml","metadata":null,"publish":[],"authors":[],"categories":[],"keywords":[],"readme":null,"repository":null,"homepage":null,"documentation":null,"edition":"2024","links":null,"default_run":null,"rust_version":null}],"workspace_members":["path+file://[TEST_DIR]/debug_logs#0.1.0"],"workspace_default_members":["path+file://[TEST_DIR]/debug_logs#0.1.0"],"resolve":{"nodes":[{"id":"path+file://[TEST_DIR]/debug_logs#0.1.0","dependencies":[],"deps":[],"features":[]}],"root":"path+file://[TEST_DIR]/debug_logs#0.1.0"},"target_directory":"[TEST_DIR]/debug_logs/target","build_directory":"[TEST_DIR]/debug_logs/target","version":1,"workspace_root":"[TEST_DIR]/debug_logs","metadata":null} instance=1
  INFO mdbook-rustdoc-links:build:prepare: resolving packages instance=1 preparing
-DEBUG mdbook-rustdoc-links:build:resolve_packages: running: [COMMAND_DEBUG]
-TRACE mdbook-rustdoc-links:build:resolve_packages: --- stderr
- instance=1
-TRACE mdbook-rustdoc-links:build:resolve_packages: --- stdout
-debug_logs v0.1.0 ([TEST_DIR]/debug_logs) instance=1
 DEBUG mdbook-rustdoc-links:build: resolved options: Builder {
     targets: [
         "aarch64-unknown-linux-gnu",
@@ -65,11 +50,9 @@ DEBUG mdbook-rustdoc-links:build: resolved preludes: [
 DEBUG mdbook-rustdoc-links:build: resolved path mappings: PathMapper {
     target: "[TEST_DIR]/debug_logs/target",
 } instance=1
-DEBUG mdbook-rustdoc-links:build: running: [COMMAND_DEBUG]
  INFO mdbook-rustdoc-links:build:cargo-doc: started instance=1 cargo doc
 TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: [], filenames: ["[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/doc/debug_logs/index.html"], executable: None, fresh: false }) instance=1
 TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=1
-DEBUG mdbook-rustdoc-links:build: running: [COMMAND_DEBUG]
  INFO mdbook-rustdoc-links:build:cargo-check: started instance=1 cargo check
 TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: [], filenames: ["[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/debug/deps/libdebug_logs-[BUILD_HASH].rmeta"], executable: None, fresh: false }) instance=1
 TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=1
@@ -99,7 +82,6 @@ DEBUG mdbook-rustdoc-links:build: rustdoc input:
 //! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>
  instance=1
  INFO mdbook-rustdoc-links:build:rustdoc: started instance=1 rustdoc [aarch64-unknown-linux-gnu]
-DEBUG mdbook-rustdoc-links:build: running: [COMMAND_DEBUG]
 TRACE mdbook-rustdoc-links:build: --- rustdoc stderr
 {"$message_type":"diagnostic","message":"unresolved link to `fancy`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"<anon>","byte_start":35,"byte_end":40,"line_start":1,"line_end":1,"column_start":36,"column_end":41,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[`fancy`]</span>","highlight_start":36,"highlight_end":41}],"label":"no item named `fancy` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null},{"message":"`#[warn(rustdoc::broken_intra_doc_links)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `fancy`\n --> <anon>:1:36/n  |\n1 | //! - <span mdbook-rustdoc-links>[`fancy`]</span>\n  |                                    ^^^^^ no item named `fancy` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default/n\n"}
 {"$message_type":"diagnostic","message":"unresolved link to `f80`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"<anon>","byte_start":85,"byte_end":88,"line_start":2,"line_end":2,"column_start":36,"column_end":39,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[`f80`]</span>","highlight_start":36,"highlight_end":39}],"label":"no item named `f80` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `f80`\n --> <anon>:2:36/n  |\n2 | //! - <span mdbook-rustdoc-links>[`f80`]</span>\n  |                                    ^^^ no item named `f80` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n/n"}
@@ -155,17 +137,7 @@ Caused by:
  INFO mdbook-rustdoc-links: running build #2 [default targets, "fancy", workspace members, (additional options), ..]
  INFO mdbook-rustdoc-links:build:prepare: started instance=2 preparing
  INFO mdbook-rustdoc-links:build:prepare: cargo metadata instance=2 preparing
-DEBUG mdbook-rustdoc-links:build: running: [COMMAND_DEBUG]
-TRACE mdbook-rustdoc-links:build: --- stderr
- instance=2
-TRACE mdbook-rustdoc-links:build: --- stdout
-{"packages":[{"name":"debug_logs","version":"0.1.0","id":"path+file://[TEST_DIR]/debug_logs#0.1.0","license":null,"license_file":null,"description":null,"source":null,"dependencies":[],"targets":[{"kind":["lib"],"crate_types":["lib"],"name":"debug_logs","src_path":"[TEST_DIR]/debug_logs/src/lib.rs","edition":"2024","doc":true,"doctest":true,"test":true}],"features":{"fancy":[]},"manifest_path":"[TEST_DIR]/debug_logs/Cargo.toml","metadata":null,"publish":[],"authors":[],"categories":[],"keywords":[],"readme":null,"repository":null,"homepage":null,"documentation":null,"edition":"2024","links":null,"default_run":null,"rust_version":null}],"workspace_members":["path+file://[TEST_DIR]/debug_logs#0.1.0"],"workspace_default_members":["path+file://[TEST_DIR]/debug_logs#0.1.0"],"resolve":{"nodes":[{"id":"path+file://[TEST_DIR]/debug_logs#0.1.0","dependencies":[],"deps":[],"features":["fancy"]}],"root":"path+file://[TEST_DIR]/debug_logs#0.1.0"},"target_directory":"[TEST_DIR]/debug_logs/target","build_directory":"[TEST_DIR]/debug_logs/target","version":1,"workspace_root":"[TEST_DIR]/debug_logs","metadata":null} instance=2
  INFO mdbook-rustdoc-links:build:prepare: resolving packages instance=2 preparing
-DEBUG mdbook-rustdoc-links:build:resolve_packages: running: [COMMAND_DEBUG]
-TRACE mdbook-rustdoc-links:build:resolve_packages: --- stderr
- instance=2
-TRACE mdbook-rustdoc-links:build:resolve_packages: --- stdout
-debug_logs v0.1.0 ([TEST_DIR]/debug_logs) instance=2
 DEBUG mdbook-rustdoc-links:build: resolved options: Builder {
     targets: [],
     options: BuildOptions {
@@ -211,19 +183,12 @@ DEBUG mdbook-rustdoc-links:build: resolved preludes: [
     "debug_logs::*",
 ] instance=2
  INFO mdbook-rustdoc-links:build:prepare: cargo metadata instance=2 preparing
-DEBUG mdbook-rustdoc-links:build: running: [COMMAND_DEBUG]
-TRACE mdbook-rustdoc-links:build: --- stderr
- instance=2
-TRACE mdbook-rustdoc-links:build: --- stdout
-{"packages":[{"name":"debug_logs","version":"0.1.0","id":"path+file://[TEST_DIR]/debug_logs#0.1.0","license":null,"license_file":null,"description":null,"source":null,"dependencies":[],"targets":[{"kind":["lib"],"crate_types":["lib"],"name":"debug_logs","src_path":"[TEST_DIR]/debug_logs/src/lib.rs","edition":"2024","doc":true,"doctest":true,"test":true}],"features":{"fancy":[]},"manifest_path":"[TEST_DIR]/debug_logs/Cargo.toml","metadata":null,"publish":[],"authors":[],"categories":[],"keywords":[],"readme":null,"repository":null,"homepage":null,"documentation":null,"edition":"2024","links":null,"default_run":null,"rust_version":null}],"workspace_members":["path+file://[TEST_DIR]/debug_logs#0.1.0"],"workspace_default_members":["path+file://[TEST_DIR]/debug_logs#0.1.0"],"resolve":{"nodes":[{"id":"path+file://[TEST_DIR]/debug_logs#0.1.0","dependencies":[],"deps":[],"features":[]}],"root":"path+file://[TEST_DIR]/debug_logs#0.1.0"},"target_directory":"[TEST_DIR]/debug_logs/target","build_directory":"[TEST_DIR]/debug_logs/target","version":1,"workspace_root":"[TEST_DIR]/debug_logs","metadata":null} instance=2
 DEBUG mdbook-rustdoc-links:build: resolved path mappings: PathMapper {
     target: "[TEST_DIR]/debug_logs/target":"[TEST_DIR]/debug_logs/target",
 } instance=2
-DEBUG mdbook-rustdoc-links:build: running: [COMMAND_DEBUG]
  INFO mdbook-rustdoc-links:build:cargo-doc: started instance=2 cargo doc
 TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: ["fancy"], filenames: ["[TEST_DIR]/debug_logs/target/doc/debug_logs/index.html"], executable: None, fresh: false }) instance=2
 TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=2
-DEBUG mdbook-rustdoc-links:build: running: [COMMAND_DEBUG]
  INFO mdbook-rustdoc-links:build:cargo-check: started instance=2 cargo check
 TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: ["fancy"], filenames: ["[TEST_DIR]/debug_logs/target/debug/deps/libdebug_logs-[BUILD_HASH].rmeta"], executable: None, fresh: false }) instance=2
 TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=2
@@ -251,7 +216,6 @@ DEBUG mdbook-rustdoc-links:build: rustdoc input:
 //! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>
  instance=2
  INFO mdbook-rustdoc-links:build:rustdoc: started instance=2 rustdoc
-DEBUG mdbook-rustdoc-links:build: running: [COMMAND_DEBUG]
 TRACE mdbook-rustdoc-links:build: --- rustdoc stderr
 {"$message_type":"diagnostic","message":"unresolved link to `f80`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"<anon>","byte_start":85,"byte_end":88,"line_start":2,"line_end":2,"column_start":36,"column_end":39,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[`f80`]</span>","highlight_start":36,"highlight_end":39}],"label":"no item named `f80` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null},{"message":"`#[warn(rustdoc::broken_intra_doc_links)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `f80`\n --> <anon>:2:36/n  |\n2 | //! - <span mdbook-rustdoc-links>[`f80`]</span>\n  |                                    ^^^ no item named `f80` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default/n\n"}
 {"$message_type":"diagnostic","message":"unresolved link to `PhantomData`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"<anon>","byte_start":148,"byte_end":162,"line_start":3,"line_end":3,"column_start":51,"column_end":65,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>","highlight_start":51,"highlight_end":65}],"label":"no item named `PhantomData` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `PhantomData`\n --> <anon>:3:51/n  |\n3 | //! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>\n  |                                                   ^^^^^^^^^^^^^^ no item named `PhantomData` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n/n"}

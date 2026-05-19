@@ -1,1 +1,1 @@
-{{#include ../../../crates/mdbook-rustdoc-links/CHANGELOG.md}}
+{% incluee "/crates/mdbook-rustdoc-links/CHANGELOG.md" %}

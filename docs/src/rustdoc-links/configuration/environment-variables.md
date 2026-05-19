@@ -14,3 +14,15 @@ You usually don't need to set this manually, since most platforms will set `CI=t
 default.
 
 ## `MDBOOK_LOG`
+
+<!-- prettier-ignore-start -->
+{% with preprocessor = "mdbook-rustdoc-links" %}
+  {% include "/docs/src/_snippets/mdbook-log-examples.md" %}
+{% endwith %}
+<!-- prettier-ignore-end -->
+
+Control the preprocessor's logging output.
+
+## `MDBOOKKIT_TERM_GRAPHICAL`
+
+## `NO_COLOR`, `FORCE_COLOR`

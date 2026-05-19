@@ -2,7 +2,7 @@ use anyhow::Result;
 use cargo_metadata::camino::{Utf8Path, Utf8PathBuf};
 use mdbook_preprocessor::PreprocessorContext;
 
-use mdbookkit::book::{PreprocessorHelper, utf8_path};
+use mdbookkit::{book::PreprocessorHelper, url::ToUtf8Path};
 
 use crate::options::{BaseUrl, EnvConfig};
 
@@ -16,8 +16,8 @@ pub struct Environment {
 impl Environment {
     pub fn new(config: EnvConfig, book: &PreprocessorContext) -> Result<Self> {
         Ok(Self {
-            book_dir: utf8_path(&book.root).map(Utf8PathBuf::from)?,
-            src_path: utf8_path(&book.src_path()?).map(Utf8PathBuf::from)?,
+            book_dir: book.root.as_path().into_utf8_path_buf()?,
+            src_path: book.src_path()?,
             config,
         })
     }

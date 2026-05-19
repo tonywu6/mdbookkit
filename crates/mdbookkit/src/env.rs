@@ -1,6 +1,11 @@
-use std::{io::IsTerminal, ops::Deref, sync::LazyLock};
+use std::{io::IsTerminal, ops::Deref, process::Command, sync::LazyLock};
 
+use anyhow::{Context, Result};
+use camino::Utf8PathBuf;
 use console::colors_enabled_stderr;
+use serde::Deserialize;
+
+use crate::{error::WithPathDebug, subprocess::CommandUtil};
 
 macro_rules! env_var {
     ($name:ident $(, $extra:ident)*) => {
@@ -63,4 +68,28 @@ impl<S: Deref<Target = str>> TruthyStr for Option<S> {
             text
         }
     }
+}
+
+pub fn locate_project(cargo: Option<Command>) -> Result<Utf8PathBuf> {
+    #[derive(Deserialize)]
+    struct LocateProject {
+        root: Utf8PathBuf,
+    }
+
+    let output = cargo
+        .unwrap_or_else(|| Command::new("cargo").flag("locate-project", true))
+        .args(["--message-format=json", "--workspace"])
+        .run()
+        .checked()
+        .context("`cargo locate-project` did not succeed")?;
+
+    let LocateProject { root } = serde_json::from_slice(&output.stdout)
+        .with_context(|| format!("{:?}", String::from_utf8_lossy(&output.stdout)))
+        .context("`cargo locate-project` returned unsupported data")?;
+
+    let root = (root.parent())
+        .with_path_context(&root)
+        .context("path to Cargo.toml should have a parent")?;
+
+    Ok(root.to_owned())
 }

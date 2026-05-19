@@ -10,8 +10,10 @@ repository.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
+camino = { workspace = true }
 clap = { workspace = true }
 glob = "0.3.3"
+heck = "0.5.0"
 image = { version = "0.25.10", features = [
   "png",
   "webp",

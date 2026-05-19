@@ -8,7 +8,7 @@ cargo install mdbook-permalinks
 
 Alternatively, you may obtain precompiled binaries from [GitHub releases][gh-releases].
 
-{{#include ../_snippets/mdbook-0.4.md}}
+{% include "/docs/src/_snippets/mdbook-0.4.md" %}
 
 ## Configure
 

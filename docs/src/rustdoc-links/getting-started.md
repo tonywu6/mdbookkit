@@ -75,9 +75,13 @@ builds.
 + after = ["links"]
 ```
 
+{% raw %}
+
 Adding this tells mdBook to run this preprocessor after the default [`links`
 preprocessor][mdbook-links]. This is recommended because it allows the preprocessor to
 see text embedded using the [`{{#include}}` directive][mdbook-include].
+
+{% endraw %}
 
 </details>
 
@@ -153,7 +157,7 @@ warning in your terminal:
 
 <figure>
 
-{{#include ../../../crates/mdbook-rustdoc-links/tests/book_getting_started/stderr/data.svg}}
+{% include "/crates/mdbook-rustdoc-links/tests/book_getting_started/stderr/data.svg" %}
 
 <figcaption>
 

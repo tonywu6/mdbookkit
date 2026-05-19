@@ -249,7 +249,7 @@ In this example, the preprocessor does 2 rounds of resolution:
     [Starting on 2026-05-01][docs-rs-default-target], `x86_64-unknown-linux-gnu` is the
     default target that docs.rs will build docs for if one isn't specified.
 
-[^cargo-dep-feature]: {{#include ../_snippets/cargo-features-quirk.md}}
+[^cargo-dep-feature]: {% include "../_snippets/cargo-features-quirk.md" %}
 
 <!-- prettier-ignore-start -->
 [cfg-doc]: https://doc.rust-lang.org/stable/rustdoc/advanced-features.html#cfgdoc-documenting-platform-specific-or-feature-specific-information

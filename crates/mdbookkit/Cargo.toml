@@ -18,6 +18,7 @@ readme = "README.md"
 annotate-snippets = "0.12.16"
 anyhow = { workspace = true }
 bon = "3.9.1"
+camino = { workspace = true, features = ["serde1"] }
 clap = { workspace = true }
 console = { version = "0.16.3" }
 indicatif = { workspace = true }

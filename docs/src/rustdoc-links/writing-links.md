@@ -254,7 +254,7 @@ If you don't specify a namespace, and the item is indeed ambiguous, rustdoc will
 a warning:
 
 <figure>
-{{#include _media/ambiguous-link.svg}}
+  {% include "_media/ambiguous-link.svg" %}
 </figure>
 
 ## Caveats & tips
@@ -287,7 +287,7 @@ syntax, you should quote the link text in inline code. Otherwise, generic parame
 be interpreted as (invalid) HTML tags and become invisible.
 
 <figure>
-{{#include ../../../crates/mdbook-rustdoc-links/tests/book_link_syntax_escape_generics/stderr/data.svg}}
+  {% include "/crates/mdbook-rustdoc-links/tests/book_link_syntax_escape_generics/stderr/data.svg" %}
 </figure>
 
 ### Unsupported generic parameters syntax
@@ -300,7 +300,7 @@ implementation of a generic trait, such as the
 in the example below.
 
 <figure>
-{{#include ../../../crates/mdbook-rustdoc-links/tests/book_link_syntax_unsupported_generics/stderr/data.svg}}
+  {% include "/crates/mdbook-rustdoc-links/tests/book_link_syntax_unsupported_generics/stderr/data.svg" %}
 </figure>
 
 <!-- prettier-ignore-start -->
