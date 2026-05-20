@@ -15,6 +15,7 @@ extra-watch-dirs = [
   "../crates",
   "../README.md",
 ]
+use-default-preprocessors = false
 
 [output.html]
 additional-css = ["web/loader.css"]
@@ -30,7 +31,8 @@ site-url = "/mdbookkit/"
 runnable = false
 
 [preprocessor.rustdoc-links]
-after = ["links"]
+after = ["doc"]
+base-url.dev = "/api"
 command = "cargo run --package mdbook-rustdoc-links"
 
 [preprocessor.rustdoc-links.build]
@@ -48,7 +50,7 @@ preludes = [
 ]
 
 [preprocessor.permalinks]
-after = ["rustdoc-links"]
+after = ["doc", "rustdoc-links"]
 always-link = [".rs"]
 book-url = "https://docs.tonywu.dev/mdbookkit/"
 command = "cargo run --package mdbook-permalinks"
@@ -57,7 +59,6 @@ command = "cargo run --package mdbook-permalinks"
 command = "node scripts/preprocessor.ts"
 
 [preprocessor.doc]
-after = ["links"]
 command = "cargo run -- preprocess"
 
 [preprocessor.doc.socials."/"]

@@ -32,9 +32,9 @@ With this option, the preprocessor does the following:
   | `base-url.dev = "/api"`      | <code><strong>/api</strong>/url/struct.Url.html</code><br>      |
   | `base-url.dev = "/api/rust"` | <code><strong>/api/rust</strong>/url/struct.Url.html</code><br> |
 
-- It creates a symlink at the specified path _under your book's `src` directory_ (for
-  example, `/path/to/book/src/api`) that points to the `target/doc`, where `cargo doc`
-  places its output.
+- It creates a symlink[^symlink-windows] at the specified path _under your book's `src`
+  directory_ (for example, `/path/to/book/src/api`) that points to the `target/doc`,
+  where `cargo doc` places its output.
   - When this symlink exists, `mdbook` will recursively copy everything under it to your
     book's build output.
 
@@ -52,32 +52,43 @@ As a result:
 
 > [!IMPORTANT]
 >
-> Note that the option in this case is <code>base-url<strong>.dev</strong></code>.
->
-> If you had specified only `base-url`, then the option **will take effect in CI/CD
-> environments as well.** If you are deploying your book online, such as using GitHub
-> Pages, **the published book will still contain links that point to your own site,**
-> which is likely not what you wanted.
+> If you specify `base-url` instead of <code>base-url<strong>.dev</strong></code>, then
+> the option **will take effect in CI/CD environments as well.** If you are deploying
+> your book online, such as by using GitHub Pages, **links in the published book will
+> still point to your own site instead of to `docs.rs`,** which may not be what you
+> wanted.
 >
 > If you indeed want to deploy API docs alongside your book, please see
-> [Self-hosting API docs](self-hosting-cargo-docs.md).
+> [Self-hosting API docs](self-hosting-cargo-docs.md) for additional notes.
 
 > [!TIP]
 >
-> - It is okay to add the auto-generated symlink to `.gitignore`.
-> - If you add the path to your crate's `src` directory to mdBook's
+> - It is OK to add the auto-generated symlink to `.gitignore`.
+> - You can add the path to your crate's `src` directory to mdBook's
 >   [`build.extra-watch-dirs` option](http://rust-lang.github.io/mdBook/format/configuration/general.html?highlight=extra-watch-dirs#build-options),
->   `mdbook serve` will refresh when your update your source code, which will also
->   rebuild your API docs.
+>   in which case `mdbook serve` will refresh when your update your source code, which
+>   will also rebuild your API docs.
 
 ## Caveats
 
 - Because mdBook has to copy all of `cargo doc`'s output to your book's output
-  directory, [configuring](package-selection.md) the preprocessor to run `cargo doc` on
-  a large amount of packages could introduce a noticeable delay every time
-  `mdbook serve` rebuilds your book.
+  directory, configuring the preprocessor to run `cargo doc` on a
+  [large amount of packages](package-selection.md) could introduce a noticeable delay
+  every time `mdbook serve` rebuilds your book.
 
 [^relpath]:
     Technically, the preprocessor generates _relative paths_ from each book page to the
     expected doc location, so that links work correctly even if you use mdBook's
     `site-url` option, but the outcome is the same.
+
+[^symlink-windows]:
+    On Windows, symlink creation requires you to either [enable Developer Mode] or run
+    the program with [elevated privileges]. The preprocessor will fall back to creating
+    an [NTFS junction] if it fails to create a symlink, in which case you should add the
+    resulting directory to `.gitignore`.
+
+<!-- prettier-ignore-start -->
+[enable Developer Mode]: https://blogs.windows.com/windowsdeveloper/2016/12/02/symlinks-windows-10/
+[elevated privileges]: https://doc.rust-lang.org/std/os/windows/fs/fn.symlink_dir.html#limitations
+[NTFS junction]: https://learn.microsoft.com/en-us/windows/win32/FileIO/hard-links-and-junctions#junctions
+<!-- prettier-ignore-end -->

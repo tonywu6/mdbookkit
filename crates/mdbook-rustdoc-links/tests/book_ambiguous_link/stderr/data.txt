@@ -1,0 +1,7 @@
+warning: unresolved link to `tracing_subscriber::fmt`
+  ╭▸ rustdoc-links/writing-links.md:1:5
+  │
+1 │ > [`tracing_subscriber::fmt`] is both a function and a module.
+  ╰╴    ━━━━━━━━━━━━━━━━━━━━━━━ no item named `tracing_subscriber` in scope
+
+ WARN mdbook-rustdoc-links: finished with warnings

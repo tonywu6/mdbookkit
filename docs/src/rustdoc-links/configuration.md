@@ -115,20 +115,20 @@ for more info.
 ```toml config-example
 [preprocessor.rustdoc-links]
 build.packages = ["tap", "clap", "indexmap"]
-# you can refer to these packages
+# these packages can be referred to in docs
 ```
 
 ```toml config-example
 [preprocessor.rustdoc-links.build]
 packages = [{ workspace = "all" }]
-# you can refer to all packages in your workspace
+# all packages in your workspace can be referred to in docs
 ```
 
 ```toml config-example
 [preprocessor.rustdoc-links.build]
 packages = [{ workspace = true, dependencies = true }]
-# you can refer to all default members in your workspace,
-# as well as their direct dependencies
+# all default members in your workspace, as well as their
+# direct dependencies, can be referred to in docs
 ```
 
 </details></p>

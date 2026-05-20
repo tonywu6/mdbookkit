@@ -186,6 +186,11 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
                         Ok(path) => path,
                         Err(()) => return Ok(()),
                     };
+                    match src.extension().map(|e| e.as_encoded_bytes()) {
+                        None => return Ok(()),
+                        Some(b"svg") => return Ok(()),
+                        _ => {}
+                    }
                     let img = image::open(&src)
                         .with_context(|| src.display().to_string())
                         .context("failed to read image")?;

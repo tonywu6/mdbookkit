@@ -84,10 +84,6 @@ test_case![deserialize_workspace, exit(101)];
 test_case![deserialize_package, exit(101)];
 test_case![hidden_items, exit(0)];
 
-test_case![book_getting_started, exit(0)];
-test_case![book_link_syntax_escape_generics, exit(0)];
-test_case![book_link_syntax_unsupported_generics, exit(0)];
-
 test_case![
     debug_logs,
     exit(0),
@@ -99,6 +95,42 @@ test_case![
 ];
 
 test_case![base_url, exit(0), env = ["CI" = "1"]];
+
+test_case![
+    book_ambiguous_link,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
+test_case![
+    book_escape_generics,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
+test_case![
+    book_getting_started,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
+test_case![
+    book_mdbookkit_term_ascii,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "ascii"]
+];
+test_case![
+    book_mdbookkit_term_unicode,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
+test_case![
+    book_mdbookkit_term_logging,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = ""]
+];
+test_case![
+    book_unsupported_generics,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
 
 #[test]
 fn base_url_local() -> Result<()> {

@@ -111,7 +111,7 @@ impl<'a> IssueReporter<'a> {
         } else {
             for issue in self.issues {
                 // filtering done by tracing
-                issue_to_traces(issue, source.clone(), &emit);
+                issue_to_traces(&issue, &source, &emit);
             }
         }
     }
@@ -166,10 +166,14 @@ pub fn issue_to_report<'a>(issue: IssueReport<'a>, source: SourceCode<'a>) -> Ve
     sections
 }
 
-pub fn issue_to_traces<'a>(issue: IssueReport<'a>, source: SourceCode<'a>, emit: &EmitCallsite) {
+pub fn issue_to_traces<'a>(
+    issue: &'a IssueReport<'a>,
+    source: &'a SourceCode<'a>,
+    emit: &EmitCallsite,
+) {
     struct IssueFormatter<'a> {
-        issue: IssueReport<'a>,
-        source: SourceCode<'a>,
+        issue: &'a IssueReport<'a>,
+        source: &'a SourceCode<'a>,
     }
 
     impl<'a> Display for IssueFormatter<'a> {
