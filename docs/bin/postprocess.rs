@@ -18,7 +18,7 @@ use tap::{Pipe, Tap};
 use tracing::{debug, error, info, info_span, trace};
 use url::Url;
 
-use mdbookkit::{error::OnWarning, url::UrlFromPath};
+use mdbookkit::{error::FailOnWarnings, url::UrlFromPath};
 
 pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
     let root_dir = root_dir.unwrap_or(current_dir()?);
@@ -278,7 +278,7 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
         }
     }
 
-    OnWarning::FailInCi.check()
+    FailOnWarnings::InPipelines.check()
 }
 
 #[derive(Deserialize, Debug)]

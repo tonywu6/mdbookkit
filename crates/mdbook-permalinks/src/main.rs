@@ -17,7 +17,7 @@ use mdbookkit::{
     diagnostics::IssueReporter,
     emit, emit_error,
     env::is_logging,
-    error::{OnWarning, PathDebug, ProgramExit, has_severity},
+    error::{FailOnWarnings, PathDebug, ProgramExit, has_severity},
     level_enabled,
     logging::init_logging,
     ticker, ticker_item,
@@ -494,7 +494,7 @@ struct Config {
     #[serde(default)]
     always_link: Vec<String>,
     #[serde(default)]
-    fail_on_warnings: OnWarning,
+    fail_on_warnings: FailOnWarnings,
 }
 
 #[derive(Clone)]

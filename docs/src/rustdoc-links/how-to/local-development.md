@@ -24,7 +24,7 @@ base-url.dev = "/api"
 With this option, the preprocessor does the following:
 
 - Instead of generating links that point to docs.rs, it generates links in the form of
-  <br> `/<base-url.dev>/<crate-name>/<item>`[^relpath]. For example:
+  <br> `/<base-url.dev>/<crate-name>/<item>`[^relpath]:
 
   | Configuration                | Generated link                                                  |
   | ---------------------------- | --------------------------------------------------------------- |

@@ -77,21 +77,6 @@ variable:
 <figure>
 
 ```shell
-MDBOOK_LOG=warn mdbook build
-```
-
-{% include "/crates/mdbook-rustdoc-links/tests/book_mdbookkit_term_logging/stderr/data.svg" %}
-
-<figcaption>
-  Example diagnostic output when the preprocessor is in logging mode (either <code>CI</code>
-  or <code>MDBOOK_LOG</code> has been set).
-</figcaption>
-
-</figure>
-
-<figure>
-
-```shell
 MDBOOKKIT_TERM_GRAPHICAL=unicode MDBOOK_LOG=warn mdbook build
 ```
 
@@ -116,6 +101,21 @@ MDBOOKKIT_TERM_GRAPHICAL=ascii MDBOOK_LOG=warn mdbook build
 <figcaption>
   Example diagnostic output using the <code>ascii</code> mode. <br>
   This uses plain ASCII characters instead of line drawing characters.
+</figcaption>
+
+</figure>
+
+<figure>
+
+```shell
+MDBOOK_LOG=warn mdbook build
+```
+
+{% include "/crates/mdbook-rustdoc-links/tests/book_mdbookkit_term_logging/stderr/data.svg" %}
+
+<figcaption>
+  Example diagnostic output when the preprocessor is in logging mode (either <code>CI</code>
+  or <code>MDBOOK_LOG</code> has been set).
 </figcaption>
 
 </figure>

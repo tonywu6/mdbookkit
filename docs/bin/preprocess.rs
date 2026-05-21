@@ -22,7 +22,7 @@ use mdbookkit::{
     },
     emit, emit_error, emit_warning,
     env::locate_project,
-    error::{ExpectFmt, OnWarning, WithPathDebug},
+    error::{ExpectFmt, FailOnWarnings, WithPathDebug},
     markdown::{PatchStream, Spanned},
     url::{ExpectPath, ExpectUrl, UrlFromPath},
 };
@@ -133,7 +133,7 @@ pub fn run() -> Result<()> {
         }
     }
 
-    OnWarning::FailInCi.check()?;
+    FailOnWarnings::InPipelines.check()?;
 
     book.to_stdout(&ctx)
 }

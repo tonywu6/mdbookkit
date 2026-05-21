@@ -52,30 +52,37 @@ fn level_to_severity(level: Level) -> u8 {
 }
 
 #[derive(Deserialize, Debug, Default, Clone, Copy)]
-pub enum OnWarning {
+pub enum FailOnWarnings {
     #[default]
+    #[serde(skip)]
+    Unspecified,
     #[serde(rename = "ci")]
-    FailInCi,
+    InPipelines,
     #[serde(rename = "always")]
-    AlwaysFail,
+    Always,
 }
 
-impl OnWarning {
+impl FailOnWarnings {
     #[inline]
     pub fn check(&self) -> Result<()> {
         if has_severity(Level::ERROR) {
             Err(anyhow!("preprocessor finished with errors"))
         } else if has_severity(Level::WARN) {
             match (self, is_ci()) {
-                (Self::AlwaysFail, _) => anyhow! { "treating warnings as errors because the \
+                (Self::Always, _) => anyhow! { "treating warnings as errors because the \
                 `fail-on-warnings` option is set to \"always\"" }
                 .pipe(Err),
-                (Self::FailInCi, Some(ci)) => {
+                (Self::InPipelines, Some(ci)) => {
                     anyhow! { "treating warnings as errors because CI={ci} and the \
                     `fail-on-warnings` option is set to \"ci\"" }
                     .pipe(Err)
                 }
-                (Self::FailInCi, None) => Ok(()),
+                (Self::Unspecified, Some(ci)) => {
+                    anyhow! { "treating warnings as errors because CI={ci} (option \
+                    `fail-on-warnings` set to \"ci\" by default)" }
+                    .pipe(Err)
+                }
+                (Self::InPipelines | Self::Unspecified, None) => Ok(()),
             }
         } else {
             Ok(())
@@ -87,9 +94,9 @@ impl OnWarning {
         match result {
             Err(error) => Err(error),
             Ok(Err(error)) => match (self, is_ci()) {
-                (Self::AlwaysFail, _) => Err(error),
-                (Self::FailInCi, Some(_)) => Err(error),
-                (Self::FailInCi, None) => Ok(Err(error)),
+                (Self::Always, _) => Err(error),
+                (Self::InPipelines | Self::Unspecified, Some(_)) => Err(error),
+                (Self::InPipelines | Self::Unspecified, None) => Ok(Err(error)),
             },
             Ok(Ok(result)) => Ok(Ok(result)),
         }

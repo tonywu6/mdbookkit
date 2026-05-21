@@ -83,6 +83,15 @@ test_case![manifest_invalid, exit(101)];
 test_case![deserialize_workspace, exit(101)];
 test_case![deserialize_package, exit(101)];
 test_case![hidden_items, exit(0)];
+test_case![
+    fail_on_warnings_in_ci,
+    exit(101),
+    env = [
+        "CI" = "true",
+        "MDBOOK_LOG" = "warn,mdbook_core=off",
+        "MDBOOKKIT_TERM_GRAPHICAL" = ""
+    ]
+];
 
 test_case![
     debug_logs,

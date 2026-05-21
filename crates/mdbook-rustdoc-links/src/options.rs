@@ -17,7 +17,7 @@ use mdbookkit::{
     config::value_or_vec,
     de_struct, emit_error,
     env::{is_ci, locate_project},
-    error::OnWarning,
+    error::FailOnWarnings,
     url::{UrlPath, UrlUtil},
 };
 
@@ -81,7 +81,7 @@ de_struct!(
 pub struct Config {
     pub builder: BuilderConfig,
     pub env: EnvConfig,
-    pub fail_on_warnings: OnWarning,
+    pub fail_on_warnings: FailOnWarnings,
 }
 
 #[derive(Debug, Default)]

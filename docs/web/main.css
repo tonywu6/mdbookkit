@@ -281,9 +281,12 @@ body {
       margin-block: 0;
     }
 
-    > figcaption {
+    > :not(svg) {
       position: sticky;
       left: 0;
+    }
+
+    > figcaption {
       font-size: 0.8em;
       font-weight: 600;
 

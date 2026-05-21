@@ -1,0 +1,28 @@
+<svg width="1213px" height="56px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .fg { fill: #B2B2B2 }
+    .bg { fill: #1A1A1A }
+    .fg-red { fill: #E06C75 }
+    .fg-yellow { fill: #D19A66 }
+    .container {
+      padding: 0 10px;
+      line-height: 18px;
+    }
+    .bold { font-weight: bold; }
+    tspan {
+      font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;
+      white-space: pre;
+      line-height: 18px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" y="0"  class="bg" />
+
+  <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: continuous-integration.md:1:5: unresolved link to `std::path::PurePath`: no item named `PurePath` in module `path`</tspan>
+</tspan>
+    <tspan x="10px" y="46px"><tspan class="fg-red">ERROR</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: treating warnings as errors because CI=true (option `fail-on-warnings` set to "ci" by default)</tspan>
+</tspan>
+  </text>
+
+</svg>

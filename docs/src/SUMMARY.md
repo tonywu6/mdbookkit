@@ -15,7 +15,7 @@
     - [Cargo workspaces](rustdoc-links/how-to/cargo-workspaces.md)
     - [Conditional compilation](rustdoc-links/how-to/conditional-compilation.md)
     - [Local development](rustdoc-links/how-to/local-development.md)
-    - [Configure for CI/CD](rustdoc-links/how-to/continuous-integration.md)
+    - [Use in CI/CD](rustdoc-links/how-to/continuous-integration.md)
     - [Self-host API docs](rustdoc-links/how-to/self-hosting-cargo-docs.md)
   - [Configuration](rustdoc-links/configuration.md)
     - [Environment variables](rustdoc-links/configuration/environment-variables.md)

@@ -582,19 +582,21 @@ at the `warning` level.
 
 Can be either:
 
-- `"ci"`. The preprocessor will fail if it is running in a CI environment and there are
-  warnings.
+- `"ci"`. The preprocessor will exit with an error if it is
+  [running in a CI environment](how-to/continuous-integration.md#detecting-ci) and there
+  are warnings.
 
   If it is not running in CI, the preprocessor prints out warnings but will exit with
   `0` (unless there are errors).
 
-- `"always"`. The preprocessor will always fail as long as there are warnings.
+- `"always"`. The preprocessor will always exit with an error as long as there are
+  warnings.
 
 The default is `"ci"`. This allows the preprocessor to fail your CI builds if it detects
 potential issues, but keep `mdbook serve` running during local development.
 
-Log messages and diagnostics at the error severity always cause the preprocessor to
-fail, regardless of this option.
+Regardless of this option, log messages and diagnostics at the error severity will
+always cause the preprocessor to exit with an error.
 
 <!-- prettier-ignore-start -->
 [target triples]: https://doc.rust-lang.org/stable/cargo/appendix/glossary.html#target
