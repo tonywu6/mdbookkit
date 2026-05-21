@@ -15,7 +15,7 @@ use tracing::debug;
 
 use mdbookkit::{
     config::value_or_vec,
-    de_struct, emit_error,
+    de_struct, doc_link, emit_error,
     env::{is_ci, locate_project},
     error::FailOnWarnings,
     url::{UrlPath, UrlUtil},
@@ -209,6 +209,7 @@ impl BuilderConfig {
         } else {
             default_cargo
                 .workspace(book_dir.as_std_path())
+                .context(doc_link!(help = "faq#failed-to-find-a-cargo-project"))
                 .context("this preprocessor will run `cargo doc`, which requires a Cargo project")
                 .context("failed to find a Cargo project")
                 .or_else(emit_error!())?

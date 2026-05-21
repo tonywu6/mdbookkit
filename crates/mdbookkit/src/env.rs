@@ -80,8 +80,8 @@ pub fn locate_project(command: Option<Command>) -> Result<Utf8PathBuf> {
         .unwrap_or_else(|| Command::new("cargo").flag("locate-project", true))
         .args(["--message-format=json", "--workspace"])
         .run()
-        .checked()
-        .context("`cargo locate-project` did not succeed")?;
+        .result()?
+        .output()?;
 
     let LocateProject { root } = serde_json::from_slice(&output.stdout)
         .with_context(|| format!("{:?}", String::from_utf8_lossy(&output.stdout)))

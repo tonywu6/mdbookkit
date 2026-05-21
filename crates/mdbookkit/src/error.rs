@@ -289,6 +289,16 @@ macro_rules! with_bug_report {
     };
 }
 
+#[macro_export]
+macro_rules! doc_link {
+    (help = $page:literal) => {
+        concat!("for more info, see: ", $crate::doc_link!($page))
+    };
+    ($page:literal) => {
+        concat!(env!("CARGO_PKG_HOMEPAGE"), "/", $page)
+    };
+}
+
 pub trait ProgramExit {
     fn exit(self) -> !;
 }

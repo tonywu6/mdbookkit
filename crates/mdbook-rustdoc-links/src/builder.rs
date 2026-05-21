@@ -797,7 +797,8 @@ fn resolve_packages(
                 .runner(&cargo.runner)
                 .current_dir(manifest_dir)
                 .run()
-                .checked()?
+                .result()?
+                .output()?
                 .stdout;
             Ok(String::from_utf8(stdout)?)
         })
@@ -1056,7 +1057,7 @@ trait CargoMetadataUtil {
 
 impl CargoMetadataUtil for Subprocess {
     fn into_cargo_metadata(self) -> Result<cargo_metadata::Metadata> {
-        let stdout = String::from_utf8(self.checked()?.stdout)?;
+        let stdout = String::from_utf8(self.result()?.output()?.stdout)?;
         Ok(cargo_metadata::MetadataCommand::parse(stdout)?)
     }
 }

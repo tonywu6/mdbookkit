@@ -27,6 +27,7 @@ warning: unresolved link to `crate::fun`
    |
    = help: try specifying the crate name instead of `crate::`
    = help: or use the `build.preludes` option to introduce this item into scope
+   = help: for more info, see: https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#no-item--in-module-temporary_crate_0
    = note: in order to resolve links, the preprocessor creates a temporary crate;
            a prelude was not implicitly added to the temporary crate because:
            the default workspace member has been filtered out by the `build.packages` option

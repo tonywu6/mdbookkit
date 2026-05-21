@@ -19,7 +19,7 @@
     - [Self-host API docs](rustdoc-links/how-to/self-hosting-cargo-docs.md)
   - [Configuration](rustdoc-links/configuration.md)
     - [Environment variables](rustdoc-links/configuration/environment-variables.md)
-  - [Common issues]()
+  - [Common issues](rustdoc-links/faq.md)
   - [Motivation](rustdoc-links/motivation.md)
   <!-- - [CHANGELOG](rustdoc-links/CHANGELOG.md) -->
 

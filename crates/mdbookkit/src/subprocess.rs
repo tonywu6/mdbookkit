@@ -138,9 +138,17 @@ impl Subprocess {
             repr,
         })
     }
+}
 
-    pub fn checked(self) -> Result<process::Output> {
-        let SubprocessResult { output, status, .. } = self.result()?;
+pub struct SubprocessResult {
+    pub output: process::Output,
+    pub status: Option<anyhow::Error>,
+    pub repr: PrintCommand,
+}
+
+impl SubprocessResult {
+    pub fn output(self) -> Result<process::Output> {
+        let Self { output, status, .. } = self;
 
         if level_enabled!(Level::TRACE) {
             let stdout = String::from_utf8_lossy(&output.stdout);
@@ -174,12 +182,6 @@ impl Subprocess {
             Ok(output)
         }
     }
-}
-
-pub struct SubprocessResult {
-    pub output: process::Output,
-    pub status: Option<anyhow::Error>,
-    pub repr: PrintCommand,
 }
 
 pub struct PrintCommand(String);
