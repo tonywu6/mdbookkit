@@ -1,6 +1,8 @@
  WARN mdbook-rustdoc-links: could not determine the versions of these packages: {
     "pin-project-lite",
-} note: dev and build dependencies are excluded
+}
+note: dev and build dependencies are excluded
+help: for more info, see https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#could-not-determine-the-versions-of-these-packages
 warning: unresolved link to `pin_project_lite`
  --> index.md:1:3
   |

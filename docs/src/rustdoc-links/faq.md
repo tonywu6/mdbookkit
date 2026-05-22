@@ -46,3 +46,53 @@ dependencies, like so:
 build.features = ["serde/derive"]
 build.packages = ["serde"]
 ```
+
+Due to a quirk in Cargo, selecting dependency features this way currently results in an
+error. A workaround to include at least one workspace member in the `build.packages`
+option, for example:
+
+```diff config-example
+  [preprocessor.rustdoc-links]
+  build.features = ["serde/derive"]
+- build.packages = ["serde"]
++ build.packages = [{ workspace = true }]
+```
+
+For more information, see
+[Cargo issue #16990](https://github.com/rust-lang/cargo/issues/16990).
+
+## "could not determine the versions of these packages"
+
+This warning could occur if you try to link to a dev or build dependency by adding the
+package to the [`build.packages`](configuration.md#buildpackages) option.
+
+Due to an issue in Cargo, attempting to document dev or build dependencies results in
+Cargo exiting with an error. Therefore, it is currently not possible to use the
+preprocessor to generate links to them.
+
+For more information, see
+[Cargo issue #11105](https://github.com/rust-lang/cargo/issues/11105).
+
+## "rustdoc did not process this link"
+
+This warning diagnostic occurs when the preprocessor was not able to resolve a item but
+`rustdoc` did not issue a diagnostic for it.
+
+Normally, when an item fails to resolve, such as when the item does not exist, `rustdoc`
+generates a corresponding warning. However, in very specific circumstances, `rustdoc`
+considers an item resolved, but does not generate the necessary files for the
+preprocessor to generate a URL. Some known examples are:
+
+- If an item is marked as [`#[doc(hidden)]`][doc-hidden]. It is currently not possible
+  to link to a hidden item.
+
+- If an item from another crate is [re-exported with `#[doc(inline)]`][doc-inline], but
+  that crate is not included in
+  [the list of packages to build docs for](configuration.md#buildpackages). In this
+  case, try rewriting the link to point to the original item instead of the re-exported
+  location.
+
+<!-- prettier-ignore-start -->
+[doc-hidden]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/the-doc-attribute.html#hidden
+[doc-inline]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/re-exports.html#inlining-with-docinline
+<!-- prettier-ignore-end -->

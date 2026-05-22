@@ -838,8 +838,9 @@ fn resolve_packages(
     let unresolved = trees.into_values().flatten().collect::<BTreeSet<_>>();
 
     if !unresolved.is_empty() {
-        warn! { "could not determine the versions of these packages: {unresolved:#?} \
-        note: dev and build dependencies are excluded" };
+        warn! { "could not determine the versions of these packages: {unresolved:#?}\n\
+        note: dev and build dependencies are excluded\n\
+        {}", doc_link!(help = "faq#could-not-determine-the-versions-of-these-packages") };
     }
 
     Ok(PackageResolution(resolved))

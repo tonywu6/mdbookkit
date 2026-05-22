@@ -292,10 +292,10 @@ macro_rules! with_bug_report {
 #[macro_export]
 macro_rules! doc_link {
     (help = $page:literal) => {
-        concat!("help: see ", $crate::doc_link!($page), " for more info")
+        concat!("help: for more info, see ", $crate::doc_link!($page))
     };
     (see = $page:literal) => {
-        concat!("see ", $crate::doc_link!($page), " for more info")
+        concat!("for more info, see ", $crate::doc_link!($page))
     };
     ($page:literal) => {
         concat!(env!("CARGO_PKG_HOMEPAGE"), "/", $page)

@@ -6,7 +6,7 @@ Caused by:
     1: command exited with [EXIT_CODE] 101
     2: [COMMAND_DEBUG] "cargo" "tree" "--features" "anstyle-parse/utf8" "--no-dedupe" "--format" "{p}" "--prefix" "none" "--edges" "normal" "--package" "anstyle-parse" "--depth" "0"
        
-help: see https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#cannot-specify-features-for-packages-outside-of-workspace for more info
+help: for more info, see https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#cannot-specify-features-for-packages-outside-of-workspace
 note: the following options have been specified, which may have caused the error:
     - build.features
     - build.packages
