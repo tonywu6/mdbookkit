@@ -19,11 +19,11 @@ use tempfile::TempDir;
 use tracing::{Level, debug, info, info_span, instrument, trace, warn};
 
 use mdbookkit::{
-    emit_debug, emit_error, emit_warning,
+    doc_link, emit_debug, emit_error, emit_warning,
     env::is_logging,
     error::{ExpectFmt, WithPathDebug},
     level_enabled,
-    subprocess::{CommandUtil, Subprocess},
+    subprocess::{CommandUtil, Subprocess, SubprocessResult},
     ticker, ticker_event, with_bug_report,
 };
 
@@ -316,7 +316,7 @@ fn run_builder(
             })
             .collect::<Vec<_>>();
 
-        let status = if let Some(status) = result.status {
+        let status = if let Some(status) = result.status() {
             Some(status)
         } else if stderr
             .iter()
@@ -482,7 +482,7 @@ impl CargoRecorder {
 
         let result = proc.result()?;
 
-        let error = if let Some(status) = result.status {
+        let error = if let Some(status) = result.status() {
             Some(status)
         } else if !success {
             (result.repr.as_context())
@@ -804,7 +804,19 @@ fn resolve_packages(
         })
         .collect::<Result<Vec<_>>>()
         .context("error while resolving package versions")
-        .or_else(with_notes!(emit_warning, notes))?
+        .or_else(|error| {
+            let error = if let Some(output) = error.downcast_ref::<SubprocessResult>()
+                && (output.stderr())
+                    .contains("cannot specify features for packages outside of workspace")
+            {
+                anyhow! { "{error:?}\n{}", doc_link! {
+                    help = "faq#cannot-specify-features-for-packages-outside-of-workspace"
+                } }
+            } else {
+                anyhow!("{error:?}")
+            };
+            with_notes!(emit_warning, notes)(error)
+        })?
         .iter()
         .flat_map(|output| {
             output.lines().filter_map(|line| {

@@ -1,5 +1,7 @@
 use std::{
+    borrow::Cow,
     ffi::OsStr,
+    fmt::Display,
     process::{self, Command, Stdio},
 };
 
@@ -124,66 +126,75 @@ impl Subprocess {
             }
         };
 
-        let status = if output.status.success() {
+        Ok(SubprocessResult { output, repr })
+    }
+}
+
+#[derive(Debug)]
+pub struct SubprocessResult {
+    pub output: process::Output,
+    pub repr: PrintCommand,
+}
+
+impl SubprocessResult {
+    pub fn stdout(&self) -> Cow<'_, str> {
+        String::from_utf8_lossy(&self.output.stdout)
+    }
+
+    pub fn stderr(&self) -> Cow<'_, str> {
+        String::from_utf8_lossy(&self.output.stderr)
+    }
+
+    pub fn status(&self) -> Option<anyhow::Error> {
+        let Self { output, repr } = self;
+        if output.status.success() {
             None
         } else {
             (repr.as_context())
                 .context(format!("command exited with {}", output.status))
                 .pipe(Some)
-        };
-
-        Ok(SubprocessResult {
-            output,
-            status,
-            repr,
-        })
+        }
     }
-}
 
-pub struct SubprocessResult {
-    pub output: process::Output,
-    pub status: Option<anyhow::Error>,
-    pub repr: PrintCommand,
-}
-
-impl SubprocessResult {
     pub fn output(self) -> Result<process::Output> {
-        let Self { output, status, .. } = self;
-
         if level_enabled!(Level::TRACE) {
-            let stdout = String::from_utf8_lossy(&output.stdout);
+            let stdout = self.stdout();
             let stdout = stdout.trim_end();
-            let stderr = String::from_utf8_lossy(&output.stderr);
+            let stderr = self.stderr();
             let stderr = stderr.trim_end();
             trace!("--- stderr\n{stderr}");
             trace!("--- stdout\n{stdout}");
         }
 
-        if let Some(status) = status {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let stderr = stderr.trim_end();
-
-            let error = if stderr.is_empty() {
-                let stdout = String::from_utf8_lossy(&output.stdout);
-                let stdout = stdout.trim_end();
-
-                if stdout.is_empty() {
-                    "--- stderr\n(empty)\n--- stdout\n(empty)".into()
-                } else {
-                    format!("--- stderr\n(empty)\n--- stdout\n{stdout}")
-                }
-            } else {
-                format!("--- stderr\n{stderr}")
-            };
-
-            let error = status.context(error);
-            Err(error)
+        if let Some(status) = self.status() {
+            Err(status.context(self))
         } else {
-            Ok(output)
+            Ok(self.output)
         }
     }
 }
 
+impl Display for SubprocessResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let stderr = self.stderr();
+        let stderr = stderr.trim_end();
+
+        if stderr.is_empty() {
+            let stdout = self.stdout();
+            let stdout = stdout.trim_end();
+
+            if stdout.is_empty() {
+                write!(f, "--- stderr\n(empty)\n--- stdout\n(empty)")
+            } else {
+                write!(f, "--- stderr\n(empty)\n--- stdout\n{stdout}")
+            }
+        } else {
+            write!(f, "--- stderr\n{stderr}")
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct PrintCommand(String);
 
 impl PrintCommand {

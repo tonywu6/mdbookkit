@@ -1,4 +1,4 @@
-<svg width="1012px" height="452px" xmlns="http://www.w3.org/2000/svg">
+<svg width="995px" height="452px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -35,7 +35,7 @@
 </tspan>
     <tspan x="10px" y="154px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: or use the `build.preludes` option to introduce this item into scope</tspan>
 </tspan>
-    <tspan x="10px" y="172px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for more info, see: https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#no-item--in-module-temporary_crate_0</tspan>
+    <tspan x="10px" y="172px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: see https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#no-item--in-module-temporary_crate_0 for more info</tspan>
 </tspan>
     <tspan x="10px" y="190px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: in order to resolve links, the preprocessor creates a temporary crate;</tspan>
 </tspan>
@@ -61,7 +61,7 @@
 </tspan>
     <tspan x="10px" y="388px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: or use the `build.preludes` option to introduce this item into scope</tspan>
 </tspan>
-    <tspan x="10px" y="406px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for more info, see: https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#no-item--in-module-temporary_crate_0</tspan>
+    <tspan x="10px" y="406px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: see https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#no-item--in-module-temporary_crate_0 for more info</tspan>
 </tspan>
     <tspan x="10px" y="424px">
 </tspan>

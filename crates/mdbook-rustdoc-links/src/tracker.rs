@@ -818,7 +818,7 @@ impl<'a> IssueReportContext<'a> {
                 let help1 =
                     format!("try specifying the crate name instead of `{specifies_crate}::`");
                 let help2 = "or use the `build.preludes` option to introduce this item into scope";
-                let help3 = doc_link!(help = "faq#no-item--in-module-temporary_crate_0");
+                let help3 = doc_link!(see = "faq#no-item--in-module-temporary_crate_0");
                 report
                     .note(Note::help(help1))
                     .note(Note::help(help2))

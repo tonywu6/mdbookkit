@@ -1,4 +1,4 @@
-<svg width="936px" height="272px" xmlns="http://www.w3.org/2000/svg">
+<svg width="970px" height="272px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -26,7 +26,7 @@
 </tspan>
     <tspan x="10px" y="82px"><tspan>    0: this preprocessor will run `cargo doc`, which requires a Cargo project</tspan>
 </tspan>
-    <tspan x="10px" y="100px"><tspan>    1: for more info, see: https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#failed-to-find-a-cargo-project</tspan>
+    <tspan x="10px" y="100px"><tspan>    1: help: see https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#failed-to-find-a-cargo-project for more info</tspan>
 </tspan>
     <tspan x="10px" y="118px"><tspan>    2: --- stderr</tspan>
 </tspan>
