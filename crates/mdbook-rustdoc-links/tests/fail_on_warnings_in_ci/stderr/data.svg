@@ -1,4 +1,4 @@
-<svg width="1213px" height="56px" xmlns="http://www.w3.org/2000/svg">
+<svg width="1213px" height="74px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -22,6 +22,8 @@
     <tspan x="10px" y="28px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: continuous-integration.md:1:5: unresolved link to `std::path::PurePath`: no item named `PurePath` in module `path`</tspan>
 </tspan>
     <tspan x="10px" y="46px"><tspan class="fg-red">ERROR</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: treating warnings as errors because CI=true (option `fail-on-warnings` set to "ci" by default)</tspan>
+</tspan>
+    <tspan x="10px" y="64px"><tspan>ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status</tspan>
 </tspan>
   </text>
 

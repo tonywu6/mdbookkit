@@ -1,18 +1,5 @@
 # Common/Known issues
 
-## "failed to find a Cargo project"
-
-This fatal error occurs because the preprocessor cannot find your Cargo project (package
-or workspace), without which it cannot run
-[`cargo doc`](naming-items.md#under-the-hood).
-
-This could happen if the directory containing your book (containing the `book.toml`
-file) is not within a Cargo project. You can tell the preprocessor where your project is
-by setting the [`manifest-dir`](configuration.md#manifest-dir) option.
-
-If you are not working with a Cargo project, then this preprocessor is not really
-useful.
-
 ## "no item ... in module `temporary_crate_0`"
 
 This warning could appear if you try to use the `crate::*` or `self::*` notation to link
@@ -61,9 +48,22 @@ option, for example:
 For more information, see
 [Cargo issue #16990](https://github.com/rust-lang/cargo/issues/16990).
 
+## "failed to find a Cargo project"
+
+This fatal error could occur because the preprocessor cannot find your Cargo project
+(package or workspace), without which it cannot run
+[`cargo doc`](naming-items.md#under-the-hood).
+
+This could happen if the directory containing your book (containing the `book.toml`
+file) is not within a Cargo project. You can tell the preprocessor where your project is
+by setting the [`manifest-dir`](configuration.md#manifest-dir) option.
+
+If you are not working with a Cargo project, then this preprocessor is not really
+useful.
+
 ## "could not determine the versions of these packages"
 
-This warning could occur if you try to link to a dev or build dependency by adding the
+This warning could appear if you try to link to a dev or build dependency by adding the
 package to the [`build.packages`](configuration.md#buildpackages) option.
 
 Due to an issue in Cargo, attempting to document dev or build dependencies results in
@@ -75,7 +75,7 @@ For more information, see
 
 ## "rustdoc did not process this link"
 
-This warning diagnostic occurs when the preprocessor was not able to resolve a item but
+This warning diagnostic appears when the preprocessor was not able to resolve a item but
 `rustdoc` did not issue a diagnostic for it.
 
 Normally, when an item fails to resolve, such as when the item does not exist, `rustdoc`

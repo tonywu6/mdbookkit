@@ -1,2 +1,3 @@
  WARN mdbook-rustdoc-links: continuous-integration.md:1:5: unresolved link to `std::path::PurePath`: no item named `PurePath` in module `path`
 ERROR mdbook-rustdoc-links: treating warnings as errors because CI=true (option `fail-on-warnings` set to "ci" by default)
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

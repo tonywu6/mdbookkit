@@ -83,7 +83,7 @@ as some example pipeline configurations that you can use as starting points.
 ### Installing a Rust toolchain
 
 Since the preprocessor [needs to run `cargo doc`](../naming-items.md#under-the-hood), a
-Rust toolchain is required in the CI environment. For example, in GitHub Actions, you
+Rust toolchain is required in the CI environment. For GitHub Actions, for example, you
 can use the [`dtolnay/rust-toolchain`] action.
 
 If you use the [`build.targets`](../configuration.md#buildtargets) option to generate
@@ -92,12 +92,17 @@ CI.
 
 ### Installing the preprocessor
 
-You can install a precompiled version of the preprocessor using [`cargo binstall`] (or
-fetch it from [GitHub Releases][gh-releases]). As usual, you can also compile from
-source by running `cargo install`.
+You can install a precompiled version of the preprocessor using [`cargo binstall`], or
+fetch it from [GitHub Releases][gh-releases]. As usual, you can also compile from source
+by running `cargo install`.
 
 For GitHub Actions, actions like [`taiki-e/install-action`] may be useful for installing
 both mdBook and the preprocessor in one go.
+
+> [!TIP]
+>
+> Unlike previous versions, v3 of the preprocessor no longer relies on rust-analyzer!
+> This means you can safely remove steps related to rust-analyzer from your pipelines.
 
 ## Example: GitHub Actions
 
@@ -126,8 +131,8 @@ jobs:
             mdbook
             mdbook-rustdoc-links
           fallback: cargo-binstall
-          # the action does not officially support the preprocessor
-          # as a tool, but it can use cargo-binstall as a fallback method
+          # the action does not officially support the preprocessor as a tool,
+          # but it can use cargo-binstall as a fallback method
 
       - name: Build docs
         working-directory: docs

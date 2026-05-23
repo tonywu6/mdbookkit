@@ -6,7 +6,7 @@ etc. But how does this work when the links are in mdBook?
 
 ## Mental model
 
-When using this preprocessor, you may _imagine your book as a standalone, empty crate._
+When using this preprocessor, you can _imagine your book as a standalone, empty crate._
 By default, this "crate" also "depends on" your local package. If you are working with a
 [Cargo workspace](how-to/cargo-workspaces.md), then it "depends on" all default members
 in the workspace.
@@ -14,7 +14,7 @@ in the workspace.
 This means that, by default, you can always link to the following kinds of
 items[^prelude]:
 
-- From the prelude, for example:
+- Items from the prelude, for example:
 
   > ```md
   > [`u8`], [`assert!`], [`Option`], [`IntoFuture::Output`]
@@ -22,7 +22,7 @@ items[^prelude]:
   >
   > [`u8`], [`assert!`], [`Option`], [`IntoFuture::Output`]
 
-- From `std`, by specifying their paths, for example:
+- Items from `std`, by specifying their paths, for example:
 
   > ```md
   > - [`std::net::UdpSocket`]
@@ -32,7 +32,7 @@ items[^prelude]:
   > - [`std::net::UdpSocket`]
   > - [`size_of::<T>()`][std::mem::size_of]
 
-- From crate(s) in your project, for example:
+- Items from crate(s) in your workspace, by specifying their paths, for example:
 
   > ```md
   > - [`mdbookkit::env::is_ci`]
@@ -68,8 +68,9 @@ example, we have:
 If you are documenting a workspace that features multiple libraries, then items from
 them are not implicitly introduced, as that could create ambiguity.
 
-Instead, to make things easier, you may use the `build.preludes` configuration to
-explicitly introduce items into scope.
+Instead, to make things easier, you may use the
+[`build.preludes`](configuration.md#buildpreludes) configuration to explicitly introduce
+items into scope.
 
 As an example, assuming the crate `tracing_subscriber` is in your workspace. With the
 following `book.toml`:
@@ -92,8 +93,9 @@ Items from that crate can now be linked to without having to write out the crate
 Of course, for more comprehensive documentation, you might wish to mention the APIs that
 your libraries depend on as well.
 
-The preprocessor provides the `build.packages` option that allows you to build docs for
-extra packages. You may then refer to items in such packages using the same syntax:
+The preprocessor provides the [`build.packages`](configuration.md#buildpackages) option
+that allows you to build docs for extra packages. You may then refer to items in such
+packages using the same syntax:
 
 > ```md
 > - [`Patch`][::annotate_snippets::Patch]
@@ -104,7 +106,7 @@ extra packages. You may then refer to items in such packages using the same synt
 > - [`fmt`][fn@tracing_subscriber::fmt]
 
 To learn how to use the option, please see the dedicated
-[How-to guide](how-to/package-selection.md)!
+[How-to guide](how-to/package-selection.md)
 
 ## Items that cannot be linked to
 
@@ -143,7 +145,7 @@ use tracing_subscriber::*; // from `build.preludes`
 ```
 
 (This is effectively a temporary `lib.rs` file, hence the concept of a
-["standalone, empty crate!"](#mental-model))
+["standalone, empty crate"](#mental-model)!)
 
 The preprocessor then **invokes [`rustdoc`] with this snippet,** alongside things such
 as the artifacts produced by `cargo doc`. If written as a shell command, this would look

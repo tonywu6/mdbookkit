@@ -50,11 +50,30 @@ collections. [^1]
 
 Follow the [quickstart tutorial](getting-started.md) to try out the preprocessor.
 
-> [!TIP]
->
-> This preprocessor does _**not**_ require a nightly compiler to function.
+For **writing documentation,**
+
+- Learn about all the [syntax features for writing links](writing-links.md) when using
+  this preprocessor. Hint: it's almost exactly the same as when writing doc comments.
+
+- Learn how to [refer to Rust items by name](naming-items.md) in links so that the
+  preprocessor can resolve them.
+
+See how to configure the preprocessor **for specific scenarios,** such as:
+
+- How to link to [items from dependencies](how-to/package-selection.md)
+
+- How to link to [conditionally-compiled items](how-to/conditional-compilation.md)
+
+- How to [use the preprocessor in CI/CD](how-to/continuous-integration.md)
+
+Finally, you can check out the list of
+[all available configuration options](configuration.md).
 
 Happy linking!
+
+> [!TIP]
+>
+> This preprocessor does _not_ require a nightly compiler to function.
 
 ## License
 

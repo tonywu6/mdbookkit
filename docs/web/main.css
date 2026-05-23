@@ -406,6 +406,21 @@ figure.fig-text {
   }
 }
 
+.chapter {
+  li.chapter-item,
+  li.header-item {
+    line-height: 1.5em !important;
+
+    .chapter-link-wrapper {
+      margin-block-end: 0.5em;
+    }
+  }
+}
+
+.sidebar code {
+  line-height: 1.5em !important;
+}
+
 /* à la Google's developer docs */
 @media screen and (width <= 420px) {
   :root {

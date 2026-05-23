@@ -7,10 +7,11 @@ use serde::Deserialize;
 
 use crate::{error::WithPathDebug, subprocess::CommandUtil};
 
+#[macro_export]
 macro_rules! env_var {
     ($name:ident $(, $extra:ident)*) => {
-        pub(crate) static $name: LazyLock<Option<String>> =
-            LazyLock::new(|| {
+        pub(crate) static $name: ::std::sync::LazyLock<Option<String>> =
+            ::std::sync::LazyLock::new(|| {
                 std::env::var(stringify!($name))
                     $( .or_else(|_| std::env::var(stringify!($extra))) )*
                     .ok()

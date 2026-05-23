@@ -1,1 +1,1 @@
-> [`tracing_subscriber::fmt`] is both a function and a module.
+> [`std::vec`] can be either a module or a macro.

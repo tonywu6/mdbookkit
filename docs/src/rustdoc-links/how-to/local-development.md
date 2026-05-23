@@ -9,8 +9,8 @@ During local development, this behavior may be inconvenient:
 - If you are simultaneously working on API docs, pages on docs.rs will not reflect your
   local modifications.
 
-For such reasons, the preprocessor provides a `base-url` option to support locally
-previewing docs produced by `cargo doc` .
+For such reasons, the preprocessor provides a [`base-url`](../configuration.md#base-url)
+option to support locally previewing docs produced by `cargo doc` .
 
 ## Using `base-url.dev`
 

@@ -76,21 +76,26 @@ variable:
 
 <figure>
 
-```shell
-MDBOOKKIT_TERM_GRAPHICAL=unicode MDBOOK_LOG=warn mdbook build
-```
-
-{% include "/crates/mdbook-rustdoc-links/tests/book_mdbookkit_term_unicode/stderr/data.svg" %}
-
 <figcaption>
   Example diagnostic output using the <code>unicode</code> mode. <br>
   This is the default format when none of <code>CI</code>, <code>MDBOOK_LOG</code>,
   or <code>MDBOOKKIT_TERM_GRAPHICAL</code> is specified.
 </figcaption>
 
+```shell
+MDBOOKKIT_TERM_GRAPHICAL=unicode MDBOOK_LOG=warn mdbook build
+```
+
+{% include "/crates/mdbook-rustdoc-links/tests/book_mdbookkit_term_unicode/stderr/data.svg" %}
+
 </figure>
 
 <figure>
+
+<figcaption>
+  Example diagnostic output using the <code>ascii</code> mode. <br>
+  This uses plain ASCII characters instead of line drawing characters.
+</figcaption>
 
 ```shell
 MDBOOKKIT_TERM_GRAPHICAL=ascii MDBOOK_LOG=warn mdbook build
@@ -98,14 +103,14 @@ MDBOOKKIT_TERM_GRAPHICAL=ascii MDBOOK_LOG=warn mdbook build
 
 {% include "/crates/mdbook-rustdoc-links/tests/book_mdbookkit_term_ascii/stderr/data.svg" %}
 
-<figcaption>
-  Example diagnostic output using the <code>ascii</code> mode. <br>
-  This uses plain ASCII characters instead of line drawing characters.
-</figcaption>
-
 </figure>
 
 <figure>
+
+<figcaption>
+  Example diagnostic output when the preprocessor is in logging mode (either <code>CI</code>
+  or <code>MDBOOK_LOG</code> has been set).
+</figcaption>
 
 ```shell
 MDBOOK_LOG=warn mdbook build
@@ -113,16 +118,12 @@ MDBOOK_LOG=warn mdbook build
 
 {% include "/crates/mdbook-rustdoc-links/tests/book_mdbookkit_term_logging/stderr/data.svg" %}
 
-<figcaption>
-  Example diagnostic output when the preprocessor is in logging mode (either <code>CI</code>
-  or <code>MDBOOK_LOG</code> has been set).
-</figcaption>
-
 </figure>
 
 ## `NO_COLOR`, `FORCE_COLOR`
 
 By default, the preprocessor enables or disables colored output depending on whether the
 output destination supports it. For example, if stderr is redirected to a file, then the
-preprocessor suppresses colors. You can set the `NO_COLOR` or `FORCE_COLOR` environment
-variable to explicitly control this.
+preprocessor suppresses colors. You can set the [`NO_COLOR`](https://no-color.org/) or
+[`FORCE_COLOR`](https://force-color.org/) environment variable to explicitly control
+this.

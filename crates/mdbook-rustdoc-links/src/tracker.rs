@@ -279,11 +279,11 @@ impl<'a> LinkTracker<'a> {
         }
     }
 
-    pub fn export<'d: 'a>(&'d self) -> ExportedPages<'d> {
+    pub fn export<'d: 'a>(&'d self) -> ExportedPages<'a> {
         let mut contents = HashMap::with_capacity(self.pages.len());
         let mut reporters = Vec::with_capacity(self.pages.len());
 
-        let links = self.pages.iter().scan(0usize, |start, page| {
+        let iter = self.pages.iter().scan(0usize, |start, page| {
             let links = &self.links[*start..page.link_end];
             *start = page.link_end;
             Some((page, links))
@@ -297,7 +297,7 @@ impl<'a> LinkTracker<'a> {
 
         let base_url = UrlPath::empty();
 
-        for (page, links) in links {
+        for (page, links) in iter {
             let path = (page.base.relative_to(&base_url))
                 .unwrap_or_else(|_| page.base.as_str().to_owned());
 
@@ -386,6 +386,12 @@ impl<'a> LinkTracker<'a> {
     }
 }
 
+pub struct ExportedPages<'a> {
+    pub contents: HashMap<String, Result<String>>,
+    pub issues: Vec<IssueReporter<'a>>,
+    pub stats: Statistics,
+}
+
 fn resolve_url(base: &BaseUrl, output: &BuildOutput<'_>, href: &str) -> Result<UrlPath> {
     if let Ok(href) = href.parse::<Url>() {
         return Ok(href.into());
@@ -416,12 +422,6 @@ fn resolve_url(base: &BaseUrl, output: &BuildOutput<'_>, href: &str) -> Result<U
     .join(href)?;
 
     Ok(url)
-}
-
-pub struct ExportedPages<'a> {
-    pub contents: HashMap<String, Result<String>>,
-    pub issues: Vec<IssueReporter<'a>>,
-    pub stats: Statistics,
 }
 
 macro_rules! link_class {

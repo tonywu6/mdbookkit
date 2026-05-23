@@ -5,8 +5,9 @@ needs to run `cargo doc` to be able to resolve links. You can only create links 
 crates whose packages `cargo doc` has documented.
 
 By default, only your local packages are documented. If you would like to refer to items
-in other packages, then you can use the `build.packages` option to explicitly specify
-more packages to run `cargo doc` on.
+in other packages, then you can use the
+[`build.packages`](../configuration.md#buildpackages) option to explicitly specify more
+packages to run `cargo doc` on.
 
 ## Specifying packages by name
 

@@ -22,7 +22,7 @@ documentation][rustdoc].
 
 ## Overview
 
-Here is a quick look of the most common link formats:
+Here is a quick look of some syntax features and how they look when rendered:
 
 ```md
 - [`std::path`] is a shortcut link
@@ -92,12 +92,12 @@ If you don't intend a bracketed text to be a link, you can escape it using backs
 > > ```md
 > > - [_`std::alloc`_], memory _allocation_ APIs
 > > - [**`std::borrow`**], a module for working with **borrowed** data
-> > - [~~`std::mem::uninitialized`~~] is deprecated since 1.39.0
+> > - [~~`std::mem::uninitialized`~~] has been deprecated since 1.39.0
 > > ```
 > >
 > > - [_`std::alloc`_], memory _allocation_ APIs
 > > - [**`std::borrow`**], a module for working with **borrowed** data
-> > - [~~`std::mem::uninitialized`~~] is deprecated since 1.39.0
+> > - [~~`std::mem::uninitialized`~~] has been deprecated since 1.39.0
 >
 > Note that this is _not_ supported in rustdoc itself. To maintain compatibility with
 > rustdoc, you can place markup outside of the link to achieve the same effect:
@@ -147,8 +147,8 @@ following example, the link labels are also the displayed text:
 ### Inline links
 
 Finally, if you prefer, you can also use the commonly-seen ["inline" link][inline-link]
-syntax. For this preprocessor (and rustdoc), they are functionally the same as
-[reference links](#reference-links):
+syntax. For this preprocessor (and rustdoc), they are functionally the same as reference
+links:
 
 > ```md
 > The [`iter`](std::iter) module defines Rust’s iterator trait.
@@ -156,11 +156,11 @@ syntax. For this preprocessor (and rustdoc), they are functionally the same as
 >
 > The [`iter`](std::iter) module defines Rust’s iterator trait.
 
-Use inline links if you would like to specify [link titles][link-title], which are text
-tooltips that will appear when you hover on a link using the mouse pointer. If you don't
-specify one (that is, in most cases), then rustdoc will by default provide one based on
-the resolved link. For example, on desktop, hover on the following links to see the
-different titles:
+You can use inline links if you would like to specify [link titles][link-title], which
+are text tooltips that will appear when you hover on a link using the mouse pointer. If
+you don't specify one (that is, in most cases), then rustdoc will by default provide one
+based on the resolved link. For example, on desktop, hover on the following links to see
+the different titles:
 
 <!-- prettier-ignore-start -->
 
@@ -190,7 +190,8 @@ links mentioned above.
 
 ## Generic parameters
 
-Item names can contain generic parameters:
+Item names can contain generic parameters. A link like `[Vec<T>]` will behave the same
+as `[Vec]`:
 
 > ```md
 > [`Vec<T>`], a heap-allocated _vector_ that is resizable at runtime.
@@ -220,6 +221,8 @@ Do note some caveats with this syntax though:
 Rust allows different kinds of items to [share the same name][namespace] in the same
 scope. In rustdoc (and this preprocessor), you can clarify the kind of item you want to
 link to using _disambiguators,_ which takes the form `disambiguator@item`. For example,
+the following snippet uses the `fn@` and `mod@` disambiguator to distinguish between a
+function and module of the same name:
 
 > ```md
 > `tracing_subscriber::fmt` is both a [function][fn@tracing_subscriber::fmt] and a
@@ -266,10 +269,9 @@ a warning:
 Compared to [reference links](#reference-links), [inline links](#inline-links) may pose
 a slight hazard when an item fails to resolve: a broken reference link will appear
 broken when rendered, while a broken inline link will appear as a clickable link, albeit
-with an invalid destination. Although in both cases, the preprocessor should still
-produce a diagnostic warning about the broken link.
+with an invalid destination.
 
-Compare the following links with typos:
+For example, compare the following links with typos:
 
 ```md
 - The [`threads`][std::threads] module contains Rust’s threading abstractions.
@@ -280,6 +282,10 @@ Compare the following links with typos:
 - The <a href="std::threads"><code>threads</code></a> module contains Rust’s threading
   abstractions.
 
+Therefore, it's advisable to consistently use reference or shorthand links to link to
+Rust items, to distinguish them from regular web links. Although in both cases, the
+preprocessor should still produce a diagnostic warning about the broken link.
+
 ### Escaping generic parameters
 
 When combining the [shortcut link](#shortcut-links) syntax with the generic parameters
@@ -288,6 +294,7 @@ be interpreted as (invalid) HTML tags and become invisible.
 
 <figure>
   {% include "/crates/mdbook-rustdoc-links/tests/book_escape_generics/stderr/data.svg" %}
+  <figcaption>rustdoc will emit a warning in this case</figcaption>
 </figure>
 
 ### Unsupported generic parameters syntax

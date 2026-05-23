@@ -88,7 +88,7 @@ test_case![
     exit(101),
     env = [
         "CI" = "true",
-        "MDBOOK_LOG" = "warn,mdbook_core=off",
+        "MDBOOK_LOG" = "warn",
         "MDBOOKKIT_TERM_GRAPHICAL" = ""
     ]
 ];

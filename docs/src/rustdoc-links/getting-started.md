@@ -37,7 +37,7 @@ the build process. You can build and install this preprocessor from source using
 cargo install mdbook-rustdoc-links
 ```
 
-<details>
+<p><details>
   <summary>Other ways to install</summary>
 
 - This project supports [cargo-binstall], so instead of compiling from source, you can
@@ -49,7 +49,15 @@ cargo install mdbook-rustdoc-links
 
 - You can also download binaries directly from [GitHub releases][gh-releases].
 
-</details>
+</details></p>
+
+<p><details>
+  <summary>Upgrading from v2</summary>
+
+Unlike previous versions, v3 of the preprocessor no longer requires rust-analyzer to
+work.
+
+</details></p>
 
 ## Configure
 
