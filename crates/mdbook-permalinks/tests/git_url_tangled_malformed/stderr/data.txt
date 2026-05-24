@@ -1,0 +1,9 @@
+ERROR mdbook-permalinks: failed to initialize preprocessor
+
+Caused by:
+    0: could not find a supported git remote URL
+    1: in `output.html.git-repository-url`:
+    2: "https://tangled.org/tonywu.org"
+    3: malformed path "/tonywu.org": expected URL for "tangled.org" to begin with `/<owner>/<repo>` or `/<did>`
+    4: help: use the `repo-url-template` option to define a custom URL scheme
+ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with exit status: 1 status

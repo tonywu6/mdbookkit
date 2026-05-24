@@ -1,0 +1,4 @@
+- [](/Cargo.toml)
+- ![](/Cargo.toml)
+- [](https://git.example.org/lorem/ipsum/web/ref/HEAD/.editorconfig)
+- ![](https://git.example.org/lorem/ipsum/bin/ref/HEAD/.editorconfig)

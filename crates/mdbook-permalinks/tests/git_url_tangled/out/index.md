@@ -1,0 +1,4 @@
+- [](https://tangled.org/tonywu.org/mdbookkit/tree/[GIT_REVISION]/crates/mdbook-permalinks/tests/git_url_tangled/book.toml)
+- ![](https://tangled.org/tonywu.org/mdbookkit/raw/[GIT_REVISION]/crates/mdbook-permalinks/tests/git_url_tangled/book.toml)
+- [](https://tangled.org/tonywu.org/mdbookkit/tree/[GIT_REVISION]/.editorconfig)
+- ![](https://tangled.org/tonywu.org/mdbookkit/raw/[GIT_REVISION]/.editorconfig)

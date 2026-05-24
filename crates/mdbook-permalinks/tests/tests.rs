@@ -29,6 +29,13 @@ test_case![git_url_from_book, exit(0)];
 test_case![git_url_scp_like, exit(0)];
 test_case![git_url_unsupported, exit(101)];
 test_case![git_url_with_query, exit(0)];
+test_case![git_url_codeberg, exit(0)];
+test_case![git_url_tangled, exit(0)];
+test_case![git_url_tangled_did, exit(0)];
+test_case![git_url_tangled_self_hosted, exit(101)];
+test_case![git_url_tangled_malformed, exit(101)];
+test_case![git_url_custom_params, exit(0)];
+test_case![git_url_invalid_config, exit(101)];
 
 macro_rules! test_in_temp_dir {
     [$name:ident ($($args:tt)+), |$root:ident| { $($setup:tt)* }] => {
@@ -130,7 +137,7 @@ fn redacted() -> Vec<(&'static str, RedactedValue)> {
     vec![
         (
             "[GIT_REVISION]",
-            Regex::new(r"(tree/|blob/|raw/|\?h=)(?<redacted>[0-9a-f]{40}|v[0-9.]+)")
+            Regex::new(r"(?<redacted>[0-9a-f]{40}|v[0-9.]+)")
                 .unwrap()
                 .into(),
         ),

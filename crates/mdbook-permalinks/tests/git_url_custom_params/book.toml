@@ -1,0 +1,15 @@
+[preprocessor.permalinks]
+
+[preprocessor.permalinks.repo-url-template]
+params.commit = "ref"
+params.raw = "bin"
+params.tag = "ver"
+params.tree = ["web", "tree"]
+pattern = "https://git.example.org/lorem/ipsum/{tree}/{kind}/{ref}/{path}"
+
+[output.markdown]
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

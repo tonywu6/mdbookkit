@@ -1,0 +1,11 @@
+ERROR mdbook-permalinks: failed to initialize preprocessor
+
+Caused by:
+    0: failed to read preprocessor config from book.toml
+    1: TOML parse error at line 4, column 3
+         |
+       4 |   [
+         |   ^
+       expected at least 1 item
+       
+ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with exit status: 1 status

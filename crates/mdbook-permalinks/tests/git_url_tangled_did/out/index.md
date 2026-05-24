@@ -1,0 +1,4 @@
+- [](https://tangled.org/did:plc:mdgd3jaddgg2ie24yzzqoh5k/tree/[GIT_REVISION]/crates/mdbook-permalinks/tests/git_url_tangled_did/book.toml)
+- ![](https://tangled.org/did:plc:mdgd3jaddgg2ie24yzzqoh5k/raw/[GIT_REVISION]/crates/mdbook-permalinks/tests/git_url_tangled_did/book.toml)
+- [](https://tangled.org/did:plc:mdgd3jaddgg2ie24yzzqoh5k/tree/[GIT_REVISION]/.editorconfig)
+- ![](https://tangled.org/did:plc:mdgd3jaddgg2ie24yzzqoh5k/raw/[GIT_REVISION]/.editorconfig)

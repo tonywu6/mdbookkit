@@ -346,7 +346,7 @@ fn derive_pattern(url: &gix_url::Url) -> Result<UrlPath> {
 
     if is_on_domain("github.com", host) {
         let malformed = || {
-            format! { "malformed path {path:?}, expected URL for {host:?} \
+            format! { "malformed path {path:?}: expected URL for {host:?} \
             to begin with `/<owner>/<repo>`" }
         };
 
@@ -360,7 +360,7 @@ fn derive_pattern(url: &gix_url::Url) -> Result<UrlPath> {
 
     if is_on_domain("codeberg.org", host) {
         let malformed = || {
-            format! { "malformed path {path:?}, expected URL for {host:?} \
+            format! { "malformed path {path:?}: expected URL for {host:?} \
             to begin with `/<owner>/<repo>`" }
         };
 
@@ -374,8 +374,8 @@ fn derive_pattern(url: &gix_url::Url) -> Result<UrlPath> {
 
     if is_on_domain("tangled.org", host) {
         let malformed = || {
-            format! { "malformed path {path:?}, expected URL for {host:?} \
-            to begin with `/<owner>/<repo>` or /<did>" }
+            format! { "malformed path {path:?}: expected URL for {host:?} \
+            to begin with `/<owner>/<repo>` or `/<did>`" }
         };
 
         let mut iter = path.split('/').skip_while(|c| c.is_empty());
@@ -389,6 +389,12 @@ fn derive_pattern(url: &gix_url::Url) -> Result<UrlPath> {
         };
 
         return derive_pattern_tangled(entity, repo);
+    }
+
+    if host.starts_with("knot.") {
+        warn! { "help: it looks like you are using a self-hosted tangled knot" };
+        warn! { "help: if so, you can set `output.html.git-repository-url` \
+        to your repo's \"https://tangled.org\" URL" }
     }
 
     bail!("unsupported remote {host:?}")
