@@ -61,6 +61,8 @@ test_in_temp_dir![git_no_repo(exit(0)), |book| { Ok(()) }];
 
 test_in_temp_dir![git_no_commit(exit(0)), |book| {
     run!(book, "git", "init");
+    #[rustfmt::skip]
+    run!(book, "git", "remote", "add", "origin", "https://github.com/lorem/ipsum.git");
     Ok(())
 }];
 

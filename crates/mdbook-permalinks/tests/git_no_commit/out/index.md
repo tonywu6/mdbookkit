@@ -1,1 +1,1 @@
-- [](../book.toml)
+- [](https://github.com/lorem/ipsum/tree/HEAD/book.toml)
