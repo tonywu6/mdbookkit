@@ -63,7 +63,7 @@
 </tspan>
     <tspan x="10px" y="406px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: also tried the following paths</tspan>
 </tspan>
-    <tspan x="10px" y="424px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.html": path is inaccessible</tspan>
+    <tspan x="10px" y="424px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.html": path doesn't exist</tspan>
 </tspan>
     <tspan x="10px" y="442px">
 </tspan>
@@ -91,7 +91,7 @@
 </tspan>
     <tspan x="10px" y="658px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md/README.md": path is not part of the book</tspan>
 </tspan>
-    <tspan x="10px" y="676px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md": path is inaccessible</tspan>
+    <tspan x="10px" y="676px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md": path doesn't exist</tspan>
 </tspan>
     <tspan x="10px" y="694px">
 </tspan>
@@ -171,7 +171,7 @@
 </tspan>
     <tspan x="10px" y="1378px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/404/README.md": path is not part of the book</tspan>
 </tspan>
-    <tspan x="10px" y="1396px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/404": path is inaccessible</tspan>
+    <tspan x="10px" y="1396px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/404": path doesn't exist</tspan>
 </tspan>
     <tspan x="10px" y="1414px">
 </tspan>
@@ -187,7 +187,7 @@
 </tspan>
     <tspan x="10px" y="1522px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1540px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">resolves to a path that is inaccessible:</tspan>
+    <tspan x="10px" y="1540px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist:</tspan>
 </tspan>
     <tspan x="10px" y="1558px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">"LICENSE-GPL.md"</tspan>
 </tspan>

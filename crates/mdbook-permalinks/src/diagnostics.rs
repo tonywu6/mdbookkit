@@ -114,14 +114,14 @@ impl<'a> LinkDiagnostic<'a> {
                         vec![
                             Highlight::span(span.clone())
                                 .kind(AnnotationKind::Primary)
-                                .label(format!("resolves to a path that is {status}"))
+                                .label(format!("resolves to a path that {status}"))
                                 .build(),
                         ]
                     } else {
                         vec![
                             Highlight::span(span.clone())
                                 .kind(AnnotationKind::Primary)
-                                .label(format!("resolves to a path that is {status}:"))
+                                .label(format!("resolves to a path that {status}:"))
                                 .build(),
                             Highlight::span(span.clone())
                                 .kind(AnnotationKind::Context)
@@ -134,8 +134,7 @@ impl<'a> LinkDiagnostic<'a> {
                 let notes = if candidates.len() > 1 {
                     let mut note = String::from("also tried the following paths");
                     for (link, status) in candidates.iter().skip(1) {
-                        write!(note, "\n{:?}: path is {status}", self.shorten_url(link))
-                            .expect_fmt();
+                        write!(note, "\n{:?}: path {status}", self.shorten_url(link)).expect_fmt();
                     }
                     vec![Note::note(note)]
                 } else {
@@ -188,10 +187,11 @@ impl<'a> LinkDiagnostic<'a> {
 impl Display for PathStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let text = match self {
-            PathStatus::Unreachable => "inaccessible",
-            PathStatus::Ignored => "ignored by git",
-            PathStatus::NotInRepo => "outside of this repo",
-            PathStatus::NotInBook => "not part of the book",
+            PathStatus::Nonexistent => "doesn't exist",
+            PathStatus::Unreachable => "is inaccessible",
+            PathStatus::Ignored => "is ignored by git",
+            PathStatus::NotInRepo => "is outside of this repo",
+            PathStatus::NotInBook => "is not part of the book",
         };
         f.write_str(text)
     }

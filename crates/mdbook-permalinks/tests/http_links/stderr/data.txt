@@ -20,7 +20,7 @@ warning: broken link to "https://example.org/book/trailing-slash.html"
   |      "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md"
   |
   = note: also tried the following paths
-          "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.html": path is inaccessible
+          "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.html": path doesn't exist
 
 warning: broken link to "https://example.org/book/trailing-slash.md"
  --> crates/mdbook-permalinks/tests/http_links/src/3.not-found.md:3:6
@@ -34,7 +34,7 @@ warning: broken link to "https://example.org/book/trailing-slash.md"
   = note: also tried the following paths
           "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md/index.md": path is not part of the book
           "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md/README.md": path is not part of the book
-          "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md": path is inaccessible
+          "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md": path doesn't exist
 
 warning: broken link to "https://example.org/book/staging/"
  --> crates/mdbook-permalinks/tests/http_links/src/3.not-found.md:4:6
@@ -74,7 +74,7 @@ warning: broken link to "https://example.org/book/404"
   = note: also tried the following paths
           "crates/mdbook-permalinks/tests/http_links/src/404/index.md": path is not part of the book
           "crates/mdbook-permalinks/tests/http_links/src/404/README.md": path is not part of the book
-          "crates/mdbook-permalinks/tests/http_links/src/404": path is inaccessible
+          "crates/mdbook-permalinks/tests/http_links/src/404": path doesn't exist
 
 warning: broken link to "https://git.example.org/tree/HEAD/LICENSE-GPL.md"
  --> crates/mdbook-permalinks/tests/http_links/src/3.not-found.md:7:6
@@ -82,7 +82,7 @@ warning: broken link to "https://git.example.org/tree/HEAD/LICENSE-GPL.md"
 7 | - [](https://git.example.org/tree/HEAD/LICENSE-GPL.md)
   |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   |      |
-  |      resolves to a path that is inaccessible:
+  |      resolves to a path that doesn't exist:
   |      "LICENSE-GPL.md"
 
  WARN mdbook-permalinks: finished with warnings

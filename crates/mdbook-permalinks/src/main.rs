@@ -253,7 +253,10 @@ impl Environment {
         trace! { should_link, check_mode, not_in_book, not_in_tree, always_link };
 
         if !should_link {
-            if let Err(err @ (PathStatus::Unreachable | PathStatus::NotInRepo)) = relative_to_repo {
+            if let Err(
+                err @ (PathStatus::Nonexistent | PathStatus::Unreachable | PathStatus::NotInRepo),
+            ) = relative_to_repo
+            {
                 // at this point `not_in_book` is false
                 // it is okay for `err` to be `Ignored` because the file
                 // will be copied to output anyway

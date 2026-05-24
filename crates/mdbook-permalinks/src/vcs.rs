@@ -29,20 +29,29 @@ impl VersionControl {
             return Err(PathStatus::NotInRepo);
         }
 
-        if let Ok(metadata) = file.expect_path().symlink_metadata() {
-            if !(self.repo.is_path_ignored(&path))
-                .with_context(|| format!("error testing if {path:?} is ignored"))
-                .or_else(emit_debug!())
-                .unwrap_or(false)
-            {
-                Ok(TryFile { path, metadata }).inspect(|f| trace!("{f:?}"))
-            } else {
-                debug!("path ignored");
-                Err(PathStatus::Ignored)
+        match file.expect_path().symlink_metadata() {
+            Ok(metadata) => {
+                if !(self.repo.is_path_ignored(&path))
+                    .with_context(|| format!("error testing if {path:?} is ignored"))
+                    .or_else(emit_debug!())
+                    .unwrap_or(false)
+                {
+                    Ok(TryFile { path, metadata }).inspect(|f| trace!("{f:?}"))
+                } else {
+                    debug!("path ignored");
+                    Err(PathStatus::Ignored)
+                }
             }
-        } else {
-            debug!("path inaccessible");
-            Err(PathStatus::Unreachable)
+            Err(error) => match error.kind() {
+                std::io::ErrorKind::NotFound => {
+                    debug!("path not found");
+                    Err(PathStatus::Nonexistent)
+                }
+                _ => {
+                    debug!("path inaccessible");
+                    Err(PathStatus::Unreachable)
+                }
+            },
         }
     }
 }

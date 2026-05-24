@@ -4,7 +4,7 @@ warning: broken link to "draft.md"
 1 | - [](draft.md)
   |      ^^^^^^^^
   |      |
-  |      resolves to a path that is inaccessible:
+  |      resolves to a path that doesn't exist:
   |      "crates/mdbook-permalinks/tests/file_links/src/draft.md"
 
 warning: broken link to "../../Cargo.lock"
@@ -13,14 +13,14 @@ warning: broken link to "../../Cargo.lock"
 2 | - [](../../Cargo.lock)
   |      ^^^^^^^^^^^^^^^^
   |      |
-  |      resolves to a path that is inaccessible:
+  |      resolves to a path that doesn't exist:
   |      "crates/mdbook-permalinks/tests/Cargo.lock"
 
 warning: broken link to "/LICENSE-GPL.md"
  --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:3:6
   |
 3 | - [](/LICENSE-GPL.md)
-  |      ^^^^^^^^^^^^^^^ resolves to a path that is inaccessible
+  |      ^^^^^^^^^^^^^^^ resolves to a path that doesn't exist
 
 warning: broken link to "//LICENSE-MIT.md"
  --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:4:6
@@ -37,7 +37,7 @@ warning: broken link to "image.jpeg"
 5 | - ![](image.jpeg)
   |       ^^^^^^^^^^
   |       |
-  |       resolves to a path that is inaccessible:
+  |       resolves to a path that doesn't exist:
   |       "crates/mdbook-permalinks/tests/file_links/src/image.jpeg"
 
 warning: broken link to "../static/shinjuku.jpg"
@@ -46,7 +46,7 @@ warning: broken link to "../static/shinjuku.jpg"
 6 | - ![](../static/shinjuku.jpg)
   |       ^^^^^^^^^^^^^^^^^^^^^^
   |       |
-  |       resolves to a path that is inaccessible:
+  |       resolves to a path that doesn't exist:
   |       "crates/mdbook-permalinks/tests/file_links/static/shinjuku.jpg"
 
 warning: broken link to "/target/.rustc_info.json"
