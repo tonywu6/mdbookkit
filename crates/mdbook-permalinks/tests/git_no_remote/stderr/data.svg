@@ -1,4 +1,4 @@
-<svg width="860px" height="128px" xmlns="http://www.w3.org/2000/svg">
+<svg width="886px" height="128px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -26,9 +26,9 @@
 </tspan>
     <tspan x="10px" y="82px"><tspan>    0: failed to determine the remote URL prefix for permalinks</tspan>
 </tspan>
-    <tspan x="10px" y="100px"><tspan>    1: expected repo to have a remote named `origin`, but found none</tspan>
+    <tspan x="10px" y="100px"><tspan>    1: expected repo to have a remote named "origin", but found none</tspan>
 </tspan>
-    <tspan x="10px" y="118px"><tspan>    2: help: set `output.html.git-repository-url` to a GitHub URL, or use `repo-url-template` option</tspan>
+    <tspan x="10px" y="118px"><tspan>    2: help: set `output.html.git-repository-url` to a supported URL, or use `repo-url-template` option</tspan>
 </tspan>
   </text>
 

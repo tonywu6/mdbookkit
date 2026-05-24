@@ -1,0 +1,1 @@
+- [](https://github.com/lorem/ipsum/tree/[GIT_REVISION]/crates/mdbook-permalinks/tests/git_url_from_book/book.toml)

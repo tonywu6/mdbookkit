@@ -1,0 +1,11 @@
+[preprocessor.permalinks]
+
+[output.html]
+git-repository-url = "https://gitlab.haskell.org/ghc/ghc"
+
+[output.markdown]
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

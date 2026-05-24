@@ -6,7 +6,6 @@ use anyhow::{Context, Result};
 use git2::Repository;
 use mdbook_markdown::pulldown_cmark;
 use mdbook_preprocessor::{PreprocessorContext, book::Book};
-use serde::Deserialize;
 use tap::{Pipe, Tap};
 use tracing::{Level, debug, error_span, info, info_span, span::EnteredSpan, trace, warn};
 use url::Url;
@@ -17,21 +16,23 @@ use mdbookkit::{
     diagnostics::IssueReporter,
     emit, emit_error,
     env::is_logging,
-    error::{FailOnWarnings, PathDebug, ProgramExit, has_severity},
+    error::{PathDebug, ProgramExit, has_severity},
     level_enabled,
     logging::init_logging,
     ticker, ticker_item,
-    url::{ExpectUrl, ToUtf8Path, UrlFromPath},
+    url::{ExpectUrl, ToUtf8Path, UrlFromPath, UrlSuffix},
 };
 
 use self::{
     link::{ContentHint, LinkStatus, PathStatus, RelativeLink},
+    options::Config,
     page::Pages,
     vcs::Permalink,
 };
 
 mod diagnostics;
 mod link;
+mod options;
 mod page;
 mod vcs;
 
@@ -172,7 +173,7 @@ impl Environment {
             let page_url = base.as_ref();
 
             if let Some(book) = &env.config.book_url
-                && let Some(path) = book.0.make_relative(&file_url)
+                && let Some(path) = book.as_url().make_relative(&file_url)
                 && !path.starts_with("../")
             {
                 let dest = ResolveBook {
@@ -187,7 +188,7 @@ impl Environment {
             } else if let Some((path, hint)) = env.vcs.link.to_path(&file_url)
                 && let Ok(url) = env.vcs.root.join(&path)
             {
-                let (_, url_suffix) = UrlSuffix::take(file_url);
+                let (_, url_suffix) = env.vcs.link.take_suffix(file_url);
                 let dest = ResolveFile {
                     hint,
                     url_suffix,
@@ -200,7 +201,7 @@ impl Environment {
                 let _span = dest.span(&ticker);
                 self.resolve_file(dest);
             } else if file_url.scheme() == "file" {
-                let (file_url, url_suffix) = UrlSuffix::take(file_url);
+                let (file_url, url_suffix) = env.vcs.link.take_suffix(file_url);
                 let dest = ResolveFile {
                     hint: link.hint,
                     url_suffix,
@@ -228,10 +229,6 @@ impl Environment {
             link,
         }: ResolveFile,
     ) {
-        if url_suffix.query.is_some() || url_suffix.fragment.is_some() {
-            trace!(?url_suffix);
-        }
-
         let relative_to_repo = self.vcs.try_file(&file_url);
 
         let relative_to_book = self
@@ -274,7 +271,8 @@ impl Environment {
             match relative_to_repo {
                 Ok(file) => {
                     let href = self.vcs.link.to_link(&file.path, hint);
-                    link.permalink(url_suffix.restored(href).as_str().to_owned());
+                    let href = url_suffix.restored(href).as_str().to_owned();
+                    link.permalink(href);
                 }
                 Err(err) => {
                     link.unreachable(vec![(file_url, err)]);
@@ -481,83 +479,6 @@ impl<'a, 'r> ResolveBook<'a, 'r> {
             ticker_item!(ticker, Level::DEBUG, "book_link", "{:?}", &*link.href)
         }
         .entered()
-    }
-}
-
-#[derive(Deserialize, Debug, Default)]
-#[serde(rename_all = "kebab-case", deny_unknown_fields)]
-struct Config {
-    #[serde(default)]
-    repo_url_template: Option<String>,
-    #[serde(default)]
-    book_url: Option<UrlPrefix>,
-    #[serde(default)]
-    always_link: Vec<String>,
-    #[serde(default)]
-    fail_on_warnings: FailOnWarnings,
-}
-
-#[derive(Clone)]
-struct UrlPrefix(Url);
-
-impl From<Url> for UrlPrefix {
-    fn from(mut url: Url) -> Self {
-        if !url.path().ends_with('/') {
-            let path = format!("{}/", url.path());
-            url.set_path(&path);
-        }
-        Self(url)
-    }
-}
-
-impl<'de> Deserialize<'de> for UrlPrefix {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let url = Url::deserialize(deserializer)?;
-        Ok(Self::from(url))
-    }
-}
-
-impl Debug for UrlPrefix {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("UrlPrefix")
-            .field(&format_args!("\"{}\"", self.0))
-            .finish()
-    }
-}
-
-#[must_use]
-#[derive(Debug)]
-struct UrlSuffix {
-    query: Option<String>,
-    fragment: Option<String>,
-}
-
-impl UrlSuffix {
-    fn take(mut url: Url) -> (Url, Self) {
-        let query = url.query().map(|s| s.to_owned());
-        let fragment = url.fragment().map(|s| s.to_owned());
-        url.set_query(None);
-        url.set_fragment(None);
-        (url, Self { query, fragment })
-    }
-
-    fn restored(self, mut url: Url) -> Url {
-        let Self { query, fragment } = self;
-
-        match (url.query(), &query) {
-            (Some(_), None) => {}
-            _ => url.set_query(query.as_deref()),
-        }
-
-        match (url.fragment(), &fragment) {
-            (Some(_), None) => {}
-            _ => url.set_fragment(fragment.as_deref()),
-        }
-
-        url
     }
 }
 

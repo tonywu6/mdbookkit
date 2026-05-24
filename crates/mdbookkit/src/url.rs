@@ -44,9 +44,17 @@ impl UrlPath {
             .finish()
             .pipe(|query| if query.is_empty() { None } else { Some(query) });
 
+        let fragment = self.0.fragment().and_then(decode_group).and_then(&mut f);
+
         let mut url = self.0.clone();
+
         url.set_path(&path);
         url.set_query(query.as_deref());
+
+        if let Some(f) = fragment {
+            url.set_fragment(Some(&*f));
+        }
+
         Self(url)
     }
 
@@ -114,6 +122,12 @@ impl UrlPath {
             }
         }
 
+        if let Some(k) = self.0.fragment().and_then(decode_group)
+            && let Some(v) = value.fragment()
+        {
+            captured.insert(k.into(), v.into());
+        }
+
         Some(captured)
     }
 
@@ -142,8 +156,22 @@ impl UrlPath {
     }
 
     #[inline]
+    pub fn as_url(&self) -> Option<&Url> {
+        if self.is_url() { Some(&self.0) } else { None }
+    }
+
+    #[inline]
     pub fn into_url(self) -> Option<Url> {
         if self.is_url() { Some(self.0) } else { None }
+    }
+
+    #[inline]
+    pub fn host_str(&self) -> Option<&str> {
+        if self.is_url() {
+            self.0.host_str()
+        } else {
+            None
+        }
     }
 
     #[inline]
@@ -172,7 +200,7 @@ impl From<Url> for UrlPath {
 
 impl Debug for UrlPath {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("UrlPattern")
+        f.debug_tuple("UrlPath")
             .field(&format_args!("{:?}", self.as_str()))
             .finish()
     }
@@ -192,6 +220,55 @@ fn decode_group(segment: &str) -> Option<&str> {
         (segment.strip_suffix("%7D")).or_else(|| segment.strip_suffix('}'))
     } else {
         None
+    }
+}
+
+#[must_use]
+#[derive(Debug)]
+pub struct UrlSuffix {
+    query: HashMap<String, String>,
+    fragment: Option<String>,
+}
+
+impl UrlPath {
+    pub fn take_suffix(&self, mut url: Url) -> (Url, UrlSuffix) {
+        let mut query = url.query_pairs().into_owned().collect::<HashMap<_, _>>();
+
+        for (k, v) in self.0.query_pairs() {
+            if decode_group(v.as_ref()).is_some() {
+                query.remove(&*k);
+            }
+        }
+
+        let fragment = if self.0.fragment().and_then(decode_group).is_some() {
+            None
+        } else {
+            url.fragment().map(<_>::to_owned)
+        };
+
+        let suffix = UrlSuffix { query, fragment };
+
+        url.set_query(None);
+        url.set_fragment(None);
+
+        (url, suffix)
+    }
+}
+
+impl UrlSuffix {
+    pub fn restored(self, mut url: Url) -> Url {
+        let Self { query, fragment } = self;
+
+        if !query.is_empty() {
+            url.query_pairs_mut().extend_pairs(query).finish();
+        }
+
+        match (url.fragment(), &fragment) {
+            (Some(_), None) => {}
+            _ => url.set_fragment(fragment.as_deref()),
+        }
+
+        url
     }
 }
 

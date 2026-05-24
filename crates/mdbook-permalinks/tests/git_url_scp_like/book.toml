@@ -1,0 +1,11 @@
+[preprocessor.permalinks]
+
+[output.html]
+git-repository-url = "git@alt.github.com:lorem/ipsum.git"
+
+[output.markdown]
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

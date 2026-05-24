@@ -214,6 +214,7 @@ impl TestRoot<'_> {
 
     fn actual_page(&self, name: &Utf8Path, temp: &Utf8Path) -> Result<String> {
         let text = std::fs::read_to_string(temp.join(name))
+            .or_else(|_| std::fs::read_to_string(temp.join("markdown").join(name)))
             .with_context(|| name.to_string())
             .context("mdbook did not build this file")?;
         Ok(text)

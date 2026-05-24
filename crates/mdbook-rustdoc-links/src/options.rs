@@ -324,8 +324,9 @@ impl<'de> Deserialize<'de> for BaseUrl {
     where
         D: Deserializer<'de>,
     {
-        (String::deserialize(deserializer)?.parse::<Self>())
-            .map_err(|err| serde::de::Error::custom(format_args!("{err:?}")))
+        let url = Cow::<str>::deserialize(deserializer)?;
+        let url = (url.parse()).map_err(|err| serde::de::Error::custom(format!("{err:?}")))?;
+        Ok(url)
     }
 }
 

@@ -2,99 +2,21 @@ use anyhow::{Context, Result, anyhow, bail};
 use git2::{DescribeOptions, Repository, RepositoryOpenFlags};
 use mdbook_preprocessor::{PreprocessorContext, config::Config as MDBookConfig};
 use tap::Pipe;
-use tracing::{debug, info, instrument, trace};
+use tracing::{debug, info, instrument, trace, warn};
 use url::Url;
 
 use mdbookkit::{
     emit_debug,
-    url::{ExpectPath, UrlFromPath, UrlPath},
+    url::{ExpectPath, UrlFromPath, UrlPath, UrlSuffix},
 };
 
 use crate::{
-    Config, VersionControl,
+    VersionControl,
     link::{ContentHint, PathStatus},
+    options::{Config, PathParams, TemplateConfig},
 };
 
 impl VersionControl {
-    #[instrument(level = "debug", skip_all)]
-    pub fn try_from_git(config: &Config, ctx: &PreprocessorContext) -> Result<Result<Self>> {
-        let repo = match Repository::open_ext(
-            &ctx.root,
-            RepositoryOpenFlags::empty(),
-            &[] as &[&std::ffi::OsStr],
-        )
-        .context("this preprocessor requires a git repository to work")
-        {
-            Ok(repo) => repo,
-            Err(err) => return config.fail_on_warnings.adjusted(Ok(Err(err))),
-        };
-
-        let root = repo
-            .workdir()
-            .unwrap_or_else(|| repo.commondir())
-            .canonicalize()
-            .context("could not locate repo root")?
-            .to_directory_url();
-
-        let Some(reference) =
-            get_git_head(&repo).context("could not get a tag or the commit hash to HEAD")?
-        else {
-            let err = anyhow!("repo does not contain any commit")
-                .context("this preprocessor expects repo to have at least 1 commit");
-            return config.fail_on_warnings.adjusted(Ok(Err(err)));
-        };
-
-        let link = {
-            if let Some(pat) = &config.repo_url_template {
-                debug!("using explicitly set repo_url_template");
-                let pattern = match pat.parse::<UrlPath>() {
-                    Ok(pat) => {
-                        if pat.is_url() {
-                            Ok(pat)
-                        } else {
-                            Err(anyhow!("URL must begin with `https://` or `http://`"))
-                        }
-                    }
-                    Err(e) => Err(anyhow!(e)),
-                }
-                .context("failed to parse `repo-url-template` as a valid URL")?;
-                Permalink { pattern, reference }
-            } else {
-                let repo = match find_git_remote(&repo, &ctx.config)
-                    .context("error while finding a git remote URL")?
-                {
-                    Ok(repo) => repo,
-                    Err(err) => {
-                        return anyhow! { "help: set `output.html.git-repository-url` to a GitHub URL, \
-                                        or use `repo-url-template` option" }
-                            .context(err)
-                            .context("failed to determine the remote URL prefix for permalinks")
-                            .pipe(Err)
-                            .pipe(Ok)
-                            .pipe(|result| config.fail_on_warnings.adjusted(result));
-                    }
-                };
-                let (owner, repo) = match remote_as_github(repo.as_ref()) {
-                    Ok(result) => result,
-                    Err(err) => {
-                        return anyhow! { "help: use the `repo-url-template` option \
-                        to define a custom URL scheme" }
-                        .context(err)
-                        .context(match repo {
-                            RepoSource::Config(..) => "in `output.html.git-repository-url`:",
-                            RepoSource::Remote(..) => "in git remote \"origin\":",
-                        })
-                        .context("failed to find a git remote URL")
-                        .pipe(Err);
-                    }
-                };
-                Permalink::github(&owner, &repo, &reference)
-            }
-        };
-
-        Ok(Ok(Self { root, repo, link }))
-    }
-
     #[instrument(level="debug", skip_all, fields(file = format!("{file}"), root = format!("{}", self.root)))]
     pub fn try_file(&self, file: &Url) -> Result<TryFile, PathStatus> {
         let Some(path) = self.root.make_relative(file) else {
@@ -133,19 +55,15 @@ pub struct TryFile {
 
 #[derive(Debug)]
 pub struct Permalink {
-    pub pattern: UrlPath,
-    pub reference: String,
+    pattern: UrlPath,
+    refname: RefName,
+    params: PathParams,
 }
 
-impl Permalink {
-    /// See <https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content--parameters>
-    pub fn github(owner: &str, repo: &str, reference: &str) -> Self {
-        let pattern = format!("https://github.com/{owner}/{repo}/{{tree}}/{{ref}}/{{path}}")
-            .parse()
-            .expect("should be a valid pattern");
-        let reference = reference.into();
-        Self { pattern, reference }
-    }
+#[derive(Debug)]
+enum RefName {
+    Commit(String),
+    Tag(String),
 }
 
 impl Permalink {
@@ -153,11 +71,24 @@ impl Permalink {
     pub fn to_link(&self, path: &str, hint: ContentHint) -> Url {
         self.pattern
             .fill_pattern(|group| match group {
-                "ref" => Some((&self.reference).into()),
+                "ref" => Some(
+                    match &self.refname {
+                        RefName::Commit(commit) => commit,
+                        RefName::Tag(tag) => tag,
+                    }
+                    .into(),
+                ),
+                "kind" => Some(
+                    match &self.refname {
+                        RefName::Commit(..) => &self.params.commit[0],
+                        RefName::Tag(..) => &self.params.tag[0],
+                    }
+                    .into(),
+                ),
                 "tree" => Some(
                     match hint {
-                        ContentHint::Tree => "tree",
-                        ContentHint::Raw => "raw",
+                        ContentHint::Tree => &self.params.tree[0],
+                        ContentHint::Raw => &self.params.raw[0],
                     }
                     .into(),
                 ),
@@ -176,10 +107,16 @@ impl Permalink {
             return None;
         }
 
-        let hint = match groups.get("tree").map(|s| &**s)? {
-            "tree" | "blob" => ContentHint::Tree,
-            "raw" => ContentHint::Raw,
-            _ => return None,
+        let hint = if let Some(tree) = groups.get("tree").map(|s| &**s) {
+            if self.params.tree.iter().any(|plc| plc == tree) {
+                ContentHint::Tree
+            } else if self.params.raw.iter().any(|plc| plc == tree) {
+                ContentHint::Raw
+            } else {
+                return None;
+            }
+        } else {
+            return None;
         };
 
         let path = groups.remove("path")?.into_owned();
@@ -188,6 +125,21 @@ impl Permalink {
 
         Some((path, hint))
     }
+
+    pub fn take_suffix(&self, url: Url) -> (Url, UrlSuffix) {
+        self.pattern.take_suffix(url)
+    }
+}
+
+impl Default for PathParams {
+    fn default() -> Self {
+        Self {
+            tree: vec!["tree".into(), "blob".into()],
+            raw: vec!["raw".into()],
+            commit: vec!["commit".into()],
+            tag: vec!["tag".into()],
+        }
+    }
 }
 
 enum RepoSource {
@@ -195,8 +147,8 @@ enum RepoSource {
     Remote(gix_url::Url),
 }
 
-impl AsRef<gix_url::Url> for RepoSource {
-    fn as_ref(&self) -> &gix_url::Url {
+impl RepoSource {
+    fn as_url(&self) -> &gix_url::Url {
         match self {
             Self::Config(u) => u,
             Self::Remote(u) => u,
@@ -204,8 +156,108 @@ impl AsRef<gix_url::Url> for RepoSource {
     }
 }
 
+impl VersionControl {
+    #[instrument(level = "debug", skip_all)]
+    pub fn try_from_git(config: &Config, ctx: &PreprocessorContext) -> Result<Result<Self>> {
+        let repo = match Repository::open_ext(
+            &ctx.root,
+            RepositoryOpenFlags::empty(),
+            &[] as &[&std::ffi::OsStr],
+        )
+        .context("this preprocessor requires a git repository to work")
+        {
+            Ok(repo) => repo,
+            Err(err) => return config.fail_on_warnings.adjusted(Ok(Err(err))),
+        };
+
+        let root = repo
+            .workdir()
+            .unwrap_or_else(|| repo.commondir())
+            .canonicalize()
+            .context("could not locate repo root")?
+            .to_directory_url();
+
+        let refname =
+            match get_git_head(&repo).context("could not get a tag or the commit hash to HEAD")? {
+                Some(refname) => refname,
+                None => {
+                    let err = anyhow!("repo does not contain any commit")
+                        .context("this preprocessor expects repo to have at least 1 commit");
+                    return config.fail_on_warnings.adjusted(Ok(Err(err)));
+                }
+            };
+
+        let link = {
+            let TemplateConfig { pattern, params } = &config.repo_url_template;
+
+            let pattern = if let Some(pat) = pattern {
+                debug!("using explicitly set repo_url_template");
+
+                match pat.parse::<UrlPath>() {
+                    Ok(pat) => {
+                        if pat.is_url() {
+                            Ok(pat)
+                        } else {
+                            Err(anyhow!("URL must begin with `https://` or `http://`"))
+                        }
+                    }
+                    Err(e) => Err(anyhow!(e)),
+                }
+                .context("failed to parse `repo-url-template` as a valid URL")?
+            } else {
+                let remote = config.remote_name.as_deref().unwrap_or("origin");
+                let repo = match find_git_remote(&repo, remote, &ctx.config)
+                    .context("error while finding a git remote URL")?
+                {
+                    Ok(repo) => repo,
+                    Err(err) => {
+                        return anyhow! { "help: set `output.html.git-repository-url` to a \
+                        supported URL, or use `repo-url-template` option" }
+                        .context(err)
+                        .context("failed to determine the remote URL prefix for permalinks")
+                        .pipe(Err)
+                        .pipe(Ok)
+                        .pipe(|result| config.fail_on_warnings.adjusted(result));
+                    }
+                };
+
+                match derive_pattern(repo.as_url()) {
+                    Ok(pattern) => pattern,
+                    Err(err) => {
+                        return anyhow! { "help: use the `repo-url-template` option \
+                        to define a custom URL scheme" }
+                        .context(err)
+                        .context(format!("{:?}", repo.as_url().to_string()))
+                        .context(match repo {
+                            RepoSource::Config(..) => "in `output.html.git-repository-url`:".into(),
+                            RepoSource::Remote(..) => format!("in git remote {remote:?}:"),
+                        })
+                        .context("could not find a supported git remote URL")
+                        .pipe(Err);
+                    }
+                }
+            };
+
+            let params = match params {
+                Some(params) => params.clone(),
+                None => derive_params(&pattern),
+            };
+
+            Permalink {
+                pattern,
+                refname,
+                params,
+            }
+        };
+
+        debug!("{link:#?}");
+
+        Ok(Ok(Self { root, repo, link }))
+    }
+}
+
 #[instrument(level = "debug", skip_all)]
-fn get_git_head(repo: &Repository) -> Result<Option<String>> {
+fn get_git_head(repo: &Repository) -> Result<Option<RefName>> {
     let head = match repo.head() {
         Ok(head) => head,
         Err(err) => {
@@ -231,16 +283,20 @@ fn get_git_head(repo: &Repository) -> Result<Option<String>> {
         .or_else(emit_debug!("no exact tag found: {}"))
     {
         info!("using tag name {tag:?} for permalinks");
-        Ok(Some(tag))
+        Ok(Some(RefName::Tag(tag)))
     } else {
         let sha = head.id().to_string();
         info!("using commit hash {sha} for permalinks");
-        Ok(Some(sha))
+        Ok(Some(RefName::Commit(sha)))
     }
 }
 
 #[instrument(level = "debug", skip_all)]
-fn find_git_remote(repo: &Repository, config: &MDBookConfig) -> Result<Result<RepoSource>> {
+fn find_git_remote(
+    repo: &Repository,
+    remote: &str,
+    config: &MDBookConfig,
+) -> Result<Result<RepoSource>> {
     if let Some(url) = config.get::<String>("output.html.git-repository-url")? {
         debug!("found {url:?} in book.toml");
         gix_url::parse(url.as_str().into())
@@ -250,214 +306,129 @@ fn find_git_remote(repo: &Repository, config: &MDBookConfig) -> Result<Result<Re
             .pipe(Ok)
             .pipe(Ok)
     } else {
-        let repo = match repo
-            .find_remote("origin")
-            .context("expected repo to have a remote named `origin`, but found none")
-        {
+        let repo = match repo.find_remote(remote).with_context(|| {
+            format!("expected repo to have a remote named {remote:?}, but found none")
+        }) {
             Ok(repo) => repo,
             Err(err) => return Ok(Err(err)),
         };
         let repo = match repo.url() {
             Some(url) => url,
             None => {
-                return anyhow!("expected remote `origin` to have a URL, but found none")
+                return anyhow!("expected remote {remote:?} to have a URL, but found none")
                     .pipe(Err)
                     .pipe(Ok);
             }
         };
-        debug!("found {repo:?} via remote `origin`");
+        debug!("found {repo:?} via remote {remote:?}");
         gix_url::parse(repo.into())
             .inspect(|u| debug!("parsed as {u:?}"))
-            .context("could not parse the remote URL of `origin`")?
+            .with_context(|| format!("could not parse the remote URL of {remote:?}"))?
             .pipe(RepoSource::Remote)
             .pipe(Ok)
             .pipe(Ok)
     }
 }
 
-fn remote_as_github(url: &gix_url::Url) -> Result<(String, String)> {
-    let Some(host) = url.host() else {
-        bail!("remote URL does not have a host")
+fn derive_pattern(url: &gix_url::Url) -> Result<UrlPath> {
+    let host = match url.host() {
+        Some(host) => host,
+        None => bail!("remote URL does not have a host"),
     };
-
-    if host != "github.com" && !host.ends_with(".github.com") {
-        bail!("unsupported remote {host:?}, only `github.com` is supported")
-    }
-
     let path = url.path.to_string();
 
-    let mut iter = path.split('/').skip_while(|c| c.is_empty()).take(2);
+    fn is_on_domain(domain: &'static str, host: &str) -> bool {
+        match host.strip_suffix(domain) {
+            None => false,
+            Some(sub) => sub.is_empty() || sub.ends_with('.'),
+        }
+    }
 
-    let owner = iter
-        .next()
-        .with_context(|| format!("malformed path {path:?}, expected `/<owner>/<repo>`"))?;
+    if is_on_domain("github.com", host) {
+        let malformed = || {
+            format! { "malformed path {path:?}, expected URL for {host:?} \
+            to begin with `/<owner>/<repo>`" }
+        };
 
-    let repo = iter
-        .next()
-        .with_context(|| format!("malformed path {path:?}, expected `/<owner>/<repo>`"))?;
+        let mut iter = path.split('/').skip_while(|c| c.is_empty());
+        let owner = (iter.next()).with_context(malformed)?;
+        let repo = (iter.next()).with_context(malformed)?;
+        let repo = repo.strip_suffix(".git").unwrap_or(repo);
 
-    let repo = repo.strip_suffix(".git").unwrap_or(repo);
+        return derive_pattern_github(owner, repo);
+    }
 
-    Ok((owner.to_owned(), repo.to_owned()))
+    if is_on_domain("codeberg.org", host) {
+        let malformed = || {
+            format! { "malformed path {path:?}, expected URL for {host:?} \
+            to begin with `/<owner>/<repo>`" }
+        };
+
+        let mut iter = path.split('/').skip_while(|c| c.is_empty());
+        let owner = (iter.next()).with_context(malformed)?;
+        let repo = (iter.next()).with_context(malformed)?;
+        let repo = repo.strip_suffix(".git").unwrap_or(repo);
+
+        return derive_pattern_codeberg(owner, repo);
+    }
+
+    if is_on_domain("tangled.org", host) {
+        let malformed = || {
+            format! { "malformed path {path:?}, expected URL for {host:?} \
+            to begin with `/<owner>/<repo>` or /<did>" }
+        };
+
+        let mut iter = path.split('/').skip_while(|c| c.is_empty());
+        let entity = (iter.next()).with_context(malformed)?;
+        let repo = if entity.starts_with("did:") {
+            None
+        } else {
+            let repo = (iter.next()).with_context(malformed)?;
+            let repo = repo.strip_suffix(".git").unwrap_or(repo);
+            Some(repo)
+        };
+
+        return derive_pattern_tangled(entity, repo);
+    }
+
+    bail!("unsupported remote {host:?}")
 }
 
-#[cfg(test)]
-#[allow(clippy::unwrap_used)]
-mod tests {
-    use anyhow::Result;
-    use git2::Repository;
-    use mdbook_preprocessor::config::Config as MDBookConfig;
+fn derive_pattern_github(owner: &str, repo: &str) -> Result<UrlPath> {
+    let pattern = format!("https://github.com/{owner}/{repo}/{{tree}}/{{ref}}/{{path}}");
+    let pattern = pattern
+        .parse()
+        .with_context(|| format!("could not parse {pattern:?} as a URL"))?;
+    Ok(pattern)
+}
 
-    use crate::link::ContentHint;
+fn derive_pattern_codeberg(owner: &str, repo: &str) -> Result<UrlPath> {
+    let pattern = format!("https://codeberg.org/{owner}/{repo}/{{tree}}/{{kind}}/{{ref}}/{{path}}");
+    let pattern = pattern
+        .parse()
+        .with_context(|| format!("could not parse {pattern:?} as a URL"))?;
+    Ok(pattern)
+}
 
-    use super::{Permalink, find_git_remote, remote_as_github};
+fn derive_pattern_tangled(entity: &str, repo: Option<&str>) -> Result<UrlPath> {
+    let pattern = match repo {
+        Some(repo) => format!("https://tangled.org/{entity}/{repo}/{{tree}}/{{ref}}/{{path}}"),
+        None => format!("https://tangled.org/{entity}/{{tree}}/{{ref}}/{{path}}"),
+    };
+    let pattern = pattern
+        .parse()
+        .with_context(|| format!("could not parse {pattern:?} as a URL"))?;
+    Ok(pattern)
+}
 
-    #[test]
-    fn test_github_url_from_book() -> Result<()> {
-        let config = r#"
-        [output.html]
-        git-repository-url = "https://github.com/lorem/ipsum/tree/main/crates/dolor"
-        "#
-        .parse::<MDBookConfig>()?;
-        let repo = Repository::open_from_env()?;
-        let repo = find_git_remote(&repo, &config)??;
-        let (owner, repo) = remote_as_github(repo.as_ref())?;
-        assert_eq!(owner, "lorem");
-        assert_eq!(repo, "ipsum");
-        Ok(())
-    }
-
-    #[test]
-    fn test_github_url_from_repo() -> Result<()> {
-        let config = "".parse::<MDBookConfig>()?;
-        let repo = Repository::open_from_env()?;
-        let repo = find_git_remote(&repo, &config)??;
-        let (_, repo) = remote_as_github(repo.as_ref())?;
-        assert_eq!(repo, "mdbookkit");
-        Ok(())
-    }
-
-    #[test]
-    fn test_scp_uri() -> Result<()> {
-        let config = r#"
-        [output.html]
-        git-repository-url = "git@my-alt.github.com:lorem/ipsum.git"
-        "#
-        .parse::<MDBookConfig>()?;
-        let repo = Repository::open_from_env()?;
-        let repo = find_git_remote(&repo, &config)??;
-        let (owner, repo) = remote_as_github(repo.as_ref())?;
-        assert_eq!(owner, "lorem");
-        assert_eq!(repo, "ipsum");
-        Ok(())
-    }
-
-    #[test]
-    #[should_panic(expected = "unsupported remote")]
-    fn test_non_github() {
-        let config = r#"
-        [output.html]
-        git-repository-url = "https://gitlab.haskell.org/ghc/ghc"
-        "#
-        .parse::<MDBookConfig>()
-        .unwrap();
-        let repo = Repository::open_from_env().unwrap();
-        let repo = find_git_remote(&repo, &config).unwrap().unwrap();
-        let _ = remote_as_github(repo.as_ref()).unwrap();
-    }
-
-    #[test]
-    fn test_path_to_link() -> Result<()> {
-        let scheme = Permalink::github("lorem", "ipsum", "main");
-
-        let link = scheme.to_link(".editorconfig", ContentHint::Tree);
-
-        assert_eq!(
-            link.as_str(),
-            "https://github.com/lorem/ipsum/tree/main/.editorconfig"
-        );
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_path_to_link_with_suffix() -> Result<()> {
-        let scheme = Permalink {
-            pattern: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
-            reference: "master".into(),
-        };
-
-        let link = scheme.to_link(".editorconfig", ContentHint::Tree);
-
-        assert_eq!(
-            link.as_str(),
-            "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/.editorconfig?h=master"
-        );
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_link_to_path() -> Result<()> {
-        let scheme = Permalink::github("lorem", "ipsum", "main");
-
-        let (path, hint) = scheme
-            .to_path(&"https://github.com/lorem/ipsum/raw/HEAD/path/to/file".parse()?)
-            .unwrap();
-
-        assert_eq!(path, "path/to/file");
-        assert_eq!(hint, ContentHint::Raw);
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_link_to_path_repo_root() -> Result<()> {
-        let scheme = Permalink::github("lorem", "ipsum", "main");
-
-        let (path, _) = scheme
-            .to_path(&"https://github.com/lorem/ipsum/raw/HEAD".parse()?)
-            .unwrap();
-
-        assert_eq!(path, "");
-
-        let (path, _) = scheme
-            .to_path(&"https://github.com/lorem/ipsum/raw/HEAD/".parse()?)
-            .unwrap();
-
-        assert_eq!(path, "");
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_link_to_path_with_suffix() -> Result<()> {
-        let scheme = Permalink {
-            pattern: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
-            reference: "main".into(),
-        };
-
-        let (path, hint) =
-            scheme.to_path(&"https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/raw/.editorconfig?h=HEAD".parse()?).unwrap();
-
-        assert_eq!(path, ".editorconfig");
-        assert_eq!(hint, ContentHint::Raw);
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_link_to_path_non_head() -> Result<()> {
-        let scheme = Permalink {
-            pattern: "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}".parse()?,
-            reference: "main".into(),
-        };
-
-        let matched =
-            scheme.to_path(&"https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/.editorconfig?h=b676ac4".parse()?);
-
-        assert!(matched.is_none());
-
-        Ok(())
+fn derive_params(pat: &UrlPath) -> PathParams {
+    match pat.host_str() {
+        Some("github.com") => Default::default(),
+        Some("tangled.org") => Default::default(),
+        Some("codeberg.org") => PathParams {
+            tree: vec!["src".into()],
+            ..Default::default()
+        },
+        _ => Default::default(),
     }
 }
