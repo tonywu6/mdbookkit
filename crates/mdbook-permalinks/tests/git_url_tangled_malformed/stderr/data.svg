@@ -34,7 +34,7 @@
 </tspan>
     <tspan x="10px" y="154px"><tspan>    4: help: use the `repo-url-template` option to define a custom URL scheme</tspan>
 </tspan>
-    <tspan x="10px" y="172px"><tspan>ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with exit status: 1 status</tspan>
+    <tspan x="10px" y="172px"><tspan>ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status</tspan>
 </tspan>
   </text>
 

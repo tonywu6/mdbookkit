@@ -300,10 +300,6 @@ fn redacted() -> Vec<(&'static str, RedactedValue)> {
             .into(),
         ),
         (
-            "[EXIT_CODE]",
-            Regex::new(r"exit (status|code):").unwrap().into(),
-        ), // windows
-        (
             "[COMMAND_DEBUG]",
             Regex::new(r": (?<redacted>(?:command|running):(?: cd .+? &&)?)")
                 .unwrap()

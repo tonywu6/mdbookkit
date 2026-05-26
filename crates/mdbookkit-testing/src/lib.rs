@@ -120,6 +120,7 @@ impl TestBook {
     pub fn assert(&self) -> Result<Assert> {
         let mut redactions = Redactions::new();
         redactions.insert("[TEST_DIR]", normalize_paths(self.path.root_dir.as_str()))?;
+        redactions.insert("[EXIT_CODE]", Regex::new(r"exit (status|code):")?)?; // windows
         redactions.insert("[ELAPSED]", Regex::new(r"in (?<redacted>\d+\.\d+s)")?)?;
         for (placeholder, matcher) in &self.redacted {
             redactions.insert(placeholder, matcher.clone())?;

@@ -6,4 +6,4 @@ Caused by:
     2: "https://gitlab.haskell.org/ghc/ghc"
     3: unsupported remote "gitlab.haskell.org"
     4: help: use the `repo-url-template` option to define a custom URL scheme
-ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with exit status: 1 status
+ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

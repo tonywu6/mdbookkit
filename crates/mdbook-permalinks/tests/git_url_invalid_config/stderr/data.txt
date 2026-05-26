@@ -8,4 +8,4 @@ Caused by:
          |   ^
        expected at least 1 item
        
-ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with exit status: 1 status
+ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status
