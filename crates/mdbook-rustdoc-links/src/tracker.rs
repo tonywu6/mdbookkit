@@ -3,12 +3,12 @@ use std::{
     collections::{BTreeSet, HashMap},
     fmt::{Debug, Display, Write},
     ops::{ControlFlow, Range},
+    path::PathBuf,
 };
 
 use anyhow::{Context, Result, bail};
 use cargo_metadata::{
     Package,
-    camino::Utf8PathBuf,
     diagnostic::{Diagnostic, DiagnosticSpan},
 };
 use html_escape::decode_html_entities;
@@ -33,7 +33,7 @@ use mdbookkit::{
     error::ExpectFmt,
     markdown::{PatchStream, locate_text},
     plural,
-    url::{UrlPath, UrlUtil},
+    url::UrlUtil,
     util::{Lexicographic, LexicographicOrd},
     with_bug_report,
 };
@@ -43,28 +43,27 @@ use crate::{
     diagnostics::{DiagnosticNotes, RustcDiagnostic, SourceMap, report_level},
     env::Environment,
     markdown::markdown,
-    options::BaseUrl,
 };
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct LinkTracker<'a> {
     links: Vec<Link<'a>>,
     pages: Vec<Page<'a>>,
     notes: DiagnosticNotes,
-    symlinks: HashMap<Utf8PathBuf, Utf8PathBuf>,
+    symlinks: HashMap<PathBuf, PathBuf>,
     env: Environment,
 }
 
 #[derive(Debug)]
 struct Page<'a> {
     text: &'a str,
-    base: UrlPath,
+    base: Url,
     link_end: usize,
 }
 
 #[derive(Debug)]
 struct Link<'a> {
-    href: Option<UrlPath>,
+    href: Option<Url>,
     kind: LinkType,
     span: SourceSpan,
     dest: CowStr<'a>,
@@ -98,9 +97,7 @@ impl<'a> LinkTracker<'a> {
         }
     }
 
-    pub fn read(&mut self, text: &'a str, path: &str) -> Result<()> {
-        let base = path.parse()?;
-
+    pub fn read(&mut self, text: &'a str, base: Url) -> Result<()> {
         let mut state = None;
 
         for (event, span) in markdown(text).into_offset_iter() {
@@ -275,7 +272,7 @@ impl<'a> LinkTracker<'a> {
                 (src.join("doc"), dst)
             };
 
-            self.symlinks.insert(src, dst);
+            self.symlinks.insert(src.into(), dst);
         }
     }
 
@@ -295,15 +292,12 @@ impl<'a> LinkTracker<'a> {
             stats: Default::default(),
         };
 
-        let base_url = UrlPath::empty();
-
         for (page, links) in iter {
-            let path = (page.base.relative_to(&base_url))
-                .unwrap_or_else(|_| page.base.as_str().to_owned());
+            let name = self.env.page_dir().print_relative(&page.base).to_string();
 
             let source = SourceCode {
                 source_code: page.text,
-                source_path: path.clone().into(),
+                source_path: name.into(),
             };
 
             let issues = links
@@ -324,7 +318,7 @@ impl<'a> LinkTracker<'a> {
                 .into_string()
                 .map_err(<_>::into);
 
-            contents.insert(path, text);
+            contents.insert(page.base.clone(), text);
         }
 
         ExportedPages {
@@ -387,14 +381,14 @@ impl<'a> LinkTracker<'a> {
 }
 
 pub struct ExportedPages<'a> {
-    pub contents: HashMap<String, Result<String>>,
+    pub contents: HashMap<Url, Result<String>>,
     pub issues: Vec<IssueReporter<'a>>,
     pub stats: Statistics,
 }
 
-fn resolve_url(base: &BaseUrl, output: &BuildOutput<'_>, href: &str) -> Result<UrlPath> {
+fn resolve_url(base: &Url, output: &BuildOutput<'_>, href: &str) -> Result<Url> {
     if let Ok(href) = href.parse::<Url>() {
-        return Ok(href.into());
+        return Ok(href);
     }
 
     let (name, version, href) = if let Some(href) = href.strip_prefix("../")
@@ -407,7 +401,7 @@ fn resolve_url(base: &BaseUrl, output: &BuildOutput<'_>, href: &str) -> Result<U
         bail!("unsupported link format")
     };
 
-    let url = (base.0).fill_pattern(|group| match group {
+    let url = base.pattern_fill(|group| match group {
         "pkg_name" => Some(name.as_str().into()),
         "version" => Some(version.to_string().into()),
         _ => None,
@@ -668,7 +662,7 @@ impl<'a> Link<'a> {
         Ok(self)
     }
 
-    fn export(&'a self, base: &UrlPath) -> Option<impl Iterator<Item = Event<'a>>> {
+    fn export(&'a self, base: &Url) -> Option<impl Iterator<Item = Event<'a>>> {
         let Self {
             href,
             title,
@@ -677,7 +671,7 @@ impl<'a> Link<'a> {
         } = self;
 
         let href = href.as_ref()?;
-        let href = if let Ok(path) = href.relative_to(base) {
+        let href = if let Some(path) = base.make_relative(href) {
             CowStr::Boxed(path.into())
         } else {
             CowStr::Borrowed(href.as_str())
@@ -975,15 +969,20 @@ impl Display for Statistics {
 mod tests {
     use anyhow::Result;
 
-    use mdbookkit::diagnostics::{
-        Highlight, IssueLevel, IssueReport,
-        annotate_snippets::{AnnotationKind, Renderer, renderer::DecorStyle},
-        issue_to_report,
+    use mdbookkit::{
+        diagnostics::{
+            Highlight, IssueLevel, IssueReport,
+            annotate_snippets::{AnnotationKind, Renderer, renderer::DecorStyle},
+            issue_to_report,
+        },
+        url::ExpectUrl,
     };
     use mdbookkit_testing::{
         AssertUtil, default_assert,
         snapbox::{Data, data::DataFormat, utils::current_dir},
     };
+
+    use crate::env::Environment;
 
     use super::{LinkTracker, SourceSpan};
 
@@ -1016,8 +1015,10 @@ mod tests {
     }
 
     fn test_link_spans(text: &str, expected: Data) -> Result<()> {
-        let mut tracker = LinkTracker::default();
-        tracker.read(text, "index.md")?;
+        let mut tracker = LinkTracker::new(Environment::default());
+        let root = tracker.env.page_dir();
+        let path = root.join("index.md").expect_url();
+        tracker.read(text, path)?;
         let span = tracker.links[0].span.clone();
         let report = print_link_spans(span);
         let report = issue_to_report(report, (text, "<anon>").into());

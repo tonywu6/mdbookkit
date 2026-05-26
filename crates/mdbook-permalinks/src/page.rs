@@ -43,11 +43,11 @@ impl<'a> Pages<'a> {
             .collect()
     }
 
-    pub fn insert(&mut self, url: Url, source: &'a str) -> Result<&mut Self> {
+    pub fn insert(&mut self, url: Url, source: &'a str) -> Result<()> {
         let stream = Parser::new_ext(source, self.markdown).into_offset_iter();
         let page = Page::read(source, stream)?;
         self.pages.push((url.into(), page));
-        Ok(self)
+        Ok(())
     }
 
     pub fn pages(&self) -> impl Iterator<Item = &(Arc<Url>, Page<'a>)> {

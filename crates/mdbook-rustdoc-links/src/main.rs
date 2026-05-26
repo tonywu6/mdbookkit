@@ -6,13 +6,13 @@ use anyhow::{Context, Result};
 use tracing::{Level, error_span, info, info_span, warn};
 
 use mdbookkit::{
-    book::{BookHelper, PreprocessorHelper, book_from_stdin},
+    book::{PreprocessorHelper, book_from_stdin},
     config::validate_config_examples,
     diagnostics::IssueReporter,
     emit, emit_error, emit_warning,
-    error::{PathDebug, ProgramExit, has_severity},
+    error::{ProgramExit, has_severity},
     logging::init_logging,
-    url::ToUtf8Path,
+    url::UrlUtil,
 };
 
 use self::{
@@ -88,18 +88,17 @@ fn mdbook() -> Result<(), ()> {
 
     let mut tracker = LinkTracker::new(env);
 
-    for (path, ch) in book.iter_chapters() {
+    ctx.for_each_page(&book, |path, content| {
         info_span!("page_read", path = ?path.debug()).in_scope(|| {
-            let path = path.to_utf8_path().or_else(emit_error!())?;
             tracker
-                .read(&ch.content, path.as_str())
+                .read(content, path)
                 .context("failed to parse file as markdown")
                 .or_else(emit_error!())?;
             Ok(())
-        })?;
-    }
+        })
+    })?;
 
-    build_docs(builder.resolve(tracker.env().book_dir())?, &mut tracker)?;
+    build_docs(builder.resolve(&tracker.env().book_dir())?, &mut tracker)?;
 
     let ExportedPages {
         mut contents,
@@ -115,19 +114,18 @@ fn mdbook() -> Result<(), ()> {
 
     tracker.symlink_docs().or_else(emit_warning!()).ok();
 
-    book.for_each_page_mut(|path, content| {
-        let key = path.to_str().expect("paths were checked");
-        let out = contents.remove(key).expect("`contents` should have key");
+    ctx.for_each_page_mut(&mut book, |path, content| {
+        let text = contents.remove(&path).expect("`contents` should have key");
 
-        *content = out
-            .with_context(|| key.to_owned())
-            .context("error generating output")
+        *content = text
+            .with_context(|| format!("{:?}", path.debug()))
+            .context("error generating output for file")
             .or_else(emit_error!())?;
 
         Ok(())
     })?;
 
-    book.to_stdout(&ctx).or_else(emit_error!())?;
+    ctx.print(book).or_else(emit_error!())?;
 
     info!("{stats}");
 

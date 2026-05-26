@@ -1,43 +1,69 @@
-use anyhow::Result;
-use cargo_metadata::camino::{Utf8Path, Utf8PathBuf};
+use std::path::PathBuf;
+
+use anyhow::{Context, Result};
 use mdbook_preprocessor::PreprocessorContext;
+use url::Url;
 
-use mdbookkit::{book::PreprocessorHelper, url::ToUtf8Path};
+use mdbookkit::{
+    book::PreprocessorHelper,
+    url::{UrlFromPath, UrlUtil},
+};
 
-use crate::options::{BaseUrl, EnvConfig};
+use crate::options::EnvConfig;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Environment {
-    book_dir: Utf8PathBuf,
-    src_path: Utf8PathBuf,
-    config: EnvConfig,
+    book_dir: Url,
+    page_dir: Url,
+    base_url: Url,
 }
 
 impl Environment {
     pub fn new(config: EnvConfig, book: &PreprocessorContext) -> Result<Self> {
+        let book_dir = (book.root)
+            .canonicalize()
+            .context("could not locate book directory")?
+            .dir_to_url();
+        let page_dir = book.page_dir()?;
+        let base_url = config.base_url.reify(&page_dir)?;
         Ok(Self {
-            book_dir: book.root.as_path().into_utf8_path_buf()?,
-            src_path: book.src_path()?,
-            config,
+            book_dir,
+            page_dir,
+            base_url,
         })
     }
 
-    pub fn base_url(&self) -> &BaseUrl {
-        &self.config.base_url
+    pub fn book_dir(&self) -> PathBuf {
+        self.book_dir.expect_path()
     }
 
-    pub fn base_dir(&self) -> Option<Utf8PathBuf> {
-        if !self.base_url().0.is_url() {
-            let path = (self.base_url().0.as_str())
-                .trim_start_matches('/')
-                .trim_end_matches('/');
-            Some(self.src_path.join(path))
+    pub fn page_dir(&self) -> &Url {
+        &self.page_dir
+    }
+
+    pub fn base_url(&self) -> &Url {
+        &self.base_url
+    }
+
+    pub fn base_dir(&self) -> Option<PathBuf> {
+        if self.base_url.scheme() == "file" {
+            Some(self.base_url.expect_path())
         } else {
             None
         }
     }
+}
 
-    pub fn book_dir(&self) -> &Utf8Path {
-        &self.book_dir
+#[cfg(test)]
+impl Default for Environment {
+    fn default() -> Self {
+        use crate::options::BaseUrl;
+
+        let dir = std::env::current_dir().expect("current_dir should be accessible");
+        Self {
+            book_dir: dir.dir_to_url(),
+            page_dir: dir.dir_to_url(),
+            base_url: BaseUrl::default_url(),
+        }
     }
 }

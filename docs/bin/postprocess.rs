@@ -18,7 +18,10 @@ use tap::{Pipe, Tap};
 use tracing::{debug, error, info, info_span, trace};
 use url::Url;
 
-use mdbookkit::{error::FailOnWarnings, url::UrlFromPath};
+use mdbookkit::{
+    error::FailOnWarnings,
+    url::{ToUtf8Path, UrlFromPath},
+};
 
 pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
     let root_dir = root_dir.unwrap_or(current_dir()?);
@@ -26,7 +29,7 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
     let jinja =
         Environment::new().tap_mut(|env| env.add_template("index.html", OPEN_GRAPH).unwrap());
 
-    let root_dir = root_dir.canonicalize()?.to_directory_url();
+    let root_dir = root_dir.canonicalize()?.to_utf8_path()?.dir_to_url();
 
     let book_toml_path = root_dir.join("book.toml")?;
 
@@ -83,7 +86,7 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
     let mut book_links: HashMap<Url, HashSet<Url>> = HashMap::new();
 
     for path in glob(out_dir.join("**/*.html")?.path())? {
-        let file_url = path?.to_file_url();
+        let file_url = path?.to_utf8_path()?.file_to_url();
         let html = std::fs::read_to_string(file_url.path())?;
 
         let _span = info_span!("html").entered();

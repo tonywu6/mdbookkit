@@ -2,11 +2,10 @@ use std::{
     borrow::{Borrow, Cow},
     hash::Hash,
     io::{Read, Write},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Result, bail};
-use camino::Utf8PathBuf;
 use mdbook_markdown::pulldown_cmark::Options as MarkdownOptions;
 use mdbook_preprocessor::{
     PreprocessorContext,
@@ -17,8 +16,9 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use tap::{Pipe, Tap};
 use tracing::warn;
+use url::Url;
 
-use crate::{markdown::default_markdown_options, url::ToUtf8Path};
+use crate::{error::WithPathDebug, markdown::default_markdown_options, url::UrlFromPath};
 
 pub fn string_from_stdin() -> Result<String> {
     Ok(Vec::new()
@@ -42,6 +42,7 @@ pub fn book_from_stdin() -> Result<(PreprocessorContext, Book)> {
     }
 }
 
+#[allow(clippy::result_unit_err)]
 pub trait PreprocessorHelper {
     fn preprocessor<T>(&self, names: &[&str]) -> Result<T>
     where
@@ -49,7 +50,17 @@ pub trait PreprocessorHelper {
 
     fn markdown_options(&self) -> MarkdownOptions;
 
-    fn src_path(&self) -> Result<Utf8PathBuf>;
+    fn page_dir(&self) -> Result<Url>;
+
+    fn for_each_page<'a, F>(&self, book: &'a Book, func: F) -> Result<(), ()>
+    where
+        F: FnMut(Url, &'a str) -> Result<(), ()>;
+
+    fn for_each_page_mut<F>(&self, book: &mut Book, func: F) -> Result<(), ()>
+    where
+        F: FnMut(Url, &mut String) -> Result<(), ()>;
+
+    fn print(&self, book: Book) -> Result<()>;
 }
 
 macro_rules! preprocessor_table {
@@ -106,12 +117,74 @@ impl PreprocessorHelper for PreprocessorContext {
         options
     }
 
-    fn src_path(&self) -> Result<Utf8PathBuf> {
-        (self.root.canonicalize())
-            .context("failed to locate book directory")?
-            .join(&self.config.book.src)
-            .into_utf8_path_buf()
+    fn page_dir(&self) -> Result<Url> {
+        let path = self.root.join(&self.config.book.src);
+        let path = path
+            .canonicalize()
+            .with_path_debug(path)
+            .context("failed to locate src directory")?;
+        Ok(path.dir_to_url())
     }
+
+    fn for_each_page<'a, F>(&self, book: &'a Book, mut func: F) -> Result<(), ()>
+    where
+        F: FnMut(Url, &'a str) -> Result<(), ()>,
+    {
+        for item in book.iter() {
+            let BookItem::Chapter(ch) = item else {
+                continue;
+            };
+            let Some(path) = &ch.source_path else {
+                continue;
+            };
+            func(page_url(self, path), &ch.content)?;
+        }
+        Ok(())
+    }
+
+    fn for_each_page_mut<F>(&self, book: &mut Book, mut func: F) -> Result<(), ()>
+    where
+        F: FnMut(Url, &mut String) -> Result<(), ()>,
+    {
+        let mut result = Ok(());
+        book.for_each_chapter_mut(|ch| {
+            if result.is_err() {
+                return;
+            }
+            let &mut Chapter {
+                source_path: Some(ref path),
+                ref mut content,
+                ..
+            } = ch
+            else {
+                return;
+            };
+            result = func(page_url(self, path), content);
+        });
+        result
+    }
+
+    fn print(&self, book: Book) -> Result<()> {
+        let output = if self.mdbook_version.starts_with("0.4.") {
+            patch_mdbook_output_0_4(book)
+        } else {
+            serde_json::to_string(&book).map_err(Into::into)
+        }
+        .context("failed to serialize mdBook output")?;
+        std::io::stdout()
+            .write_all(output.as_bytes())
+            .context("failed to write mdBook output")
+    }
+}
+
+fn page_dir(ctx: &PreprocessorContext) -> PathBuf {
+    ctx.root.join(&ctx.config.book.src)
+}
+
+fn page_url(ctx: &PreprocessorContext, path: &Path) -> Url {
+    let base = page_dir(ctx);
+    let path = base.join(path);
+    path.file_to_url()
 }
 
 pub fn try_get_config<T>(ctx: &impl ConfigSource, name: &str) -> Result<Option<T>>
@@ -214,64 +287,6 @@ where
     table.remove("after");
     table.remove("optional");
     table.remove("renderers");
-}
-
-pub trait BookHelper {
-    fn iter_chapters(&self) -> impl Iterator<Item = (&PathBuf, &Chapter)>;
-
-    fn for_each_page_mut<F, E>(&mut self, func: F) -> Result<(), E>
-    where
-        F: FnMut(&PathBuf, &mut String) -> Result<(), E>;
-
-    fn to_stdout(self, ctx: &PreprocessorContext) -> Result<()>;
-}
-
-impl BookHelper for Book {
-    fn iter_chapters(&self) -> impl Iterator<Item = (&PathBuf, &Chapter)> {
-        self.iter().filter_map(|item| {
-            let BookItem::Chapter(ch) = item else {
-                return None;
-            };
-            let Some(path) = &ch.source_path else {
-                return None;
-            };
-            Some((path, ch))
-        })
-    }
-
-    fn for_each_page_mut<F, E>(&mut self, mut func: F) -> Result<(), E>
-    where
-        F: FnMut(&PathBuf, &mut String) -> Result<(), E>,
-    {
-        let mut result = Ok(());
-        self.for_each_chapter_mut(|ch| {
-            if result.is_err() {
-                return;
-            }
-            let &mut Chapter {
-                source_path: Some(ref path),
-                ref mut content,
-                ..
-            } = ch
-            else {
-                return;
-            };
-            result = func(path, content);
-        });
-        result
-    }
-
-    fn to_stdout(self, ctx: &PreprocessorContext) -> Result<()> {
-        let output = if ctx.mdbook_version.starts_with("0.4.") {
-            patch_mdbook_output_0_4(self)
-        } else {
-            serde_json::to_string(&self).map_err(Into::into)
-        }
-        .context("failed to serialize mdBook output")?;
-        std::io::stdout()
-            .write_all(output.as_bytes())
-            .context("failed to write mdBook output")
-    }
 }
 
 fn patch_mdbook_input(

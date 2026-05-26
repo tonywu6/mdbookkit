@@ -11,16 +11,16 @@ use tracing::{Level, debug, error_span, info, info_span, span::EnteredSpan, trac
 use url::Url;
 
 use mdbookkit::{
-    book::{BookHelper, PreprocessorHelper, book_from_stdin},
+    book::{PreprocessorHelper, book_from_stdin},
     config::validate_config_examples,
     diagnostics::IssueReporter,
     emit, emit_error,
     env::is_logging,
-    error::{PathDebug, ProgramExit, has_severity},
+    error::{ProgramExit, has_severity},
     level_enabled,
     logging::init_logging,
     ticker, ticker_item,
-    url::{ExpectUrl, ToUtf8Path, UrlFromPath, UrlSuffix},
+    url::{UrlSuffix, UrlUtil},
 };
 
 use self::{
@@ -55,7 +55,7 @@ fn mdbook() -> Result<(), ()> {
         .context("failed to read from mdBook")
         .or_else(emit_error!())?;
 
-    match Environment::new(&ctx) {
+    let book = match Environment::new(&ctx) {
         Ok(Ok(env)) => env.process(book)?,
         Ok(Err(err)) => {
             warn!("{:?}", err.context("preprocessor will be disabled"));
@@ -64,9 +64,9 @@ fn mdbook() -> Result<(), ()> {
         Err(err) => Err(err)
             .context("failed to initialize preprocessor")
             .or_else(emit_error!())?,
-    }
-    .to_stdout(&ctx)
-    .or_else(emit_error!())?;
+    };
+
+    ctx.print(book).or_else(emit_error!())?;
 
     Ok(())
 }
@@ -85,9 +85,10 @@ enum Command {
     ValidateConfig,
 }
 
-struct Environment {
+struct Environment<'a> {
+    ctx: &'a PreprocessorContext,
     vcs: VersionControl,
-    root_dir: Url,
+    page_dir: Url,
     markdown: pulldown_cmark::Options,
     config: Config,
 }
@@ -98,20 +99,17 @@ struct VersionControl {
     repo: Repository,
 }
 
-impl Environment {
-    fn process(self: Environment, mut book: Book) -> Result<Book, ()> {
+impl Environment<'_> {
+    fn process(self, mut book: Book) -> Result<Book, ()> {
         let mut contents = Pages::new(self.markdown);
 
-        for (path, ch) in book.iter_chapters() {
+        self.ctx.for_each_page(&book, |path, content| {
             info_span!("page_read", path = ?path.debug()).in_scope(|| {
-                let path = path.to_utf8_path().or_else(emit_error!())?;
-                let url = self.root_dir.join(path.as_str()).expect_url();
-                (contents.insert(url, &ch.content))
+                (contents.insert(path, content))
                     .context("failed to parse file as markdown")
-                    .or_else(emit_error!())?;
-                Ok(())
-            })?;
-        }
+                    .or_else(emit_error!())
+            })
+        })?;
 
         self.resolve(&mut contents);
 
@@ -129,13 +127,11 @@ impl Environment {
 
         let mut results = contents.emit();
 
-        book.for_each_page_mut(|path, content| {
-            let key = path.to_str().expect("paths were checked");
-            let url = self.root_dir.join(key).expect_url();
-            if let Some(output) = results.remove(&url) {
+        self.ctx.for_each_page_mut(&mut book, |path, content| {
+            if let Some(output) = results.remove(&path) {
                 *content = output
-                    .with_context(|| path.display().to_string())
-                    .context("error generating output")
+                    .with_context(|| format!("{:?}", path.debug()))
+                    .context("error generating output for file")
                     .or_else(emit_error!())?;
             }
             Ok(())
@@ -151,7 +147,7 @@ impl Environment {
     }
 
     fn resolve(&self, content: &mut Pages<'_>) {
-        let page_paths = &content.paths(&self.root_dir);
+        let page_paths = &content.paths(&self.page_dir);
 
         let ticker = ticker!(Level::INFO, "process", "processing links").entered();
 
@@ -173,7 +169,7 @@ impl Environment {
             let page_url = base.as_ref();
 
             if let Some(book) = &env.config.book_url
-                && let Some(path) = book.as_url().make_relative(&file_url)
+                && let Some(path) = book.as_ref().make_relative(&file_url)
                 && !path.starts_with("../")
             {
                 let dest = ResolveBook {
@@ -188,7 +184,7 @@ impl Environment {
             } else if let Some((path, hint)) = env.vcs.link.to_path(&file_url)
                 && let Ok(url) = env.vcs.root.join(&path)
             {
-                let (_, url_suffix) = env.vcs.link.take_suffix(file_url);
+                let (_, url_suffix) = env.vcs.link.as_ref().remove_suffix(file_url);
                 let dest = ResolveFile {
                     hint,
                     url_suffix,
@@ -201,7 +197,7 @@ impl Environment {
                 let _span = dest.span(&ticker);
                 self.resolve_file(dest);
             } else if file_url.scheme() == "file" {
-                let (file_url, url_suffix) = env.vcs.link.take_suffix(file_url);
+                let (file_url, url_suffix) = env.vcs.link.as_ref().remove_suffix(file_url);
                 let dest = ResolveFile {
                     hint: link.hint,
                     url_suffix,
@@ -232,7 +228,7 @@ impl Environment {
         let relative_to_repo = self.vcs.try_file(&file_url);
 
         let relative_to_book = self
-            .root_dir
+            .page_dir
             .make_relative(&file_url)
             .expect("should be a file");
 
@@ -341,7 +337,7 @@ impl Environment {
         for page in try_pages {
             trace!("trying book page {page:?}");
 
-            let file_url = (self.root_dir)
+            let file_url = (self.page_dir)
                 .join(page)
                 .expect("should be a valid url")
                 .tap_mut(|u| u.set_query(file_url.query()))
@@ -361,7 +357,7 @@ impl Environment {
 
         if !is_index {
             // try the unmodified path itself
-            let try_file = self.root_dir.join(&path).expect("should be a valid url");
+            let try_file = self.page_dir.join(&path).expect("should be a valid url");
 
             match self.vcs.try_file(&try_file) {
                 Ok(result) if !result.metadata.is_dir() => {
@@ -390,26 +386,29 @@ impl Environment {
 
         link.unreachable(not_found);
     }
+}
 
-    fn new(book: &PreprocessorContext) -> Result<Result<Self>> {
-        let config = book
+impl<'a> Environment<'a> {
+    fn new(ctx: &'a PreprocessorContext) -> Result<Result<Self>> {
+        let config = ctx
             .preprocessor(&[PREPROCESSOR_NAME, "mdbook-link-forever"])
             .inspect(|c| debug!("{c:#?}"))
             .context("failed to read preprocessor config from book.toml")?;
 
-        let vcs = match VersionControl::try_from_git(&config, book) {
+        let vcs = match VersionControl::try_from_git(&config, ctx) {
             Ok(Ok(vcs)) => vcs,
             Ok(Err(err)) => return Ok(Err(err)),
             Err(err) => return Err(err),
         };
 
-        let markdown = book.markdown_options();
+        let markdown = ctx.markdown_options();
 
-        let root_dir = book.src_path()?.to_directory_url();
+        let page_dir = ctx.page_dir()?;
 
         Ok(Ok(Self {
+            ctx,
             vcs,
-            root_dir,
+            page_dir,
             markdown,
             config,
         }))

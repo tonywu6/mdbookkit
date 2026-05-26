@@ -12,13 +12,12 @@ fn main() {
     let _span = error_span!({ env!("CARGO_PKG_NAME") }).entered();
     let Program { command } = clap::Parser::parse();
     match command {
-        Command::Postprocess { root_dir } => postprocess::run(root_dir),
+        Command::Postprocess { root_dir } => postprocess::run(root_dir).or_else(emit_error!()),
         Command::Preprocess { command: None } => preprocess::run(),
         Command::Preprocess {
             command: Some(Preprocess::Supports { .. }),
         } => Ok(()),
     }
-    .or_else(emit_error!())
     .exit()
 }
 

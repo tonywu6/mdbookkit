@@ -1,7 +1,14 @@
-use std::{borrow::Cow, fmt::Debug, ops::Deref, path::Path, process::Command, str::FromStr};
+use std::{
+    borrow::Cow,
+    fmt::Debug,
+    ops::Deref,
+    path::{Path, PathBuf},
+    process::Command,
+    str::FromStr,
+};
 
-use anyhow::{Context, Result, anyhow};
-use cargo_metadata::camino::{Utf8Path, Utf8PathBuf};
+use anyhow::{Context, Result, anyhow, bail};
+use cargo_metadata::camino::{Utf8Component, Utf8Path, Utf8PathBuf};
 use serde::{
     Deserialize, Deserializer,
     de::{
@@ -12,13 +19,14 @@ use serde::{
 use shlex::Shlex;
 use tap::{Pipe, Tap};
 use tracing::debug;
+use url::Url;
 
 use mdbookkit::{
     config::value_or_vec,
     de_struct, doc_link, emit_error,
     env::{is_ci, locate_project},
-    error::FailOnWarnings,
-    url::{UrlPath, UrlUtil},
+    error::{FailOnWarnings, MapDeserializeError},
+    url::{ExpectUrl, UrlUtil},
 };
 
 de_struct!(
@@ -155,6 +163,9 @@ pub struct EnvConfig {
     pub base_url: BaseUrlConfig,
 }
 
+#[derive(Debug, Clone)]
+pub struct BaseUrl(String);
+
 #[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct BaseUrlConfig {
@@ -164,17 +175,20 @@ pub struct BaseUrlConfig {
     release: BaseUrl,
 }
 
-#[derive(Debug, Clone)]
-pub struct BaseUrl(pub UrlPath);
+impl BaseUrl {
+    pub fn reify(&self, base: &Url) -> Result<Url> {
+        Ok(base.join(&self.0)?.with_trailing_slash())
+    }
+}
 
 #[derive(Debug)]
 pub struct BuildConfigResolved {
-    pub manifest_dir: Utf8PathBuf,
+    pub manifest_dir: PathBuf,
     pub builders: Vec<Builder>,
 }
 
 impl BuilderConfig {
-    pub fn resolve(self, book_dir: &Utf8Path) -> Result<BuildConfigResolved, ()> {
+    pub fn resolve(self, book_dir: &Path) -> Result<BuildConfigResolved, ()> {
         let Self {
             manifest_dir,
             build,
@@ -201,21 +215,20 @@ impl BuilderConfig {
 
         // https://github.com/rust-lang/cargo/issues/16834
         let manifest_dir = if let Some(dir) = manifest_dir {
-            book_dir
-                .join(dir)
-                .canonicalize_utf8()
+            (book_dir.join(dir).canonicalize())
                 .context("failed to resolve `manifest-dir` to an absolute path")
                 .or_else(emit_error!())?
         } else {
             default_cargo
-                .workspace(book_dir.as_std_path())
+                .workspace(book_dir)
                 .context(doc_link!(help = "faq#failed-to-find-a-cargo-project"))
                 .context("this preprocessor will run `cargo doc`, which requires a Cargo project")
                 .context("failed to find a Cargo project")
                 .or_else(emit_error!())?
+                .into()
         };
 
-        debug!("resolved manifest dir: {manifest_dir}");
+        debug!("resolved manifest dir: {}", manifest_dir.display());
 
         Ok(BuildConfigResolved {
             manifest_dir,
@@ -304,14 +317,39 @@ impl FromStr for BaseUrl {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut pat = s.parse::<UrlPath>()?;
-        pat.ensure_trailing_slash();
-        Ok(Self(pat))
+        match s.parse::<Url>() {
+            Ok(url) => Ok(Self(url.with_trailing_slash().into())),
+            Err(..) => {
+                for component in Utf8Path::new(s).components() {
+                    match component {
+                        Utf8Component::Prefix(p) => {
+                            bail!("path prefix {p} is unsupported")
+                        }
+                        Utf8Component::ParentDir => {
+                            bail!("path should not contain `..`")
+                        }
+                        Utf8Component::RootDir => {}
+                        Utf8Component::CurDir => {}
+                        Utf8Component::Normal(..) => {}
+                    }
+                }
+                let url = ("example:/".parse::<Url>().expect_url())
+                    .join(s)
+                    .context("invalid URL")?;
+                Ok(Self(url[url::Position::BeforePath..][1..].into()))
+            }
+        }
     }
 }
 
 impl Default for BaseUrl {
     fn default() -> Self {
+        Self(Self::default_url().into())
+    }
+}
+
+impl BaseUrl {
+    pub fn default_url() -> Url {
         // https://doc.rust-lang.org/cargo/reference/unstable.html#rustdoc-map
         "https://docs.rs/{pkg_name}/{version}"
             .parse()
@@ -325,7 +363,7 @@ impl<'de> Deserialize<'de> for BaseUrl {
         D: Deserializer<'de>,
     {
         let url = Cow::<str>::deserialize(deserializer)?;
-        let url = (url.parse()).map_err(|err| serde::de::Error::custom(format!("{err:?}")))?;
+        let url = url.parse().or_serde_error()?;
         Ok(url)
     }
 }

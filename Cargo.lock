@@ -1033,6 +1033,7 @@ dependencies = [
  "indicatif",
  "mdbook-markdown",
  "mdbook-preprocessor",
+ "percent-encoding",
  "pulldown-cmark-to-cmark",
  "serde",
  "serde_json",

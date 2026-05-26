@@ -60,7 +60,7 @@ pub fn build_docs(options: BuildConfigResolved, tracker: &mut LinkTracker) -> Re
 }
 
 fn run_builder(
-    manifest_dir: &Utf8Path,
+    manifest_dir: &Path,
     builder: Builder,
     tracker: &mut LinkTracker<'_>,
 ) -> Result<(), ()> {
@@ -719,7 +719,7 @@ impl PathMapper {
 fn resolve_packages(
     metadata: &cargo_metadata::Metadata,
     options: &BuildOptions,
-    manifest_dir: &Utf8Path,
+    manifest_dir: &Path,
     notes: &DiagnosticNotes,
 ) -> Result<PackageResolution, ()> {
     let BuildOptions {
@@ -1076,7 +1076,14 @@ impl CargoMetadataUtil for Subprocess {
 }
 
 pub fn symlink_dir_all(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Result<()> {
-    let mkdir = if let Some(parent) = target.as_ref().parent() {
+    // ensure no trailing slash
+    let target = if let Some(name) = target.as_ref().file_name() {
+        target.as_ref().with_file_name(name)
+    } else {
+        target.as_ref().to_owned()
+    };
+
+    let mkdir = if let Some(parent) = target.parent() {
         // this could fail due to a parent being a symlink
         // don't bail early unless `symlink_dir` actually fails
         std::fs::create_dir_all(parent)
@@ -1120,7 +1127,7 @@ pub fn symlink_dir_all(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Re
         Ok(()) => Ok(()),
 
         Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
-            remove_symlink(target.as_ref())
+            remove_symlink(&target)
                 .with_path_debug(&target)
                 .context("failed to remove existing symlink at:")?;
             symlink_dir_all(source, target)

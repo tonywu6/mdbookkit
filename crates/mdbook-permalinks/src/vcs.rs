@@ -7,7 +7,8 @@ use url::Url;
 
 use mdbookkit::{
     emit_debug,
-    url::{ExpectPath, UrlFromPath, UrlPath, UrlSuffix},
+    error::WithPathDebug,
+    url::{UrlFromPath, UrlUtil},
 };
 
 use crate::{
@@ -17,7 +18,10 @@ use crate::{
 };
 
 impl VersionControl {
-    #[instrument(level="debug", skip_all, fields(file = format!("{file}"), root = format!("{}", self.root)))]
+    #[instrument(level="debug", skip_all, fields(
+        file = ?file.debug(),
+        root = ?self.root.debug(),
+    ))]
     pub fn try_file(&self, file: &Url) -> Result<TryFile, PathStatus> {
         let Some(path) = self.root.make_relative(file) else {
             debug!("no relative path from root");
@@ -64,7 +68,7 @@ pub struct TryFile {
 
 #[derive(Debug)]
 pub struct Permalink {
-    pattern: UrlPath,
+    pattern: Url,
     refname: RefName,
     params: PathParams,
 }
@@ -78,39 +82,36 @@ enum RefName {
 impl Permalink {
     /// Try to convert this path to a permalink
     pub fn to_link(&self, path: &str, hint: ContentHint) -> Url {
-        self.pattern
-            .fill_pattern(|group| match group {
-                "ref" => Some(
-                    match &self.refname {
-                        RefName::Commit(commit) => commit,
-                        RefName::Tag(tag) => tag,
-                    }
-                    .into(),
-                ),
-                "kind" => Some(
-                    match &self.refname {
-                        RefName::Commit(..) => &self.params.commit[0],
-                        RefName::Tag(..) => &self.params.tag[0],
-                    }
-                    .into(),
-                ),
-                "tree" => Some(
-                    match hint {
-                        ContentHint::Tree => &self.params.tree[0],
-                        ContentHint::Raw => &self.params.raw[0],
-                    }
-                    .into(),
-                ),
-                "path" => Some(path.into()),
-                _ => None,
-            })
-            .into_url()
-            .expect("should result in a URL")
+        self.pattern.pattern_fill(|group| match group {
+            "ref" => Some(
+                match &self.refname {
+                    RefName::Commit(commit) => commit,
+                    RefName::Tag(tag) => tag,
+                }
+                .into(),
+            ),
+            "kind" => Some(
+                match &self.refname {
+                    RefName::Commit(..) => &self.params.commit[0],
+                    RefName::Tag(..) => &self.params.tag[0],
+                }
+                .into(),
+            ),
+            "tree" => Some(
+                match hint {
+                    ContentHint::Tree => &self.params.tree[0],
+                    ContentHint::Raw => &self.params.raw[0],
+                }
+                .into(),
+            ),
+            "path" => Some(path.into()),
+            _ => None,
+        })
     }
 
     /// Try to extract a path (relative to repo root) from this link
     pub fn to_path(&self, link: &Url) -> Option<(String, ContentHint)> {
-        let mut groups = self.pattern.test_pattern(Some("path"), link)?;
+        let mut groups = self.pattern.pattern_test(Some("path"), link)?;
 
         if groups.get("ref").map(|s| &**s) != Some("HEAD") {
             return None;
@@ -134,9 +135,11 @@ impl Permalink {
 
         Some((path, hint))
     }
+}
 
-    pub fn take_suffix(&self, url: Url) -> (Url, UrlSuffix) {
-        self.pattern.take_suffix(url)
+impl AsRef<Url> for Permalink {
+    fn as_ref(&self) -> &Url {
+        &self.pattern
     }
 }
 
@@ -179,12 +182,12 @@ impl VersionControl {
             Err(err) => return config.fail_on_warnings.adjusted(Ok(Err(err))),
         };
 
-        let root = repo
-            .workdir()
-            .unwrap_or_else(|| repo.commondir())
+        let root = repo.workdir().unwrap_or_else(|| repo.commondir());
+        let root = root
             .canonicalize()
+            .with_path_debug(root)
             .context("could not locate repo root")?
-            .to_directory_url();
+            .dir_to_url();
 
         let refname = match get_git_head(&repo)
             .context("could not get a tag or the commit hash to HEAD")?
@@ -200,20 +203,9 @@ impl VersionControl {
         let link = {
             let TemplateConfig { pattern, params } = &config.repo_url_template;
 
-            let pattern = if let Some(pat) = pattern {
+            let pattern = if let Some(pattern) = pattern {
                 debug!("using explicitly set repo_url_template");
-
-                match pat.parse::<UrlPath>() {
-                    Ok(pat) => {
-                        if pat.is_url() {
-                            Ok(pat)
-                        } else {
-                            Err(anyhow!("URL must begin with `https://` or `http://`"))
-                        }
-                    }
-                    Err(e) => Err(anyhow!(e)),
-                }
-                .context("failed to parse `repo-url-template` as a valid URL")?
+                pattern.clone()
             } else {
                 let remote = config.remote_name.as_deref().unwrap_or("origin");
                 let repo = match find_git_remote(&repo, remote, &ctx.config)
@@ -340,7 +332,7 @@ fn find_git_remote(
     }
 }
 
-fn derive_pattern(url: &gix_url::Url) -> Result<UrlPath> {
+fn derive_pattern(url: &gix_url::Url) -> Result<Url> {
     let host = match url.host() {
         Some(host) => host,
         None => bail!("remote URL does not have a host"),
@@ -410,7 +402,7 @@ fn derive_pattern(url: &gix_url::Url) -> Result<UrlPath> {
     bail!("unsupported remote {host:?}")
 }
 
-fn derive_pattern_github(owner: &str, repo: &str) -> Result<UrlPath> {
+fn derive_pattern_github(owner: &str, repo: &str) -> Result<Url> {
     let pattern = format!("https://github.com/{owner}/{repo}/{{tree}}/{{ref}}/{{path}}");
     let pattern = pattern
         .parse()
@@ -418,7 +410,7 @@ fn derive_pattern_github(owner: &str, repo: &str) -> Result<UrlPath> {
     Ok(pattern)
 }
 
-fn derive_pattern_codeberg(owner: &str, repo: &str) -> Result<UrlPath> {
+fn derive_pattern_codeberg(owner: &str, repo: &str) -> Result<Url> {
     let pattern = format!("https://codeberg.org/{owner}/{repo}/{{tree}}/{{kind}}/{{ref}}/{{path}}");
     let pattern = pattern
         .parse()
@@ -426,7 +418,7 @@ fn derive_pattern_codeberg(owner: &str, repo: &str) -> Result<UrlPath> {
     Ok(pattern)
 }
 
-fn derive_pattern_tangled(entity: &str, repo: Option<&str>) -> Result<UrlPath> {
+fn derive_pattern_tangled(entity: &str, repo: Option<&str>) -> Result<Url> {
     let pattern = match repo {
         Some(repo) => format!("https://tangled.org/{entity}/{repo}/{{tree}}/{{ref}}/{{path}}"),
         None => format!("https://tangled.org/{entity}/{{tree}}/{{ref}}/{{path}}"),
@@ -437,7 +429,7 @@ fn derive_pattern_tangled(entity: &str, repo: Option<&str>) -> Result<UrlPath> {
     Ok(pattern)
 }
 
-fn derive_params(pat: &UrlPath) -> PathParams {
+fn derive_params(pat: &Url) -> PathParams {
     match pat.host_str() {
         Some("github.com") => Default::default(),
         Some("tangled.org") => Default::default(),

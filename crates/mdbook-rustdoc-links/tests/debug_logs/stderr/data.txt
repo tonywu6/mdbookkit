@@ -1,17 +1,17 @@
-TRACE mdbook-rustdoc-links:page_read: link >>> span=2..11 dest="fancy" title="fancy" path="index.md"
-TRACE mdbook-rustdoc-links:page_read: link +++ span=3..10 event=Code(Borrowed("fancy")) parent=2..11 path="index.md"
-TRACE mdbook-rustdoc-links:page_read: link <<< span=2..11 path="index.md"
-TRACE mdbook-rustdoc-links:page_read: link >>> span=14..21 dest="f80" title="f80" path="index.md"
-TRACE mdbook-rustdoc-links:page_read: link +++ span=15..20 event=Code(Borrowed("f80")) parent=14..21 path="index.md"
-TRACE mdbook-rustdoc-links:page_read: link <<< span=14..21 path="index.md"
-TRACE mdbook-rustdoc-links:page_read: link >>> span=24..40 dest="PhantomData<T>" title="PhantomData<T>" path="index.md"
-TRACE mdbook-rustdoc-links:page_read: link +++ span=25..36 event=Text(Borrowed("PhantomData")) parent=24..40 path="index.md"
-TRACE mdbook-rustdoc-links:page_read: link +++ span=36..39 event=InlineHtml(Borrowed("<T>")) parent=24..40 path="index.md"
-TRACE mdbook-rustdoc-links:page_read: link <<< span=24..40 path="index.md"
-TRACE mdbook-rustdoc-links:page_read:normalized: link >>> span=0..32 dest="PhantomData<T>" title="PhantomData<T>" path="index.md" link="PhantomData<T>" span=24..40
-TRACE mdbook-rustdoc-links:page_read:normalized: link +++ span=1..12 event=Text(Borrowed("PhantomData")) parent=0..32 path="index.md" link="PhantomData<T>" span=24..40
-TRACE mdbook-rustdoc-links:page_read:normalized: link +++ span=12..15 event=InlineHtml(Borrowed("<T>")) parent=0..32 path="index.md" link="PhantomData<T>" span=24..40
-TRACE mdbook-rustdoc-links:page_read:normalized: link <<< span=0..32 path="index.md" link="PhantomData<T>" span=24..40
+TRACE mdbook-rustdoc-links:page_read: link >>> span=2..11 dest="fancy" title="fancy" path="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link +++ span=3..10 event=Code(Borrowed("fancy")) parent=2..11 path="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link <<< span=2..11 path="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link >>> span=14..21 dest="f80" title="f80" path="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link +++ span=15..20 event=Code(Borrowed("f80")) parent=14..21 path="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link <<< span=14..21 path="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link >>> span=24..40 dest="PhantomData<T>" title="PhantomData<T>" path="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link +++ span=25..36 event=Text(Borrowed("PhantomData")) parent=24..40 path="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link +++ span=36..39 event=InlineHtml(Borrowed("<T>")) parent=24..40 path="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link <<< span=24..40 path="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read:normalized: link >>> span=0..32 dest="PhantomData<T>" title="PhantomData<T>" path="file://[TEST_DIR]/debug_logs/src/index.md" link="PhantomData<T>" span=24..40
+TRACE mdbook-rustdoc-links:page_read:normalized: link +++ span=1..12 event=Text(Borrowed("PhantomData")) parent=0..32 path="file://[TEST_DIR]/debug_logs/src/index.md" link="PhantomData<T>" span=24..40
+TRACE mdbook-rustdoc-links:page_read:normalized: link +++ span=12..15 event=InlineHtml(Borrowed("<T>")) parent=0..32 path="file://[TEST_DIR]/debug_logs/src/index.md" link="PhantomData<T>" span=24..40
+TRACE mdbook-rustdoc-links:page_read:normalized: link <<< span=0..32 path="file://[TEST_DIR]/debug_logs/src/index.md" link="PhantomData<T>" span=24..40
 DEBUG mdbook-rustdoc-links: resolved manifest dir: [TEST_DIR]/debug_logs
  INFO mdbook-rustdoc-links: running build #1 [aarch64-unknown-linux-gnu]
  INFO mdbook-rustdoc-links:build:prepare: started instance=1 preparing

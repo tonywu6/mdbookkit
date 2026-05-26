@@ -24,6 +24,7 @@ console = { version = "0.16.3" }
 indicatif = { workspace = true }
 mdbook-markdown = { workspace = true }
 mdbook-preprocessor = { workspace = true }
+percent-encoding = { workspace = true }
 pulldown-cmark-to-cmark = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

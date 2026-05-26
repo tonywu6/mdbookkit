@@ -1,16 +1,16 @@
 use std::borrow::Cow;
 
-use mdbookkit::{
-    config::value_or_vec,
-    error::FailOnWarnings,
-    url::{UrlPath, UrlUtil},
-};
 use serde::{
     Deserialize, Deserializer,
     de::value::{MapAccessDeserializer, SeqAccessDeserializer},
 };
-use tap::Tap;
 use url::Url;
+
+use mdbookkit::{
+    config::value_or_vec,
+    error::{FailOnWarnings, MapDeserializeError},
+    url::UrlUtil,
+};
 
 #[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
@@ -18,7 +18,7 @@ pub struct Config {
     #[serde(default, deserialize_with = "TemplateConfig::deserialize2")]
     pub repo_url_template: TemplateConfig,
     #[serde(default)]
-    pub book_url: Option<BaseUrl>,
+    pub book_url: Option<BookUrl>,
     #[serde(default)]
     pub remote_name: Option<String>,
     #[serde(default)]
@@ -28,36 +28,13 @@ pub struct Config {
 }
 
 #[derive(Debug)]
-pub struct BaseUrl(UrlPath);
-
-impl BaseUrl {
-    pub fn as_url(&self) -> &Url {
-        self.0.as_url().expect("url was checked to be http")
-    }
-}
-
-impl<'de> Deserialize<'de> for BaseUrl {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let url = Cow::<str>::deserialize(deserializer)?;
-        let url = (url.parse::<UrlPath>())
-            .map_err(|err| serde::de::Error::custom(format!("{err:?}")))?
-            .tap_mut(|u| u.ensure_trailing_slash());
-        if url.as_url().is_none() {
-            let err = serde::de::Error::custom("expected an HTTP URL");
-            return Err(err);
-        }
-        Ok(Self(url))
-    }
-}
+pub struct BookUrl(Url);
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct TemplateConfig {
     #[serde(default)]
-    pub pattern: Option<String>,
+    pub pattern: Option<Url>,
     #[serde(default)]
     pub params: Option<PathParams>,
 }
@@ -73,6 +50,27 @@ pub struct PathParams {
     pub commit: Vec<String>,
     #[serde(default, deserialize_with = "value_or_vec1")]
     pub tag: Vec<String>,
+}
+
+impl AsRef<Url> for BookUrl {
+    fn as_ref(&self) -> &Url {
+        &self.0
+    }
+}
+
+impl<'de> Deserialize<'de> for BookUrl {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let url = Cow::<str>::deserialize(deserializer)?;
+        let url = url.parse::<Url>().or_serde_error()?.with_trailing_slash();
+        if url.scheme() != "https" && url.scheme() != "http" {
+            let err = serde::de::Error::custom("expected an HTTP URL");
+            return Err(err);
+        }
+        Ok(Self(url))
+    }
 }
 
 impl TemplateConfig {
@@ -94,8 +92,9 @@ impl TemplateConfig {
             where
                 E: serde::de::Error,
             {
+                let pattern = v.parse().or_serde_error()?;
                 Ok(TemplateConfig {
-                    pattern: Some(v.into()),
+                    pattern: Some(pattern),
                     params: Default::default(),
                 })
             }

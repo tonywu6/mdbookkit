@@ -14,7 +14,7 @@ use mdbook_markdown::pulldown_cmark::{CodeBlockKind, CowStr, Event, Parser, Tag,
 use minijinja::{Environment, UndefinedBehavior};
 
 use mdbookkit::{
-    book::{BookHelper, PreprocessorHelper, book_from_stdin},
+    book::{PreprocessorHelper, book_from_stdin},
     config::{ConfigExampleErrors, ConfigExampleInputs},
     diagnostics::{
         Highlight, IssueLevel, IssueReport, IssueReporter, Note, SourceCode,
@@ -24,28 +24,33 @@ use mdbookkit::{
     env::locate_project,
     error::{ExpectFmt, FailOnWarnings, WithPathDebug},
     markdown::{PatchStream, Spanned},
-    url::{ExpectPath, ExpectUrl, UrlFromPath},
+    url::{ExpectUrl, UrlUtil},
 };
 
-pub fn run() -> Result<()> {
-    let (ctx, mut book) = book_from_stdin().context("failed to read from mdBook")?;
+pub fn run() -> Result<(), ()> {
+    let (ctx, mut book) = book_from_stdin()
+        .context("failed to read from mdBook")
+        .or_else(emit_error!())?;
+
+    let page_dir = ctx.page_dir().or_else(emit_error!())?;
 
     let jinja = {
         let mut jinja = Environment::new();
 
         jinja.set_path_join_callback({
-            let src_path = ctx.src_path()?.to_directory_url();
+            let page_dir = page_dir.clone();
             move |name, referrer| {
                 if let Some(name) = name.strip_prefix('/') {
                     CARGO_WORKSPACE.join(name).into_string().into()
                 } else {
-                    src_path
+                    page_dir
                         .join(referrer)
                         .expect_url()
                         .join(name)
                         .expect_url()
                         .expect_path()
-                        .into_string()
+                        .to_string_lossy()
+                        .into_owned()
                         .into()
                 }
             }
@@ -70,12 +75,12 @@ pub fn run() -> Result<()> {
 
     let mut state = BookState::default();
 
-    book.for_each_page_mut(|path, content| -> Result<()> {
-        let path = path.display().to_string();
+    ctx.for_each_page_mut(&mut book, |path, content| {
+        let name = page_dir.print_relative(&path).to_string();
 
         if let Ok(rendered) = jinja
-            .render_named_str(&path, content, ())
-            .with_path_debug(&path)
+            .render_named_str(&name, content, ())
+            .with_path_debug(&name)
             .context("failed to render page content using minijinja")
             .or_else(emit_warning!())
         {
@@ -86,15 +91,15 @@ pub fn run() -> Result<()> {
             .into_offset_iter()
             .scan(PageState::default(), |inner, chunk| {
                 Some(match inner.scan(chunk) {
-                    Some((Ok(elem), span)) => match state.consume(&path, (elem, span.clone())) {
+                    Some((Ok(elem), span)) => match state.consume(&name, (elem, span.clone())) {
                         Ok(chunk) => chunk,
                         Err(err) => {
-                            state.report(&path, error_report(&err, span));
+                            state.report(&name, error_report(&err, span));
                             None
                         }
                     },
                     Some((Err(err), span)) => {
-                        state.report(&path, error_report(&err, span));
+                        state.report(&name, error_report(&err, span));
                         None
                     }
                     None => None,
@@ -106,7 +111,7 @@ pub fn run() -> Result<()> {
         if !stream.is_empty()
             && let Ok(rendered) = PatchStream::new(content, stream.into_iter())
                 .into_string()
-                .with_path_debug(&path)
+                .with_path_debug(&name)
                 .context("failed to patch page content")
                 .or_else(emit_warning!())
         {
@@ -116,26 +121,26 @@ pub fn run() -> Result<()> {
         Ok(())
     })?;
 
-    state.validate_config()?;
+    state.validate_config().or_else(emit_error!())?;
 
-    for (path, ch) in book.iter_chapters() {
-        let path = path.display().to_string();
-
-        if let Some(issues) = state.issues.remove(&*path) {
+    ctx.for_each_page(&book, |path, content| {
+        let name = page_dir.print_relative(&path).to_string();
+        if let Some(issues) = state.issues.remove(&name) {
             IssueReporter {
                 issues,
                 source: SourceCode {
-                    source_code: &ch.content,
-                    source_path: path.into(),
+                    source_code: content,
+                    source_path: name.into(),
                 },
             }
             .emit(emit!());
         }
-    }
+        Ok(())
+    })?;
 
-    FailOnWarnings::InPipelines.check()?;
+    FailOnWarnings::InPipelines.check().or_else(emit_error!())?;
 
-    book.to_stdout(&ctx)
+    ctx.print(book).or_else(emit_error!())
 }
 
 static CARGO_WORKSPACE: LazyLock<Utf8PathBuf> =

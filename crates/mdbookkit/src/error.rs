@@ -1,14 +1,11 @@
 use std::{
-    fmt::{Debug, Display},
+    fmt::Debug,
     path::Path,
     process::exit,
-    sync::{
-        LockResult,
-        atomic::{AtomicU8, Ordering},
-    },
+    sync::atomic::{AtomicU8, Ordering},
 };
 
-use anyhow::{Context, Error, Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use serde::Deserialize;
 use tap::Pipe;
 use tracing::{Event, Level, Subscriber};
@@ -123,58 +120,6 @@ macro_rules! write_str {
     }};
 }
 
-pub trait ExpectLock<T> {
-    fn expect_lock(self) -> T;
-}
-
-impl<T> ExpectLock<T> for LockResult<T> {
-    #[inline(always)]
-    fn expect_lock(self) -> T {
-        self.expect("lock should not be poisoned")
-    }
-}
-
-#[allow(async_fn_in_trait)]
-pub trait FutureWithError<T> {
-    async fn context<C>(self, context: C) -> Result<T>
-    where
-        C: Display + Send + Sync + 'static;
-
-    async fn with_context<C, G>(self, context: G) -> Result<T>
-    where
-        C: Display + Send + Sync + 'static,
-        G: FnOnce() -> C;
-}
-
-impl<F, T, E> FutureWithError<T> for F
-where
-    F: Future<Output = Result<T, E>>,
-    E: Into<Error>,
-{
-    #[inline(always)]
-    async fn context<C>(self, context: C) -> Result<T>
-    where
-        C: Display + Send + Sync + 'static,
-    {
-        match self.await {
-            Ok(value) => Ok(value),
-            Err(error) => Err(error.into()).context(context),
-        }
-    }
-
-    #[inline(always)]
-    async fn with_context<C, G>(self, context: G) -> Result<T>
-    where
-        C: Display + Send + Sync + 'static,
-        G: FnOnce() -> C,
-    {
-        match self.await {
-            Ok(value) => Ok(value),
-            Err(error) => Err(error.into()).with_context(context),
-        }
-    }
-}
-
 pub trait PathDebug {
     fn debug(&self) -> impl Debug;
 }
@@ -195,7 +140,7 @@ impl PathDebug for Path {
 }
 
 pub trait WithPathDebug<T> {
-    fn with_path_label(self, path: impl AsRef<Path>, label: &str) -> Result<T>;
+    fn with_path_label(self, path: impl AsRef<Path>, label: &'static str) -> Result<T>;
 
     #[inline]
     fn with_path_debug(self, path: impl AsRef<Path>) -> Result<T>
@@ -211,16 +156,40 @@ where
     Result<T, E>: Context<T, E>,
 {
     #[inline]
-    fn with_path_label(self, path: impl AsRef<Path>, label: &str) -> Result<T> {
+    fn with_path_label(self, path: impl AsRef<Path>, label: &'static str) -> Result<T> {
         self.with_context(|| format!("{label}: {:?}", path.as_ref().debug()))
     }
 }
 
 impl<T> WithPathDebug<T> for Option<T> {
     #[inline]
-    fn with_path_label(self, path: impl AsRef<Path>, label: &str) -> Result<T> {
+    fn with_path_label(self, path: impl AsRef<Path>, label: &'static str) -> Result<T> {
         self.with_context(|| format!("{label}: {:?}", path.as_ref().debug()))
     }
+}
+
+pub trait MapDeserializeError<T, E> {
+    fn or_serde_error<E2: serde::de::Error>(self) -> Result<T, E2>;
+}
+
+impl<T, E: Into<anyhow::Error>> MapDeserializeError<T, E> for Result<T, E> {
+    fn or_serde_error<E2: serde::de::Error>(self) -> Result<T, E2> {
+        match self {
+            Ok(data) => Ok(data),
+            Err(err) => {
+                let err = err.into();
+                let err = serde::de::Error::custom(format!("{err:?}"));
+                Err(err)
+            }
+        }
+    }
+}
+
+#[macro_export]
+macro_rules! try2 {
+    ({ $($tt:tt)+ }) => {
+        (|| -> ::anyhow::Result<_> { $($tt)+ })()
+    };
 }
 
 #[macro_export]

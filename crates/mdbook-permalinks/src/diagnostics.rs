@@ -19,7 +19,7 @@ use crate::{
     page::Pages,
 };
 
-impl Environment {
+impl Environment<'_> {
     pub fn issues<'a, F>(&'a self, contents: &'a Pages<'a>, filter: F) -> Vec<IssueReporter<'a>>
     where
         F: Fn(&'a LinkStatus) -> bool,
