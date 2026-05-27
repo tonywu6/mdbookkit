@@ -250,7 +250,10 @@ impl Environment<'_> {
 
         if !should_link {
             if let Err(
-                err @ (PathStatus::Nonexistent | PathStatus::Unreachable | PathStatus::NotInRepo),
+                err @ (PathStatus::NotFound
+                | PathStatus::NotADirectory
+                | PathStatus::Unreachable
+                | PathStatus::NotInRepo),
             ) = relative_to_repo
             {
                 // at this point `not_in_book` is false

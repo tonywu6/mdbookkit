@@ -16,7 +16,8 @@ pub enum LinkStatus {
 
 #[derive(Debug, Clone, Copy)]
 pub enum PathStatus {
-    Nonexistent,
+    NotFound,
+    NotADirectory,
     Unreachable,
     Ignored,
     NotInRepo,

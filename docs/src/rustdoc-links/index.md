@@ -21,12 +21,12 @@ Instead of finding and pasting URLs into your book, which can be tedious and
 error-prone:
 
 ```md
-The [`option`](https://doc.rust-lang.org/stable/core/option/index.html) and
-[`result`](https://doc.rust-lang.org/stable/core/result/index.html) modules define
+The [`option`](https://doc.rust-lang.org/stable/std/option/index.html) and
+[`result`](https://doc.rust-lang.org/stable/std/result/index.html) modules define
 optional and error-handling types ...
 ```
 
-You simply write ...
+You simply mention items by name ...
 
 ```md
 The [`option`][std::option] and [`result`][std::result] modules define optional and

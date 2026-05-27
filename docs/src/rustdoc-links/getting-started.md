@@ -1,7 +1,7 @@
 # Getting started
 
 This tutorial will walk you through the steps necessary to use the preprocessor. After
-which, you will be writing some links in an mdBook project to see how the preprocessor
+setup, you will be writing some links in an mdBook project to see how the preprocessor
 works.
 
 ## Prerequisites
@@ -29,27 +29,11 @@ This tutorial assumes that:
 
 ## Install
 
-A ["preprocessor"] is just an executable that mdBook will run during builds to customize
-the build process. You can build and install this preprocessor from source using
-`cargo`:
-
-```sh
-cargo install mdbook-rustdoc-links
-```
-
-<p><details>
-  <summary>Other ways to install</summary>
-
-- This project supports [cargo-binstall], so instead of compiling from source, you can
-  install a precompiled binary:
-
-  ```sh
-  cargo binstall mdbook-rustdoc-links
-  ```
-
-- You can also download binaries directly from [GitHub releases][gh-releases].
-
-</details></p>
+<!-- prettier-ignore-start -->
+{% with preprocessor = "mdbook-rustdoc-links" %}
+  {% include "../_snippets/install.md" %}
+{% endwith %}
+<!-- prettier-ignore-end -->
 
 <p><details>
   <summary>Upgrading from v2</summary>
@@ -112,7 +96,7 @@ have seen this type of notation in [doc comments][doc-comment] in Rust source co
 > If you are not yet familiar with how documenting Rust code works, feel free to review
 > the relevant chapter in [the book][publishing-to-crates-io] first!
 
-You may now run `mdbook serve`. In the rendered page, you should see the following text
+You may now run `mdbook serve`! In the rendered page, you should see the following text
 containing the desired link:
 
 <figure class="fig-text">
@@ -177,17 +161,22 @@ Formatting of diagnostics powered by [annotate-snippets][annotate_snippets]
 
 ## Next steps
 
+Continue reading to learn more about the preprocessor!
+
+- Learn about the tips and specificities for [writing Markdown links](writing-links.md).
+
+- Understand [how the preprocessor resolves items](naming-items.md).
+
+- See how to [customize the preprocessor](configuration.md).
+
 <!-- prettier-ignore-start -->
 [`cargo doc`]: https://doc.rust-lang.org/cargo/commands/cargo-doc.html
 [`cargo init`]: https://doc.rust-lang.org/cargo/commands/cargo-init.html
-[cargo-binstall]: https://github.com/cargo-bins/cargo-binstall
 [cargo-project]: https://doc.rust-lang.org/cargo/guide/why-cargo-exists.html
-[gh-releases]: https://github.com/tonywu6/mdbookkit/releases
 [intra-doc-link]: https://doc.rust-lang.org/rustdoc/write-documentation/linking-to-items-by-name.html
 [mdbook-include]: https://rust-lang.github.io/mdBook/format/mdbook.html#including-files
 [mdbook-links]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html#:~:text=The%20following%20preprocessors%20are%20built%2Din%20and%20included%20by%20default:
 [mdbook-tutorial]: https://rust-lang.github.io/mdBook/guide/creating.html
-["preprocessor"]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html
 [rustdoc-lints]: https://doc.rust-lang.org/rustdoc/lints.html
 [doc-comment]: https://doc.rust-lang.org/reference/comments.html#doc-comments
 [publishing-to-crates-io]: https://doc.rust-lang.org/book/ch14-02-publishing-to-crates-io.html

@@ -36,6 +36,11 @@ test_case![git_url_tangled_self_hosted, exit(101)];
 test_case![git_url_tangled_malformed, exit(101)];
 test_case![git_url_custom_params, exit(0)];
 test_case![git_url_invalid_config, exit(101)];
+test_case![
+    book_tutorial_check,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
 
 macro_rules! test_in_temp_dir {
     [$name:ident ($($args:tt)+), |$root:ident| { $($setup:tt)* }] => {

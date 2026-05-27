@@ -31,19 +31,28 @@ warning: broken link to "//LICENSE-MIT.md"
   |      resolves to a path that is outside of this repo:
   |      "/LICENSE-MIT.md"
 
-warning: broken link to "image.jpeg"
- --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:5:7
+warning: broken link to "../book.toml/"
+ --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:5:6
   |
-5 | - ![](image.jpeg)
+5 | - [](../book.toml/)
+  |      ^^^^^^^^^^^^^
+  |      |
+  |      resolves to a path that exists but is not a directory:
+  |      "crates/mdbook-permalinks/tests/file_links/book.toml/"
+
+warning: broken link to "image.jpeg"
+ --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:6:7
+  |
+6 | - ![](image.jpeg)
   |       ^^^^^^^^^^
   |       |
   |       resolves to a path that doesn't exist:
   |       "crates/mdbook-permalinks/tests/file_links/src/image.jpeg"
 
 warning: broken link to "../static/shinjuku.jpg"
- --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:6:7
+ --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:7:7
   |
-6 | - ![](../static/shinjuku.jpg)
+7 | - ![](../static/shinjuku.jpg)
   |       ^^^^^^^^^^^^^^^^^^^^^^
   |       |
   |       resolves to a path that doesn't exist:

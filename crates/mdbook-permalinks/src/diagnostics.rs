@@ -187,7 +187,8 @@ impl<'a> LinkDiagnostic<'a> {
 impl Display for PathStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let text = match self {
-            PathStatus::Nonexistent => "doesn't exist",
+            PathStatus::NotFound => "doesn't exist",
+            PathStatus::NotADirectory => "exists but is not a directory",
             PathStatus::Unreachable => "is inaccessible",
             PathStatus::Ignored => "is ignored by git",
             PathStatus::NotInRepo => "is outside of this repo",

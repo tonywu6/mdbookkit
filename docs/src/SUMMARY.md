@@ -6,8 +6,7 @@
 
 ---
 
-[mdbook-rustdoc-links](rustdoc-links/index.md)
-
+- [mdbook-rustdoc-links](rustdoc-links/index.md)
 - [Getting started](rustdoc-links/getting-started.md)
 - [Writing links](rustdoc-links/writing-links.md)
 - [Naming items](rustdoc-links/naming-items.md)
@@ -26,17 +25,14 @@
 
 ---
 
-- [mdbook-permalinks]()
-  - [Getting started](permalinks/getting-started.md)
-  - [Features](permalinks/features.md)
-  - [More ways to link]()
-  <!-- - [More ways to link](permalinks/more-ways-to-link.md) -->
-  - [How to ...]()
-    - [Configure for CI/CD]()
-  - [Configuration]()
-    - [Environment variables]()
-  - [Common issues]()
-  <!-- - [CHANGELOG](permalinks/CHANGELOG.md) -->
+- [mdbook-permalinks](permalinks/index.md)
+- [Tutorial](permalinks/tutorial.md)
+- [How to ...]()
+  - [Use in CI/CD]()
+- [Configuration](permalinks/configuration.md)
+  - [Environment variables]()
+- [Common issues]()
+- [CHANGELOG]()
 
 ---
 

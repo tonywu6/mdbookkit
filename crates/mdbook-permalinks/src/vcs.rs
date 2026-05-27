@@ -49,7 +49,11 @@ impl VersionControl {
             Err(error) => match error.kind() {
                 std::io::ErrorKind::NotFound => {
                     debug!("path not found");
-                    Err(PathStatus::Nonexistent)
+                    Err(PathStatus::NotFound)
+                }
+                std::io::ErrorKind::NotADirectory => {
+                    debug!("path not a directory");
+                    Err(PathStatus::NotADirectory)
                 }
                 _ => {
                     debug!("path inaccessible");

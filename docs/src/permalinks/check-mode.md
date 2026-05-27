@@ -3,6 +3,8 @@
 Linking by relative path should cover the majority of use cases. However, there are
 cases where this may not work:
 
+{% raw %}
+
 - When working with mdBook's `{{#include}}` directive, relative paths may become
   incorrect;
 - Furthermore, the included document may also be intended for additional platforms,
@@ -40,6 +42,8 @@ include the content of other text files directly in book pages. The preprocessor
 resolve links relative to the file being included. In this case, relative paths could be
 valid for the source file (and therefore valid for e.g. GitHub) but invalid for the
 book.
+
+{% endraw %}
 
 > For example, if `chapters/1.md` includes `shared/info.md`, and `shared/info.md`
 > contains a link to `./image.png` (i.e. `shared/image.png`), then the preprocessor can
