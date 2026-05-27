@@ -23,24 +23,27 @@ impl VersionControl {
         root = ?self.root.debug(),
     ))]
     pub fn try_file(&self, file: &Url) -> Result<TryFile, PathStatus> {
-        let Some(path) = self.root.make_relative(file) else {
+        let Some(link) = self.root.make_relative(file) else {
             debug!("no relative path from root");
             return Err(PathStatus::Unreachable);
         };
 
-        if path.starts_with("../") {
+        if link.starts_with("../") {
             debug!("path outside repo");
             return Err(PathStatus::NotInRepo);
-        }
+        };
 
-        match file.expect_path().symlink_metadata() {
+        let path = file.expect_path();
+
+        match path.symlink_metadata() {
             Ok(metadata) => {
                 if !(self.repo.is_path_ignored(&path))
-                    .with_context(|| format!("error testing if {path:?} is ignored"))
+                    .with_path_debug(&path)
+                    .context("error testing if path is ignored")
                     .or_else(emit_debug!())
                     .unwrap_or(false)
                 {
-                    Ok(TryFile { path, metadata }).inspect(|f| trace!("{f:?}"))
+                    Ok(TryFile { link, metadata }).inspect(|f| trace!("{f:?}"))
                 } else {
                     debug!("path ignored");
                     Err(PathStatus::Ignored)
@@ -66,7 +69,7 @@ impl VersionControl {
 
 #[derive(Debug)]
 pub struct TryFile {
-    pub path: String,
+    pub link: String,
     pub metadata: std::fs::Metadata,
 }
 

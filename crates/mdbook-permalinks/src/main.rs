@@ -272,7 +272,7 @@ impl Environment<'_> {
         } else {
             match relative_to_repo {
                 Ok(file) => {
-                    let href = self.vcs.link.to_link(&file.path, hint);
+                    let href = self.vcs.link.to_link(&file.link, hint);
                     let href = url_suffix.restored(href).as_str().to_owned();
                     link.permalink(href);
                 }

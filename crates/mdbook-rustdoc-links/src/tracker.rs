@@ -971,7 +971,7 @@ mod tests {
 
     use mdbookkit::{
         diagnostics::{
-            Highlight, IssueLevel, IssueReport,
+            Highlight, IssueLevel, IssueReport, SourceCode,
             annotate_snippets::{AnnotationKind, Renderer, renderer::DecorStyle},
             issue_to_report,
         },
@@ -1020,8 +1020,12 @@ mod tests {
         let path = root.join("index.md").expect_url();
         tracker.read(text, path)?;
         let span = tracker.links[0].span.clone();
+        let source = SourceCode {
+            source_code: text,
+            source_path: "<anon>".into(),
+        };
         let report = print_link_spans(span);
-        let report = issue_to_report(report, (text, "<anon>").into());
+        let report = issue_to_report(report, source);
         let renderer = Renderer::styled().decor_style(DecorStyle::Ascii);
         let actual = renderer.render(&report);
         default_assert().try_eq_text(None, actual, expected)?;

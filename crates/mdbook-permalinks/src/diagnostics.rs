@@ -3,14 +3,16 @@ use std::{
     fmt::{Display, Write},
 };
 
-use tap::TapOptional;
+use tap::TapFallible;
 use url::Url;
 
 use mdbookkit::{
     diagnostics::{
-        Highlight, IssueLevel, IssueReport, IssueReporter, Note, annotate_snippets::AnnotationKind,
+        Highlight, IssueLevel, IssueReport, IssueReporter, Note, SourceCode,
+        annotate_snippets::AnnotationKind,
     },
     error::ExpectFmt,
+    url::UrlUtil,
 };
 
 use crate::{
@@ -32,12 +34,13 @@ impl Environment<'_> {
                     .map(|link| LinkDiagnostic { root, base, link }.emit())
                     .collect();
                 let source_code = page.source();
-                let source_path = root
-                    .make_relative(base)
-                    .unwrap_or_else(|| base.as_str().into());
+                let source_path = root.print_relative(base).to_string().into();
                 IssueReporter {
                     issues,
-                    source: (source_code, source_path).into(),
+                    source: SourceCode {
+                        source_code,
+                        source_path,
+                    },
                 }
             })
             .collect()
@@ -87,7 +90,7 @@ impl<'a> LinkDiagnostic<'a> {
                         .build(),
                 ])
                 .notes(vec![Note::note(
-                    format! { "resolved path is {:?}", self.shorten(href) },
+                    format! { "resolved path is {:?}", self.shorten_href(href) },
                 )])
                 .build(),
 
@@ -100,7 +103,7 @@ impl<'a> LinkDiagnostic<'a> {
                         .build(),
                 ])
                 .notes(vec![Note::note(
-                    format! { "resolved path is {:?}",self.shorten(href) },
+                    format! { "resolved path is {:?}", self.shorten_href(href) },
                 )])
                 .build(),
 
@@ -109,7 +112,7 @@ impl<'a> LinkDiagnostic<'a> {
 
                 let labels = {
                     let (link, status) = &candidates[0];
-                    let shortened = self.shorten_url(link);
+                    let shortened = self.shorten_path(link);
                     if !shortened.starts_with('/') && href.strip_suffix(&*shortened) == Some("/") {
                         vec![
                             Highlight::span(span.clone())
@@ -134,7 +137,7 @@ impl<'a> LinkDiagnostic<'a> {
                 let notes = if candidates.len() > 1 {
                     let mut note = String::from("also tried the following paths");
                     for (link, status) in candidates.iter().skip(1) {
-                        write!(note, "\n{:?}: path {status}", self.shorten_url(link)).expect_fmt();
+                        write!(note, "\n{:?}: path {status}", self.shorten_path(link)).expect_fmt();
                     }
                     vec![Note::note(note)]
                 } else {
@@ -150,36 +153,35 @@ impl<'a> LinkDiagnostic<'a> {
         }
     }
 
-    fn shorten<'p>(&self, path: &'p str) -> Cow<'p, str> {
+    fn shorten_path<'p>(&self, path: &'p Url) -> Cow<'p, str> {
+        if let path = self.root.print_relative(path).to_string()
+            && !path.starts_with("../")
+        {
+            path.into()
+        } else if path.scheme() == "file" {
+            match path.to_file_path() {
+                Ok(path) => Cow::Owned(path.display().to_string()),
+                Err(()) => Cow::Borrowed(path.path()),
+            }
+        } else {
+            Cow::Borrowed(path.as_str())
+        }
+    }
+
+    fn shorten_href<'p>(&self, path: &'p str) -> Cow<'p, str> {
         let url = if let Some(path) = path.strip_prefix('/') {
             self.root.join(path)
         } else {
             self.base.join(path)
         }
-        .ok()
-        .tap_some_mut(|url| {
+        .tap_ok_mut(|url| {
             url.set_query(None);
             url.set_fragment(None);
         });
-        if let Some(url) = url {
-            self.shorten_url(&url).into_owned().into()
+        if let Ok(url) = url {
+            self.shorten_path(&url).into_owned().into()
         } else {
             Cow::Borrowed(path)
-        }
-    }
-
-    fn shorten_url<'p>(&self, url: &'p Url) -> Cow<'p, str> {
-        if let Some(rel) = self.root.make_relative(url)
-            && !rel.starts_with("../")
-        {
-            Cow::Owned(rel)
-        } else if url.scheme() == "file" {
-            match url.to_file_path() {
-                Ok(path) => Cow::Owned(path.display().to_string()),
-                Err(()) => Cow::Borrowed(url.path()),
-            }
-        } else {
-            Cow::Borrowed(url.as_str())
         }
     }
 }

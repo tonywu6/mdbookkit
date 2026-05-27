@@ -25,6 +25,7 @@ macro_rules! test_case {
 
 test_case![file_links, exit(0)];
 test_case![http_links, exit(0)];
+test_case![path_encoding, exit(0)];
 test_case![git_url_from_book, exit(0)];
 test_case![git_url_scp_like, exit(0)];
 test_case![git_url_unsupported, exit(101)];

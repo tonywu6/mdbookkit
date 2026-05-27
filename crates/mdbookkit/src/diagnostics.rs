@@ -423,16 +423,6 @@ impl Display for IssueLevel {
     }
 }
 
-impl<'a, P: Display> From<(&'a str, P)> for SourceCode<'a> {
-    fn from((source_code, source_path): (&'a str, P)) -> Self {
-        let source_path = source_path.to_string().into();
-        Self {
-            source_code,
-            source_path,
-        }
-    }
-}
-
 fn byte_to_line_col(text: &str, byte: usize) -> Option<(usize, usize)> {
     if byte >= text.len() {
         return None;
