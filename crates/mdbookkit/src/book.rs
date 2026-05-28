@@ -3,6 +3,7 @@ use std::{
     hash::Hash,
     io::{Read, Write},
     path::{Path, PathBuf},
+    str::FromStr,
 };
 
 use anyhow::{Context, Result, bail};
@@ -10,15 +11,17 @@ use mdbook_markdown::pulldown_cmark::Options as MarkdownOptions;
 use mdbook_preprocessor::{
     PreprocessorContext,
     book::{Book, BookItem, Chapter},
-    config::HtmlConfig,
+    config::{self, HtmlConfig},
 };
 use serde::Deserialize;
 use serde_json::{Value, json};
-use tap::{Pipe, Tap};
+use tap::Pipe;
 use tracing::warn;
 use url::Url;
 
-use crate::{error::WithDebugContext, markdown::default_markdown_options, url::UrlFromPath};
+use crate::{
+    emit_debug, error::WithDebugContext, markdown::default_markdown_options, url::UrlFromPath,
+};
 
 pub fn string_from_stdin() -> Result<String> {
     Ok(Vec::new()
@@ -44,9 +47,7 @@ pub fn book_from_stdin() -> Result<(PreprocessorContext, Book)> {
 
 #[allow(clippy::result_unit_err)]
 pub trait PreprocessorHelper {
-    fn preprocessor<T>(&self, names: &[&str]) -> Result<T>
-    where
-        T: for<'de> Deserialize<'de> + Default;
+    fn book_toml(&self) -> BookToml<'_>;
 
     fn markdown_options(&self) -> MarkdownOptions;
 
@@ -65,34 +66,9 @@ pub trait PreprocessorHelper {
     fn print(&self, book: Book) -> Result<()>;
 }
 
-macro_rules! preprocessor_table {
-    (preprocessor.$name:expr) => {
-        format!("preprocessor.{}", preprocessor_table!($name))
-    };
-    ($name:expr) => {
-        $name.strip_prefix("mdbook-").unwrap_or($name)
-    };
-}
-
 impl PreprocessorHelper for PreprocessorContext {
-    fn preprocessor<T>(&self, names: &[&str]) -> Result<T>
-    where
-        T: for<'de> Deserialize<'de> + Default,
-    {
-        for (idx, name) in names.iter().enumerate() {
-            if let Some(value) = try_get_config(self, name)? {
-                if idx != 0 {
-                    warn! {
-                        "the book.toml section [{deprecated}] is deprecated, \
-                        use [{recommended}] instead.",
-                        deprecated  = preprocessor_table!(preprocessor.name),
-                        recommended = preprocessor_table!(preprocessor.names[0])
-                    };
-                }
-                return Ok(value);
-            }
-        }
-        Ok(Default::default())
+    fn book_toml(&self) -> BookToml<'_> {
+        BookToml::from_ctx(self)
     }
 
     fn markdown_options(&self) -> MarkdownOptions {
@@ -192,47 +168,141 @@ fn page_url(ctx: &PreprocessorContext, path: &Path) -> Url {
     path.file_to_url()
 }
 
-pub fn try_get_config<T>(ctx: &impl ConfigSource, name: &str) -> Result<Option<T>>
-where
-    T: for<'de> Deserialize<'de>,
-{
-    let table = match ctx.get_config(name)? {
-        None => return Ok(None),
-        Some(table) => table,
-    }
-    .tap_mut(remove_builtin_options);
-
-    let error = match T::deserialize(table) {
-        Ok(options) => return Ok(Some(options)),
-        Err(error) => error,
-    };
-
-    let source = ctx.get_source()?;
-    Err(recover_toml_error::<T>(&source, name).unwrap_or(error))?
+pub struct BookToml<'a> {
+    config: Cow<'a, config::Config>,
+    source: BookTomlSource,
 }
 
-fn recover_toml_error<T>(source: &str, name: &str) -> Result<toml::de::Error>
+enum BookTomlSource {
+    Read(String),
+    Path(PathBuf),
+}
+
+macro_rules! preprocessor_table {
+    (preprocessor.$name:expr) => {
+        format!("preprocessor.{}", preprocessor_table!($name))
+    };
+    ($name:expr) => {
+        $name.strip_prefix("mdbook-").unwrap_or($name)
+    };
+}
+
+impl<'a> BookToml<'a> {
+    fn from_ctx(ctx: &'a PreprocessorContext) -> Self {
+        Self {
+            config: Cow::Borrowed(&ctx.config),
+            source: BookTomlSource::Path(ctx.root.join("book.toml")),
+        }
+    }
+
+    fn load_source(&mut self) -> Result<&str> {
+        let path = match self.source {
+            BookTomlSource::Path(ref path) => path,
+            BookTomlSource::Read(ref source) => return Ok(source),
+        };
+
+        let source = std::fs::read_to_string(path)
+            .with_path_debug(path)
+            .context("failed to reload config from file")?;
+
+        let mut config = config::Config::from_str(&source)
+            .with_path_debug(path)
+            .context("failed to reload config from file")?;
+
+        config
+            .update_from_env()
+            .context("failed to update config from environment variables")?;
+
+        self.config = Cow::Owned(config);
+        self.source = BookTomlSource::Read(source);
+
+        self.load_source()
+    }
+
+    fn read_by_path<T>(&mut self, path: &str) -> Result<Option<T>>
+    where
+        T: for<'de> Deserialize<'de>,
+    {
+        let value = match self.config.get::<toml::Value>(path)? {
+            None => return Ok(None),
+            Some(value) => value,
+        }
+        .preprocess(path);
+
+        let error = match T::deserialize(value) {
+            Ok(config) => return Ok(Some(config)),
+            Err(error) => error,
+        };
+
+        if let Ok(source) = self.load_source().or_else(emit_debug!())
+            && let Ok(error) = recover_toml_error::<T>(source, path).or_else(emit_debug!())
+        {
+            Err(error)?
+        } else {
+            Err(error)?
+        }
+    }
+
+    pub fn preprocessor<T>(&mut self, names: &[&str]) -> Result<Option<T>>
+    where
+        T: for<'de> Deserialize<'de>,
+    {
+        for (idx, name) in names.iter().enumerate() {
+            let name = preprocessor_table!(preprocessor.name);
+            if let Some(value) = self.read_by_path(&name)? {
+                if idx != 0 {
+                    warn! {
+                        "the book.toml section [{deprecated}] is deprecated, \
+                        use [{recommended}] instead.",
+                        deprecated  = name,
+                        recommended = preprocessor_table!(preprocessor.names[0])
+                    };
+                }
+                return Ok(value);
+            }
+        }
+        Ok(None)
+    }
+
+    pub fn html_config<T>(&mut self, key: &str) -> Result<Option<T>>
+    where
+        T: for<'de> Deserialize<'de>,
+    {
+        self.read_by_path::<T>(&format!("output.html.{key}"))
+    }
+}
+
+impl FromStr for BookToml<'static> {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self {
+            config: Cow::Owned(s.parse()?),
+            source: BookTomlSource::Read(s.to_owned()),
+        })
+    }
+}
+
+fn recover_toml_error<T>(source: &str, path: &str) -> Result<toml::de::Error>
 where
     T: for<'de> Deserialize<'de>,
 {
     let table = toml::de::DeTable::parse(source)?;
-    let table = (|| {
-        table
-            .into_inner()
-            .remove("preprocessor")?
-            .into_inner()
-            .into_table()?
-            .remove(preprocessor_table!(name))
-    })()
-    .context("no such table")?
-    .tap_mut(|table| {
-        if let Some(table) = table.get_mut().as_mut_table() {
-            remove_builtin_options(table);
-        }
-    });
+    let table = toml::Spanned::new(table.span(), toml::de::DeValue::Table(table.into_inner()));
+    let value = path
+        .split('.')
+        .try_fold(table, |parent, key| {
+            if let toml::de::DeValue::Table(mut table) = parent.into_inner() {
+                table.remove(key)
+            } else {
+                None
+            }
+        })
+        .context("value not defined in source")?
+        .preprocess(path);
 
-    let table = toml::de::ValueDeserializer::from(table);
-    if let Err(mut error) = T::deserialize(table) {
+    let value = toml::de::ValueDeserializer::from(value);
+    if let Err(mut error) = T::deserialize(value) {
         error.set_input(Some(source));
         Ok(error)
     } else {
@@ -240,41 +310,29 @@ where
     }
 }
 
-pub trait ConfigSource {
-    fn get_config(&self, preprocessor: &str) -> Result<Option<toml::Table>>;
-    fn get_source(&self) -> Result<Cow<'_, str>>;
+trait PreprocessBookToml {
+    fn preprocess(self, path: &str) -> Self;
 }
 
-impl ConfigSource for PreprocessorContext {
-    fn get_config(&self, name: &str) -> Result<Option<toml::Table>> {
-        match (self.config).get::<toml::Table>(&preprocessor_table!(preprocessor.name))? {
-            None => Ok(None),
-            Some(table) => Ok(Some(table)),
+impl PreprocessBookToml for toml::Value {
+    fn preprocess(mut self, path: &str) -> Self {
+        if path.starts_with("preprocessor.")
+            && let toml::Value::Table(ref mut table) = self
+        {
+            remove_builtin_options(table);
         }
-    }
-
-    fn get_source(&self) -> Result<Cow<'_, str>> {
-        Ok(std::fs::read_to_string(self.root.join("book.toml"))?.into())
+        self
     }
 }
 
-impl ConfigSource for &str {
-    fn get_config(&self, preprocessor: &str) -> Result<Option<toml::Table>> {
-        let table = toml::from_str::<toml::Value>(self)?;
-        let table = (|| {
-            table
-                .into_table()?
-                .remove("preprocessor")?
-                .into_table()?
-                .remove(preprocessor_table!(preprocessor))?
-                .into_table()
-        })()
-        .context("no such table")?;
-        Ok(Some(table))
-    }
-
-    fn get_source(&self) -> Result<Cow<'_, str>> {
-        Ok((*self).into())
+impl PreprocessBookToml for toml::Spanned<toml::de::DeValue<'_>> {
+    fn preprocess(mut self, path: &str) -> Self {
+        if path.starts_with("preprocessor.")
+            && let toml::de::DeValue::Table(table) = self.as_mut()
+        {
+            remove_builtin_options(table);
+        }
+        self
     }
 }
 
@@ -339,50 +397,4 @@ fn patch_mdbook_output_0_4(book: Book) -> Result<String> {
     }
 
     Ok(serde_json::to_string(&book)?)
-}
-
-trait TomlTableHelper {
-    type TableType;
-    fn into_table(self) -> Option<Self::TableType>;
-    fn as_mut_table(&mut self) -> Option<&mut Self::TableType>;
-}
-
-impl<'de> TomlTableHelper for toml::de::DeValue<'de> {
-    type TableType = toml::de::DeTable<'de>;
-
-    fn into_table(self) -> Option<Self::TableType> {
-        if let Self::Table(table) = self {
-            Some(table)
-        } else {
-            None
-        }
-    }
-
-    fn as_mut_table(&mut self) -> Option<&mut Self::TableType> {
-        if let Self::Table(table) = self {
-            Some(table)
-        } else {
-            None
-        }
-    }
-}
-
-impl TomlTableHelper for toml::Value {
-    type TableType = toml::Table;
-
-    fn into_table(self) -> Option<Self::TableType> {
-        if let Self::Table(table) = self {
-            Some(table)
-        } else {
-            None
-        }
-    }
-
-    fn as_mut_table(&mut self) -> Option<&mut Self::TableType> {
-        if let Self::Table(table) = self {
-            Some(table)
-        } else {
-            None
-        }
-    }
 }

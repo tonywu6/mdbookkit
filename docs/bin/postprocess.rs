@@ -19,7 +19,7 @@ use tracing::{debug, error, info, info_span, trace};
 use url::Url;
 
 use mdbookkit::{
-    error::{FailOnWarnings, WithDebugContext},
+    error::{FailOnWarnings, ReadableDebug, WithDebugContext},
     url::{ToUtf8Path, UrlFromPath},
 };
 
@@ -91,7 +91,7 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
 
         let _span = info_span!("html").entered();
 
-        info!(%file_url);
+        info!(file = ?file_url.show());
 
         let (og_title, og_description) = {
             let mut title = String::new();

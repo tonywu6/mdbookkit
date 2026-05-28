@@ -1,13 +1,13 @@
 use std::{collections::BTreeMap, marker::PhantomData};
 
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use serde::{
     Deserialize, Deserializer, Serialize,
     de::value::{EnumAccessDeserializer, MapAccessDeserializer, SeqAccessDeserializer},
 };
 
 use crate::{
-    book::{string_from_stdin, try_get_config},
+    book::{BookToml, string_from_stdin},
     markdown::Spanned,
 };
 
@@ -199,12 +199,15 @@ where
         .filter_map(|(name, examples)| {
             let errors = examples
                 .into_iter()
-                .filter_map(
-                    |(example, span)| match try_get_config::<T>(&&*example, preprocessor) {
+                .filter_map(|(example, span)| {
+                    match (example.parse::<BookToml>())
+                        .and_then(|mut config| config.preprocessor::<T>(&[preprocessor]))
+                        .and_then(|config| config.context("config table not defined"))
+                    {
                         Ok(..) => None,
                         Err(e) => Some((format!("{e:?}"), span)),
-                    },
-                )
+                    }
+                })
                 .collect::<Vec<_>>();
             if errors.is_empty() {
                 None

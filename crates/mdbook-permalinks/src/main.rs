@@ -402,9 +402,11 @@ impl Environment<'_> {
 impl<'a> Environment<'a> {
     fn new(ctx: &'a PreprocessorContext) -> Result<Result<Self>> {
         let config = ctx
+            .book_toml()
             .preprocessor(&[PREPROCESSOR_NAME, "mdbook-link-forever"])
             .inspect(|c| debug!("{c:#?}"))
-            .context("failed to read preprocessor config from book.toml")?;
+            .context("failed to read preprocessor config from book.toml")?
+            .unwrap_or_default();
 
         let vcs = match VersionControl::try_from_git(&config, ctx) {
             Ok(Ok(vcs)) => vcs,

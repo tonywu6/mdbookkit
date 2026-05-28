@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
-use tracing::{Level, error_span, info, info_span, warn};
+use tracing::{Level, debug, error_span, info, info_span, warn};
 
 use mdbookkit::{
     book::{PreprocessorHelper, book_from_stdin},
@@ -79,9 +79,12 @@ fn mdbook() -> Result<(), ()> {
         env,
         fail_on_warnings,
     } = ctx
+        .book_toml()
         .preprocessor(&[PREPROCESSOR_NAME, "mdbook-rustdoc-link"])
+        .inspect(|c| debug!("{c:#?}"))
         .context("failed to read preprocessor config from book.toml")
-        .or_else(emit_error!())?;
+        .or_else(emit_error!())?
+        .unwrap_or_default();
 
     let env = Environment::new(env, &ctx).or_else(emit_error!())?;
 
