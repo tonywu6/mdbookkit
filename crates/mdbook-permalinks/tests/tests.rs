@@ -25,7 +25,6 @@ macro_rules! test_case {
 
 test_case![file_links, exit(0)];
 test_case![http_links, exit(0)];
-test_case![path_encoding, exit(0)];
 test_case![git_url_from_book, exit(0)];
 test_case![git_url_scp_like, exit(0)];
 test_case![git_url_unsupported, exit(101)];
@@ -42,6 +41,10 @@ test_case![
     exit(0),
     env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
 ];
+
+test_case![path_encoding, exit(0)];
+#[cfg(windows)]
+test_case![path_encoding, exit(0)];
 
 macro_rules! test_in_temp_dir {
     [$name:ident ($($args:tt)+), |$root:ident| { $($setup:tt)* }] => {

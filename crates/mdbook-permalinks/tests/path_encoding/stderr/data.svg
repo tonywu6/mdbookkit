@@ -1,4 +1,4 @@
-<svg width="740px" height="524px" xmlns="http://www.w3.org/2000/svg">
+<svg width="740px" height="362px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -55,25 +55,7 @@
 </tspan>
     <tspan x="10px" y="334px">
 </tspan>
-    <tspan x="10px" y="352px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "../static/%90V%8Fh%93%F1%92%9A%96%DA.jpg"</tspan>
-</tspan>
-    <tspan x="10px" y="370px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/path_encoding/src/東京都港区.md:9:5</tspan>
-</tspan>
-    <tspan x="10px" y="388px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
-</tspan>
-    <tspan x="10px" y="406px"><tspan class="fg-bright-blue bold">9</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> ![](</tspan><tspan class="fg-yellow bold">../static/%90V%8Fh%93%F1%92%9A%96%DA.jpg</tspan><tspan>)</tspan>
-</tspan>
-    <tspan x="10px" y="424px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan>
-</tspan>
-    <tspan x="10px" y="442px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-bright-blue bold">|</tspan>
-</tspan>
-    <tspan x="10px" y="460px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist:</tspan>
-</tspan>
-    <tspan x="10px" y="478px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>     </tspan><tspan class="fg-bright-blue bold">"crates/mdbook-permalinks/tests/path_encoding/static/�V�h�\u{52696}�.jpg"</tspan>
-</tspan>
-    <tspan x="10px" y="496px">
-</tspan>
-    <tspan x="10px" y="514px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: finished with warnings</tspan>
+    <tspan x="10px" y="352px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: finished with warnings</tspan>
 </tspan>
   </text>
 
