@@ -50,7 +50,9 @@ pub trait PreprocessorHelper {
 
     fn markdown_options(&self) -> MarkdownOptions;
 
-    fn page_dir(&self) -> Result<Url>;
+    fn book_dir(&self) -> Result<PathBuf>;
+
+    fn page_dir(&self) -> Result<PathBuf>;
 
     fn for_each_page<'a, F>(&self, book: &'a Book, func: F) -> Result<(), ()>
     where
@@ -117,13 +119,16 @@ impl PreprocessorHelper for PreprocessorContext {
         options
     }
 
-    fn page_dir(&self) -> Result<Url> {
-        let path = self.root.join(&self.config.book.src);
-        let path = path
-            .canonicalize()
+    fn book_dir(&self) -> Result<PathBuf> {
+        let path = &self.root;
+        let path = (path.canonicalize())
             .with_path_debug(path)
-            .context("failed to locate src directory")?;
-        Ok(path.dir_to_url())
+            .context("could not access the root directory of the book")?;
+        Ok(path)
+    }
+
+    fn page_dir(&self) -> Result<PathBuf> {
+        Ok(self.book_dir()?.join(&self.config.book.src))
     }
 
     fn for_each_page<'a, F>(&self, book: &'a Book, mut func: F) -> Result<(), ()>

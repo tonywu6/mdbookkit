@@ -98,7 +98,7 @@ fn mdbook() -> Result<(), ()> {
         })
     })?;
 
-    build_docs(builder.resolve(&tracker.env().book_dir())?, &mut tracker)?;
+    build_docs(builder.resolve(tracker.env().book_dir())?, &mut tracker)?;
 
     let ExportedPages {
         mut contents,

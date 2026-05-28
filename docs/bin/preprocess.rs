@@ -24,7 +24,7 @@ use mdbookkit::{
     env::locate_project,
     error::{ExpectFmt, FailOnWarnings, WithPathDebug},
     markdown::{PatchStream, Spanned},
-    url::{ExpectUrl, UrlUtil},
+    url::{ExpectUrl, UrlFromPath, UrlUtil},
 };
 
 pub fn run() -> Result<(), ()> {
@@ -32,7 +32,7 @@ pub fn run() -> Result<(), ()> {
         .context("failed to read from mdBook")
         .or_else(emit_error!())?;
 
-    let page_dir = ctx.page_dir().or_else(emit_error!())?;
+    let page_dir = ctx.page_dir().or_else(emit_error!())?.dir_to_url();
 
     let jinja = {
         let mut jinja = Environment::new();
@@ -48,7 +48,8 @@ pub fn run() -> Result<(), ()> {
                         .expect_url()
                         .join(name)
                         .expect_url()
-                        .expect_path()
+                        .to_file_path()
+                        .unwrap()
                         .to_string_lossy()
                         .into_owned()
                         .into()

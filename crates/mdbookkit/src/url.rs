@@ -38,8 +38,6 @@ pub trait UrlUtil {
 
     fn remove_suffix(&self, from: Url) -> (Url, UrlSuffix);
 
-    fn expect_path(&self) -> PathBuf;
-
     fn debug(&self) -> impl Debug;
 
     fn print_relative(&self, path: &Url) -> impl Debug + Display;
@@ -229,12 +227,6 @@ impl UrlUtil for Url {
         from.set_fragment(None);
 
         (from, suffix)
-    }
-
-    #[inline]
-    fn expect_path(&self) -> PathBuf {
-        self.to_file_path()
-            .expect("should have been a valid `file:` url")
     }
 
     #[inline]

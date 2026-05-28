@@ -20,7 +20,7 @@ use mdbookkit::{
     level_enabled,
     logging::init_logging,
     ticker, ticker_item,
-    url::{UrlSuffix, UrlUtil},
+    url::{UrlFromPath, UrlSuffix, UrlUtil},
 };
 
 use self::{
@@ -113,7 +113,7 @@ impl Environment<'_> {
 
         self.resolve(&mut contents);
 
-        for issues in self.issues(&contents, |_| true).pipe(IssueReporter::sorted) {
+        for issues in self.issues(&contents).pipe(IssueReporter::sorted) {
             issues.emit(emit!());
         }
 
@@ -406,7 +406,7 @@ impl<'a> Environment<'a> {
 
         let markdown = ctx.markdown_options();
 
-        let page_dir = ctx.page_dir()?;
+        let page_dir = ctx.page_dir()?.dir_to_url();
 
         Ok(Ok(Self {
             ctx,

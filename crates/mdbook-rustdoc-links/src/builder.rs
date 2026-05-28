@@ -1140,7 +1140,7 @@ pub fn symlink_dir_all(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Re
         }
         .with_path_label(&target, "target")
         .with_path_label(&source, "source")
-        .context("failed to create symlink")?,
+        .context("failed to create a symlink between these paths:")?,
     }
 }
 

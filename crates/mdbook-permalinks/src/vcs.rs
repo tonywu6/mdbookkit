@@ -23,17 +23,24 @@ impl VersionControl {
         root = ?self.root.debug(),
     ))]
     pub fn try_file(&self, file: &Url) -> Result<TryFile, PathStatus> {
-        let Some(link) = self.root.make_relative(file) else {
-            debug!("no relative path from root");
-            return Err(PathStatus::Unreachable);
+        let (link, path) = match {
+            if let Some(link) = self.root.make_relative(file) {
+                if link.starts_with("../") {
+                    Err(PathStatus::NotInRepo)
+                } else if let Ok(path) = file.to_file_path() {
+                    Ok((link, path))
+                } else {
+                    Err(PathStatus::InvalidBytes)
+                }
+            } else {
+                Err(PathStatus::Unreachable)
+            }
+        }
+        .inspect_err(|s| debug!("{s:?}"))
+        {
+            Ok((link, path)) => (link, path),
+            Err(err) => return Err(err),
         };
-
-        if link.starts_with("../") {
-            debug!("path outside repo");
-            return Err(PathStatus::NotInRepo);
-        };
-
-        let path = file.expect_path();
 
         match path.symlink_metadata() {
             Ok(metadata) => {
@@ -43,27 +50,19 @@ impl VersionControl {
                     .or_else(emit_debug!())
                     .unwrap_or(false)
                 {
-                    Ok(TryFile { link, metadata }).inspect(|f| trace!("{f:?}"))
+                    Ok(TryFile { link, metadata })
                 } else {
-                    debug!("path ignored");
-                    Err(PathStatus::Ignored)
+                    Err(PathStatus::GitIgnored)
                 }
             }
             Err(error) => match error.kind() {
-                std::io::ErrorKind::NotFound => {
-                    debug!("path not found");
-                    Err(PathStatus::NotFound)
-                }
-                std::io::ErrorKind::NotADirectory => {
-                    debug!("path not a directory");
-                    Err(PathStatus::NotADirectory)
-                }
-                _ => {
-                    debug!("path inaccessible");
-                    Err(PathStatus::Unreachable)
-                }
+                std::io::ErrorKind::NotFound => Err(PathStatus::NotFound),
+                std::io::ErrorKind::NotADirectory => Err(PathStatus::NotADirectory),
+                _ => Err(PathStatus::Unreachable),
             },
         }
+        .inspect(|f| trace!("{f:?}"))
+        .inspect_err(|s| debug!("{s:?}"))
     }
 }
 

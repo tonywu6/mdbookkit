@@ -269,7 +269,7 @@ impl<'a> LinkTracker<'a> {
             let (src, dst) = if let Some(target) = output.target.as_deref() {
                 (src.join(target).join("doc"), dst.join(target))
             } else {
-                (src.join("doc"), dst)
+                (src.join("doc"), dst.to_owned())
             };
 
             self.symlinks.insert(src.into(), dst);

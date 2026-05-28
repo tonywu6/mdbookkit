@@ -1,8 +1,7 @@
 use std::{
     borrow::Cow,
     fmt::Debug,
-    ops::Deref,
-    path::{Path, PathBuf},
+    path::{self, Path, PathBuf},
     process::Command,
     str::FromStr,
 };
@@ -26,7 +25,7 @@ use mdbookkit::{
     de_struct, doc_link, emit_error,
     env::{is_ci, locate_project},
     error::{FailOnWarnings, MapDeserializeError},
-    url::{ExpectUrl, UrlUtil},
+    url::{UrlFromPath, UrlUtil},
 };
 
 de_struct!(
@@ -164,7 +163,13 @@ pub struct EnvConfig {
 }
 
 #[derive(Debug, Clone)]
-pub struct BaseUrl(String);
+pub struct BaseUrl(BaseUrlInner);
+
+#[derive(Debug, Clone)]
+enum BaseUrlInner {
+    Http(Url),
+    Path(PathBuf),
+}
 
 #[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
@@ -173,12 +178,6 @@ pub struct BaseUrlConfig {
     dev: BaseUrl,
     #[serde(default)]
     release: BaseUrl,
-}
-
-impl BaseUrl {
-    pub fn reify(&self, base: &Url) -> Result<Url> {
-        Ok(base.join(&self.0)?.with_trailing_slash())
-    }
 }
 
 #[derive(Debug)]
@@ -317,10 +316,25 @@ impl FromStr for BaseUrl {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self(s.parse()?))
+    }
+}
+
+impl FromStr for BaseUrlInner {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.parse::<Url>() {
-            Ok(url) => Ok(Self(url.with_trailing_slash().into())),
+            Ok(url) => {
+                if !matches!(url.scheme(), "https" | "http") {
+                    bail!("expected an HTTP URL")
+                }
+                let url = url.with_trailing_slash();
+                Ok(Self::Http(url))
+            }
             Err(..) => {
-                for component in Utf8Path::new(s).components() {
+                let path = Utf8Path::new(s);
+                for component in path.components() {
                     match component {
                         Utf8Component::Prefix(p) => {
                             bail!("path prefix {p} is unsupported")
@@ -333,10 +347,7 @@ impl FromStr for BaseUrl {
                         Utf8Component::Normal(..) => {}
                     }
                 }
-                let url = ("example:/".parse::<Url>().expect_url())
-                    .join(s)
-                    .context("invalid URL")?;
-                Ok(Self(url[url::Position::BeforePath..][1..].into()))
+                Ok(Self::Path(path.as_std_path().to_owned()))
             }
         }
     }
@@ -344,16 +355,27 @@ impl FromStr for BaseUrl {
 
 impl Default for BaseUrl {
     fn default() -> Self {
-        Self(Self::default_url().into())
+        // https://doc.rust-lang.org/cargo/reference/unstable.html#rustdoc-map
+        "https://docs.rs/{pkg_name}/{version}"
+            .parse()
+            .expect("default url should be valid")
     }
 }
 
 impl BaseUrl {
-    pub fn default_url() -> Url {
-        // https://doc.rust-lang.org/cargo/reference/unstable.html#rustdoc-map
-        "https://docs.rs/{pkg_name}/{version}"
-            .parse()
-            .expect("should be valid")
+    pub fn resolve(self, root: PathBuf) -> (Url, Option<PathBuf>) {
+        match self.0 {
+            BaseUrlInner::Http(http) => (http, None),
+            BaseUrlInner::Path(path) => {
+                let dir = path.components().fold(root, |base, part| match part {
+                    path::Component::Prefix(..) => base,
+                    path::Component::RootDir => base,
+                    part => base.join(part),
+                });
+                let url = dir.dir_to_url();
+                (url, Some(dir))
+            }
+        }
     }
 }
 
@@ -403,14 +425,12 @@ where
     deserializer.deserialize_any(Visitor)
 }
 
-impl Deref for BaseUrlConfig {
-    type Target = BaseUrl;
-
-    fn deref(&self) -> &Self::Target {
+impl BaseUrlConfig {
+    pub fn take(self) -> BaseUrl {
         if is_ci().is_some() {
-            &self.release
+            self.release
         } else {
-            &self.dev
+            self.dev
         }
     }
 }

@@ -19,9 +19,10 @@ pub enum PathStatus {
     NotFound,
     NotADirectory,
     Unreachable,
-    Ignored,
+    GitIgnored,
     NotInRepo,
     NotInBook,
+    InvalidBytes,
 }
 
 pub struct LinkSpan<'a>(pub Vec<LinkText<'a>>);

@@ -22,15 +22,11 @@ use crate::{
 };
 
 impl Environment<'_> {
-    pub fn issues<'a, F>(&'a self, contents: &'a Pages<'a>, filter: F) -> Vec<IssueReporter<'a>>
-    where
-        F: Fn(&'a LinkStatus) -> bool,
-    {
+    pub fn issues<'a>(&'a self, contents: &'a Pages<'a>) -> Vec<IssueReporter<'a>> {
         let root = &self.vcs.root;
         (contents.pages())
             .map(|(base, page)| {
                 let issues = (page.links())
-                    .filter(|link| filter(&link.status))
                     .map(|link| LinkDiagnostic { root, base, link }.emit())
                     .collect();
                 let source_code = page.source();
@@ -192,9 +188,10 @@ impl Display for PathStatus {
             PathStatus::NotFound => "doesn't exist",
             PathStatus::NotADirectory => "exists but is not a directory",
             PathStatus::Unreachable => "is inaccessible",
-            PathStatus::Ignored => "is ignored by git",
+            PathStatus::GitIgnored => "is ignored by git",
             PathStatus::NotInRepo => "is outside of this repo",
             PathStatus::NotInBook => "is not part of the book",
+            PathStatus::InvalidBytes => "is invalid on this system",
         };
         f.write_str(text)
     }
