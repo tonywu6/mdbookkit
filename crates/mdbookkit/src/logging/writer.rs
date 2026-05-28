@@ -72,8 +72,9 @@ fn spawn_ticker(this: &mut MultiProgressTicker) {
             }
         }
 
+        #[allow(clippy::unwrap_used)]
         let style = ProgressStyle::with_template("{spinner:.cyan} {prefix} ... {wide_msg}")
-            .expect("should be a valid template")
+            .unwrap()
             .tick_chars("⠇⠋⠙⠸⠴⠦⠿");
 
         let mut current = HashMap::new();

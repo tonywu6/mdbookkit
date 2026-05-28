@@ -22,9 +22,9 @@ use mdbookkit::{
     },
     emit, emit_error, emit_warning,
     env::locate_project,
-    error::{ExpectFmt, FailOnWarnings, WithPathDebug},
+    error::{ExpectFmt, FailOnWarnings, WithDebugContext},
     markdown::{PatchStream, Spanned},
-    url::{ExpectUrl, UrlFromPath, UrlUtil},
+    url::{UrlFromPath, UrlUtil},
 };
 
 pub fn run() -> Result<(), ()> {
@@ -45,9 +45,9 @@ pub fn run() -> Result<(), ()> {
                 } else {
                     page_dir
                         .join(referrer)
-                        .expect_url()
+                        .unwrap()
                         .join(name)
-                        .expect_url()
+                        .unwrap()
                         .to_file_path()
                         .unwrap()
                         .to_string_lossy()

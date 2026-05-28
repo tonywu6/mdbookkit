@@ -18,7 +18,7 @@ use tap::{Pipe, Tap};
 use tracing::warn;
 use url::Url;
 
-use crate::{error::WithPathDebug, markdown::default_markdown_options, url::UrlFromPath};
+use crate::{error::WithDebugContext, markdown::default_markdown_options, url::UrlFromPath};
 
 pub fn string_from_stdin() -> Result<String> {
     Ok(Vec::new()

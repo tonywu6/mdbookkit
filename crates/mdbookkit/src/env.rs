@@ -5,7 +5,7 @@ use camino::Utf8PathBuf;
 use console::colors_enabled_stderr;
 use serde::Deserialize;
 
-use crate::{error::WithPathDebug, subprocess::CommandUtil};
+use crate::{error::WithDebugContext, subprocess::CommandUtil};
 
 #[macro_export]
 macro_rules! env_var {
@@ -85,7 +85,7 @@ pub fn locate_project(command: Option<Command>) -> Result<Utf8PathBuf> {
         .output()?;
 
     let LocateProject { root } = serde_json::from_slice(&output.stdout)
-        .with_context(|| format!("{:?}", String::from_utf8_lossy(&output.stdout)))
+        .with_debug(&*String::from_utf8_lossy(&output.stdout), "stdout")
         .context("`cargo locate-project` returned unsupported data")?;
 
     let root = (root.parent())

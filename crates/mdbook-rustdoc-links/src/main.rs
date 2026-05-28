@@ -1,4 +1,4 @@
-#![warn(clippy::unwrap_used)]
+#![cfg_attr(not(test), warn(clippy::unwrap_used))]
 
 use std::path::PathBuf;
 
@@ -10,9 +10,8 @@ use mdbookkit::{
     config::validate_config_examples,
     diagnostics::IssueReporter,
     emit, emit_error, emit_warning,
-    error::{ProgramExit, has_severity},
+    error::{ProgramExit, ReadableDebug, WithDebugContext, has_severity},
     logging::init_logging,
-    url::UrlUtil,
 };
 
 use self::{
@@ -89,7 +88,7 @@ fn mdbook() -> Result<(), ()> {
     let mut tracker = LinkTracker::new(env);
 
     ctx.for_each_page(&book, |path, content| {
-        info_span!("page_read", path = ?path.debug()).in_scope(|| {
+        info_span!("page_read", file = ?path.show()).in_scope(|| {
             tracker
                 .read(content, path)
                 .context("failed to parse file as markdown")
@@ -110,15 +109,18 @@ fn mdbook() -> Result<(), ()> {
         issues.emit(emit!());
     }
 
-    fail_on_warnings.check().or_else(emit_error!())?;
-
     tracker.symlink_docs().or_else(emit_warning!()).ok();
 
+    fail_on_warnings.check().or_else(emit_error!())?;
+
     ctx.for_each_page_mut(&mut book, |path, content| {
-        let text = contents.remove(&path).expect("`contents` should have key");
+        let text = contents
+            .remove(&path)
+            .with_debug(&path, "file")
+            .expect("`contents` should contain path");
 
         *content = text
-            .with_context(|| format!("{:?}", path.debug()))
+            .with_debug(&path, "file")
             .context("error generating output for file")
             .or_else(emit_error!())?;
 

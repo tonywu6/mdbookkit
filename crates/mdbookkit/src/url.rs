@@ -12,7 +12,7 @@ use percent_encoding::percent_decode_str;
 use tap::Pipe;
 use url::{Url, form_urlencoded::Serializer as SearchParams};
 
-use crate::error::WithPathDebug;
+use crate::error::WithDebugContext;
 
 pub trait UrlUtil {
     fn ensure_trailing_slash(&mut self);
@@ -37,8 +37,6 @@ pub trait UrlUtil {
     ) -> Option<HashMap<Cow<'a, str>, Cow<'b, str>>>;
 
     fn remove_suffix(&self, from: Url) -> (Url, UrlSuffix);
-
-    fn debug(&self) -> impl Debug;
 
     fn print_relative(&self, path: &Url) -> impl Debug + Display;
 }
@@ -229,17 +227,6 @@ impl UrlUtil for Url {
         (from, suffix)
     }
 
-    #[inline]
-    fn debug(&self) -> impl Debug {
-        struct UrlDebug<'a>(&'a Url);
-        return UrlDebug(self);
-        impl Debug for UrlDebug<'_> {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                write!(f, "{:?}", self.0.as_str())
-            }
-        }
-    }
-
     fn print_relative(&self, path: &Url) -> impl Debug + Display {
         struct ShowUrl<'a, 'b> {
             base: &'a Url,
@@ -274,17 +261,6 @@ impl UrlUtil for Url {
         }
 
         ShowUrl { base: self, path }
-    }
-}
-
-pub trait ExpectUrl<T> {
-    fn expect_url(self) -> T;
-}
-
-impl<T> ExpectUrl<T> for Result<T, url::ParseError> {
-    #[inline]
-    fn expect_url(self) -> T {
-        self.expect("should be a valid URL")
     }
 }
 

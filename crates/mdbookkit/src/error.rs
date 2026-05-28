@@ -10,6 +10,7 @@ use serde::Deserialize;
 use tap::Pipe;
 use tracing::{Event, Level, Subscriber};
 use tracing_subscriber::{Layer, layer};
+use url::Url;
 
 use crate::env::is_ci;
 
@@ -120,13 +121,27 @@ macro_rules! write_str {
     }};
 }
 
-pub trait PathDebug {
-    fn debug(&self) -> impl Debug;
+pub trait ReadableDebug {
+    fn show(&self) -> impl Debug;
 }
 
-impl PathDebug for Path {
+impl ReadableDebug for str {
     #[inline]
-    fn debug(&self) -> impl Debug {
+    fn show(&self) -> impl Debug {
+        self
+    }
+}
+
+impl ReadableDebug for Url {
+    #[inline]
+    fn show(&self) -> impl Debug {
+        self.as_str()
+    }
+}
+
+impl ReadableDebug for Path {
+    #[inline]
+    fn show(&self) -> impl Debug {
         struct DebugPath<'a>(&'a Path);
 
         impl Debug for DebugPath<'_> {
@@ -139,32 +154,22 @@ impl PathDebug for Path {
     }
 }
 
-pub trait WithPathDebug<T> {
-    fn with_path_label(self, path: impl AsRef<Path>, label: &'static str) -> Result<T>;
+pub trait WithDebugContext<T, E> {
+    fn with_debug(self, debug: &(impl ReadableDebug + ?Sized), label: &'static str) -> Result<T>;
 
     #[inline]
     fn with_path_debug(self, path: impl AsRef<Path>) -> Result<T>
     where
         Self: Sized,
     {
-        self.with_path_label(path, "path")
+        self.with_debug(path.as_ref(), "path")
     }
 }
 
-impl<T, E> WithPathDebug<T> for Result<T, E>
-where
-    Result<T, E>: Context<T, E>,
-{
+impl<C: Context<T, E>, T, E> WithDebugContext<T, E> for C {
     #[inline]
-    fn with_path_label(self, path: impl AsRef<Path>, label: &'static str) -> Result<T> {
-        self.with_context(|| format!("{label}: {:?}", path.as_ref().debug()))
-    }
-}
-
-impl<T> WithPathDebug<T> for Option<T> {
-    #[inline]
-    fn with_path_label(self, path: impl AsRef<Path>, label: &'static str) -> Result<T> {
-        self.with_context(|| format!("{label}: {:?}", path.as_ref().debug()))
+    fn with_debug(self, debug: &(impl ReadableDebug + ?Sized), label: &'static str) -> Result<T> {
+        self.with_context(|| format!("{label}: {:?}", debug.show()))
     }
 }
 
@@ -183,13 +188,6 @@ impl<T, E: Into<anyhow::Error>> MapDeserializeError<T, E> for Result<T, E> {
             }
         }
     }
-}
-
-#[macro_export]
-macro_rules! try2 {
-    ({ $($tt:tt)+ }) => {
-        (|| -> ::anyhow::Result<_> { $($tt)+ })()
-    };
 }
 
 #[macro_export]

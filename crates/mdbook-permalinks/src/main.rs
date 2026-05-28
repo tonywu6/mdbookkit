@@ -1,4 +1,4 @@
-#![warn(clippy::unwrap_used)]
+#![cfg_attr(not(test), warn(clippy::unwrap_used))]
 
 use std::{collections::HashSet, fmt::Debug};
 
@@ -16,7 +16,7 @@ use mdbookkit::{
     diagnostics::IssueReporter,
     emit, emit_error,
     env::is_logging,
-    error::{ProgramExit, has_severity},
+    error::{ProgramExit, ReadableDebug, WithDebugContext, has_severity},
     level_enabled,
     logging::init_logging,
     ticker, ticker_item,
@@ -104,7 +104,7 @@ impl Environment<'_> {
         let mut contents = Pages::new(self.markdown);
 
         self.ctx.for_each_page(&book, |path, content| {
-            info_span!("page_read", path = ?path.debug()).in_scope(|| {
+            info_span!("page_read", file = ?path.show()).in_scope(|| {
                 (contents.insert(path, content))
                     .context("failed to parse file as markdown")
                     .or_else(emit_error!())
@@ -125,15 +125,19 @@ impl Environment<'_> {
             .check()
             .or_else(emit_error!())?;
 
-        let mut results = contents.emit();
+        let mut contents = contents.emit();
 
         self.ctx.for_each_page_mut(&mut book, |path, content| {
-            if let Some(output) = results.remove(&path) {
-                *content = output
-                    .with_context(|| format!("{:?}", path.debug()))
-                    .context("error generating output for file")
-                    .or_else(emit_error!())?;
-            }
+            let text = contents
+                .remove(&path)
+                .with_debug(&path, "file")
+                .expect("`contents` should contain path");
+
+            *content = text
+                .with_debug(&path, "file")
+                .context("error generating output for file")
+                .or_else(emit_error!())?;
+
             Ok(())
         })?;
 
@@ -227,10 +231,9 @@ impl Environment<'_> {
     ) {
         let relative_to_repo = self.vcs.try_file(&file_url);
 
-        let relative_to_book = self
-            .page_dir
+        let relative_to_book = (self.page_dir)
             .make_relative(&file_url)
-            .expect("should be a file");
+            .expect("both are file urls");
 
         trace!(?relative_to_book);
 
@@ -262,9 +265,10 @@ impl Environment<'_> {
                 link.unreachable(vec![(file_url, err)]);
             } else if link.href.starts_with('/') {
                 // mdBook doesn't support absolute paths like VS Code does
+                let file_url = url_suffix.restored(file_url);
                 let rewritten = page_url
-                    .make_relative(&url_suffix.restored(file_url))
-                    .expect("both should be file: urls");
+                    .make_relative(&file_url)
+                    .expect("both are file urls");
                 link.rewritten(rewritten);
             } else {
                 link.unchanged();
@@ -342,14 +346,15 @@ impl Environment<'_> {
 
             let file_url = (self.page_dir)
                 .join(page)
-                .expect("should be a valid url")
+                .with_debug(&**page, "page")
+                .expect("`page` should be parsable as a url path")
                 .tap_mut(|u| u.set_query(file_url.query()))
                 .tap_mut(|u| u.set_fragment(file_url.fragment()));
 
             if page_paths.contains(page) {
                 let rewritten = page_url
                     .make_relative(&file_url)
-                    .expect("both should be file: urls");
+                    .expect("both are file urls");
                 link.rewritten(rewritten);
                 return;
             }
@@ -360,7 +365,10 @@ impl Environment<'_> {
 
         if !is_index {
             // try the unmodified path itself
-            let try_file = self.page_dir.join(&path).expect("should be a valid url");
+            let try_file = (self.page_dir)
+                .join(&path)
+                .with_debug(&*path, "path")
+                .expect("`path` should be parsable as a url path");
 
             match self.vcs.try_file(&try_file) {
                 Ok(result) if !result.metadata.is_dir() => {
@@ -370,7 +378,7 @@ impl Environment<'_> {
 
                     let rewritten = page_url
                         .make_relative(&file_url)
-                        .expect("both should be file: urls");
+                        .expect("both are file urls");
 
                     link.rewritten(rewritten);
 

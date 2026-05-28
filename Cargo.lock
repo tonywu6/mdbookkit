@@ -1076,6 +1076,7 @@ dependencies = [
  "anyhow",
  "camino",
  "clap",
+ "mdbookkit",
  "regex",
  "snapbox",
  "tap",

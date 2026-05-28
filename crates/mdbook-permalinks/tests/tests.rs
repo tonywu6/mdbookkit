@@ -122,7 +122,7 @@ where
 
     let root_dir = DirRoot::mutable_temp()?;
     let root_dir = (root_dir.path())
-        .expect("temp dir should have a path")
+        .unwrap()
         .try_conv::<&Utf8Path>()?
         .to_owned();
     book.path.root_dir = root_dir;

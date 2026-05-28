@@ -21,7 +21,7 @@ use tracing::{Level, debug, info, info_span, instrument, trace, warn};
 use mdbookkit::{
     doc_link, emit_debug, emit_error, emit_warning,
     env::is_logging,
-    error::{ExpectFmt, WithPathDebug},
+    error::{ExpectFmt, WithDebugContext},
     level_enabled,
     subprocess::{CommandUtil, Subprocess, SubprocessResult},
     ticker, ticker_event, with_bug_report,
@@ -262,7 +262,7 @@ fn run_builder(
                 .and_then(|dir| dir.parent())
             {
                 symlink_dir_all(doc, tempdir.path().join(name))
-                    .with_context(|| doc.to_owned())
+                    .with_path_debug(doc.as_std_path())
                     .context("failed to locate doc artifacts expected at:")
                     .or_else(emit_warning!())
                     .ok();
@@ -309,7 +309,7 @@ fn run_builder(
             .lines()
             .filter_map(|line| {
                 serde_json::from_str::<Diagnostic>(line)
-                    .with_context(|| line.to_owned())
+                    .with_debug(line, "line")
                     .context("could not parse line as diagnostic")
                     .or_else(emit_debug!())
                     .ok()
@@ -1138,8 +1138,8 @@ pub fn symlink_dir_all(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Re
         } else {
             Err(anyhow!(e))
         }
-        .with_path_label(&target, "target")
-        .with_path_label(&source, "source")
+        .with_debug(target.as_path(), "target")
+        .with_debug(source.as_ref(), "source")
         .context("failed to create a symlink between these paths:")?,
     }
 }

@@ -354,11 +354,10 @@ impl FromStr for BaseUrlInner {
 }
 
 impl Default for BaseUrl {
+    #[allow(clippy::unwrap_used)]
     fn default() -> Self {
         // https://doc.rust-lang.org/cargo/reference/unstable.html#rustdoc-map
-        "https://docs.rs/{pkg_name}/{version}"
-            .parse()
-            .expect("default url should be valid")
+        "https://docs.rs/{pkg_name}/{version}".parse().unwrap()
     }
 }
 

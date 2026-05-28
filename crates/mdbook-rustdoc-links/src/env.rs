@@ -51,7 +51,7 @@ impl Environment {
 impl Default for Environment {
     fn default() -> Self {
         use crate::options::BaseUrl;
-        let dir = std::env::current_dir().expect("current_dir should be accessible");
+        let dir = std::env::current_dir().unwrap();
         let (base_url, base_dir) = BaseUrl::default().resolve(dir.clone());
         Self {
             page_dir: dir.dir_to_url(),

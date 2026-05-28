@@ -1,4 +1,4 @@
-#![warn(clippy::unwrap_used)]
+#![cfg_attr(not(test), warn(clippy::unwrap_used))]
 #![doc = include_str!("../README.md")]
 
 pub mod book;

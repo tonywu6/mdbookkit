@@ -4,6 +4,7 @@ use anstyle::RgbColor;
 use anstyle_svg::Palette;
 use anyhow::{Context, Result, bail};
 use camino::{Utf8Path, Utf8PathBuf};
+use mdbookkit::error::WithDebugContext;
 use regex::Regex;
 use snapbox::{
     Assert, Data, IntoData, RedactedValue, Redactions, assert::DEFAULT_ACTION_ENV, cmd::Command,
@@ -216,7 +217,7 @@ impl TestRoot<'_> {
     fn actual_page(&self, name: &Utf8Path, temp: &Utf8Path) -> Result<String> {
         let text = std::fs::read_to_string(temp.join(name))
             .or_else(|_| std::fs::read_to_string(temp.join("markdown").join(name)))
-            .with_context(|| name.to_string())
+            .with_path_debug(name.as_std_path())
             .context("mdbook did not build this file")?;
         Ok(text)
     }

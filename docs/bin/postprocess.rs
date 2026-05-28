@@ -19,7 +19,7 @@ use tracing::{debug, error, info, info_span, trace};
 use url::Url;
 
 use mdbookkit::{
-    error::FailOnWarnings,
+    error::{FailOnWarnings, WithDebugContext},
     url::{ToUtf8Path, UrlFromPath},
 };
 
@@ -195,7 +195,7 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
                         _ => {}
                     }
                     let img = image::open(&src)
-                        .with_context(|| src.display().to_string())
+                        .with_path_debug(&*src)
                         .context("failed to read image")?;
                     elem.set_attribute("width", &img.width().to_string())?;
                     elem.set_attribute("height", &img.height().to_string())?;

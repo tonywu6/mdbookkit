@@ -30,7 +30,7 @@ use mdbookkit::{
         annotate_snippets::AnnotationKind,
     },
     doc_link, emit_debug, emit_trace, emit_warning,
-    error::ExpectFmt,
+    error::{ExpectFmt, WithDebugContext},
     markdown::{PatchStream, locate_text},
     plural,
     url::UrlUtil,
@@ -181,7 +181,8 @@ impl<'a> LinkTracker<'a> {
                         && !eq_escaped(&link.dest, &href)
                     {
                         if let Ok(url) = resolve_url(self.env.base_url(), &output, &href)
-                            .with_context(|| format!("could not convert to a full URL: {href:?}"))
+                            .with_debug(&*href, "URL")
+                            .context("could not convert to a full URL")
                             .or_else(with_bug_report!(emit_warning))
                         {
                             link.href = Some(url)
@@ -202,7 +203,8 @@ impl<'a> LinkTracker<'a> {
                     if text.is_empty() {
                         let mut state = state.borrow_mut();
                         let text = std::mem::take(&mut state.text_content);
-                        let link = state.link().expect("checked");
+                        #[allow(clippy::unwrap_used)]
+                        let link = state.link().unwrap();
                         if matches!(link.kind, CollapsedUnknown | ShortcutUnknown)
                             && link.inner_elem.len() == 1
                             && let Some(Event::Text(original) | Event::Code(original)) =
@@ -969,13 +971,10 @@ impl Display for Statistics {
 mod tests {
     use anyhow::Result;
 
-    use mdbookkit::{
-        diagnostics::{
-            Highlight, IssueLevel, IssueReport, SourceCode,
-            annotate_snippets::{AnnotationKind, Renderer, renderer::DecorStyle},
-            issue_to_report,
-        },
-        url::ExpectUrl,
+    use mdbookkit::diagnostics::{
+        Highlight, IssueLevel, IssueReport, SourceCode,
+        annotate_snippets::{AnnotationKind, Renderer, renderer::DecorStyle},
+        issue_to_report,
     };
     use mdbookkit_testing::{
         AssertUtil, default_assert,
@@ -1017,7 +1016,7 @@ mod tests {
     fn test_link_spans(text: &str, expected: Data) -> Result<()> {
         let mut tracker = LinkTracker::new(Environment::default());
         let root = tracker.env.page_dir();
-        let path = root.join("index.md").expect_url();
+        let path = root.join("index.md").unwrap();
         tracker.read(text, path)?;
         let span = tracker.links[0].span.clone();
         let source = SourceCode {

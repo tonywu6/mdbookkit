@@ -54,7 +54,8 @@ impl<'a> BrokenLinkCallback<'a> for KeepBrokenLinks {
                 .collect::<Vec<_>>();
 
             if elements.len() == 1 {
-                (elements.into_iter()).next().expect("has 1 item")
+                #[allow(clippy::unwrap_used)]
+                (elements.into_iter()).next().unwrap()
             } else {
                 (elements.iter())
                     .fold(String::with_capacity(dest.len()), |mut out, elem| {

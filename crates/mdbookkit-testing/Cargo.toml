@@ -16,6 +16,7 @@ anstyle-svg = "1.1.0"
 anyhow = { workspace = true }
 camino = { workspace = true }
 clap = { workspace = true }
+mdbookkit = { workspace = true }
 regex = "1.12.3"
 snapbox = { version = "1.2.1", features = ["term-svg", "dir", "regex"] }
 tap = { workspace = true }

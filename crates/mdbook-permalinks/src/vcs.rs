@@ -7,7 +7,7 @@ use url::Url;
 
 use mdbookkit::{
     emit_debug,
-    error::WithPathDebug,
+    error::{ReadableDebug, WithDebugContext},
     url::{UrlFromPath, UrlUtil},
 };
 
@@ -19,8 +19,8 @@ use crate::{
 
 impl VersionControl {
     #[instrument(level="debug", skip_all, fields(
-        file = ?file.debug(),
-        root = ?self.root.debug(),
+        file = ?file.show(),
+        root = ?self.root.show(),
     ))]
     pub fn try_file(&self, file: &Url) -> Result<TryFile, PathStatus> {
         let (link, path) = match {
