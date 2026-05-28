@@ -1,0 +1,44 @@
+<svg width="1079px" height="200px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .fg { fill: #B2B2B2 }
+    .bg { fill: #1A1A1A }
+    .fg-bright-blue { fill: #5CADF1 }
+    .fg-yellow { fill: #D19A66 }
+    .container {
+      padding: 0 10px;
+      line-height: 18px;
+    }
+    .bold { font-weight: bold; }
+    tspan {
+      font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;
+      white-space: pre;
+      line-height: 18px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" y="0"  class="bg" />
+
+  <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "../static/%90V%8Fh%93%F1%92%9A%96%DA.jpg"</tspan>
+</tspan>
+    <tspan x="10px" y="46px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/path_encoding_windows/src/東京都港区.md:1:37</tspan>
+</tspan>
+    <tspan x="10px" y="64px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="82px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> ![`[*"新宿二丁目".encode("shift-jis")]`](</tspan><tspan class="fg-yellow bold">../static/%90V%8Fh%93%F1%92%9A%96%DA.jpg</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="100px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                                          </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan>
+</tspan>
+    <tspan x="10px" y="118px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                                          </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="136px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                                          </tspan><tspan class="fg-yellow bold">resolves to a path that is invalid on this system:</tspan>
+</tspan>
+    <tspan x="10px" y="154px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>                                          </tspan><tspan class="fg-bright-blue bold">"crates/mdbook-permalinks/tests/path_encoding_windows/static/�V�h�\u{52696}�.jpg"</tspan>
+</tspan>
+    <tspan x="10px" y="172px">
+</tspan>
+    <tspan x="10px" y="190px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: finished with warnings</tspan>
+</tspan>
+  </text>
+
+</svg>
