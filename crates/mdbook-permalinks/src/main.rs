@@ -11,8 +11,8 @@ use tracing::{Level, debug, error_span, info, info_span, span::EnteredSpan, trac
 use url::Url;
 
 use mdbookkit::{
-    book::{PreprocessorHelper, book_from_stdin},
-    config::validate_config_examples,
+    book::{PreprocessorHelper, book_from_stdin, should_emit_issues},
+    config::{BaseDir, validate_config_examples},
     diagnostics::IssueReporter,
     emit, emit_error,
     env::is_logging,
@@ -113,8 +113,10 @@ impl Environment<'_> {
 
         self.resolve(&mut contents);
 
-        for issues in self.issues(&contents).pipe(IssueReporter::sorted) {
-            issues.emit(emit!());
+        if should_emit_issues(self.ctx) {
+            for issues in self.issues(&contents).pipe(IssueReporter::sorted) {
+                issues.emit(emit!());
+            }
         }
 
         contents.log_stats();
