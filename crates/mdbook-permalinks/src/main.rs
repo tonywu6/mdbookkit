@@ -25,7 +25,7 @@ use mdbookkit::{
 
 use self::{
     link::{ContentHint, LinkStatus, PathStatus, RelativeLink},
-    options::Config,
+    options::{Config, Options},
     page::Pages,
     vcs::Permalink,
 };
@@ -43,7 +43,7 @@ fn main() {
     match command {
         Some(Command::Supports { .. }) => Ok(()),
         Some(Command::ValidateConfig) => {
-            validate_config_examples::<Config>(PREPROCESSOR_NAME).or_else(emit_error!())
+            validate_config_examples::<Options>(PREPROCESSOR_NAME).or_else(emit_error!())
         }
         None => mdbook(),
     }
@@ -89,8 +89,9 @@ struct Environment<'a> {
     ctx: &'a PreprocessorContext,
     vcs: VersionControl,
     page_dir: Url,
+    site_url: BaseDir,
     markdown: pulldown_cmark::Options,
-    config: Config,
+    options: Options,
 }
 
 struct VersionControl {
@@ -122,7 +123,7 @@ impl Environment<'_> {
         contents.log_stats();
 
         // bail before emitting changes
-        self.config
+        self.options
             .fail_on_warnings
             .check()
             .or_else(emit_error!())?;
@@ -158,6 +159,8 @@ impl Environment<'_> {
         let ticker = ticker!(Level::INFO, "process", "processing links").entered();
 
         for (base, link) in content.links_mut() {
+            let page_url = base.as_ref();
+
             let file_url = match if let Some(link) = link.href.strip_prefix('/') {
                 self.vcs.root.join(link)
             } else {
@@ -171,11 +174,8 @@ impl Environment<'_> {
                 }
             };
 
-            let env = self;
-            let page_url = base.as_ref();
-
-            if let Some(book) = &env.config.book_url
-                && let Some(path) = book.as_ref().make_relative(&file_url)
+            if let Some(http) = &self.site_url.http
+                && let Some(path) = http.make_relative(&file_url)
                 && !path.starts_with("../")
             {
                 let dest = ResolveBook {
@@ -187,10 +187,10 @@ impl Environment<'_> {
                 };
                 let _span = dest.span(&ticker);
                 self.resolve_book(dest);
-            } else if let Some((path, hint)) = env.vcs.link.to_path(&file_url)
-                && let Ok(url) = env.vcs.root.join(&path)
+            } else if let Some((path, hint)) = self.vcs.link.to_path(&file_url)
+                && let Ok(url) = self.vcs.root.join(&path)
             {
-                let (_, url_suffix) = env.vcs.link.as_ref().remove_suffix(file_url);
+                let (_, url_suffix) = self.vcs.link.as_ref().remove_suffix(file_url);
                 let dest = ResolveFile {
                     hint,
                     url_suffix,
@@ -203,7 +203,7 @@ impl Environment<'_> {
                 let _span = dest.span(&ticker);
                 self.resolve_file(dest);
             } else if file_url.scheme() == "file" {
-                let (file_url, url_suffix) = env.vcs.link.as_ref().remove_suffix(file_url);
+                let (file_url, url_suffix) = self.vcs.link.as_ref().remove_suffix(file_url);
                 let dest = ResolveFile {
                     hint: link.hint,
                     url_suffix,
@@ -245,7 +245,7 @@ impl Environment<'_> {
         let not_in_tree =
             relative_to_book.ends_with(".md") && !page_paths.contains(&relative_to_book);
 
-        let always_link = (self.config.always_link)
+        let always_link = (self.options.always_link)
             .iter()
             .any(|suffix| file_url.path().ends_with(suffix));
 
@@ -403,14 +403,9 @@ impl Environment<'_> {
 
 impl<'a> Environment<'a> {
     fn new(ctx: &'a PreprocessorContext) -> Result<Result<Self>> {
-        let config = ctx
-            .book_toml()
-            .preprocessor(&[PREPROCESSOR_NAME, "mdbook-link-forever"])
-            .inspect(|c| debug!("{c:#?}"))
-            .context("failed to read preprocessor config from book.toml")?
-            .unwrap_or_default();
+        let config = Config::new(ctx)?;
 
-        let vcs = match VersionControl::try_from_git(&config, ctx) {
+        let vcs = match VersionControl::try_from_git(&config, &ctx.root) {
             Ok(Ok(vcs)) => vcs,
             Ok(Err(err)) => return Ok(Err(err)),
             Err(err) => return Err(err),
@@ -418,14 +413,31 @@ impl<'a> Environment<'a> {
 
         let markdown = ctx.markdown_options();
 
-        let page_dir = ctx.page_dir()?.dir_to_url();
+        let page_dir = ctx.page_dir()?;
+
+        let Config {
+            repo_url: _,
+            site_url,
+            mut options,
+        } = config;
+
+        let site_url = site_url
+            .or_else(|| {
+                #[allow(deprecated)]
+                options.book_url.take()
+            })
+            .unwrap_or_default()
+            .resolve(&page_dir);
+
+        let page_dir = page_dir.dir_to_url();
 
         Ok(Ok(Self {
             ctx,
             vcs,
             page_dir,
+            site_url,
             markdown,
-            config,
+            options,
         }))
     }
 }

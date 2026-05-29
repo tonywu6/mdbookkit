@@ -24,7 +24,7 @@
 </tspan>
     <tspan x="10px" y="64px"><tspan>Caused by:</tspan>
 </tspan>
-    <tspan x="10px" y="82px"><tspan>    0: failed to read preprocessor config from book.toml</tspan>
+    <tspan x="10px" y="82px"><tspan>    0: failed to read config from book.toml</tspan>
 </tspan>
     <tspan x="10px" y="100px"><tspan>    1: TOML parse error at line 4, column 3</tspan>
 </tspan>

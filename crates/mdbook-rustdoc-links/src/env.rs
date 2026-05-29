@@ -19,7 +19,7 @@ impl Environment {
     pub fn new(config: EnvConfig, book: &PreprocessorContext) -> Result<Self> {
         let book_dir = book.book_dir()?;
         let page_dir = book.page_dir()?;
-        let base_dir = config.base_url.take().resolve(page_dir.clone());
+        let base_dir = config.base_url.take().resolve(&page_dir);
         let page_dir = page_dir.dir_to_url();
         Ok(Self {
             book_dir,
@@ -46,12 +46,12 @@ impl Default for Environment {
     fn default() -> Self {
         use crate::options::default_base_url;
 
-        let dir = std::env::current_dir().unwrap();
-        let base_dir = default_base_url().resolve(dir.clone());
+        let page_dir = std::env::current_dir().unwrap();
+        let base_dir = default_base_url().resolve(&page_dir);
 
         Self {
-            page_dir: dir.dir_to_url(),
-            book_dir: dir,
+            page_dir: page_dir.dir_to_url(),
+            book_dir: page_dir,
             base_dir,
         }
     }

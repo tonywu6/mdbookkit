@@ -1,24 +1,68 @@
-use std::borrow::Cow;
-
+use anyhow::{Context, Result};
+use mdbook_preprocessor::PreprocessorContext;
 use serde::{
     Deserialize, Deserializer,
     de::value::{MapAccessDeserializer, SeqAccessDeserializer},
 };
+use tracing::debug;
 use url::Url;
 
 use mdbookkit::{
-    config::value_or_vec,
+    book::PreprocessorHelper,
+    config::{BaseUrl, value_or_vec},
     error::{FailOnWarnings, MapDeserializeError},
-    url::UrlUtil,
+    impl_deserialize_from_str, try2,
 };
+
+use crate::PREPROCESSOR_NAME;
+
+#[derive(Debug, Default)]
+#[allow(unused)]
+pub struct Config {
+    pub repo_url: Option<gix_url::Url>,
+    pub site_url: Option<BaseUrl>,
+    pub options: Options,
+}
+
+impl Config {
+    pub fn new(ctx: &PreprocessorContext) -> Result<Self> {
+        try2!({
+            let mut book_toml = ctx.book_toml().with_source();
+
+            let options = book_toml
+                .preprocessor::<Options>(&[PREPROCESSOR_NAME, "mdbook-link-forever"])
+                .inspect(|c| debug!("{c:#?}"))?
+                .unwrap_or_default();
+
+            struct RepoUrl(gix_url::Url);
+            impl_deserialize_from_str!(RepoUrl, "a remote URL", |s| {
+                Ok(Self(gix_url::parse(s.into())?))
+            });
+
+            let repo_url = book_toml
+                .html_config::<RepoUrl>("git-repository-url")?
+                .map(|u| u.0);
+
+            let site_url = book_toml.html_config::<BaseUrl>("site-url")?;
+
+            Ok(Self {
+                repo_url,
+                site_url,
+                options,
+            })
+        })
+        .context("failed to read config from book.toml")
+    }
+}
 
 #[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
-pub struct Config {
+pub struct Options {
     #[serde(default, deserialize_with = "TemplateConfig::deserialize2")]
     pub repo_url_template: TemplateConfig,
+    #[deprecated]
     #[serde(default)]
-    pub book_url: Option<BookUrl>,
+    pub book_url: Option<BaseUrl>,
     #[serde(default)]
     pub remote_name: Option<String>,
     #[serde(default)]
@@ -26,9 +70,6 @@ pub struct Config {
     #[serde(default)]
     pub fail_on_warnings: FailOnWarnings,
 }
-
-#[derive(Debug)]
-pub struct BookUrl(Url);
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
@@ -50,27 +91,6 @@ pub struct PathParams {
     pub commit: Vec<String>,
     #[serde(default, deserialize_with = "value_or_vec1")]
     pub tag: Vec<String>,
-}
-
-impl AsRef<Url> for BookUrl {
-    fn as_ref(&self) -> &Url {
-        &self.0
-    }
-}
-
-impl<'de> Deserialize<'de> for BookUrl {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let url = Cow::<str>::deserialize(deserializer)?;
-        let url = url.parse::<Url>().or_serde_error()?.with_trailing_slash();
-        if url.scheme() != "https" && url.scheme() != "http" {
-            let err = serde::de::Error::custom("expected an HTTP URL");
-            return Err(err);
-        }
-        Ok(Self(url))
-    }
 }
 
 impl TemplateConfig {

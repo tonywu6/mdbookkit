@@ -1,7 +1,7 @@
 ERROR mdbook-permalinks: failed to initialize preprocessor
 
 Caused by:
-    0: failed to read preprocessor config from book.toml
+    0: failed to read config from book.toml
     1: TOML parse error at line 4, column 3
          |
        4 |   [

@@ -1,6 +1,8 @@
 [preprocessor.permalinks]
-book-url = "https://example.org/book"
 repo-url-template = "https://git.example.org/{tree}/{ref}/{path}"
+
+[output.html]
+site-url = "https://example.org/book"
 
 [output.markdown]
 

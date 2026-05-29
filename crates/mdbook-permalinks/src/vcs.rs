@@ -1,6 +1,7 @@
+use std::path::Path;
+
 use anyhow::{Context, Result, anyhow, bail};
 use git2::{DescribeOptions, Repository, RepositoryOpenFlags};
-use mdbook_preprocessor::{PreprocessorContext, config::Config as MDBookConfig};
 use tap::Pipe;
 use tracing::{debug, info, instrument, trace, warn};
 use url::Url;
@@ -160,12 +161,12 @@ impl Default for PathParams {
     }
 }
 
-enum RepoSource {
-    Config(gix_url::Url),
+enum RepoSource<'a> {
+    Config(&'a gix_url::Url),
     Remote(gix_url::Url),
 }
 
-impl RepoSource {
+impl RepoSource<'_> {
     fn as_url(&self) -> &gix_url::Url {
         match self {
             Self::Config(u) => u,
@@ -176,16 +177,16 @@ impl RepoSource {
 
 impl VersionControl {
     #[instrument(level = "debug", skip_all)]
-    pub fn try_from_git(config: &Config, ctx: &PreprocessorContext) -> Result<Result<Self>> {
+    pub fn try_from_git(config: &Config, root: &Path) -> Result<Result<Self>> {
         let repo = match Repository::open_ext(
-            &ctx.root,
+            root,
             RepositoryOpenFlags::empty(),
             &[] as &[&std::ffi::OsStr],
         )
         .context("this preprocessor requires a git repository to work")
         {
             Ok(repo) => repo,
-            Err(err) => return config.fail_on_warnings.adjusted(Ok(Err(err))),
+            Err(err) => return config.options.fail_on_warnings.adjusted(Ok(Err(err))),
         };
 
         let root = repo.workdir().unwrap_or_else(|| repo.commondir());
@@ -207,14 +208,14 @@ impl VersionControl {
         };
 
         let link = {
-            let TemplateConfig { pattern, params } = &config.repo_url_template;
+            let TemplateConfig { pattern, params } = &config.options.repo_url_template;
 
             let pattern = if let Some(pattern) = pattern {
                 debug!("using explicitly set repo_url_template");
                 pattern.clone()
             } else {
-                let remote = config.remote_name.as_deref().unwrap_or("origin");
-                let repo = match find_git_remote(&repo, remote, &ctx.config)
+                let remote = config.options.remote_name.as_deref().unwrap_or("origin");
+                let repo = match find_git_remote(&repo, remote, config)
                     .context("error while finding a git remote URL")?
                 {
                     Ok(repo) => repo,
@@ -225,7 +226,7 @@ impl VersionControl {
                         .context("failed to determine the remote URL prefix for permalinks")
                         .pipe(Err)
                         .pipe(Ok)
-                        .pipe(|result| config.fail_on_warnings.adjusted(result));
+                        .pipe(|result| config.options.fail_on_warnings.adjusted(result));
                     }
                 };
 
@@ -300,19 +301,13 @@ fn get_git_head(repo: &Repository) -> Result<Option<RefName>> {
 }
 
 #[instrument(level = "debug", skip_all)]
-fn find_git_remote(
+fn find_git_remote<'a>(
     repo: &Repository,
     remote: &str,
-    config: &MDBookConfig,
-) -> Result<Result<RepoSource>> {
-    if let Some(url) = config.get::<String>("output.html.git-repository-url")? {
-        debug!("found {url:?} in book.toml");
-        gix_url::parse(url.as_str().into())
-            .inspect(|u| debug!("parsed as {u:?}"))
-            .context("could not parse `output.html.git-repository-url`")?
-            .pipe(RepoSource::Config)
-            .pipe(Ok)
-            .pipe(Ok)
+    config: &'a Config,
+) -> Result<Result<RepoSource<'a>>> {
+    if let Some(ref url) = config.repo_url {
+        Ok(Ok(RepoSource::Config(url)))
     } else {
         let repo = match repo.find_remote(remote).with_context(|| {
             format!("expected repo to have a remote named {remote:?}, but found none")

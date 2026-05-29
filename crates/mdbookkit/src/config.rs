@@ -153,7 +153,7 @@ fn make_url_suffix(path: &str) -> Result<BaseUrlSuffix> {
 }
 
 impl BaseUrl {
-    pub fn resolve(self, root: PathBuf) -> BaseDir {
+    pub fn resolve(self, root: &Path) -> BaseDir {
         let path = root.join(match &self.0 {
             BaseUrlValue::Http { path, .. } => path,
             BaseUrlValue::Path { path, .. } => path,
@@ -181,8 +181,14 @@ pub struct BaseDir {
 }
 
 impl BaseDir {
-    pub fn make_relative(&self) {
-        todo!()
+    pub fn make_relative(&self, url: &Url) -> Option<String> {
+        if let Some(ref http) = self.http
+            && let Some(path) = http.make_relative(url)
+        {
+            Some(path)
+        } else {
+            self.file.make_relative(url)
+        }
     }
 
     #[inline]
@@ -198,6 +204,13 @@ impl BaseDir {
     #[inline]
     pub fn as_path(&self) -> &Path {
         &self.path
+    }
+}
+
+impl Default for BaseUrl {
+    fn default() -> Self {
+        #[allow(clippy::unwrap_used)]
+        "/".parse().unwrap()
     }
 }
 

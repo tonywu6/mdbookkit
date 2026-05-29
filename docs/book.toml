@@ -18,14 +18,13 @@ git-repository-icon = "fab-github"
 git-repository-url = "https://github.com/tonywu6/mdbookkit"
 hash-files = true
 preferred-dark-theme = "ayu"
-site-url = "/mdbookkit/"
+site-url = "https://docs.tonywu.dev/mdbookkit/"
 
 [output.html.playground]
 runnable = false
 
 [preprocessor.rustdoc-links]
 after = ["doc"]
-base-url.dev = "/api"
 command = "cargo run --package mdbook-rustdoc-links"
 
 [preprocessor.rustdoc-links.build]
@@ -44,8 +43,6 @@ preludes = [
 
 [preprocessor.permalinks]
 after = ["doc", "rustdoc-links"]
-always-link = [".rs"]
-book-url = "https://docs.tonywu.dev/mdbookkit/"
 command = "cargo run --package mdbook-permalinks"
 
 [preprocessor.app]
