@@ -161,7 +161,7 @@ impl Environment<'_> {
         for (base, link) in content.links_mut() {
             let page_url = base.as_ref();
 
-            let file_url = match if let Some(link) = link.href.strip_prefix('/') {
+            let link_url = match if let Some(link) = link.href.strip_prefix('/') {
                 self.vcs.root.join(link)
             } else {
                 base.join(&link.href)
@@ -175,35 +175,35 @@ impl Environment<'_> {
             };
 
             if let Some(http) = &self.site_url.http
-                && let Some(path) = http.make_relative(&file_url)
+                && let Some(path) = http.make_relative(&link_url)
                 && !path.starts_with("../")
             {
                 let dest = ResolveBook {
                     link,
-                    file_url,
+                    link_url,
                     page_url,
                     page_paths,
                     path,
                 };
                 let _span = dest.span(&ticker);
                 self.resolve_book(dest);
-            } else if let Some((path, hint)) = self.vcs.link.to_path(&file_url)
-                && let Ok(url) = self.vcs.root.join(&path)
+            } else if let Some((path, hint)) = self.vcs.link.to_path(&link_url)
+                && let Ok(file_url) = self.vcs.root.join(&path)
             {
-                let (_, url_suffix) = self.vcs.link.as_ref().remove_suffix(file_url);
+                let (_, url_suffix) = self.vcs.link.as_ref().remove_suffix(link_url);
                 let dest = ResolveFile {
                     hint,
                     url_suffix,
                     check_mode: true,
-                    file_url: url,
+                    file_url,
                     page_url,
                     page_paths,
                     link,
                 };
                 let _span = dest.span(&ticker);
                 self.resolve_file(dest);
-            } else if file_url.scheme() == "file" {
-                let (file_url, url_suffix) = self.vcs.link.as_ref().remove_suffix(file_url);
+            } else if link_url.scheme() == "file" {
+                let (file_url, url_suffix) = self.vcs.link.as_ref().remove_suffix(link_url);
                 let dest = ResolveFile {
                     hint: link.hint,
                     url_suffix,
@@ -293,7 +293,7 @@ impl Environment<'_> {
     fn resolve_book(
         &self,
         ResolveBook {
-            file_url,
+            link_url,
             page_url,
             page_paths,
             path,
@@ -350,8 +350,8 @@ impl Environment<'_> {
                 .join(page)
                 .with_debug(&**page, "page")
                 .expect("`page` should be parsable as a url path")
-                .tap_mut(|u| u.set_query(file_url.query()))
-                .tap_mut(|u| u.set_fragment(file_url.fragment()));
+                .tap_mut(|u| u.set_query(link_url.query()))
+                .tap_mut(|u| u.set_fragment(link_url.fragment()));
 
             if page_paths.contains(page) {
                 let rewritten = page_url
@@ -375,8 +375,8 @@ impl Environment<'_> {
             match self.vcs.try_file(&try_file) {
                 Ok(result) if !result.metadata.is_dir() => {
                     let file_url = try_file
-                        .tap_mut(|u| u.set_query(file_url.query()))
-                        .tap_mut(|u| u.set_fragment(file_url.fragment()));
+                        .tap_mut(|u| u.set_query(link_url.query()))
+                        .tap_mut(|u| u.set_fragment(link_url.fragment()));
 
                     let rewritten = page_url
                         .make_relative(&file_url)
@@ -454,7 +454,7 @@ struct ResolveFile<'a, 'r> {
 }
 
 struct ResolveBook<'a, 'r> {
-    file_url: Url,
+    link_url: Url,
     page_url: &'a Url,
     page_paths: &'a HashSet<String>,
     path: String,
@@ -490,7 +490,7 @@ impl<'a, 'r> ResolveBook<'a, 'r> {
     #[inline]
     fn span(&self, ticker: &tracing::Span) -> EnteredSpan {
         let Self {
-            file_url,
+            link_url,
             page_url,
             path,
             link,
@@ -501,7 +501,7 @@ impl<'a, 'r> ResolveBook<'a, 'r> {
         } else if level_enabled!(Level::TRACE) {
             ticker_item! {
                 ticker, Level::TRACE, "book_link",
-                %file_url, %page_url, ?path,
+                %link_url, %page_url, ?path,
                 "{:?}", &*link.href
             }
         } else {
