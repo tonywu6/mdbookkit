@@ -6,6 +6,7 @@ use std::{
 };
 
 use anyhow::{Context, Result, anyhow};
+use camino::Utf8Path;
 use serde::Deserialize;
 use tap::Pipe;
 use tracing::{Event, Level, Subscriber};
@@ -121,41 +122,46 @@ macro_rules! write_str {
     }};
 }
 
-pub trait ReadableDebug {
+pub trait Show {
     fn show(&self) -> impl Debug;
 }
 
-impl ReadableDebug for str {
+impl Show for str {
     #[inline]
     fn show(&self) -> impl Debug {
         self
     }
 }
 
-impl ReadableDebug for Url {
+impl Show for Url {
     #[inline]
     fn show(&self) -> impl Debug {
         self.as_str()
     }
 }
 
-impl ReadableDebug for Path {
+impl Show for Path {
     #[inline]
     fn show(&self) -> impl Debug {
         struct DebugPath<'a>(&'a Path);
-
+        return DebugPath(self);
         impl Debug for DebugPath<'_> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(f, "{:?}", self.0.display().to_string())
             }
         }
+    }
+}
 
-        DebugPath(self)
+impl Show for Utf8Path {
+    #[inline]
+    fn show(&self) -> impl Debug {
+        self.as_str()
     }
 }
 
 pub trait WithDebugContext<T, E> {
-    fn with_debug(self, debug: &(impl ReadableDebug + ?Sized), label: &'static str) -> Result<T>;
+    fn with_debug(self, debug: &(impl Show + ?Sized), label: &'static str) -> Result<T>;
 
     #[inline]
     fn with_path_debug(self, path: impl AsRef<Path>) -> Result<T>
@@ -168,7 +174,7 @@ pub trait WithDebugContext<T, E> {
 
 impl<C: Context<T, E>, T, E> WithDebugContext<T, E> for C {
     #[inline]
-    fn with_debug(self, debug: &(impl ReadableDebug + ?Sized), label: &'static str) -> Result<T> {
+    fn with_debug(self, debug: &(impl Show + ?Sized), label: &'static str) -> Result<T> {
         self.with_context(|| format!("{label}: {:?}", debug.show()))
     }
 }

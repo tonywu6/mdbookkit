@@ -50,9 +50,11 @@ impl Environment {
 #[cfg(test)]
 impl Default for Environment {
     fn default() -> Self {
-        use crate::options::BaseUrl;
+        use crate::options::default_base_url;
+
         let dir = std::env::current_dir().unwrap();
-        let (base_url, base_dir) = BaseUrl::default().resolve(dir.clone());
+        let (base_url, base_dir) = default_base_url().resolve(dir.clone());
+
         Self {
             page_dir: dir.dir_to_url(),
             book_dir: dir,

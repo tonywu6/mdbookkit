@@ -10,7 +10,7 @@ use mdbookkit::{
     config::validate_config_examples,
     diagnostics::IssueReporter,
     emit, emit_error, emit_warning,
-    error::{ProgramExit, ReadableDebug, WithDebugContext, has_severity},
+    error::{ProgramExit, Show, WithDebugContext, has_severity},
     logging::init_logging,
 };
 

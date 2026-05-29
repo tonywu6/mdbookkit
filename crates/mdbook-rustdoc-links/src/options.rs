@@ -1,13 +1,12 @@
 use std::{
     borrow::Cow,
     fmt::Debug,
-    path::{self, Path, PathBuf},
+    path::{Path, PathBuf},
     process::Command,
-    str::FromStr,
 };
 
-use anyhow::{Context, Result, anyhow, bail};
-use cargo_metadata::camino::{Utf8Component, Utf8Path, Utf8PathBuf};
+use anyhow::{Context, Result, anyhow};
+use cargo_metadata::camino::Utf8PathBuf;
 use serde::{
     Deserialize, Deserializer,
     de::{
@@ -18,14 +17,12 @@ use serde::{
 use shlex::Shlex;
 use tap::{Pipe, Tap};
 use tracing::debug;
-use url::Url;
 
 use mdbookkit::{
-    config::value_or_vec,
+    config::{BaseUrl, value_or_vec},
     de_struct, doc_link, emit_error,
     env::{is_ci, locate_project},
-    error::{FailOnWarnings, MapDeserializeError},
-    url::{UrlFromPath, UrlUtil},
+    error::FailOnWarnings,
 };
 
 de_struct!(
@@ -162,22 +159,28 @@ pub struct EnvConfig {
     pub base_url: BaseUrlConfig,
 }
 
-#[derive(Debug, Clone)]
-pub struct BaseUrl(BaseUrlInner);
-
-#[derive(Debug, Clone)]
-enum BaseUrlInner {
-    Http(Url),
-    Path(PathBuf),
-}
-
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct BaseUrlConfig {
-    #[serde(default)]
+    #[serde(default = "default_base_url")]
     dev: BaseUrl,
-    #[serde(default)]
+    #[serde(default = "default_base_url")]
     release: BaseUrl,
+}
+
+pub(crate) fn default_base_url() -> BaseUrl {
+    // https://doc.rust-lang.org/cargo/reference/unstable.html#rustdoc-map
+    #[allow(clippy::unwrap_used)]
+    "https://docs.rs/{pkg_name}/{version}".parse().unwrap()
+}
+
+impl Default for BaseUrlConfig {
+    fn default() -> Self {
+        Self {
+            dev: default_base_url(),
+            release: default_base_url(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -309,83 +312,6 @@ impl FeatureSelection {
 
     pub fn no_default_features(&self) -> bool {
         self.no_default_features.unwrap_or(false)
-    }
-}
-
-impl FromStr for BaseUrl {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self(s.parse()?))
-    }
-}
-
-impl FromStr for BaseUrlInner {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.parse::<Url>() {
-            Ok(url) => {
-                if !matches!(url.scheme(), "https" | "http") {
-                    bail!("expected an HTTP URL")
-                }
-                let url = url.with_trailing_slash();
-                Ok(Self::Http(url))
-            }
-            Err(..) => {
-                let path = Utf8Path::new(s);
-                for component in path.components() {
-                    match component {
-                        Utf8Component::Prefix(p) => {
-                            bail!("path prefix {p} is unsupported")
-                        }
-                        Utf8Component::ParentDir => {
-                            bail!("path should not contain `..`")
-                        }
-                        Utf8Component::RootDir => {}
-                        Utf8Component::CurDir => {}
-                        Utf8Component::Normal(..) => {}
-                    }
-                }
-                Ok(Self::Path(path.as_std_path().to_owned()))
-            }
-        }
-    }
-}
-
-impl Default for BaseUrl {
-    #[allow(clippy::unwrap_used)]
-    fn default() -> Self {
-        // https://doc.rust-lang.org/cargo/reference/unstable.html#rustdoc-map
-        "https://docs.rs/{pkg_name}/{version}".parse().unwrap()
-    }
-}
-
-impl BaseUrl {
-    pub fn resolve(self, root: PathBuf) -> (Url, Option<PathBuf>) {
-        match self.0 {
-            BaseUrlInner::Http(http) => (http, None),
-            BaseUrlInner::Path(path) => {
-                let dir = path.components().fold(root, |base, part| match part {
-                    path::Component::Prefix(..) => base,
-                    path::Component::RootDir => base,
-                    part => base.join(part),
-                });
-                let url = dir.dir_to_url();
-                (url, Some(dir))
-            }
-        }
-    }
-}
-
-impl<'de> Deserialize<'de> for BaseUrl {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let url = Cow::<str>::deserialize(deserializer)?;
-        let url = url.parse().or_serde_error()?;
-        Ok(url)
     }
 }
 

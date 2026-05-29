@@ -7,7 +7,7 @@ use url::Url;
 
 use mdbookkit::{
     emit_debug,
-    error::{ReadableDebug, WithDebugContext},
+    error::{Show, WithDebugContext},
     url::{UrlFromPath, UrlUtil},
 };
 

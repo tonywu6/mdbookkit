@@ -16,7 +16,7 @@ use mdbookkit::{
     diagnostics::IssueReporter,
     emit, emit_error,
     env::is_logging,
-    error::{ProgramExit, ReadableDebug, WithDebugContext, has_severity},
+    error::{ProgramExit, Show, WithDebugContext, has_severity},
     level_enabled,
     logging::init_logging,
     ticker, ticker_item,

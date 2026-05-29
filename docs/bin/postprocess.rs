@@ -19,7 +19,7 @@ use tracing::{debug, error, info, info_span, trace};
 use url::Url;
 
 use mdbookkit::{
-    error::{FailOnWarnings, ReadableDebug, WithDebugContext},
+    error::{FailOnWarnings, Show, WithDebugContext},
     url::{ToUtf8Path, UrlFromPath},
 };
 
