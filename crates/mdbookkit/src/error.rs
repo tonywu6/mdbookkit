@@ -287,3 +287,10 @@ impl ProgramExit for Result<(), ()> {
         }
     }
 }
+
+#[macro_export]
+macro_rules! try2 {
+    ({ $($tt:tt)+ }) => {
+        (|| -> ::anyhow::Result<_> { $($tt)+ })()
+    };
+}

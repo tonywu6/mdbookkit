@@ -25,6 +25,7 @@ use tracing::{debug, instrument, trace, warn};
 use url::Url;
 
 use mdbookkit::{
+    config::BaseDir,
     diagnostics::{
         Highlight, IssueLevel, IssueReport, IssueReporter, Note, SourceCode, Suggestion,
         annotate_snippets::AnnotationKind,
@@ -180,7 +181,7 @@ impl<'a> LinkTracker<'a> {
                         && let Some(link) = state.borrow_mut().link()
                         && !eq_escaped(&link.dest, &href)
                     {
-                        if let Ok(url) = resolve_url(self.env.base_url(), &output, &href)
+                        if let Ok(url) = resolve_url(self.env.base_dir(), &output, &href)
                             .with_debug(&*href, "URL")
                             .context("could not convert to a full URL")
                             .or_else(with_bug_report!(emit_warning))
@@ -265,7 +266,8 @@ impl<'a> LinkTracker<'a> {
             }
         }
 
-        if let Some(dst) = self.env.base_dir() {
+        if self.env.base_dir().as_http_url().is_none() {
+            let dst = self.env.base_dir().as_path();
             let src = &output.metadata.target_directory;
 
             let (src, dst) = if let Some(target) = output.target.as_deref() {
@@ -388,7 +390,7 @@ pub struct ExportedPages<'a> {
     pub stats: Statistics,
 }
 
-fn resolve_url(base: &Url, output: &BuildOutput<'_>, href: &str) -> Result<Url> {
+fn resolve_url(base: &BaseDir, output: &BuildOutput<'_>, href: &str) -> Result<Url> {
     if let Ok(href) = href.parse::<Url>() {
         return Ok(href);
     }
@@ -403,11 +405,13 @@ fn resolve_url(base: &Url, output: &BuildOutput<'_>, href: &str) -> Result<Url> 
         bail!("unsupported link format")
     };
 
-    let url = base.pattern_fill(|group| match group {
-        "pkg_name" => Some(name.as_str().into()),
-        "version" => Some(version.to_string().into()),
-        _ => None,
-    });
+    let url = (base.as_http_url())
+        .unwrap_or_else(|| base.as_file_url())
+        .pattern_fill(|group| match group {
+            "pkg_name" => Some(name.as_str().into()),
+            "version" => Some(version.to_string().into()),
+            _ => None,
+        });
 
     let url = if let Some(target) = output.target.as_deref() {
         url.join(target)?

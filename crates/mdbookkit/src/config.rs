@@ -1,9 +1,8 @@
 use std::{
-    borrow::Cow,
     collections::BTreeMap,
     fmt::Debug,
     marker::PhantomData,
-    path::{self, PathBuf},
+    path::{self, Path, PathBuf},
     str::FromStr,
 };
 
@@ -11,23 +10,31 @@ use anyhow::{Context, Result, bail};
 use camino::{Utf8Component, Utf8Path};
 use serde::{
     Deserialize, Deserializer, Serialize,
-    de::value::{EnumAccessDeserializer, MapAccessDeserializer, SeqAccessDeserializer},
+    de::{
+        Visitor,
+        value::{EnumAccessDeserializer, MapAccessDeserializer, SeqAccessDeserializer},
+    },
 };
+use tap::Pipe;
 use url::Url;
 
 use crate::{
     book::{BookToml, string_from_stdin},
     error::{MapDeserializeError, Show},
+    impl_deserialize_from_str,
     markdown::Spanned,
     url::{UrlFromPath, UrlUtil},
 };
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BaseUrl(BaseUrlValue);
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 enum BaseUrlValue {
-    Http(Url),
+    Http {
+        path: PathBuf,
+        http: Url,
+    },
     Path {
         path: PathBuf,
         search: Option<String>,
@@ -35,20 +42,14 @@ enum BaseUrlValue {
     },
 }
 
-impl BaseUrl {
-    pub fn resolve(self, root: PathBuf) -> (Url, Option<PathBuf>) {
-        match self.0 {
-            BaseUrlValue::Http(http) => (http, None),
-            BaseUrlValue::Path { path, search, hash } => {
-                let path = root.join(&path);
-                let mut url = path.dir_to_url();
-                url.set_query(search.as_deref());
-                url.set_fragment(hash.as_deref());
-                (url, Some(path))
-            }
-        }
-    }
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct BaseUrlSuffix {
+    path: PathBuf,
+    search: Option<String>,
+    hash: Option<String>,
 }
+
+impl_deserialize_from_str!(BaseUrl, "a URL or path");
 
 impl FromStr for BaseUrl {
     type Err = anyhow::Error;
@@ -63,87 +64,146 @@ impl FromStr for BaseUrlValue {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.parse::<Url>() {
-            Ok(url) => {
-                if !matches!(url.scheme(), "https" | "http") {
+            Ok(http) => {
+                if !matches!(http.scheme(), "https" | "http") {
                     bail!("expected an HTTP URL")
                 }
-                let url = url.with_trailing_slash();
-                Ok(Self::Http(url))
+                let http = http.with_trailing_slash();
+                let path = make_url_suffix(http.path())?.path;
+                Ok(Self::Http { http, path })
             }
 
             Err(..) => {
-                for part in Utf8Path::new(s).components() {
-                    match part {
-                        Utf8Component::Prefix(p) => {
-                            bail!("a base URL cannot contain `{p}`")
-                        }
-                        Utf8Component::ParentDir => {
-                            bail!("a base URL cannot contain `{part}`")
-                        }
-                        Utf8Component::RootDir => {}
-                        Utf8Component::CurDir => {}
-                        Utf8Component::Normal(..) => {}
-                    }
-                }
-
-                let url = if cfg!(windows) {
-                    Utf8Path::new("C:\\").dir_to_url()
-                } else {
-                    #[allow(clippy::unwrap_used)]
-                    "file:///".parse::<Url>().unwrap()
-                };
-                let url = (url.join(s)).context("this path results in an invalid base URL")?;
-
-                let path = match url.to_file_path() {
-                    Err(()) => bail!("this path is invalid on this system"),
-                    Ok(path) => path
-                        .components()
-                        .fold(
-                            PathBuf::with_capacity(path.capacity()),
-                            |base, part| match part {
-                                #[cfg(windows)]
-                                path::Component::Prefix(..) => base,
-                                #[cfg(not(windows))]
-                                path::Component::Prefix(..) => unreachable!(),
-                                path::Component::ParentDir => unreachable!(),
-                                path::Component::RootDir => base,
-                                path::Component::CurDir => base,
-                                path::Component::Normal(part) => base.join(part),
-                            },
-                        )
-                        .join(""),
-                };
-
-                let search = if let search =
-                    &url[url::Position::AfterPath..url::Position::AfterQuery]
-                    && !search.is_empty()
-                {
-                    Some(search[1..].to_owned())
-                } else {
-                    None
-                };
-                let hash = if let hash = &url[url::Position::AfterQuery..]
-                    && !hash.is_empty()
-                {
-                    Some(hash[1..].to_owned())
-                } else {
-                    None
-                };
-
+                let BaseUrlSuffix { path, search, hash } = make_url_suffix(s)?;
                 Ok(Self::Path { path, search, hash })
             }
         }
     }
 }
 
-impl<'de> Deserialize<'de> for BaseUrl {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
+fn make_url_suffix(path: &str) -> Result<BaseUrlSuffix> {
+    for part in if let Some((path, _)) = path.split_once('?') {
+        path
+    } else if let Some((path, _)) = path.split_once('#') {
+        path
+    } else {
+        path
+    }
+    .pipe(Utf8Path::new)
+    .components()
     {
-        let url = Cow::<str>::deserialize(deserializer)?;
-        let url = url.parse().or_serde_error()?;
-        Ok(url)
+        match part {
+            Utf8Component::Prefix(p) => {
+                bail!("a base URL cannot contain `{p}`")
+            }
+            Utf8Component::ParentDir => {
+                bail!("a base URL cannot contain `{part}`")
+            }
+            Utf8Component::RootDir => {}
+            Utf8Component::CurDir => {}
+            Utf8Component::Normal(..) => {}
+        }
+    }
+
+    let url = if cfg!(windows) {
+        Utf8Path::new("C:\\").dir_to_url()
+    } else {
+        #[allow(clippy::unwrap_used)]
+        "file:///".parse::<Url>().unwrap()
+    }
+    .join(path)
+    .context("this path results in an invalid base URL")?;
+
+    let path = match url.to_file_path() {
+        Err(()) => bail!("this path contains invalid characters"),
+        Ok(path) => path
+            .components()
+            .fold(
+                PathBuf::with_capacity(path.as_os_str().len()),
+                |base, part| match part {
+                    #[cfg(windows)]
+                    path::Component::Prefix(..) => base,
+                    #[cfg(not(windows))]
+                    path::Component::Prefix(..) => unreachable!(),
+                    path::Component::ParentDir => unreachable!(),
+                    path::Component::RootDir => base,
+                    path::Component::CurDir => base,
+                    path::Component::Normal(part) => base.join(part),
+                },
+            )
+            .join(""),
+    };
+
+    let search = if let search = &url[url::Position::AfterPath..url::Position::AfterQuery]
+        && !search.is_empty()
+    {
+        Some(search[1..].to_owned())
+    } else {
+        None
+    };
+    let hash = if let hash = &url[url::Position::AfterQuery..]
+        && !hash.is_empty()
+    {
+        Some(hash[1..].to_owned())
+    } else {
+        None
+    };
+
+    Ok(BaseUrlSuffix { path, search, hash })
+}
+
+impl BaseUrl {
+    pub fn resolve(self, root: PathBuf) -> BaseDir {
+        let path = root.join(match &self.0 {
+            BaseUrlValue::Http { path, .. } => path,
+            BaseUrlValue::Path { path, .. } => path,
+        });
+        let (query, fragment) = match &self.0 {
+            BaseUrlValue::Http { http, .. } => (http.query(), http.fragment()),
+            BaseUrlValue::Path { search, hash, .. } => (search.as_deref(), hash.as_deref()),
+        };
+        let mut file = path.dir_to_url();
+        file.set_query(query);
+        file.set_fragment(fragment);
+        let http = match self.0 {
+            BaseUrlValue::Http { http, .. } => Some(http),
+            BaseUrlValue::Path { .. } => None,
+        };
+        BaseDir { http, file, path }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct BaseDir {
+    pub http: Option<Url>,
+    pub file: Url,
+    pub path: PathBuf,
+}
+
+impl BaseDir {
+    pub fn make_relative(&self) {
+        todo!()
+    }
+
+    #[inline]
+    pub fn as_file_url(&self) -> &Url {
+        &self.file
+    }
+
+    #[inline]
+    pub fn as_http_url(&self) -> Option<&Url> {
+        self.http.as_ref()
+    }
+
+    #[inline]
+    pub fn as_path(&self) -> &Path {
+        &self.path
+    }
+}
+
+impl Debug for BaseUrl {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("BaseUrl").field(&self.show()).finish()
     }
 }
 
@@ -160,7 +220,7 @@ impl Show for BaseUrlValue {
         impl Debug for ShowBaseUrl<'_> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 match self.0 {
-                    BaseUrlValue::Http(http) => http.show().fmt(f),
+                    BaseUrlValue::Http { http, .. } => http.show().fmt(f),
                     BaseUrlValue::Path { path, search, hash } => {
                         let mut text = format!("{}", path.display());
                         if let Some(search) = search {
@@ -177,6 +237,61 @@ impl Show for BaseUrlValue {
             }
         }
     }
+}
+
+#[macro_export]
+macro_rules! impl_deserialize_from_str {
+    ( $ty:ty, $expecting:literal ) => {
+        $crate::impl_deserialize_from_str!($ty, $expecting, |s| { s.parse() });
+    };
+    ( $ty:ty, $expecting:literal, |$s:ident| { $($tt:tt)+ } ) => {
+        impl<'de> ::serde::Deserialize<'de> for $ty {
+            fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+            where
+                D: ::serde::Deserializer<'de>,
+            {
+                $crate::config::deserialize_str(
+                    deserializer, $expecting,
+                    |$s| -> ::anyhow::Result<_> { $($tt)+ }
+                )
+            }
+        }
+    }
+}
+
+#[inline]
+pub fn deserialize_str<'de, F, D, T, E>(
+    deserializer: D,
+    expecting: &'static str,
+    parse: F,
+) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    F: FnOnce(&str) -> Result<T, E>,
+    E: Into<anyhow::Error>,
+{
+    struct Visit<F>(F, &'static str);
+
+    impl<'de, F, T, E> Visitor<'de> for Visit<F>
+    where
+        F: FnOnce(&str) -> Result<T, E>,
+        E: Into<anyhow::Error>,
+    {
+        type Value = T;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str(self.1)
+        }
+
+        fn visit_str<E2>(self, v: &str) -> Result<Self::Value, E2>
+        where
+            E2: serde::de::Error,
+        {
+            (self.0)(v).or_serde_error()
+        }
+    }
+
+    deserializer.deserialize_str(Visit(parse, expecting))
 }
 
 #[inline]

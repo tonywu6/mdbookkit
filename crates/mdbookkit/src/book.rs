@@ -243,6 +243,11 @@ impl<'a> BookToml<'a> {
         }
     }
 
+    pub fn with_source(mut self) -> Self {
+        self.load_source().or_else(emit_debug!()).ok();
+        self
+    }
+
     pub fn preprocessor<T>(&mut self, names: &[&str]) -> Result<Option<T>>
     where
         T: for<'de> Deserialize<'de>,

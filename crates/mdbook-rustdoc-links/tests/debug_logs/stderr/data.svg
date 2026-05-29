@@ -1,4 +1,4 @@
-<svg width="16451px" height="7220px" xmlns="http://www.w3.org/2000/svg">
+<svg width="16451px" height="6644px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -205,623 +205,559 @@
 </tspan>
     <tspan x="10px" y="1648px"><tspan>                dev: BaseUrl(</tspan>
 </tspan>
-    <tspan x="10px" y="1666px"><tspan>                    Http(</tspan>
+    <tspan x="10px" y="1666px"><tspan>                    "https://docs.rs/%7Bpkg_name%7D/%7Bversion%7D/",</tspan>
 </tspan>
-    <tspan x="10px" y="1684px"><tspan>                        Url {</tspan>
+    <tspan x="10px" y="1684px"><tspan>                ),</tspan>
 </tspan>
-    <tspan x="10px" y="1702px"><tspan>                            scheme: "https",</tspan>
+    <tspan x="10px" y="1702px"><tspan>                release: BaseUrl(</tspan>
 </tspan>
-    <tspan x="10px" y="1720px"><tspan>                            cannot_be_a_base: false,</tspan>
+    <tspan x="10px" y="1720px"><tspan>                    "https://docs.rs/%7Bpkg_name%7D/%7Bversion%7D/",</tspan>
 </tspan>
-    <tspan x="10px" y="1738px"><tspan>                            username: "",</tspan>
+    <tspan x="10px" y="1738px"><tspan>                ),</tspan>
 </tspan>
-    <tspan x="10px" y="1756px"><tspan>                            password: None,</tspan>
+    <tspan x="10px" y="1756px"><tspan>            },</tspan>
 </tspan>
-    <tspan x="10px" y="1774px"><tspan>                            host: Some(</tspan>
+    <tspan x="10px" y="1774px"><tspan>        },</tspan>
 </tspan>
-    <tspan x="10px" y="1792px"><tspan>                                Domain(</tspan>
+    <tspan x="10px" y="1792px"><tspan>        fail_on_warnings: Unspecified,</tspan>
 </tspan>
-    <tspan x="10px" y="1810px"><tspan>                                    "docs.rs",</tspan>
+    <tspan x="10px" y="1810px"><tspan>    },</tspan>
 </tspan>
-    <tspan x="10px" y="1828px"><tspan>                                ),</tspan>
+    <tspan x="10px" y="1828px"><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="1846px"><tspan>                            ),</tspan>
+    <tspan x="10px" y="1846px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link &gt;&gt;&gt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>2..11 </tspan><tspan class="italic">dest</tspan><tspan class="dimmed">=</tspan><tspan>"fancy" </tspan><tspan class="italic">title</tspan><tspan class="dimmed">=</tspan><tspan>"fancy" </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="1864px"><tspan>                            port: None,</tspan>
+    <tspan x="10px" y="1864px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link +++ </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>3..10 </tspan><tspan class="italic">event</tspan><tspan class="dimmed">=</tspan><tspan>Code(Borrowed("fancy")) </tspan><tspan class="italic">parent</tspan><tspan class="dimmed">=</tspan><tspan>2..11 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="1882px"><tspan>                            path: "/%7Bpkg_name%7D/%7Bversion%7D/",</tspan>
+    <tspan x="10px" y="1882px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link &lt;&lt;&lt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>2..11 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="1900px"><tspan>                            query: None,</tspan>
+    <tspan x="10px" y="1900px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link &gt;&gt;&gt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>14..21 </tspan><tspan class="italic">dest</tspan><tspan class="dimmed">=</tspan><tspan>"f80" </tspan><tspan class="italic">title</tspan><tspan class="dimmed">=</tspan><tspan>"f80" </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="1918px"><tspan>                            fragment: None,</tspan>
+    <tspan x="10px" y="1918px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link +++ </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>15..20 </tspan><tspan class="italic">event</tspan><tspan class="dimmed">=</tspan><tspan>Code(Borrowed("f80")) </tspan><tspan class="italic">parent</tspan><tspan class="dimmed">=</tspan><tspan>14..21 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="1936px"><tspan>                        },</tspan>
+    <tspan x="10px" y="1936px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link &lt;&lt;&lt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>14..21 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="1954px"><tspan>                    ),</tspan>
+    <tspan x="10px" y="1954px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link &gt;&gt;&gt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>24..40 </tspan><tspan class="italic">dest</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic">title</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="1972px"><tspan>                ),</tspan>
+    <tspan x="10px" y="1972px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link +++ </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>25..36 </tspan><tspan class="italic">event</tspan><tspan class="dimmed">=</tspan><tspan>Text(Borrowed("PhantomData")) </tspan><tspan class="italic">parent</tspan><tspan class="dimmed">=</tspan><tspan>24..40 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="1990px"><tspan>                release: BaseUrl(</tspan>
+    <tspan x="10px" y="1990px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link +++ </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>36..39 </tspan><tspan class="italic">event</tspan><tspan class="dimmed">=</tspan><tspan>InlineHtml(Borrowed("&lt;T&gt;")) </tspan><tspan class="italic">parent</tspan><tspan class="dimmed">=</tspan><tspan>24..40 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="2008px"><tspan>                    Http(</tspan>
+    <tspan x="10px" y="2008px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link &lt;&lt;&lt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>24..40 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="2026px"><tspan>                        Url {</tspan>
+    <tspan x="10px" y="2026px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>:</tspan><tspan class="bold">normalized</tspan><tspan>: link &gt;&gt;&gt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>0..32 </tspan><tspan class="italic">dest</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic">title</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md" </tspan><tspan class="italic dimmed">link</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>24..40</tspan>
 </tspan>
-    <tspan x="10px" y="2044px"><tspan>                            scheme: "https",</tspan>
+    <tspan x="10px" y="2044px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>:</tspan><tspan class="bold">normalized</tspan><tspan>: link +++ </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>1..12 </tspan><tspan class="italic">event</tspan><tspan class="dimmed">=</tspan><tspan>Text(Borrowed("PhantomData")) </tspan><tspan class="italic">parent</tspan><tspan class="dimmed">=</tspan><tspan>0..32 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md" </tspan><tspan class="italic dimmed">link</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>24..40</tspan>
 </tspan>
-    <tspan x="10px" y="2062px"><tspan>                            cannot_be_a_base: false,</tspan>
+    <tspan x="10px" y="2062px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>:</tspan><tspan class="bold">normalized</tspan><tspan>: link +++ </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>12..15 </tspan><tspan class="italic">event</tspan><tspan class="dimmed">=</tspan><tspan>InlineHtml(Borrowed("&lt;T&gt;")) </tspan><tspan class="italic">parent</tspan><tspan class="dimmed">=</tspan><tspan>0..32 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md" </tspan><tspan class="italic dimmed">link</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>24..40</tspan>
 </tspan>
-    <tspan x="10px" y="2080px"><tspan>                            username: "",</tspan>
+    <tspan x="10px" y="2080px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>:</tspan><tspan class="bold">normalized</tspan><tspan>: link &lt;&lt;&lt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>0..32 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md" </tspan><tspan class="italic dimmed">link</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>24..40</tspan>
 </tspan>
-    <tspan x="10px" y="2098px"><tspan>                            password: None,</tspan>
+    <tspan x="10px" y="2098px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: resolved manifest dir: [TEST_DIR]/debug_logs</tspan>
 </tspan>
-    <tspan x="10px" y="2116px"><tspan>                            host: Some(</tspan>
+    <tspan x="10px" y="2116px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: running build #1 [aarch64-unknown-linux-gnu]</tspan>
 </tspan>
-    <tspan x="10px" y="2134px"><tspan>                                Domain(</tspan>
+    <tspan x="10px" y="2134px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">preparing</tspan>
 </tspan>
-    <tspan x="10px" y="2152px"><tspan>                                    "docs.rs",</tspan>
+    <tspan x="10px" y="2152px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: cargo metadata </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">preparing</tspan>
 </tspan>
-    <tspan x="10px" y="2170px"><tspan>                                ),</tspan>
+    <tspan x="10px" y="2170px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: resolving packages </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">preparing</tspan>
 </tspan>
-    <tspan x="10px" y="2188px"><tspan>                            ),</tspan>
+    <tspan x="10px" y="2188px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved options: Builder {</tspan>
 </tspan>
-    <tspan x="10px" y="2206px"><tspan>                            port: None,</tspan>
+    <tspan x="10px" y="2206px"><tspan>    targets: [</tspan>
 </tspan>
-    <tspan x="10px" y="2224px"><tspan>                            path: "/%7Bpkg_name%7D/%7Bversion%7D/",</tspan>
+    <tspan x="10px" y="2224px"><tspan>        "aarch64-unknown-linux-gnu",</tspan>
 </tspan>
-    <tspan x="10px" y="2242px"><tspan>                            query: None,</tspan>
+    <tspan x="10px" y="2242px"><tspan>    ],</tspan>
 </tspan>
-    <tspan x="10px" y="2260px"><tspan>                            fragment: None,</tspan>
+    <tspan x="10px" y="2260px"><tspan>    options: BuildOptions {</tspan>
 </tspan>
-    <tspan x="10px" y="2278px"><tspan>                        },</tspan>
+    <tspan x="10px" y="2278px"><tspan>        preludes: None,</tspan>
 </tspan>
-    <tspan x="10px" y="2296px"><tspan>                    ),</tspan>
+    <tspan x="10px" y="2296px"><tspan>        packages: None,</tspan>
 </tspan>
-    <tspan x="10px" y="2314px"><tspan>                ),</tspan>
+    <tspan x="10px" y="2314px"><tspan>        features: FeatureSelection {</tspan>
 </tspan>
-    <tspan x="10px" y="2332px"><tspan>            },</tspan>
+    <tspan x="10px" y="2332px"><tspan>            features: [],</tspan>
 </tspan>
-    <tspan x="10px" y="2350px"><tspan>        },</tspan>
+    <tspan x="10px" y="2350px"><tspan>            all_features: None,</tspan>
 </tspan>
-    <tspan x="10px" y="2368px"><tspan>        fail_on_warnings: Unspecified,</tspan>
+    <tspan x="10px" y="2368px"><tspan>            no_default_features: None,</tspan>
 </tspan>
-    <tspan x="10px" y="2386px"><tspan>    },</tspan>
+    <tspan x="10px" y="2386px"><tspan>        },</tspan>
 </tspan>
-    <tspan x="10px" y="2404px"><tspan>)</tspan>
+    <tspan x="10px" y="2404px"><tspan>        rustc_args: [],</tspan>
 </tspan>
-    <tspan x="10px" y="2422px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link &gt;&gt;&gt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>2..11 </tspan><tspan class="italic">dest</tspan><tspan class="dimmed">=</tspan><tspan>"fancy" </tspan><tspan class="italic">title</tspan><tspan class="dimmed">=</tspan><tspan>"fancy" </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
+    <tspan x="10px" y="2422px"><tspan>        rustdoc_args: [],</tspan>
 </tspan>
-    <tspan x="10px" y="2440px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link +++ </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>3..10 </tspan><tspan class="italic">event</tspan><tspan class="dimmed">=</tspan><tspan>Code(Borrowed("fancy")) </tspan><tspan class="italic">parent</tspan><tspan class="dimmed">=</tspan><tspan>2..11 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
+    <tspan x="10px" y="2440px"><tspan>        cargo: CargoOptions {</tspan>
 </tspan>
-    <tspan x="10px" y="2458px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link &lt;&lt;&lt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>2..11 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
+    <tspan x="10px" y="2458px"><tspan>            toolchain: None,</tspan>
 </tspan>
-    <tspan x="10px" y="2476px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link &gt;&gt;&gt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>14..21 </tspan><tspan class="italic">dest</tspan><tspan class="dimmed">=</tspan><tspan>"f80" </tspan><tspan class="italic">title</tspan><tspan class="dimmed">=</tspan><tspan>"f80" </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
+    <tspan x="10px" y="2476px"><tspan>            cargo_args: [],</tspan>
 </tspan>
-    <tspan x="10px" y="2494px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link +++ </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>15..20 </tspan><tspan class="italic">event</tspan><tspan class="dimmed">=</tspan><tspan>Code(Borrowed("f80")) </tspan><tspan class="italic">parent</tspan><tspan class="dimmed">=</tspan><tspan>14..21 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
+    <tspan x="10px" y="2494px"><tspan>            runner: CommandRunner(</tspan>
 </tspan>
-    <tspan x="10px" y="2512px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link &lt;&lt;&lt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>14..21 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
+    <tspan x="10px" y="2512px"><tspan>                None,</tspan>
 </tspan>
-    <tspan x="10px" y="2530px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link &gt;&gt;&gt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>24..40 </tspan><tspan class="italic">dest</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic">title</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
+    <tspan x="10px" y="2530px"><tspan>            ),</tspan>
 </tspan>
-    <tspan x="10px" y="2548px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link +++ </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>25..36 </tspan><tspan class="italic">event</tspan><tspan class="dimmed">=</tspan><tspan>Text(Borrowed("PhantomData")) </tspan><tspan class="italic">parent</tspan><tspan class="dimmed">=</tspan><tspan>24..40 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
+    <tspan x="10px" y="2548px"><tspan>        },</tspan>
 </tspan>
-    <tspan x="10px" y="2566px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link +++ </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>36..39 </tspan><tspan class="italic">event</tspan><tspan class="dimmed">=</tspan><tspan>InlineHtml(Borrowed("&lt;T&gt;")) </tspan><tspan class="italic">parent</tspan><tspan class="dimmed">=</tspan><tspan>24..40 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
+    <tspan x="10px" y="2566px"><tspan>        docs_rs: None,</tspan>
 </tspan>
-    <tspan x="10px" y="2584px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>: link &lt;&lt;&lt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>24..40 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md"</tspan>
+    <tspan x="10px" y="2584px"><tspan>    },</tspan>
 </tspan>
-    <tspan x="10px" y="2602px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>:</tspan><tspan class="bold">normalized</tspan><tspan>: link &gt;&gt;&gt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>0..32 </tspan><tspan class="italic">dest</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic">title</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md" </tspan><tspan class="italic dimmed">link</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>24..40</tspan>
+    <tspan x="10px" y="2602px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="2620px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>:</tspan><tspan class="bold">normalized</tspan><tspan>: link +++ </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>1..12 </tspan><tspan class="italic">event</tspan><tspan class="dimmed">=</tspan><tspan>Text(Borrowed("PhantomData")) </tspan><tspan class="italic">parent</tspan><tspan class="dimmed">=</tspan><tspan>0..32 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md" </tspan><tspan class="italic dimmed">link</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>24..40</tspan>
+    <tspan x="10px" y="2620px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved packages: {</tspan>
 </tspan>
-    <tspan x="10px" y="2638px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>:</tspan><tspan class="bold">normalized</tspan><tspan>: link +++ </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>12..15 </tspan><tspan class="italic">event</tspan><tspan class="dimmed">=</tspan><tspan>InlineHtml(Borrowed("&lt;T&gt;")) </tspan><tspan class="italic">parent</tspan><tspan class="dimmed">=</tspan><tspan>0..32 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md" </tspan><tspan class="italic dimmed">link</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>24..40</tspan>
+    <tspan x="10px" y="2638px"><tspan>    debug_logs@0.1.0,</tspan>
 </tspan>
-    <tspan x="10px" y="2656px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">page_read</tspan><tspan>:</tspan><tspan class="bold">normalized</tspan><tspan>: link &lt;&lt;&lt; </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>0..32 </tspan><tspan class="italic dimmed">file</tspan><tspan class="dimmed">=</tspan><tspan>"file://[TEST_DIR]/debug_logs/src/index.md" </tspan><tspan class="italic dimmed">link</tspan><tspan class="dimmed">=</tspan><tspan>"PhantomData&lt;T&gt;" </tspan><tspan class="italic">span</tspan><tspan class="dimmed">=</tspan><tspan>24..40</tspan>
+    <tspan x="10px" y="2656px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="2674px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: resolved manifest dir: [TEST_DIR]/debug_logs</tspan>
+    <tspan x="10px" y="2674px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved preludes: [</tspan>
 </tspan>
-    <tspan x="10px" y="2692px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: running build #1 [aarch64-unknown-linux-gnu]</tspan>
+    <tspan x="10px" y="2692px"><tspan>    "debug_logs::*",</tspan>
 </tspan>
-    <tspan x="10px" y="2710px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">preparing</tspan>
+    <tspan x="10px" y="2710px"><tspan>] </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="2728px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: cargo metadata </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">preparing</tspan>
+    <tspan x="10px" y="2728px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved path mappings: PathMapper {</tspan>
 </tspan>
-    <tspan x="10px" y="2746px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: resolving packages </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">preparing</tspan>
+    <tspan x="10px" y="2746px"><tspan>    target: "[TEST_DIR]/debug_logs/target",</tspan>
 </tspan>
-    <tspan x="10px" y="2764px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved options: Builder {</tspan>
+    <tspan x="10px" y="2764px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="2782px"><tspan>    targets: [</tspan>
+    <tspan x="10px" y="2782px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-doc</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">cargo doc</tspan>
 </tspan>
-    <tspan x="10px" y="2800px"><tspan>        "aarch64-unknown-linux-gnu",</tspan>
+    <tspan x="10px" y="2800px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: [], filenames: ["[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/doc/debug_logs/index.html"], executable: None, fresh: false }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="2818px"><tspan>    ],</tspan>
+    <tspan x="10px" y="2818px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: BuildFinished(BuildFinished { success: true }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="2836px"><tspan>    options: BuildOptions {</tspan>
+    <tspan x="10px" y="2836px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-check</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">cargo check</tspan>
 </tspan>
-    <tspan x="10px" y="2854px"><tspan>        preludes: None,</tspan>
+    <tspan x="10px" y="2854px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: [], filenames: ["[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/debug/deps/libdebug_logs-[BUILD_HASH].rmeta"], executable: None, fresh: false }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="2872px"><tspan>        packages: None,</tspan>
+    <tspan x="10px" y="2872px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: BuildFinished(BuildFinished { success: true }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="2890px"><tspan>        features: FeatureSelection {</tspan>
+    <tspan x="10px" y="2890px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: CompilerOutput {</tspan>
 </tspan>
-    <tspan x="10px" y="2908px"><tspan>            features: [],</tspan>
+    <tspan x="10px" y="2908px"><tspan>    targets: {</tspan>
 </tspan>
-    <tspan x="10px" y="2926px"><tspan>            all_features: None,</tspan>
+    <tspan x="10px" y="2926px"><tspan>        "aarch64-unknown-linux-gnu",</tspan>
 </tspan>
-    <tspan x="10px" y="2944px"><tspan>            no_default_features: None,</tspan>
+    <tspan x="10px" y="2944px"><tspan>    },</tspan>
 </tspan>
-    <tspan x="10px" y="2962px"><tspan>        },</tspan>
+    <tspan x="10px" y="2962px"><tspan>    crates: {</tspan>
 </tspan>
-    <tspan x="10px" y="2980px"><tspan>        rustc_args: [],</tspan>
+    <tspan x="10px" y="2980px"><tspan>        "debug_logs": PackageId {</tspan>
 </tspan>
-    <tspan x="10px" y="2998px"><tspan>        rustdoc_args: [],</tspan>
+    <tspan x="10px" y="2998px"><tspan>            repr: "path+file://[TEST_DIR]/debug_logs#0.1.0",</tspan>
 </tspan>
-    <tspan x="10px" y="3016px"><tspan>        cargo: CargoOptions {</tspan>
+    <tspan x="10px" y="3016px"><tspan>        },</tspan>
 </tspan>
-    <tspan x="10px" y="3034px"><tspan>            toolchain: None,</tspan>
+    <tspan x="10px" y="3034px"><tspan>    },</tspan>
 </tspan>
-    <tspan x="10px" y="3052px"><tspan>            cargo_args: [],</tspan>
+    <tspan x="10px" y="3052px"><tspan>    libs: {</tspan>
 </tspan>
-    <tspan x="10px" y="3070px"><tspan>            runner: CommandRunner(</tspan>
+    <tspan x="10px" y="3070px"><tspan>        "debug_logs [aarch64-unknown-linux-gnu]": "aarch64-unknown-linux-gnu/debug/deps/libdebug_logs-[BUILD_HASH].rmeta",</tspan>
 </tspan>
-    <tspan x="10px" y="3088px"><tspan>                None,</tspan>
+    <tspan x="10px" y="3088px"><tspan>    },</tspan>
 </tspan>
-    <tspan x="10px" y="3106px"><tspan>            ),</tspan>
+    <tspan x="10px" y="3106px"><tspan>    docs: {</tspan>
 </tspan>
-    <tspan x="10px" y="3124px"><tspan>        },</tspan>
+    <tspan x="10px" y="3124px"><tspan>        "debug_logs [aarch64-unknown-linux-gnu]": "aarch64-unknown-linux-gnu/doc/debug_logs/index.html",</tspan>
 </tspan>
-    <tspan x="10px" y="3142px"><tspan>        docs_rs: None,</tspan>
+    <tspan x="10px" y="3142px"><tspan>    },</tspan>
 </tspan>
-    <tspan x="10px" y="3160px"><tspan>    },</tspan>
+    <tspan x="10px" y="3160px"><tspan>    paths: PathMapper {</tspan>
 </tspan>
-    <tspan x="10px" y="3178px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="3178px"><tspan>        target: "[TEST_DIR]/debug_logs/target",</tspan>
 </tspan>
-    <tspan x="10px" y="3196px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved packages: {</tspan>
+    <tspan x="10px" y="3196px"><tspan>    },</tspan>
 </tspan>
-    <tspan x="10px" y="3214px"><tspan>    debug_logs@0.1.0,</tspan>
+    <tspan x="10px" y="3214px"><tspan>    ..</tspan>
 </tspan>
     <tspan x="10px" y="3232px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="3250px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved preludes: [</tspan>
+    <tspan x="10px" y="3250px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: rustdoc input:</tspan>
 </tspan>
-    <tspan x="10px" y="3268px"><tspan>    "debug_logs::*",</tspan>
+    <tspan x="10px" y="3268px"><tspan>//! - &lt;span mdbook-rustdoc-links&gt;[`fancy`]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="3286px"><tspan>] </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="3286px"><tspan>//! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="3304px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved path mappings: PathMapper {</tspan>
+    <tspan x="10px" y="3304px"><tspan>//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="3322px"><tspan>    target: "[TEST_DIR]/debug_logs/target",</tspan>
+    <tspan x="10px" y="3322px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="3340px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="3340px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">rustdoc</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">rustdoc [aarch64-unknown-linux-gnu]</tspan>
 </tspan>
-    <tspan x="10px" y="3358px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-doc</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">cargo doc</tspan>
+    <tspan x="10px" y="3358px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: --- rustdoc stderr</tspan>
 </tspan>
-    <tspan x="10px" y="3376px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: [], filenames: ["[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/doc/debug_logs/index.html"], executable: None, fresh: false }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="3376px"><tspan>{"$message_type":"diagnostic","message":"unresolved link to `fancy`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":35,"byte_end":40,"line_start":1,"line_end":1,"column_start":36,"column_end":41,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[`fancy`]&lt;/span&gt;","highlight_start":36,"highlight_end":41}],"label":"no item named `fancy` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null},{"message":"`#[warn(rustdoc::broken_intra_doc_links)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `fancy`\n --&gt; &lt;anon&gt;:1:36/n  |\n1 | //! - &lt;span mdbook-rustdoc-links&gt;[`fancy`]&lt;/span&gt;\n  |                                    ^^^^^ no item named `fancy` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default/n\n"}</tspan>
 </tspan>
-    <tspan x="10px" y="3394px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: BuildFinished(BuildFinished { success: true }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="3394px"><tspan>{"$message_type":"diagnostic","message":"unresolved link to `f80`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":85,"byte_end":88,"line_start":2,"line_end":2,"column_start":36,"column_end":39,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;","highlight_start":36,"highlight_end":39}],"label":"no item named `f80` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `f80`\n --&gt; &lt;anon&gt;:2:36/n  |\n2 | //! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;\n  |                                    ^^^ no item named `f80` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n/n"}</tspan>
 </tspan>
-    <tspan x="10px" y="3412px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-check</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">cargo check</tspan>
+    <tspan x="10px" y="3412px"><tspan>{"$message_type":"diagnostic","message":"unresolved link to `PhantomData`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":148,"byte_end":162,"line_start":3,"line_end":3,"column_start":51,"column_end":65,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":51,"highlight_end":65}],"label":"no item named `PhantomData` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `PhantomData`\n --&gt; &lt;anon&gt;:3:51/n  |\n3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;\n  |                                                   ^^^^^^^^^^^^^^ no item named `PhantomData` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n/n"}</tspan>
 </tspan>
-    <tspan x="10px" y="3430px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: [], filenames: ["[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/debug/deps/libdebug_logs-[BUILD_HASH].rmeta"], executable: None, fresh: false }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="3430px"><tspan>{"$message_type":"diagnostic","message":"unclosed HTML tag `T`","code":{"code":"rustdoc::invalid_html_tags","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":143,"byte_end":146,"line_start":3,"line_end":3,"column_start":46,"column_end":49,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":46,"highlight_end":49}],"label":null,"suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"`#[warn(rustdoc::invalid_html_tags)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null},{"message":"try marking as source code","code":null,"level":"help","spans":[{"file_name":"&lt;anon&gt;","byte_start":132,"byte_end":132,"line_start":3,"line_end":3,"column_start":35,"column_end":35,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":35,"highlight_end":35}],"label":null,"suggested_replacement":"`","suggestion_applicability":"MaybeIncorrect","expansion":null},{"file_name":"&lt;anon&gt;","byte_start":146,"byte_end":146,"line_start":3,"line_end":3,"column_start":49,"column_end":49,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":49,"highlight_end":49}],"label":null,"suggested_replacement":"`","suggestion_applicability":"MaybeIncorrect","expansion":null}],"children":[],"rendered":null}],"rendered":"warning: unclosed HTML tag `T`\n --&gt; &lt;anon&gt;:3:46/n  |\n3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;\n  |                                              ^^^\n  |\n  = note: `#[warn(rustdoc::invalid_html_tags)]` on by default/nhelp: try marking as source code/n  |\n3 | //! - &lt;span mdbook-rustdoc-links&gt;[`PhantomData&lt;T&gt;`][PhantomData&lt;T&gt;]&lt;/span&gt;\n  |                                   +              +\n/n"}</tspan>
 </tspan>
-    <tspan x="10px" y="3448px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: BuildFinished(BuildFinished { success: true }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="3448px"><tspan>{"$message_type":"diagnostic","message":"4 warnings emitted","code":null,"level":"warning","spans":[],"children":[],"rendered":"warning: 4 warnings emitted/n\n"} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="3466px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: CompilerOutput {</tspan>
+    <tspan x="10px" y="3466px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 1, link "fancy", warning: unresolved link to `fancy`</tspan>
 </tspan>
-    <tspan x="10px" y="3484px"><tspan>    targets: {</tspan>
+    <tspan x="10px" y="3484px"><tspan> --&gt; &lt;anon&gt;:1:36</tspan>
 </tspan>
-    <tspan x="10px" y="3502px"><tspan>        "aarch64-unknown-linux-gnu",</tspan>
+    <tspan x="10px" y="3502px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="3520px"><tspan>    },</tspan>
+    <tspan x="10px" y="3520px"><tspan>1 | //! - &lt;span mdbook-rustdoc-links&gt;[`fancy`]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="3538px"><tspan>    crates: {</tspan>
+    <tspan x="10px" y="3538px"><tspan>  |                                    ^^^^^ no item named `fancy` in scope</tspan>
 </tspan>
-    <tspan x="10px" y="3556px"><tspan>        "debug_logs": PackageId {</tspan>
+    <tspan x="10px" y="3556px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="3574px"><tspan>            repr: "path+file://[TEST_DIR]/debug_logs#0.1.0",</tspan>
+    <tspan x="10px" y="3574px"><tspan>  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`</tspan>
 </tspan>
-    <tspan x="10px" y="3592px"><tspan>        },</tspan>
+    <tspan x="10px" y="3592px"><tspan>  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default</tspan>
 </tspan>
-    <tspan x="10px" y="3610px"><tspan>    },</tspan>
+    <tspan x="10px" y="3610px">
 </tspan>
-    <tspan x="10px" y="3628px"><tspan>    libs: {</tspan>
+    <tspan x="10px" y="3628px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="3646px"><tspan>        "debug_logs [aarch64-unknown-linux-gnu]": "aarch64-unknown-linux-gnu/debug/deps/libdebug_logs-[BUILD_HASH].rmeta",</tspan>
+    <tspan x="10px" y="3646px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 2, link "f80", warning: unresolved link to `f80`</tspan>
 </tspan>
-    <tspan x="10px" y="3664px"><tspan>    },</tspan>
+    <tspan x="10px" y="3664px"><tspan> --&gt; &lt;anon&gt;:2:36</tspan>
 </tspan>
-    <tspan x="10px" y="3682px"><tspan>    docs: {</tspan>
+    <tspan x="10px" y="3682px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="3700px"><tspan>        "debug_logs [aarch64-unknown-linux-gnu]": "aarch64-unknown-linux-gnu/doc/debug_logs/index.html",</tspan>
+    <tspan x="10px" y="3700px"><tspan>2 | //! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="3718px"><tspan>    },</tspan>
+    <tspan x="10px" y="3718px"><tspan>  |                                    ^^^ no item named `f80` in scope</tspan>
 </tspan>
-    <tspan x="10px" y="3736px"><tspan>    paths: PathMapper {</tspan>
+    <tspan x="10px" y="3736px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="3754px"><tspan>        target: "[TEST_DIR]/debug_logs/target",</tspan>
+    <tspan x="10px" y="3754px"><tspan>  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`</tspan>
 </tspan>
-    <tspan x="10px" y="3772px"><tspan>    },</tspan>
+    <tspan x="10px" y="3772px">
 </tspan>
-    <tspan x="10px" y="3790px"><tspan>    ..</tspan>
+    <tspan x="10px" y="3790px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="3808px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="3808px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 3, link "PhantomData&lt;T&gt;", warning: unresolved link to `PhantomData`</tspan>
 </tspan>
-    <tspan x="10px" y="3826px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: rustdoc input:</tspan>
+    <tspan x="10px" y="3826px"><tspan> --&gt; &lt;anon&gt;:3:51</tspan>
 </tspan>
-    <tspan x="10px" y="3844px"><tspan>//! - &lt;span mdbook-rustdoc-links&gt;[`fancy`]&lt;/span&gt;</tspan>
+    <tspan x="10px" y="3844px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="3862px"><tspan>//! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;</tspan>
+    <tspan x="10px" y="3862px"><tspan>3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="3880px"><tspan>//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
+    <tspan x="10px" y="3880px"><tspan>  |                                                   ^^^^^^^^^^^^^^ no item named `PhantomData` in scope</tspan>
 </tspan>
-    <tspan x="10px" y="3898px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="3898px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="3916px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">rustdoc</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1 </tspan><tspan class="dimmed">rustdoc [aarch64-unknown-linux-gnu]</tspan>
+    <tspan x="10px" y="3916px"><tspan>  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`</tspan>
 </tspan>
-    <tspan x="10px" y="3934px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: --- rustdoc stderr</tspan>
+    <tspan x="10px" y="3934px">
 </tspan>
-    <tspan x="10px" y="3952px"><tspan>{"$message_type":"diagnostic","message":"unresolved link to `fancy`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":35,"byte_end":40,"line_start":1,"line_end":1,"column_start":36,"column_end":41,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[`fancy`]&lt;/span&gt;","highlight_start":36,"highlight_end":41}],"label":"no item named `fancy` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null},{"message":"`#[warn(rustdoc::broken_intra_doc_links)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `fancy`\n --&gt; &lt;anon&gt;:1:36/n  |\n1 | //! - &lt;span mdbook-rustdoc-links&gt;[`fancy`]&lt;/span&gt;\n  |                                    ^^^^^ no item named `fancy` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default/n\n"}</tspan>
+    <tspan x="10px" y="3952px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="3970px"><tspan>{"$message_type":"diagnostic","message":"unresolved link to `f80`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":85,"byte_end":88,"line_start":2,"line_end":2,"column_start":36,"column_end":39,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;","highlight_start":36,"highlight_end":39}],"label":"no item named `f80` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `f80`\n --&gt; &lt;anon&gt;:2:36/n  |\n2 | //! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;\n  |                                    ^^^ no item named `f80` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n/n"}</tspan>
+    <tspan x="10px" y="3970px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 3, link "PhantomData&lt;T&gt;", warning: unclosed HTML tag `T`</tspan>
 </tspan>
-    <tspan x="10px" y="3988px"><tspan>{"$message_type":"diagnostic","message":"unresolved link to `PhantomData`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":148,"byte_end":162,"line_start":3,"line_end":3,"column_start":51,"column_end":65,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":51,"highlight_end":65}],"label":"no item named `PhantomData` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `PhantomData`\n --&gt; &lt;anon&gt;:3:51/n  |\n3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;\n  |                                                   ^^^^^^^^^^^^^^ no item named `PhantomData` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n/n"}</tspan>
+    <tspan x="10px" y="3988px"><tspan> --&gt; &lt;anon&gt;:3:46</tspan>
 </tspan>
-    <tspan x="10px" y="4006px"><tspan>{"$message_type":"diagnostic","message":"unclosed HTML tag `T`","code":{"code":"rustdoc::invalid_html_tags","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":143,"byte_end":146,"line_start":3,"line_end":3,"column_start":46,"column_end":49,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":46,"highlight_end":49}],"label":null,"suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"`#[warn(rustdoc::invalid_html_tags)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null},{"message":"try marking as source code","code":null,"level":"help","spans":[{"file_name":"&lt;anon&gt;","byte_start":132,"byte_end":132,"line_start":3,"line_end":3,"column_start":35,"column_end":35,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":35,"highlight_end":35}],"label":null,"suggested_replacement":"`","suggestion_applicability":"MaybeIncorrect","expansion":null},{"file_name":"&lt;anon&gt;","byte_start":146,"byte_end":146,"line_start":3,"line_end":3,"column_start":49,"column_end":49,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":49,"highlight_end":49}],"label":null,"suggested_replacement":"`","suggestion_applicability":"MaybeIncorrect","expansion":null}],"children":[],"rendered":null}],"rendered":"warning: unclosed HTML tag `T`\n --&gt; &lt;anon&gt;:3:46/n  |\n3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;\n  |                                              ^^^\n  |\n  = note: `#[warn(rustdoc::invalid_html_tags)]` on by default/nhelp: try marking as source code/n  |\n3 | //! - &lt;span mdbook-rustdoc-links&gt;[`PhantomData&lt;T&gt;`][PhantomData&lt;T&gt;]&lt;/span&gt;\n  |                                   +              +\n/n"}</tspan>
+    <tspan x="10px" y="4006px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="4024px"><tspan>{"$message_type":"diagnostic","message":"4 warnings emitted","code":null,"level":"warning","spans":[],"children":[],"rendered":"warning: 4 warnings emitted/n\n"} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="4024px"><tspan>3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="4042px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 1, link "fancy", warning: unresolved link to `fancy`</tspan>
+    <tspan x="10px" y="4042px"><tspan>  |                                              ^^^</tspan>
 </tspan>
-    <tspan x="10px" y="4060px"><tspan> --&gt; &lt;anon&gt;:1:36</tspan>
+    <tspan x="10px" y="4060px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="4078px"><tspan>  |</tspan>
+    <tspan x="10px" y="4078px"><tspan>  = note: `#[warn(rustdoc::invalid_html_tags)]` on by default</tspan>
 </tspan>
-    <tspan x="10px" y="4096px"><tspan>1 | //! - &lt;span mdbook-rustdoc-links&gt;[`fancy`]&lt;/span&gt;</tspan>
+    <tspan x="10px" y="4096px"><tspan>help: try marking as source code</tspan>
 </tspan>
-    <tspan x="10px" y="4114px"><tspan>  |                                    ^^^^^ no item named `fancy` in scope</tspan>
+    <tspan x="10px" y="4114px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="4132px"><tspan>  |</tspan>
+    <tspan x="10px" y="4132px"><tspan>3 | //! - &lt;span mdbook-rustdoc-links&gt;[`PhantomData&lt;T&gt;`][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="4150px"><tspan>  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`</tspan>
+    <tspan x="10px" y="4150px"><tspan>  |                                   +              +</tspan>
 </tspan>
-    <tspan x="10px" y="4168px"><tspan>  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default</tspan>
+    <tspan x="10px" y="4168px">
 </tspan>
-    <tspan x="10px" y="4186px">
+    <tspan x="10px" y="4186px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="4204px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="4204px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: could not determine primary line</tspan>
 </tspan>
-    <tspan x="10px" y="4222px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 2, link "f80", warning: unresolved link to `f80`</tspan>
+    <tspan x="10px" y="4222px">
 </tspan>
-    <tspan x="10px" y="4240px"><tspan> --&gt; &lt;anon&gt;:2:36</tspan>
+    <tspan x="10px" y="4240px"><tspan>Caused by:</tspan>
 </tspan>
-    <tspan x="10px" y="4258px"><tspan>  |</tspan>
+    <tspan x="10px" y="4258px"><tspan>    Diagnostic { message: "4 warnings emitted", code: None, level: Warning, spans: [], children: [], rendered: Some("warning: 4 warnings emitted/n\n") } </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
 </tspan>
-    <tspan x="10px" y="4276px"><tspan>2 | //! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;</tspan>
+    <tspan x="10px" y="4276px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: build #1 done</tspan>
 </tspan>
-    <tspan x="10px" y="4294px"><tspan>  |                                    ^^^ no item named `f80` in scope</tspan>
+    <tspan x="10px" y="4294px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: running build #2 [default targets, "fancy", workspace members, (additional options), ..]</tspan>
 </tspan>
-    <tspan x="10px" y="4312px"><tspan>  |</tspan>
+    <tspan x="10px" y="4312px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">preparing</tspan>
 </tspan>
-    <tspan x="10px" y="4330px"><tspan>  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`</tspan>
+    <tspan x="10px" y="4330px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: cargo metadata </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">preparing</tspan>
 </tspan>
-    <tspan x="10px" y="4348px">
+    <tspan x="10px" y="4348px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: resolving packages </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">preparing</tspan>
 </tspan>
-    <tspan x="10px" y="4366px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="4366px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved options: Builder {</tspan>
 </tspan>
-    <tspan x="10px" y="4384px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 3, link "PhantomData&lt;T&gt;", warning: unresolved link to `PhantomData`</tspan>
+    <tspan x="10px" y="4384px"><tspan>    targets: [],</tspan>
 </tspan>
-    <tspan x="10px" y="4402px"><tspan> --&gt; &lt;anon&gt;:3:51</tspan>
+    <tspan x="10px" y="4402px"><tspan>    options: BuildOptions {</tspan>
 </tspan>
-    <tspan x="10px" y="4420px"><tspan>  |</tspan>
+    <tspan x="10px" y="4420px"><tspan>        preludes: None,</tspan>
 </tspan>
-    <tspan x="10px" y="4438px"><tspan>3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
+    <tspan x="10px" y="4438px"><tspan>        packages: Some(</tspan>
 </tspan>
-    <tspan x="10px" y="4456px"><tspan>  |                                                   ^^^^^^^^^^^^^^ no item named `PhantomData` in scope</tspan>
+    <tspan x="10px" y="4456px"><tspan>            [</tspan>
 </tspan>
-    <tspan x="10px" y="4474px"><tspan>  |</tspan>
+    <tspan x="10px" y="4474px"><tspan>                Selector(</tspan>
 </tspan>
-    <tspan x="10px" y="4492px"><tspan>  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`</tspan>
+    <tspan x="10px" y="4492px"><tspan>                    PackageSelector {</tspan>
 </tspan>
-    <tspan x="10px" y="4510px">
+    <tspan x="10px" y="4510px"><tspan>                        name: None,</tspan>
 </tspan>
-    <tspan x="10px" y="4528px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="4528px"><tspan>                        workspace: Default,</tspan>
 </tspan>
-    <tspan x="10px" y="4546px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 3, link "PhantomData&lt;T&gt;", warning: unclosed HTML tag `T`</tspan>
+    <tspan x="10px" y="4546px"><tspan>                        dependencies: false,</tspan>
 </tspan>
-    <tspan x="10px" y="4564px"><tspan> --&gt; &lt;anon&gt;:3:46</tspan>
+    <tspan x="10px" y="4564px"><tspan>                    },</tspan>
 </tspan>
-    <tspan x="10px" y="4582px"><tspan>  |</tspan>
+    <tspan x="10px" y="4582px"><tspan>                ),</tspan>
 </tspan>
-    <tspan x="10px" y="4600px"><tspan>3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
+    <tspan x="10px" y="4600px"><tspan>            ],</tspan>
 </tspan>
-    <tspan x="10px" y="4618px"><tspan>  |                                              ^^^</tspan>
+    <tspan x="10px" y="4618px"><tspan>        ),</tspan>
 </tspan>
-    <tspan x="10px" y="4636px"><tspan>  |</tspan>
+    <tspan x="10px" y="4636px"><tspan>        features: FeatureSelection {</tspan>
 </tspan>
-    <tspan x="10px" y="4654px"><tspan>  = note: `#[warn(rustdoc::invalid_html_tags)]` on by default</tspan>
+    <tspan x="10px" y="4654px"><tspan>            features: [</tspan>
 </tspan>
-    <tspan x="10px" y="4672px"><tspan>help: try marking as source code</tspan>
+    <tspan x="10px" y="4672px"><tspan>                "fancy",</tspan>
 </tspan>
-    <tspan x="10px" y="4690px"><tspan>  |</tspan>
+    <tspan x="10px" y="4690px"><tspan>            ],</tspan>
 </tspan>
-    <tspan x="10px" y="4708px"><tspan>3 | //! - &lt;span mdbook-rustdoc-links&gt;[`PhantomData&lt;T&gt;`][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
+    <tspan x="10px" y="4708px"><tspan>            all_features: None,</tspan>
 </tspan>
-    <tspan x="10px" y="4726px"><tspan>  |                                   +              +</tspan>
+    <tspan x="10px" y="4726px"><tspan>            no_default_features: None,</tspan>
 </tspan>
-    <tspan x="10px" y="4744px">
+    <tspan x="10px" y="4744px"><tspan>        },</tspan>
 </tspan>
-    <tspan x="10px" y="4762px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="4762px"><tspan>        rustc_args: [],</tspan>
 </tspan>
-    <tspan x="10px" y="4780px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: could not determine primary line</tspan>
+    <tspan x="10px" y="4780px"><tspan>        rustdoc_args: [],</tspan>
 </tspan>
-    <tspan x="10px" y="4798px">
+    <tspan x="10px" y="4798px"><tspan>        cargo: CargoOptions {</tspan>
 </tspan>
-    <tspan x="10px" y="4816px"><tspan>Caused by:</tspan>
+    <tspan x="10px" y="4816px"><tspan>            toolchain: None,</tspan>
 </tspan>
-    <tspan x="10px" y="4834px"><tspan>    Diagnostic { message: "4 warnings emitted", code: None, level: Warning, spans: [], children: [], rendered: Some("warning: 4 warnings emitted/n\n") } </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>1</tspan>
+    <tspan x="10px" y="4834px"><tspan>            cargo_args: [],</tspan>
 </tspan>
-    <tspan x="10px" y="4852px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: build #1 done</tspan>
+    <tspan x="10px" y="4852px"><tspan>            runner: CommandRunner(</tspan>
 </tspan>
-    <tspan x="10px" y="4870px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: running build #2 [default targets, "fancy", workspace members, (additional options), ..]</tspan>
+    <tspan x="10px" y="4870px"><tspan>                Some(</tspan>
 </tspan>
-    <tspan x="10px" y="4888px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">preparing</tspan>
+    <tspan x="10px" y="4888px"><tspan>                    CustomCommand(</tspan>
 </tspan>
-    <tspan x="10px" y="4906px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: cargo metadata </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">preparing</tspan>
+    <tspan x="10px" y="4906px"><tspan>                        "bash" "-c" "$*",</tspan>
 </tspan>
-    <tspan x="10px" y="4924px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: resolving packages </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">preparing</tspan>
+    <tspan x="10px" y="4924px"><tspan>                    ),</tspan>
 </tspan>
-    <tspan x="10px" y="4942px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved options: Builder {</tspan>
+    <tspan x="10px" y="4942px"><tspan>                ),</tspan>
 </tspan>
-    <tspan x="10px" y="4960px"><tspan>    targets: [],</tspan>
+    <tspan x="10px" y="4960px"><tspan>            ),</tspan>
 </tspan>
-    <tspan x="10px" y="4978px"><tspan>    options: BuildOptions {</tspan>
+    <tspan x="10px" y="4978px"><tspan>        },</tspan>
 </tspan>
-    <tspan x="10px" y="4996px"><tspan>        preludes: None,</tspan>
+    <tspan x="10px" y="4996px"><tspan>        docs_rs: None,</tspan>
 </tspan>
-    <tspan x="10px" y="5014px"><tspan>        packages: Some(</tspan>
+    <tspan x="10px" y="5014px"><tspan>    },</tspan>
 </tspan>
-    <tspan x="10px" y="5032px"><tspan>            [</tspan>
+    <tspan x="10px" y="5032px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="5050px"><tspan>                Selector(</tspan>
+    <tspan x="10px" y="5050px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved packages: {</tspan>
 </tspan>
-    <tspan x="10px" y="5068px"><tspan>                    PackageSelector {</tspan>
+    <tspan x="10px" y="5068px"><tspan>    debug_logs@0.1.0,</tspan>
 </tspan>
-    <tspan x="10px" y="5086px"><tspan>                        name: None,</tspan>
+    <tspan x="10px" y="5086px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="5104px"><tspan>                        workspace: Default,</tspan>
+    <tspan x="10px" y="5104px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved preludes: [</tspan>
 </tspan>
-    <tspan x="10px" y="5122px"><tspan>                        dependencies: false,</tspan>
+    <tspan x="10px" y="5122px"><tspan>    "debug_logs::*",</tspan>
 </tspan>
-    <tspan x="10px" y="5140px"><tspan>                    },</tspan>
+    <tspan x="10px" y="5140px"><tspan>] </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="5158px"><tspan>                ),</tspan>
+    <tspan x="10px" y="5158px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: cargo metadata </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">preparing</tspan>
 </tspan>
-    <tspan x="10px" y="5176px"><tspan>            ],</tspan>
+    <tspan x="10px" y="5176px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved path mappings: PathMapper {</tspan>
 </tspan>
-    <tspan x="10px" y="5194px"><tspan>        ),</tspan>
+    <tspan x="10px" y="5194px"><tspan>    target: "[TEST_DIR]/debug_logs/target":"[TEST_DIR]/debug_logs/target",</tspan>
 </tspan>
-    <tspan x="10px" y="5212px"><tspan>        features: FeatureSelection {</tspan>
+    <tspan x="10px" y="5212px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="5230px"><tspan>            features: [</tspan>
+    <tspan x="10px" y="5230px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-doc</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">cargo doc</tspan>
 </tspan>
-    <tspan x="10px" y="5248px"><tspan>                "fancy",</tspan>
+    <tspan x="10px" y="5248px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: ["fancy"], filenames: ["[TEST_DIR]/debug_logs/target/doc/debug_logs/index.html"], executable: None, fresh: false }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="5266px"><tspan>            ],</tspan>
+    <tspan x="10px" y="5266px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: BuildFinished(BuildFinished { success: true }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="5284px"><tspan>            all_features: None,</tspan>
+    <tspan x="10px" y="5284px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-check</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">cargo check</tspan>
 </tspan>
-    <tspan x="10px" y="5302px"><tspan>            no_default_features: None,</tspan>
+    <tspan x="10px" y="5302px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: ["fancy"], filenames: ["[TEST_DIR]/debug_logs/target/debug/deps/libdebug_logs-[BUILD_HASH].rmeta"], executable: None, fresh: false }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="5320px"><tspan>        },</tspan>
+    <tspan x="10px" y="5320px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: BuildFinished(BuildFinished { success: true }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="5338px"><tspan>        rustc_args: [],</tspan>
+    <tspan x="10px" y="5338px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: CompilerOutput {</tspan>
 </tspan>
-    <tspan x="10px" y="5356px"><tspan>        rustdoc_args: [],</tspan>
+    <tspan x="10px" y="5356px"><tspan>    targets: {},</tspan>
 </tspan>
-    <tspan x="10px" y="5374px"><tspan>        cargo: CargoOptions {</tspan>
+    <tspan x="10px" y="5374px"><tspan>    crates: {</tspan>
 </tspan>
-    <tspan x="10px" y="5392px"><tspan>            toolchain: None,</tspan>
+    <tspan x="10px" y="5392px"><tspan>        "debug_logs": PackageId {</tspan>
 </tspan>
-    <tspan x="10px" y="5410px"><tspan>            cargo_args: [],</tspan>
+    <tspan x="10px" y="5410px"><tspan>            repr: "path+file://[TEST_DIR]/debug_logs#0.1.0",</tspan>
 </tspan>
-    <tspan x="10px" y="5428px"><tspan>            runner: CommandRunner(</tspan>
+    <tspan x="10px" y="5428px"><tspan>        },</tspan>
 </tspan>
-    <tspan x="10px" y="5446px"><tspan>                Some(</tspan>
+    <tspan x="10px" y="5446px"><tspan>    },</tspan>
 </tspan>
-    <tspan x="10px" y="5464px"><tspan>                    CustomCommand(</tspan>
+    <tspan x="10px" y="5464px"><tspan>    libs: {</tspan>
 </tspan>
-    <tspan x="10px" y="5482px"><tspan>                        "bash" "-c" "$*",</tspan>
+    <tspan x="10px" y="5482px"><tspan>        "debug_logs [*]": "debug/deps/libdebug_logs-[BUILD_HASH].rmeta",</tspan>
 </tspan>
-    <tspan x="10px" y="5500px"><tspan>                    ),</tspan>
+    <tspan x="10px" y="5500px"><tspan>    },</tspan>
 </tspan>
-    <tspan x="10px" y="5518px"><tspan>                ),</tspan>
+    <tspan x="10px" y="5518px"><tspan>    docs: {</tspan>
 </tspan>
-    <tspan x="10px" y="5536px"><tspan>            ),</tspan>
+    <tspan x="10px" y="5536px"><tspan>        "debug_logs [*]": "doc/debug_logs/index.html",</tspan>
 </tspan>
-    <tspan x="10px" y="5554px"><tspan>        },</tspan>
+    <tspan x="10px" y="5554px"><tspan>    },</tspan>
 </tspan>
-    <tspan x="10px" y="5572px"><tspan>        docs_rs: None,</tspan>
+    <tspan x="10px" y="5572px"><tspan>    paths: PathMapper {</tspan>
 </tspan>
-    <tspan x="10px" y="5590px"><tspan>    },</tspan>
+    <tspan x="10px" y="5590px"><tspan>        target: "[TEST_DIR]/debug_logs/target":"[TEST_DIR]/debug_logs/target",</tspan>
 </tspan>
-    <tspan x="10px" y="5608px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
+    <tspan x="10px" y="5608px"><tspan>    },</tspan>
 </tspan>
-    <tspan x="10px" y="5626px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved packages: {</tspan>
+    <tspan x="10px" y="5626px"><tspan>    ..</tspan>
 </tspan>
-    <tspan x="10px" y="5644px"><tspan>    debug_logs@0.1.0,</tspan>
+    <tspan x="10px" y="5644px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="5662px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
+    <tspan x="10px" y="5662px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: rustdoc input:</tspan>
 </tspan>
-    <tspan x="10px" y="5680px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved preludes: [</tspan>
+    <tspan x="10px" y="5680px"><tspan>//! - &lt;span mdbook-rustdoc-links&gt;[`fancy`]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="5698px"><tspan>    "debug_logs::*",</tspan>
+    <tspan x="10px" y="5698px"><tspan>//! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="5716px"><tspan>] </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
+    <tspan x="10px" y="5716px"><tspan>//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="5734px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">prepare</tspan><tspan>: cargo metadata </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">preparing</tspan>
+    <tspan x="10px" y="5734px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="5752px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: resolved path mappings: PathMapper {</tspan>
+    <tspan x="10px" y="5752px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">rustdoc</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">rustdoc</tspan>
 </tspan>
-    <tspan x="10px" y="5770px"><tspan>    target: "[TEST_DIR]/debug_logs/target":"[TEST_DIR]/debug_logs/target",</tspan>
+    <tspan x="10px" y="5770px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: --- rustdoc stderr</tspan>
 </tspan>
-    <tspan x="10px" y="5788px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
+    <tspan x="10px" y="5788px"><tspan>{"$message_type":"diagnostic","message":"unresolved link to `f80`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":85,"byte_end":88,"line_start":2,"line_end":2,"column_start":36,"column_end":39,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;","highlight_start":36,"highlight_end":39}],"label":"no item named `f80` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null},{"message":"`#[warn(rustdoc::broken_intra_doc_links)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `f80`\n --&gt; &lt;anon&gt;:2:36/n  |\n2 | //! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;\n  |                                    ^^^ no item named `f80` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default/n\n"}</tspan>
 </tspan>
-    <tspan x="10px" y="5806px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-doc</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">cargo doc</tspan>
+    <tspan x="10px" y="5806px"><tspan>{"$message_type":"diagnostic","message":"unresolved link to `PhantomData`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":148,"byte_end":162,"line_start":3,"line_end":3,"column_start":51,"column_end":65,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":51,"highlight_end":65}],"label":"no item named `PhantomData` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `PhantomData`\n --&gt; &lt;anon&gt;:3:51/n  |\n3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;\n  |                                                   ^^^^^^^^^^^^^^ no item named `PhantomData` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n/n"}</tspan>
 </tspan>
-    <tspan x="10px" y="5824px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: ["fancy"], filenames: ["[TEST_DIR]/debug_logs/target/doc/debug_logs/index.html"], executable: None, fresh: false }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
+    <tspan x="10px" y="5824px"><tspan>{"$message_type":"diagnostic","message":"unclosed HTML tag `T`","code":{"code":"rustdoc::invalid_html_tags","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":143,"byte_end":146,"line_start":3,"line_end":3,"column_start":46,"column_end":49,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":46,"highlight_end":49}],"label":null,"suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"`#[warn(rustdoc::invalid_html_tags)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null},{"message":"try marking as source code","code":null,"level":"help","spans":[{"file_name":"&lt;anon&gt;","byte_start":132,"byte_end":132,"line_start":3,"line_end":3,"column_start":35,"column_end":35,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":35,"highlight_end":35}],"label":null,"suggested_replacement":"`","suggestion_applicability":"MaybeIncorrect","expansion":null},{"file_name":"&lt;anon&gt;","byte_start":146,"byte_end":146,"line_start":3,"line_end":3,"column_start":49,"column_end":49,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":49,"highlight_end":49}],"label":null,"suggested_replacement":"`","suggestion_applicability":"MaybeIncorrect","expansion":null}],"children":[],"rendered":null}],"rendered":"warning: unclosed HTML tag `T`\n --&gt; &lt;anon&gt;:3:46/n  |\n3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;\n  |                                              ^^^\n  |\n  = note: `#[warn(rustdoc::invalid_html_tags)]` on by default/nhelp: try marking as source code/n  |\n3 | //! - &lt;span mdbook-rustdoc-links&gt;[`PhantomData&lt;T&gt;`][PhantomData&lt;T&gt;]&lt;/span&gt;\n  |                                   +              +\n/n"}</tspan>
 </tspan>
-    <tspan x="10px" y="5842px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: BuildFinished(BuildFinished { success: true }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
+    <tspan x="10px" y="5842px"><tspan>{"$message_type":"diagnostic","message":"3 warnings emitted","code":null,"level":"warning","spans":[],"children":[],"rendered":"warning: 3 warnings emitted/n\n"} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="5860px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">cargo-check</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">cargo check</tspan>
+    <tspan x="10px" y="5860px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: Element { tag_name: "a", attributes: [Attribute { name: "href", value: "../debug_logs/fn.fancy.html" }, Attribute { name: "title", value: "fn debug_logs::fancy" }] } </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="5878px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: ["fancy"], filenames: ["[TEST_DIR]/debug_logs/target/debug/deps/libdebug_logs-[BUILD_HASH].rmeta"], executable: None, fresh: false }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
+    <tspan x="10px" y="5878px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 2, link "f80", warning: unresolved link to `f80`</tspan>
 </tspan>
-    <tspan x="10px" y="5896px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: BuildFinished(BuildFinished { success: true }) </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
+    <tspan x="10px" y="5896px"><tspan> --&gt; &lt;anon&gt;:2:36</tspan>
 </tspan>
-    <tspan x="10px" y="5914px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: CompilerOutput {</tspan>
+    <tspan x="10px" y="5914px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="5932px"><tspan>    targets: {},</tspan>
+    <tspan x="10px" y="5932px"><tspan>2 | //! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="5950px"><tspan>    crates: {</tspan>
+    <tspan x="10px" y="5950px"><tspan>  |                                    ^^^ no item named `f80` in scope</tspan>
 </tspan>
-    <tspan x="10px" y="5968px"><tspan>        "debug_logs": PackageId {</tspan>
+    <tspan x="10px" y="5968px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="5986px"><tspan>            repr: "path+file://[TEST_DIR]/debug_logs#0.1.0",</tspan>
+    <tspan x="10px" y="5986px"><tspan>  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`</tspan>
 </tspan>
-    <tspan x="10px" y="6004px"><tspan>        },</tspan>
+    <tspan x="10px" y="6004px"><tspan>  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default</tspan>
 </tspan>
-    <tspan x="10px" y="6022px"><tspan>    },</tspan>
+    <tspan x="10px" y="6022px">
 </tspan>
-    <tspan x="10px" y="6040px"><tspan>    libs: {</tspan>
+    <tspan x="10px" y="6040px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="6058px"><tspan>        "debug_logs [*]": "debug/deps/libdebug_logs-[BUILD_HASH].rmeta",</tspan>
+    <tspan x="10px" y="6058px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 3, link "PhantomData&lt;T&gt;", warning: unresolved link to `PhantomData`</tspan>
 </tspan>
-    <tspan x="10px" y="6076px"><tspan>    },</tspan>
+    <tspan x="10px" y="6076px"><tspan> --&gt; &lt;anon&gt;:3:51</tspan>
 </tspan>
-    <tspan x="10px" y="6094px"><tspan>    docs: {</tspan>
+    <tspan x="10px" y="6094px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="6112px"><tspan>        "debug_logs [*]": "doc/debug_logs/index.html",</tspan>
+    <tspan x="10px" y="6112px"><tspan>3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="6130px"><tspan>    },</tspan>
+    <tspan x="10px" y="6130px"><tspan>  |                                                   ^^^^^^^^^^^^^^ no item named `PhantomData` in scope</tspan>
 </tspan>
-    <tspan x="10px" y="6148px"><tspan>    paths: PathMapper {</tspan>
+    <tspan x="10px" y="6148px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="6166px"><tspan>        target: "[TEST_DIR]/debug_logs/target":"[TEST_DIR]/debug_logs/target",</tspan>
+    <tspan x="10px" y="6166px"><tspan>  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`</tspan>
 </tspan>
-    <tspan x="10px" y="6184px"><tspan>    },</tspan>
+    <tspan x="10px" y="6184px">
 </tspan>
-    <tspan x="10px" y="6202px"><tspan>    ..</tspan>
+    <tspan x="10px" y="6202px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="6220px"><tspan>} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
+    <tspan x="10px" y="6220px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 3, link "PhantomData&lt;T&gt;", warning: unclosed HTML tag `T`</tspan>
 </tspan>
-    <tspan x="10px" y="6238px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: rustdoc input:</tspan>
+    <tspan x="10px" y="6238px"><tspan> --&gt; &lt;anon&gt;:3:46</tspan>
 </tspan>
-    <tspan x="10px" y="6256px"><tspan>//! - &lt;span mdbook-rustdoc-links&gt;[`fancy`]&lt;/span&gt;</tspan>
+    <tspan x="10px" y="6256px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="6274px"><tspan>//! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;</tspan>
+    <tspan x="10px" y="6274px"><tspan>3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="6292px"><tspan>//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
+    <tspan x="10px" y="6292px"><tspan>  |                                              ^^^</tspan>
 </tspan>
-    <tspan x="10px" y="6310px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
+    <tspan x="10px" y="6310px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="6328px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">rustdoc</tspan><tspan>: started </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2 </tspan><tspan class="dimmed">rustdoc</tspan>
+    <tspan x="10px" y="6328px"><tspan>  = note: `#[warn(rustdoc::invalid_html_tags)]` on by default</tspan>
 </tspan>
-    <tspan x="10px" y="6346px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>: --- rustdoc stderr</tspan>
+    <tspan x="10px" y="6346px"><tspan>help: try marking as source code</tspan>
 </tspan>
-    <tspan x="10px" y="6364px"><tspan>{"$message_type":"diagnostic","message":"unresolved link to `f80`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":85,"byte_end":88,"line_start":2,"line_end":2,"column_start":36,"column_end":39,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;","highlight_start":36,"highlight_end":39}],"label":"no item named `f80` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null},{"message":"`#[warn(rustdoc::broken_intra_doc_links)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `f80`\n --&gt; &lt;anon&gt;:2:36/n  |\n2 | //! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;\n  |                                    ^^^ no item named `f80` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default/n\n"}</tspan>
+    <tspan x="10px" y="6364px"><tspan>  |</tspan>
 </tspan>
-    <tspan x="10px" y="6382px"><tspan>{"$message_type":"diagnostic","message":"unresolved link to `PhantomData`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":148,"byte_end":162,"line_start":3,"line_end":3,"column_start":51,"column_end":65,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":51,"highlight_end":65}],"label":"no item named `PhantomData` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `PhantomData`\n --&gt; &lt;anon&gt;:3:51/n  |\n3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;\n  |                                                   ^^^^^^^^^^^^^^ no item named `PhantomData` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n/n"}</tspan>
+    <tspan x="10px" y="6382px"><tspan>3 | //! - &lt;span mdbook-rustdoc-links&gt;[`PhantomData&lt;T&gt;`][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
 </tspan>
-    <tspan x="10px" y="6400px"><tspan>{"$message_type":"diagnostic","message":"unclosed HTML tag `T`","code":{"code":"rustdoc::invalid_html_tags","explanation":null},"level":"warning","spans":[{"file_name":"&lt;anon&gt;","byte_start":143,"byte_end":146,"line_start":3,"line_end":3,"column_start":46,"column_end":49,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":46,"highlight_end":49}],"label":null,"suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"`#[warn(rustdoc::invalid_html_tags)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null},{"message":"try marking as source code","code":null,"level":"help","spans":[{"file_name":"&lt;anon&gt;","byte_start":132,"byte_end":132,"line_start":3,"line_end":3,"column_start":35,"column_end":35,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":35,"highlight_end":35}],"label":null,"suggested_replacement":"`","suggestion_applicability":"MaybeIncorrect","expansion":null},{"file_name":"&lt;anon&gt;","byte_start":146,"byte_end":146,"line_start":3,"line_end":3,"column_start":49,"column_end":49,"is_primary":true,"text":[{"text":"//! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;","highlight_start":49,"highlight_end":49}],"label":null,"suggested_replacement":"`","suggestion_applicability":"MaybeIncorrect","expansion":null}],"children":[],"rendered":null}],"rendered":"warning: unclosed HTML tag `T`\n --&gt; &lt;anon&gt;:3:46/n  |\n3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;\n  |                                              ^^^\n  |\n  = note: `#[warn(rustdoc::invalid_html_tags)]` on by default/nhelp: try marking as source code/n  |\n3 | //! - &lt;span mdbook-rustdoc-links&gt;[`PhantomData&lt;T&gt;`][PhantomData&lt;T&gt;]&lt;/span&gt;\n  |                                   +              +\n/n"}</tspan>
+    <tspan x="10px" y="6400px"><tspan>  |                                   +              +</tspan>
 </tspan>
-    <tspan x="10px" y="6418px"><tspan>{"$message_type":"diagnostic","message":"3 warnings emitted","code":null,"level":"warning","spans":[],"children":[],"rendered":"warning: 3 warnings emitted/n\n"} </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
+    <tspan x="10px" y="6418px">
 </tspan>
-    <tspan x="10px" y="6436px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: Element { tag_name: "a", attributes: [Attribute { name: "href", value: "../debug_logs/fn.fancy.html" }, Attribute { name: "title", value: "fn debug_logs::fancy" }] } </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
+    <tspan x="10px" y="6436px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="6454px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 2, link "f80", warning: unresolved link to `f80`</tspan>
+    <tspan x="10px" y="6454px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: could not determine primary line</tspan>
 </tspan>
-    <tspan x="10px" y="6472px"><tspan> --&gt; &lt;anon&gt;:2:36</tspan>
+    <tspan x="10px" y="6472px">
 </tspan>
-    <tspan x="10px" y="6490px"><tspan>  |</tspan>
+    <tspan x="10px" y="6490px"><tspan>Caused by:</tspan>
 </tspan>
-    <tspan x="10px" y="6508px"><tspan>2 | //! - &lt;span mdbook-rustdoc-links&gt;[`f80`]&lt;/span&gt;</tspan>
+    <tspan x="10px" y="6508px"><tspan>    Diagnostic { message: "3 warnings emitted", code: None, level: Warning, spans: [], children: [], rendered: Some("warning: 3 warnings emitted/n\n") } </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
 </tspan>
-    <tspan x="10px" y="6526px"><tspan>  |                                    ^^^ no item named `f80` in scope</tspan>
+    <tspan x="10px" y="6526px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: build #2 done</tspan>
 </tspan>
-    <tspan x="10px" y="6544px"><tspan>  |</tspan>
+    <tspan x="10px" y="6544px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:1:5: 1 link resolved: https://docs.rs/debug_logs/0.1.0/debug_logs/fn.fancy.html</tspan>
 </tspan>
-    <tspan x="10px" y="6562px"><tspan>  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`</tspan>
+    <tspan x="10px" y="6562px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:2:5: unresolved link to `f80`: no item named `f80` in scope</tspan>
 </tspan>
-    <tspan x="10px" y="6580px"><tspan>  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default</tspan>
+    <tspan x="10px" y="6580px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:3:3: unresolved link to `PhantomData`: no item named `PhantomData` in scope</tspan>
 </tspan>
-    <tspan x="10px" y="6598px">
+    <tspan x="10px" y="6598px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:3:15: unclosed HTML tag `T`</tspan>
 </tspan>
-    <tspan x="10px" y="6616px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
+    <tspan x="10px" y="6616px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: processed 3 links: 1 resolved; 2 unresolved</tspan>
 </tspan>
-    <tspan x="10px" y="6634px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 3, link "PhantomData&lt;T&gt;", warning: unresolved link to `PhantomData`</tspan>
-</tspan>
-    <tspan x="10px" y="6652px"><tspan> --&gt; &lt;anon&gt;:3:51</tspan>
-</tspan>
-    <tspan x="10px" y="6670px"><tspan>  |</tspan>
-</tspan>
-    <tspan x="10px" y="6688px"><tspan>3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
-</tspan>
-    <tspan x="10px" y="6706px"><tspan>  |                                                   ^^^^^^^^^^^^^^ no item named `PhantomData` in scope</tspan>
-</tspan>
-    <tspan x="10px" y="6724px"><tspan>  |</tspan>
-</tspan>
-    <tspan x="10px" y="6742px"><tspan>  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`</tspan>
-</tspan>
-    <tspan x="10px" y="6760px">
-</tspan>
-    <tspan x="10px" y="6778px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
-</tspan>
-    <tspan x="10px" y="6796px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: line 3, link "PhantomData&lt;T&gt;", warning: unclosed HTML tag `T`</tspan>
-</tspan>
-    <tspan x="10px" y="6814px"><tspan> --&gt; &lt;anon&gt;:3:46</tspan>
-</tspan>
-    <tspan x="10px" y="6832px"><tspan>  |</tspan>
-</tspan>
-    <tspan x="10px" y="6850px"><tspan>3 | //! - &lt;span mdbook-rustdoc-links&gt;[PhantomData&lt;T&gt;][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
-</tspan>
-    <tspan x="10px" y="6868px"><tspan>  |                                              ^^^</tspan>
-</tspan>
-    <tspan x="10px" y="6886px"><tspan>  |</tspan>
-</tspan>
-    <tspan x="10px" y="6904px"><tspan>  = note: `#[warn(rustdoc::invalid_html_tags)]` on by default</tspan>
-</tspan>
-    <tspan x="10px" y="6922px"><tspan>help: try marking as source code</tspan>
-</tspan>
-    <tspan x="10px" y="6940px"><tspan>  |</tspan>
-</tspan>
-    <tspan x="10px" y="6958px"><tspan>3 | //! - &lt;span mdbook-rustdoc-links&gt;[`PhantomData&lt;T&gt;`][PhantomData&lt;T&gt;]&lt;/span&gt;</tspan>
-</tspan>
-    <tspan x="10px" y="6976px"><tspan>  |                                   +              +</tspan>
-</tspan>
-    <tspan x="10px" y="6994px">
-</tspan>
-    <tspan x="10px" y="7012px"><tspan> </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
-</tspan>
-    <tspan x="10px" y="7030px"><tspan class="fg-magenta">TRACE</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>:</tspan><tspan class="bold">build</tspan><tspan>:</tspan><tspan class="bold">debug</tspan><tspan>: could not determine primary line</tspan>
-</tspan>
-    <tspan x="10px" y="7048px">
-</tspan>
-    <tspan x="10px" y="7066px"><tspan>Caused by:</tspan>
-</tspan>
-    <tspan x="10px" y="7084px"><tspan>    Diagnostic { message: "3 warnings emitted", code: None, level: Warning, spans: [], children: [], rendered: Some("warning: 3 warnings emitted/n\n") } </tspan><tspan class="italic dimmed">instance</tspan><tspan class="dimmed">=</tspan><tspan>2</tspan>
-</tspan>
-    <tspan x="10px" y="7102px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: build #2 done</tspan>
-</tspan>
-    <tspan x="10px" y="7120px"><tspan class="fg-blue">DEBUG</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:1:5: 1 link resolved: https://docs.rs/debug_logs/0.1.0/debug_logs/fn.fancy.html</tspan>
-</tspan>
-    <tspan x="10px" y="7138px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:2:5: unresolved link to `f80`: no item named `f80` in scope</tspan>
-</tspan>
-    <tspan x="10px" y="7156px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:3:3: unresolved link to `PhantomData`: no item named `PhantomData` in scope</tspan>
-</tspan>
-    <tspan x="10px" y="7174px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: index.md:3:15: unclosed HTML tag `T`</tspan>
-</tspan>
-    <tspan x="10px" y="7192px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: processed 3 links: 1 resolved; 2 unresolved</tspan>
-</tspan>
-    <tspan x="10px" y="7210px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: finished with warnings</tspan>
+    <tspan x="10px" y="6634px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: finished with warnings</tspan>
 </tspan>
   </text>
 

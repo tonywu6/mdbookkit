@@ -89,42 +89,10 @@ DEBUG mdbook-rustdoc-links: Some(
         env: EnvConfig {
             base_url: BaseUrlConfig {
                 dev: BaseUrl(
-                    Http(
-                        Url {
-                            scheme: "https",
-                            cannot_be_a_base: false,
-                            username: "",
-                            password: None,
-                            host: Some(
-                                Domain(
-                                    "docs.rs",
-                                ),
-                            ),
-                            port: None,
-                            path: "/%7Bpkg_name%7D/%7Bversion%7D/",
-                            query: None,
-                            fragment: None,
-                        },
-                    ),
+                    "https://docs.rs/%7Bpkg_name%7D/%7Bversion%7D/",
                 ),
                 release: BaseUrl(
-                    Http(
-                        Url {
-                            scheme: "https",
-                            cannot_be_a_base: false,
-                            username: "",
-                            password: None,
-                            host: Some(
-                                Domain(
-                                    "docs.rs",
-                                ),
-                            ),
-                            port: None,
-                            path: "/%7Bpkg_name%7D/%7Bversion%7D/",
-                            query: None,
-                            fragment: None,
-                        },
-                    ),
+                    "https://docs.rs/%7Bpkg_name%7D/%7Bversion%7D/",
                 ),
             },
         },
