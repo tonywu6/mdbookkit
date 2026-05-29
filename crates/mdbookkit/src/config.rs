@@ -7,6 +7,7 @@ use std::{
 };
 
 use anyhow::{Context, Result, bail};
+use bon::bon;
 use camino::{Utf8Component, Utf8Path};
 use serde::{
     Deserialize, Deserializer, Serialize,
@@ -153,10 +154,11 @@ fn make_url_suffix(path: &str) -> Result<BaseUrlSuffix> {
 }
 
 impl BaseUrl {
-    pub fn resolve(self, root: &Path) -> BaseDir {
-        let path = root.join(match &self.0 {
-            BaseUrlValue::Http { path, .. } => path,
-            BaseUrlValue::Path { path, .. } => path,
+    pub fn resolve(self, parent: &Path) -> BaseDir {
+        let parent = parent.to_owned();
+        let path = parent.join(match self.0 {
+            BaseUrlValue::Http { ref path, .. } => path,
+            BaseUrlValue::Path { ref path, .. } => path,
         });
         let (query, fragment) = match &self.0 {
             BaseUrlValue::Http { http, .. } => (http.query(), http.fragment()),
@@ -165,11 +167,17 @@ impl BaseUrl {
         let mut file = path.dir_to_url();
         file.set_query(query);
         file.set_fragment(fragment);
-        let http = match self.0 {
-            BaseUrlValue::Http { http, .. } => Some(http),
-            BaseUrlValue::Path { .. } => None,
+        let (prefix, http) = match self.0 {
+            BaseUrlValue::Http { path, http, .. } => (path, Some(http)),
+            BaseUrlValue::Path { path, .. } => (path, None),
         };
-        BaseDir { http, file, path }
+        BaseDir {
+            http,
+            file,
+            path,
+            parent,
+            prefix,
+        }
     }
 }
 
@@ -178,6 +186,8 @@ pub struct BaseDir {
     pub http: Option<Url>,
     pub file: Url,
     pub path: PathBuf,
+    parent: PathBuf,
+    prefix: PathBuf,
 }
 
 impl BaseDir {
@@ -204,6 +214,35 @@ impl BaseDir {
     #[inline]
     pub fn as_path(&self) -> &Path {
         &self.path
+    }
+}
+
+#[bon]
+impl BaseDir {
+    #[inline]
+    #[builder(finish_fn = located_in)]
+    pub fn transplant(
+        &self,
+        #[builder(start_fn)] path: &Url,
+        #[builder(finish_fn)] base: &Url,
+    ) -> Option<Url> {
+        let orig = path;
+        let base = base.to_file_path().ok()?;
+        let path = path.to_file_path().ok()?;
+        let path = path
+            .strip_prefix(base)
+            .ok()?
+            .strip_prefix(&self.prefix)
+            .ok()?;
+        let path = self.parent.join(path);
+        let mut path = if orig.path().ends_with('/') {
+            path.dir_to_url()
+        } else {
+            path.file_to_url()
+        };
+        path.set_query(orig.query());
+        path.set_fragment(orig.fragment());
+        Some(path)
     }
 }
 

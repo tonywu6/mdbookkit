@@ -47,6 +47,7 @@ test_case![path_encoding, exit(0)];
 test_case![path_encoding_unix, exit(0)];
 #[cfg(windows)]
 test_case![path_encoding_windows, exit(0)];
+test_case![ambiguous_absolute_path, exit(0)];
 
 macro_rules! test_in_temp_dir {
     [$name:ident ($($args:tt)+), |$root:ident| { $($setup:tt)* }] => {

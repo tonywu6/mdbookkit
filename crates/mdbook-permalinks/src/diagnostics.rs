@@ -3,21 +3,22 @@ use std::{
     fmt::{Display, Write},
 };
 
+use percent_encoding::percent_decode_str;
 use tap::TapFallible;
 use url::Url;
 
 use mdbookkit::{
     diagnostics::{
-        Highlight, IssueLevel, IssueReport, IssueReporter, Note, SourceCode,
+        Highlight, IssueLevel, IssueReport, IssueReporter, Note, SourceCode, Suggestion,
         annotate_snippets::AnnotationKind,
     },
-    error::ExpectFmt,
+    error::{ExpectFmt, Show},
     url::UrlUtil,
 };
 
 use crate::{
-    Environment,
-    link::{LinkStatus, PathStatus, RelativeLink},
+    Environment, PREPROCESSOR_NAME,
+    link::{LinkStatus, PathFixes, PathStatus, RelativeLink},
     page::Pages,
 };
 
@@ -130,7 +131,7 @@ impl<'a> LinkDiagnostic<'a> {
                     }
                 };
 
-                let notes = if candidates.len() > 1 {
+                let mut notes = if candidates.len() > 1 {
                     let mut note = String::from("also tried the following paths");
                     for (link, status) in candidates.iter().skip(1) {
                         write!(note, "\n{:?}: path {status}", self.shorten_path(link)).expect_fmt();
@@ -140,10 +141,50 @@ impl<'a> LinkDiagnostic<'a> {
                     vec![]
                 };
 
+                let mut helps = vec![];
+
+                if let PathStatus::NotFound {
+                    fix:
+                        Some(PathFixes {
+                            ref relative,
+                            ref absolute,
+                        }),
+                } = candidates[0].1
+                {
+                    let relative = (percent_decode_str(relative).decode_utf8())
+                        .unwrap_or(Cow::Borrowed(&**relative));
+
+                    let absolute = (percent_decode_str(absolute).decode_utf8())
+                        .unwrap_or(Cow::Borrowed(&**absolute));
+
+                    let note = format! { "a possible matching path is found at:\n{:?}\n", absolute.show() };
+
+                    let help1 = IssueReport::level(IssueLevel::Help)
+                        .title("try using a relative path starting from the current page:")
+                        .patches(vec![Suggestion::span(span.clone()).repl(relative).build()])
+                        .build();
+
+                    let help2 = IssueReport::level(IssueLevel::Help)
+                        .title({
+                            "... or use an absolute path starting \
+                            from the root of your repository:"
+                        })
+                        .patches(vec![Suggestion::span(span.clone()).repl(absolute).build()])
+                        .notes(vec![Note::help(
+                            concat! { "`", PREPROCESSOR_NAME!(), "`", " will convert ",
+                            "this path to a format accepted by mdBook" },
+                        )])
+                        .build();
+
+                    notes.push(Note::note(note));
+                    helps.extend([help1, help2]);
+                }
+
                 IssueReport::level(IssueLevel::Warning)
                     .title(title)
                     .annotations(labels)
                     .notes(notes)
+                    .secondary(helps)
                     .build()
             }
         }
@@ -185,7 +226,7 @@ impl<'a> LinkDiagnostic<'a> {
 impl Display for PathStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let text = match self {
-            PathStatus::NotFound => "doesn't exist",
+            PathStatus::NotFound { .. } => "doesn't exist",
             PathStatus::NotADirectory => "exists but is not a directory",
             PathStatus::Unreachable => "is inaccessible",
             PathStatus::GitIgnored => "is ignored by git",

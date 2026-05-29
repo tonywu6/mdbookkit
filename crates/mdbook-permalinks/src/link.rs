@@ -14,15 +14,21 @@ pub enum LinkStatus {
     Unreachable(Vec<(Url, PathStatus)>),
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum PathStatus {
-    NotFound,
+    NotFound { fix: Option<PathFixes> },
     NotADirectory,
     Unreachable,
     GitIgnored,
     NotInRepo,
     NotInBook,
     InvalidBytes,
+}
+
+#[derive(Debug, Clone)]
+pub struct PathFixes {
+    pub relative: String,
+    pub absolute: String,
 }
 
 pub struct LinkSpan<'a>(pub Vec<LinkText<'a>>);

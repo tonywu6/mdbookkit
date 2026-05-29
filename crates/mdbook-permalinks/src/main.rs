@@ -24,7 +24,7 @@ use mdbookkit::{
 };
 
 use self::{
-    link::{ContentHint, LinkStatus, PathStatus, RelativeLink},
+    link::{ContentHint, LinkStatus, PathFixes, PathStatus, RelativeLink},
     options::{Config, Options},
     page::Pages,
     vcs::Permalink,
@@ -255,12 +255,13 @@ impl Environment<'_> {
 
         if !should_link {
             if let Err(
-                err @ (PathStatus::NotFound
+                mut err @ (PathStatus::NotFound { .. }
                 | PathStatus::NotADirectory
                 | PathStatus::Unreachable
                 | PathStatus::NotInRepo),
             ) = relative_to_repo
             {
+                self.try_fix_link(page_url, &file_url, &mut err);
                 // at this point `not_in_book` is false
                 // it is okay for `err` to be `Ignored` because the file
                 // will be copied to output anyway
@@ -282,7 +283,8 @@ impl Environment<'_> {
                     let href = url_suffix.restored(href).as_str().to_owned();
                     link.permalink(href);
                 }
-                Err(err) => {
+                Err(mut err) => {
+                    self.try_fix_link(page_url, &file_url, &mut err);
                     link.unreachable(vec![(file_url, err)]);
                 }
             }
@@ -399,6 +401,21 @@ impl Environment<'_> {
 
         link.unreachable(not_found);
     }
+
+    fn try_fix_link(&self, page_url: &Url, file_url: &Url, error: &mut PathStatus) {
+        let PathStatus::NotFound { fix } = error else {
+            return;
+        };
+        let Self { vcs, site_url, .. } = self;
+        if let Some(alternative) = site_url.transplant(file_url).located_in(&vcs.root)
+            && vcs.try_file(&alternative).is_ok()
+            && let Some(relative) = page_url.make_relative(&alternative)
+            && let Some(absolute) = vcs.root.make_relative(&alternative)
+        {
+            let absolute = format!("/{absolute}");
+            *fix = Some(PathFixes { relative, absolute })
+        }
+    }
 }
 
 impl<'a> Environment<'a> {
@@ -511,4 +528,11 @@ impl<'a, 'r> ResolveBook<'a, 'r> {
     }
 }
 
-static PREPROCESSOR_NAME: &str = env!("CARGO_PKG_NAME");
+#[macro_export]
+macro_rules! PREPROCESSOR_NAME {
+    () => {
+        env!("CARGO_PKG_NAME")
+    };
+}
+
+static PREPROCESSOR_NAME: &str = PREPROCESSOR_NAME!();

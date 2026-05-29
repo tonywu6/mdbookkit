@@ -57,7 +57,7 @@ impl VersionControl {
                 }
             }
             Err(error) => match error.kind() {
-                std::io::ErrorKind::NotFound => Err(PathStatus::NotFound),
+                std::io::ErrorKind::NotFound => Err(PathStatus::NotFound { fix: None }),
                 std::io::ErrorKind::NotADirectory => Err(PathStatus::NotADirectory),
                 _ => Err(PathStatus::Unreachable),
             },
