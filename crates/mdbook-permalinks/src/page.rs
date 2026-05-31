@@ -12,6 +12,7 @@ use url::Url;
 use mdbookkit::{
     markdown::{PatchStream, Spanned, locate_text},
     plural,
+    url::UrlUtil,
 };
 
 use crate::link::{
@@ -37,9 +38,11 @@ impl<'a> Pages<'a> {
     }
 
     pub fn paths(&self, root: &Url) -> HashSet<String> {
-        self.pages
-            .iter()
-            .filter_map(|(url, _)| root.make_relative(url))
+        (self.pages.iter())
+            .filter_map(|(url, _)| {
+                let href = root.as_base().make_relative(url)?;
+                Some(href.encoded_path().to_owned())
+            })
             .collect()
     }
 

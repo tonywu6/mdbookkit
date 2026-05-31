@@ -191,16 +191,6 @@ pub struct BaseDir {
 }
 
 impl BaseDir {
-    pub fn make_relative(&self, url: &Url) -> Option<String> {
-        if let Some(ref http) = self.http
-            && let Some(path) = http.make_relative(url)
-        {
-            Some(path)
-        } else {
-            self.file.make_relative(url)
-        }
-    }
-
     #[inline]
     pub fn as_file_url(&self) -> &Url {
         &self.file

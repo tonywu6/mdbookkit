@@ -1,8 +1,7 @@
 import "../scripts/variables.just"
 
-working_dir := trim_start_match(source_directory(), justfile_directory() + "/")
 cloudflare_env := '--env=""'
-wrangler_flags := f"--cwd {{working_dir}} {{cloudflare_env}}"
+wrangler_flags := f"{{cloudflare_env}}"
 
 build: && postprocess
     cargo bin mdbook build

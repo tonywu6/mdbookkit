@@ -168,11 +168,13 @@ fn page_url(ctx: &PreprocessorContext, path: &Path) -> Url {
     path.file_to_url()
 }
 
+#[derive(Debug)]
 pub struct BookToml<'a> {
     config: Cow<'a, config::Config>,
     source: BookTomlSource,
 }
 
+#[derive(Debug)]
 enum BookTomlSource {
     Read(String),
     Path(PathBuf),
@@ -241,6 +243,10 @@ impl<'a> BookToml<'a> {
         } else {
             Err(error)?
         }
+    }
+
+    pub fn inner(&self) -> &config::Config {
+        &self.config
     }
 
     pub fn with_source(mut self) -> Self {

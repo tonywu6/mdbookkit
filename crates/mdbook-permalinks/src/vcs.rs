@@ -9,7 +9,7 @@ use url::Url;
 use mdbookkit::{
     emit_debug,
     error::{Show, WithDebugContext},
-    url::{UrlFromPath, UrlUtil},
+    url::{RelativeUrl, UrlFromPath, UrlUtil},
 };
 
 use crate::{
@@ -25,8 +25,8 @@ impl VersionControl {
     ))]
     pub fn try_file(&self, file: &Url) -> Result<TryFile, PathStatus> {
         let (link, path) = match {
-            if let Some(link) = self.root.make_relative(file) {
-                if link.starts_with("../") {
+            if let Some(link) = self.root.as_base().make_relative(file) {
+                if link.encoded_path().starts_with("../") {
                     Err(PathStatus::NotInRepo)
                 } else if let Ok(path) = file.to_file_path() {
                     Ok((link, path))
@@ -69,7 +69,7 @@ impl VersionControl {
 
 #[derive(Debug)]
 pub struct TryFile {
-    pub link: String,
+    pub link: RelativeUrl,
     pub metadata: std::fs::Metadata,
 }
 
@@ -87,44 +87,48 @@ enum RefName {
 }
 
 impl Permalink {
-    /// Try to convert this path to a permalink
-    pub fn to_link(&self, path: &str, hint: ContentHint) -> Url {
-        self.pattern.pattern_fill(|group| match group {
-            "ref" => Some(
-                match &self.refname {
-                    RefName::Commit(commit) => commit,
-                    RefName::Tag(tag) => tag,
-                }
-                .into(),
-            ),
-            "kind" => Some(
-                match &self.refname {
-                    RefName::Commit(..) => &self.params.commit[0],
-                    RefName::Tag(..) => &self.params.tag[0],
-                }
-                .into(),
-            ),
-            "tree" => Some(
-                match hint {
-                    ContentHint::Tree => &self.params.tree[0],
-                    ContentHint::Raw => &self.params.raw[0],
-                }
-                .into(),
-            ),
-            "path" => Some(path.into()),
-            _ => None,
-        })
+    /// Try to convert this relative url to a permalink
+    pub fn to_link(&self, href: &RelativeUrl, hint: ContentHint) -> Url {
+        self.pattern
+            .pattern_fill(|group| match group {
+                "ref" => Some(
+                    match &self.refname {
+                        RefName::Commit(commit) => commit,
+                        RefName::Tag(tag) => tag,
+                    }
+                    .into(),
+                ),
+                "kind" => Some(
+                    match &self.refname {
+                        RefName::Commit(..) => &self.params.commit[0],
+                        RefName::Tag(..) => &self.params.tag[0],
+                    }
+                    .into(),
+                ),
+                "tree" => Some(
+                    match hint {
+                        ContentHint::Tree => &self.params.tree[0],
+                        ContentHint::Raw => &self.params.raw[0],
+                    }
+                    .into(),
+                ),
+                "path" => Some(href.encoded_path().into()),
+                _ => None,
+            })
+            .with_after_path(href)
     }
 
     /// Try to extract a path (relative to repo root) from this link
-    pub fn to_path(&self, link: &Url) -> Option<(String, ContentHint)> {
-        let mut groups = self.pattern.pattern_test(Some("path"), link)?;
+    pub fn extract(&self, link: &Url) -> Option<(RelativeUrl, ContentHint)> {
+        let matches = self.pattern.pattern_test(Some("path"), link)?;
 
-        if groups.get("ref").map(|s| &**s) != Some("HEAD") {
+        if matches.matches.get("ref").map(|s| &**s) != Some("HEAD") {
             return None;
         }
 
-        let hint = if let Some(tree) = groups.get("tree").map(|s| &**s) {
+        let href = matches.to_relative_url("path")?;
+
+        let hint = if let Some(tree) = matches.matches.get("tree").map(|s| &**s) {
             if self.params.tree.iter().any(|plc| plc == tree) {
                 ContentHint::Tree
             } else if self.params.raw.iter().any(|plc| plc == tree) {
@@ -136,17 +140,9 @@ impl Permalink {
             return None;
         };
 
-        let path = groups.remove("path")?.into_owned();
+        debug!(?href, ?hint, "path matched");
 
-        debug!(?path, ?hint, "path matched");
-
-        Some((path, hint))
-    }
-}
-
-impl AsRef<Url> for Permalink {
-    fn as_ref(&self) -> &Url {
-        &self.pattern
+        Some((href, hint))
     }
 }
 

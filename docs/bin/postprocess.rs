@@ -19,8 +19,9 @@ use tracing::{debug, error, info, info_span, trace};
 use url::Url;
 
 use mdbookkit::{
+    book::BookToml,
     error::{FailOnWarnings, Show, WithDebugContext},
-    url::{ToUtf8Path, UrlFromPath},
+    url::{ToUtf8Path, UrlFromPath, UrlUtil},
 };
 
 pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
@@ -29,33 +30,34 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
     let jinja =
         Environment::new().tap_mut(|env| env.add_template("index.html", OPEN_GRAPH).unwrap());
 
-    let root_dir = root_dir.canonicalize()?.to_utf8_path()?.dir_to_url();
+    let root_dir = root_dir.canonicalize()?.into_utf8_path()?;
 
-    let book_toml_path = root_dir.join("book.toml")?;
-
-    let book_toml = book_toml_path
-        .path()
+    let mut book_toml = root_dir
+        .join("book.toml")
         .pipe(std::fs::read_to_string)?
-        .pipe_deref(toml::from_str::<BookToml>)?;
+        .parse::<BookToml>()?;
 
     debug!("{book_toml:#?}");
 
-    let src_dir = book_toml.book.src.as_deref().unwrap_or("src");
-    let src_dir = root_dir.join(&format!("{src_dir}/"))?;
+    let src_dir = root_dir.join_os(&book_toml.inner().book.src).dir_to_url();
 
-    let out_dir = book_toml.build.build_dir.as_deref().unwrap_or("book");
-    let out_dir = root_dir.join(&format!("{out_dir}/"))?;
+    let out_dir = root_dir
+        .join_os(&book_toml.inner().build.build_dir)
+        .dir_to_url();
 
-    let BookToml {
-        preprocessor:
-            PreprocessorConfig {
-                permalinks: PermalinksConfig { book_url },
-                ..
-            },
-        ..
-    } = book_toml;
+    let root_dir = root_dir.dir_to_url();
 
-    let metadata = (book_toml.preprocessor.doc.socials.0)
+    let site_url = book_toml
+        .html_config::<Url>("site-url")?
+        .context("missing site-url")?;
+
+    let metadata = book_toml
+        .preprocessor::<MetadataConfig>(&["mdbook-doc"])?
+        .unwrap_or_default()
+        .socials
+        .0;
+
+    let metadata = metadata
         .into_iter()
         .map(|(prefix, metadata)| -> Result<(_, PageMetadata)> {
             let image = match metadata.image {
@@ -65,11 +67,11 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
             let image = if let Ok(image) = image.parse::<Url>() {
                 image
             } else {
-                let image = book_toml_path.join(&image)?;
-                let image = src_dir
+                let image = root_dir.join(&image)?;
+                let image = (src_dir.as_base())
                     .make_relative(&image)
                     .context("failed to make relative path to image")?;
-                book_url.join(&image)?
+                (site_url.as_base()).make_absolute(&image)
             };
             let metadata = PageMetadata {
                 title: metadata.title,
@@ -124,9 +126,10 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
             (collapse_whitespace(title), collapse_whitespace(description))
         };
 
-        let pathname = out_dir
+        let pathname = (out_dir.as_base())
             .make_relative(&file_url)
             .context("failed to get page pathname")?
+            .encoded_path()
             .replace("index.html", "")
             .replace(".html", "")
             .pipe(|p| format!("/{p}"));
@@ -154,9 +157,9 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
             }
         });
 
-        let og_url = book_url.join(&pathname[1..])?;
+        let og_url = site_url.join(&pathname[1..])?;
 
-        let og_site_name = book_toml.book.title.as_deref();
+        let og_site_name = book_toml.inner().book.title.as_deref();
 
         let ctx = json!({
             "og_title": og_title,
@@ -241,7 +244,7 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
                                 book_links.insert(file_url.clone(), set);
                             }
                         }
-                    } else if href.origin() != book_url.origin() {
+                    } else if href.origin() != site_url.origin() {
                         elem.set_attribute("target", "_blank").unwrap();
                         elem.set_attribute("rel", "noreferrer").unwrap();
                     }
@@ -268,13 +271,13 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
             {
                 let id = format!("#{id}");
                 link.set_fragment(None);
-                let src = out_dir
-                    .make_relative(&file_url)
-                    .unwrap()
+                let src = (out_dir.as_base())
+                    .show_relative(&file_url)
+                    .to_string()
                     .replace(".html", ".md");
-                let dst = out_dir
-                    .make_relative(&link)
-                    .unwrap()
+                let dst = (out_dir.as_base())
+                    .show_relative(&file_url)
+                    .to_string()
                     .replace(".html", ".md");
                 error!("{src} references non-existent {id:?} in {dst}");
             }
@@ -284,51 +287,14 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
     FailOnWarnings::InPipelines.check()
 }
 
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-struct BookToml {
-    book: BookConfig,
-    build: BuildConfig,
-    preprocessor: PreprocessorConfig,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-struct BookConfig {
-    #[serde(default)]
-    title: Option<String>,
-    #[serde(default)]
-    src: Option<String>,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-struct BuildConfig {
-    #[serde(default)]
-    build_dir: Option<String>,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-struct PreprocessorConfig {
-    permalinks: PermalinksConfig,
-    doc: MetadataConfig,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-struct PermalinksConfig {
-    book_url: Url,
-}
-
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case")]
 struct MetadataConfig {
     #[serde(default)]
     socials: Socials,
 }
 
-#[derive(Deserialize, Default, Debug)]
+#[derive(Deserialize, Debug, Default)]
 struct Socials(HashMap<String, PageMetadata>);
 
 #[derive(Deserialize, Debug)]

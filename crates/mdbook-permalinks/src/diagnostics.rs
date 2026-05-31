@@ -31,7 +31,7 @@ impl Environment<'_> {
                     .map(|link| LinkDiagnostic { root, base, link }.emit())
                     .collect();
                 let source_code = page.source();
-                let source_path = root.print_relative(base).to_string().into();
+                let source_path = root.as_base().show_relative(base).to_string().into();
                 IssueReporter {
                     issues,
                     source: SourceCode {
@@ -151,11 +151,15 @@ impl<'a> LinkDiagnostic<'a> {
                         }),
                 } = candidates[0].1
                 {
+                    // TODO: query and fragment
+                    let relative = relative.encoded_path();
                     let relative = (percent_decode_str(relative).decode_utf8())
-                        .unwrap_or(Cow::Borrowed(&**relative));
+                        .unwrap_or(Cow::Borrowed(relative));
 
-                    let absolute = (percent_decode_str(absolute).decode_utf8())
-                        .unwrap_or(Cow::Borrowed(&**absolute));
+                    let absolute = format!("/{}", absolute.encoded_path());
+                    let absolute = (percent_decode_str(&absolute).decode_utf8())
+                        .map(Cow::into_owned)
+                        .unwrap_or(absolute);
 
                     let note = format! { "a possible matching path is found at:\n{:?}\n", absolute.show() };
 
@@ -191,7 +195,7 @@ impl<'a> LinkDiagnostic<'a> {
     }
 
     fn shorten_path<'p>(&self, path: &'p Url) -> Cow<'p, str> {
-        if let path = self.root.print_relative(path).to_string()
+        if let path = self.root.as_base().show_relative(path).to_string()
             && !path.starts_with("../")
         {
             path.into()

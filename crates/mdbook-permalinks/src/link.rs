@@ -4,6 +4,8 @@ use mdbook_markdown::pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
 use tracing::trace;
 use url::Url;
 
+use mdbookkit::url::RelativeUrl;
+
 #[derive(Debug, Default, Clone)]
 pub enum LinkStatus {
     #[default]
@@ -27,8 +29,8 @@ pub enum PathStatus {
 
 #[derive(Debug, Clone)]
 pub struct PathFixes {
-    pub relative: String,
-    pub absolute: String,
+    pub relative: RelativeUrl,
+    pub absolute: RelativeUrl,
 }
 
 pub struct LinkSpan<'a>(pub Vec<LinkText<'a>>);
@@ -82,15 +84,15 @@ impl<'a> LinkSpan<'a> {
 
 impl<'a> RelativeLink<'a> {
     #[inline]
-    pub fn rewritten(&mut self, link: impl Into<CowStr<'a>>) {
+    pub fn rewritten(&mut self, link: RelativeUrl) {
         self.status = LinkStatus::Rewritten;
-        self.update(link);
+        self.update(link.consume_with(CowStr::from));
     }
 
     #[inline]
-    pub fn permalink(&mut self, link: impl Into<CowStr<'a>>) {
+    pub fn permalink(&mut self, link: Url) {
         self.status = LinkStatus::Permalink;
-        self.update(link);
+        self.update(String::from(link));
     }
 
     #[inline]

@@ -6,7 +6,7 @@ use anyhow::{Context, Result};
 use git2::Repository;
 use mdbook_markdown::pulldown_cmark;
 use mdbook_preprocessor::{PreprocessorContext, book::Book};
-use tap::{Pipe, Tap};
+use tap::Pipe;
 use tracing::{Level, debug, error_span, info, info_span, span::EnteredSpan, trace, warn};
 use url::Url;
 
@@ -20,7 +20,7 @@ use mdbookkit::{
     level_enabled,
     logging::init_logging,
     ticker, ticker_item,
-    url::{UrlFromPath, UrlSuffix, UrlUtil},
+    url::{RelativeUrl, UrlFromPath, UrlUtil},
 };
 
 use self::{
@@ -175,25 +175,21 @@ impl Environment<'_> {
             };
 
             if let Some(http) = &self.site_url.http
-                && let Some(path) = http.make_relative(&link_url)
-                && !path.starts_with("../")
+                && let Some(href) = http.as_base().make_relative(&link_url)
+                && !href.encoded_path().starts_with("../")
             {
                 let dest = ResolveBook {
                     link,
-                    link_url,
+                    link_url: href,
                     page_url,
                     page_paths,
-                    path,
                 };
                 let _span = dest.span(&ticker);
                 self.resolve_book(dest);
-            } else if let Some((path, hint)) = self.vcs.link.to_path(&link_url)
-                && let Ok(file_url) = self.vcs.root.join(&path)
-            {
-                let (_, url_suffix) = self.vcs.link.as_ref().remove_suffix(link_url);
+            } else if let Some((href, hint)) = self.vcs.link.extract(&link_url) {
+                let file_url = self.vcs.root.as_base().make_absolute(&href);
                 let dest = ResolveFile {
                     hint,
-                    url_suffix,
                     check_mode: true,
                     file_url,
                     page_url,
@@ -203,12 +199,10 @@ impl Environment<'_> {
                 let _span = dest.span(&ticker);
                 self.resolve_file(dest);
             } else if link_url.scheme() == "file" {
-                let (file_url, url_suffix) = self.vcs.link.as_ref().remove_suffix(link_url);
                 let dest = ResolveFile {
                     hint: link.hint,
-                    url_suffix,
                     check_mode: false,
-                    file_url,
+                    file_url: link_url,
                     page_url,
                     page_paths,
                     link,
@@ -226,28 +220,26 @@ impl Environment<'_> {
             page_url,
             page_paths,
             hint,
-            url_suffix,
             check_mode,
             link,
         }: ResolveFile,
     ) {
         let relative_to_repo = self.vcs.try_file(&file_url);
 
-        let relative_to_book = (self.page_dir)
+        let relative_to_book = (self.page_dir.as_base())
             .make_relative(&file_url)
             .expect("both are file urls");
 
         trace!(?relative_to_book);
 
-        let not_in_book = relative_to_book.starts_with("../");
+        let not_in_book = relative_to_book.encoded_path().starts_with("../");
 
         // the markdown file is in book src/ but not in SUMMARY.md
-        let not_in_tree =
-            relative_to_book.ends_with(".md") && !page_paths.contains(&relative_to_book);
+        let not_in_tree = relative_to_book.encoded_path().ends_with(".md")
+            && !page_paths.contains(relative_to_book.encoded_path());
 
-        let always_link = (self.options.always_link)
-            .iter()
-            .any(|suffix| file_url.path().ends_with(suffix));
+        let always_link =
+            (self.options.always_link.iter()).any(|suffix| file_url.path().ends_with(suffix));
 
         let should_link = check_mode || not_in_book || not_in_tree || always_link;
 
@@ -268,8 +260,7 @@ impl Environment<'_> {
                 link.unreachable(vec![(file_url, err)]);
             } else if link.href.starts_with('/') {
                 // mdBook doesn't support absolute paths like VS Code does
-                let file_url = url_suffix.restored(file_url);
-                let rewritten = page_url
+                let rewritten = (page_url.as_base())
                     .make_relative(&file_url)
                     .expect("both are file urls");
                 link.rewritten(rewritten);
@@ -280,7 +271,6 @@ impl Environment<'_> {
             match relative_to_repo {
                 Ok(file) => {
                     let href = self.vcs.link.to_link(&file.link, hint);
-                    let href = url_suffix.restored(href).as_str().to_owned();
                     link.permalink(href);
                 }
                 Err(mut err) => {
@@ -298,24 +288,10 @@ impl Environment<'_> {
             link_url,
             page_url,
             page_paths,
-            path,
             link,
         }: ResolveBook,
     ) {
-        let path = {
-            let mut path = path;
-            trace!(?path);
-            if let Some(idx) = path.find('#') {
-                path.truncate(idx);
-                trace!(?path, "removing fragment");
-            };
-            if let Some(idx) = path.find('?') {
-                path.truncate(idx);
-                trace!(?path, "removing query");
-            };
-            trace!(?path);
-            path
-        };
+        let path = link_url.encoded_path();
 
         let mut not_found = vec![];
 
@@ -348,17 +324,16 @@ impl Environment<'_> {
         for page in try_pages {
             trace!("trying book page {page:?}");
 
-            let file_url = (self.page_dir)
-                .join(page)
+            let file_url = (self.page_dir.join(page))
                 .with_debug(&**page, "page")
                 .expect("`page` should be parsable as a url path")
-                .tap_mut(|u| u.set_query(link_url.query()))
-                .tap_mut(|u| u.set_fragment(link_url.fragment()));
+                .with_after_path(&link_url);
 
             if page_paths.contains(page) {
-                let rewritten = page_url
+                let rewritten = (page_url.as_base())
                     .make_relative(&file_url)
                     .expect("both are file urls");
+
                 link.rewritten(rewritten);
                 return;
             }
@@ -369,23 +344,18 @@ impl Environment<'_> {
 
         if !is_index {
             // try the unmodified path itself
-            let try_file = (self.page_dir)
-                .join(&path)
-                .with_debug(&*path, "path")
-                .expect("`path` should be parsable as a url path");
+            let try_file = (self.page_dir.join(path))
+                .with_debug(path, "path")
+                .expect("`path` should be parsable as a url path")
+                .with_after_path(&link_url);
 
             match self.vcs.try_file(&try_file) {
                 Ok(result) if !result.metadata.is_dir() => {
-                    let file_url = try_file
-                        .tap_mut(|u| u.set_query(link_url.query()))
-                        .tap_mut(|u| u.set_fragment(link_url.fragment()));
-
-                    let rewritten = page_url
-                        .make_relative(&file_url)
+                    let rewritten = (page_url.as_base())
+                        .make_relative(&try_file)
                         .expect("both are file urls");
 
                     link.rewritten(rewritten);
-
                     return;
                 }
                 Ok(_) => {
@@ -409,10 +379,9 @@ impl Environment<'_> {
         let Self { vcs, site_url, .. } = self;
         if let Some(alternative) = site_url.transplant(file_url).located_in(&vcs.root)
             && vcs.try_file(&alternative).is_ok()
-            && let Some(relative) = page_url.make_relative(&alternative)
-            && let Some(absolute) = vcs.root.make_relative(&alternative)
+            && let Some(relative) = page_url.as_base().make_relative(&alternative)
+            && let Some(absolute) = vcs.root.as_base().make_relative(&alternative)
         {
-            let absolute = format!("/{absolute}");
             *fix = Some(PathFixes { relative, absolute })
         }
     }
@@ -464,17 +433,15 @@ struct ResolveFile<'a, 'r> {
     page_url: &'a Url,
     page_paths: &'a HashSet<String>,
     hint: ContentHint,
-    url_suffix: UrlSuffix,
     /// the link was written as an http url rather than a path
     check_mode: bool,
     link: &'a mut RelativeLink<'r>,
 }
 
 struct ResolveBook<'a, 'r> {
-    link_url: Url,
+    link_url: RelativeUrl,
     page_url: &'a Url,
     page_paths: &'a HashSet<String>,
-    path: String,
     link: &'a mut RelativeLink<'r>,
 }
 
@@ -509,7 +476,6 @@ impl<'a, 'r> ResolveBook<'a, 'r> {
         let Self {
             link_url,
             page_url,
-            path,
             link,
             ..
         } = self;
@@ -518,7 +484,7 @@ impl<'a, 'r> ResolveBook<'a, 'r> {
         } else if level_enabled!(Level::TRACE) {
             ticker_item! {
                 ticker, Level::TRACE, "book_link",
-                %link_url, %page_url, ?path,
+                %page_url, path = ?link_url.encoded_path(),
                 "{:?}", &*link.href
             }
         } else {

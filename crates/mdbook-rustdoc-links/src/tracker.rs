@@ -297,7 +297,9 @@ impl<'a> LinkTracker<'a> {
         };
 
         for (page, links) in iter {
-            let name = self.env.page_dir().print_relative(&page.base).to_string();
+            let name = (self.env.page_dir().as_base())
+                .show_relative(&page.base)
+                .to_string();
 
             let source = SourceCode {
                 source_code: page.text,
@@ -677,8 +679,8 @@ impl<'a> Link<'a> {
         } = self;
 
         let href = href.as_ref()?;
-        let href = if let Some(path) = base.make_relative(href) {
-            CowStr::Boxed(path.into())
+        let href = if let Some(href) = base.as_base().make_relative(href) {
+            href.consume_with(CowStr::from)
         } else {
             CowStr::Borrowed(href.as_str())
         };
