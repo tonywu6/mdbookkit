@@ -17,7 +17,7 @@ use mdbookkit::{
 
 use crate::{
     Environment, PREPROCESSOR_NAME,
-    link::{Link, LinkStatus, PathFixes, PathStatus},
+    link::{Link, LinkFixes, LinkStatus, PathStatus},
     page::Pages,
 };
 
@@ -103,11 +103,11 @@ impl<'a> LinkDiagnostic<'a> {
                 )])
                 .build(),
 
-            LinkStatus::Unreachable(candidates) => {
+            LinkStatus::Unreachable(unreachable) => {
                 let title = format!("broken link to {href:?}");
 
                 let labels = {
-                    let (link, status) = &candidates[0];
+                    let (link, status) = &unreachable.tried[0];
                     let shortened = self.shorten_path(link);
                     if !shortened.starts_with('/') && href.strip_suffix(&*shortened) == Some("/") {
                         vec![
@@ -130,9 +130,9 @@ impl<'a> LinkDiagnostic<'a> {
                     }
                 };
 
-                let mut notes = if candidates.len() > 1 {
+                let mut notes = if unreachable.tried.len() > 1 {
                     let mut note = String::from("also tried the following paths");
-                    for (link, status) in candidates.iter().skip(1) {
+                    for (link, status) in unreachable.tried.iter().skip(1) {
                         write!(note, "\n{:?}: path {status}", self.shorten_path(link)).expect_fmt();
                     }
                     vec![Note::note(note)]
@@ -142,13 +142,10 @@ impl<'a> LinkDiagnostic<'a> {
 
                 let mut helps = vec![];
 
-                if let PathStatus::NotFound {
-                    fix:
-                        Some(PathFixes {
-                            ref relative,
-                            ref absolute,
-                        }),
-                } = candidates[0].1
+                if let Some(LinkFixes {
+                    ref relative,
+                    ref absolute,
+                }) = unreachable.helps
                 {
                     let absolute = (absolute.clone())
                         .into_decoded()
@@ -230,7 +227,7 @@ impl<'a> LinkDiagnostic<'a> {
 impl Display for PathStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let text = match self {
-            PathStatus::NotFound { .. } => "doesn't exist",
+            PathStatus::NotFound => "doesn't exist",
             PathStatus::NotADirectory => "exists but is not a directory",
             PathStatus::Unreachable => "is inaccessible",
             PathStatus::GitIgnored => "is ignored by git",

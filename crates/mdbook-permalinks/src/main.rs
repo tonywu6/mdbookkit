@@ -24,7 +24,7 @@ use mdbookkit::{
 };
 
 use self::{
-    link::{ContentHint, Link, LinkStatus, PathFixes, PathStatus},
+    link::{ContentHint, Link, LinkFixes, LinkStatus, LinkUnreachable, PathStatus},
     options::{Config, Options},
     page::Pages,
     vcs::Permalink,
@@ -247,19 +247,16 @@ impl Environment<'_> {
 
         if !should_link {
             if let Err(
-                mut err @ (PathStatus::NotFound { .. }
+                err @ (PathStatus::NotFound
                 | PathStatus::NotADirectory
                 | PathStatus::Unreachable
                 | PathStatus::NotInRepo),
             ) = relative_to_repo
             {
-                if !check_mode {
-                    self.try_fix_link(page_url, &file_url, &mut err);
-                }
                 // at this point `not_in_book` is false
                 // it is okay for `err` to be `Ignored` because the file
                 // will be copied to output anyway
-                link.unreachable(vec![(file_url, err)]);
+                link.unreachable(vec![(file_url.clone(), err)]);
             } else if link.href.starts_with('/') {
                 // mdBook doesn't support absolute paths like VS Code does
                 let rewritten = (page_url.as_base())
@@ -275,13 +272,14 @@ impl Environment<'_> {
                     let href = self.vcs.link.to_link(&file.link, hint);
                     link.permalink(href);
                 }
-                Err(mut err) => {
-                    if !check_mode {
-                        self.try_fix_link(page_url, &file_url, &mut err);
-                    }
-                    link.unreachable(vec![(file_url, err)]);
+                Err(err) => {
+                    link.unreachable(vec![(file_url.clone(), err)]);
                 }
             }
+        }
+
+        if !check_mode {
+            self.try_fix_link(page_url, &file_url, &mut link.status);
         }
     }
 
@@ -376,8 +374,8 @@ impl Environment<'_> {
         link.unreachable(not_found);
     }
 
-    fn try_fix_link(&self, page_url: &Url, file_url: &Url, error: &mut PathStatus) {
-        let PathStatus::NotFound { fix } = error else {
+    fn try_fix_link(&self, page_url: &Url, file_url: &Url, error: &mut LinkStatus) {
+        let LinkStatus::Unreachable(LinkUnreachable { helps, .. }) = error else {
             return;
         };
         let Self { vcs, site_url, .. } = self;
@@ -387,7 +385,7 @@ impl Environment<'_> {
             && let Some(relative) = page_url.as_base().make_relative(&alternative)
         {
             let absolute = absolute.into_absolute_path();
-            *fix = Some(PathFixes { relative, absolute })
+            *helps = Some(LinkFixes { relative, absolute })
         }
     }
 }

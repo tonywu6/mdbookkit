@@ -6,19 +6,33 @@ use url::Url;
 
 use mdbookkit::url::RelativeUrl;
 
-#[derive(Debug, Default, Clone)]
+pub struct Link<'a> {
+    pub status: LinkStatus,
+    pub href: CowStr<'a>,
+    pub span: SourceSpan,
+    pub hint: ContentHint,
+    pub title: CowStr<'a>,
+}
+
+#[derive(Debug, Default)]
 pub enum LinkStatus {
     #[default]
     Ignored,
     Unchanged,
     Rewritten,
     Permalink,
-    Unreachable(Vec<(Url, PathStatus)>),
+    Unreachable(LinkUnreachable),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
+pub struct LinkUnreachable {
+    pub tried: Vec<(Url, PathStatus)>,
+    pub helps: Option<LinkFixes>,
+}
+
+#[derive(Debug)]
 pub enum PathStatus {
-    NotFound { fix: Option<PathFixes> },
+    NotFound,
     NotADirectory,
     Unreachable,
     GitIgnored,
@@ -27,8 +41,8 @@ pub enum PathStatus {
     InvalidBytes,
 }
 
-#[derive(Debug, Clone)]
-pub struct PathFixes {
+#[derive(Debug)]
+pub struct LinkFixes {
     pub absolute: RelativeUrl,
     pub relative: RelativeUrl,
 }
@@ -40,14 +54,6 @@ pub enum LinkText<'a> {
     Link(Link<'a>),
 }
 
-pub struct Link<'a> {
-    pub status: LinkStatus,
-    pub href: CowStr<'a>,
-    pub span: SourceSpan,
-    pub hint: ContentHint,
-    pub title: CowStr<'a>,
-}
-
 pub struct SourceSpan {
     pub full: Range<usize>,
     pub link: Option<Range<usize>>,
@@ -57,29 +63,6 @@ pub struct SourceSpan {
 pub enum ContentHint {
     Tree,
     Raw,
-}
-
-impl<'a> LinkSpan<'a> {
-    pub fn links_mut(&mut self) -> impl Iterator<Item = &'_ mut Link<'a>> {
-        self.0.iter_mut().filter_map(|item| match item {
-            LinkText::Link(link) => Some(link),
-            LinkText::Text(..) => None,
-        })
-    }
-
-    pub fn links(&self) -> impl Iterator<Item = &'_ Link<'a>> {
-        self.0.iter().filter_map(|item| match item {
-            LinkText::Link(link) => Some(link),
-            LinkText::Text(..) => None,
-        })
-    }
-
-    pub fn span(&self) -> &Range<usize> {
-        match &self.0[0] {
-            LinkText::Link(link) => &link.span.full,
-            LinkText::Text(..) => unreachable!("first item in LinkSpan must be a Link"),
-        }
-    }
 }
 
 impl<'a> Link<'a> {
@@ -109,8 +92,9 @@ impl<'a> Link<'a> {
     }
 
     #[inline]
-    pub fn unreachable(&mut self, errors: Vec<(Url, PathStatus)>) {
-        self.status = LinkStatus::Unreachable(errors);
+    pub fn unreachable(&mut self, tried: Vec<(Url, PathStatus)>) {
+        let status = LinkUnreachable { tried, helps: None };
+        self.status = LinkStatus::Unreachable(status);
         trace!(status = ?self.status, link = ?&*self.href);
     }
 
@@ -138,6 +122,29 @@ impl<'a> Link<'a> {
             LinkStatus::Rewritten => Some(self.hint),
             LinkStatus::Permalink => Some(self.hint),
             LinkStatus::Unreachable(_) => None,
+        }
+    }
+}
+
+impl<'a> LinkSpan<'a> {
+    pub fn links_mut(&mut self) -> impl Iterator<Item = &'_ mut Link<'a>> {
+        self.0.iter_mut().filter_map(|item| match item {
+            LinkText::Link(link) => Some(link),
+            LinkText::Text(..) => None,
+        })
+    }
+
+    pub fn links(&self) -> impl Iterator<Item = &'_ Link<'a>> {
+        self.0.iter().filter_map(|item| match item {
+            LinkText::Link(link) => Some(link),
+            LinkText::Text(..) => None,
+        })
+    }
+
+    pub fn span(&self) -> &Range<usize> {
+        match &self.0[0] {
+            LinkText::Link(link) => &link.span.full,
+            LinkText::Text(..) => unreachable!("first item in LinkSpan must be a Link"),
         }
     }
 }
