@@ -24,7 +24,7 @@ use mdbookkit::{
 };
 
 use self::{
-    link::{ContentHint, Link, LinkFixes, LinkStatus, LinkUnreachable, PathStatus},
+    link::{ContentHint, Link, LinkHelp, LinkStatus, LinkUnreachable, PathStatus},
     options::{Config, Options},
     page::Pages,
     vcs::Permalink,
@@ -385,7 +385,7 @@ impl Environment<'_> {
             && let Some(relative) = page_url.as_base().make_relative(&alternative)
         {
             let absolute = absolute.into_absolute_path();
-            *helps = Some(LinkFixes { relative, absolute })
+            helps.push(LinkHelp::FoundOther { relative, absolute });
         }
     }
 }

@@ -17,7 +17,7 @@ use mdbookkit::{
 
 use crate::{
     Environment, PREPROCESSOR_NAME,
-    link::{Link, LinkFixes, LinkStatus, PathStatus},
+    link::{Link, LinkHelp, LinkStatus, PathStatus},
     page::Pages,
 };
 
@@ -130,55 +130,58 @@ impl<'a> LinkDiagnostic<'a> {
                     }
                 };
 
-                let mut notes = if unreachable.tried.len() > 1 {
+                let mut notes = vec![];
+                let mut helps = vec![];
+
+                if unreachable.tried.len() > 1 {
                     let mut note = String::from("also tried the following paths");
                     for (link, status) in unreachable.tried.iter().skip(1) {
                         write!(note, "\n{:?}: path {status}", self.shorten_path(link)).expect_fmt();
                     }
-                    vec![Note::note(note)]
-                } else {
-                    vec![]
+                    notes.push(Note::note(note));
                 };
 
-                let mut helps = vec![];
+                for help in &unreachable.helps {
+                    match help {
+                        LinkHelp::FoundOther { absolute, relative } => {
+                            let absolute = (absolute.clone())
+                                .into_decoded()
+                                .consume_with(std::convert::identity);
 
-                if let Some(LinkFixes {
-                    ref relative,
-                    ref absolute,
-                }) = unreachable.helps
-                {
-                    let absolute = (absolute.clone())
-                        .into_decoded()
-                        .consume_with(std::convert::identity);
+                            let relative = (relative.clone())
+                                .into_decoded()
+                                .consume_with(std::convert::identity);
 
-                    let relative = (relative.clone())
-                        .into_decoded()
-                        .consume_with(std::convert::identity);
+                            let note = format! {
+                                "the following path is available:\n{:?}\n",
+                                absolute.show()
+                            };
 
-                    let note = format! {
-                        "the following path is available:\n{:?}\n",
-                        absolute.show()
-                    };
+                            let help1 = IssueReport::level(IssueLevel::Help)
+                                .title("try using a relative path starting from the current page:")
+                                .patches(vec![
+                                    Suggestion::span(span.clone()).repl(relative).build(),
+                                ])
+                                .build();
 
-                    let help1 = IssueReport::level(IssueLevel::Help)
-                        .title("try using a relative path starting from the current page:")
-                        .patches(vec![Suggestion::span(span.clone()).repl(relative).build()])
-                        .build();
+                            let help2 = IssueReport::level(IssueLevel::Help)
+                                .title({
+                                    "... or use an absolute path starting \
+                                    from the root of your repository:"
+                                })
+                                .patches(vec![
+                                    Suggestion::span(span.clone()).repl(absolute).build(),
+                                ])
+                                .notes(vec![Note::help(
+                                    concat! { "`", PREPROCESSOR_NAME!(), "`", " will convert ",
+                                    "this path to a format accepted by mdBook" },
+                                )])
+                                .build();
 
-                    let help2 = IssueReport::level(IssueLevel::Help)
-                        .title({
-                            "... or use an absolute path starting \
-                            from the root of your repository:"
-                        })
-                        .patches(vec![Suggestion::span(span.clone()).repl(absolute).build()])
-                        .notes(vec![Note::help(
-                            concat! { "`", PREPROCESSOR_NAME!(), "`", " will convert ",
-                            "this path to a format accepted by mdBook" },
-                        )])
-                        .build();
-
-                    notes.push(Note::note(note));
-                    helps.extend([help1, help2]);
+                            notes.push(Note::note(note));
+                            helps.extend([help1, help2]);
+                        }
+                    }
                 }
 
                 IssueReport::level(IssueLevel::Warning)

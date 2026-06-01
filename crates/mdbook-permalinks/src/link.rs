@@ -27,7 +27,7 @@ pub enum LinkStatus {
 #[derive(Debug)]
 pub struct LinkUnreachable {
     pub tried: Vec<(Url, PathStatus)>,
-    pub helps: Option<LinkFixes>,
+    pub helps: Vec<LinkHelp>,
 }
 
 #[derive(Debug)]
@@ -42,9 +42,11 @@ pub enum PathStatus {
 }
 
 #[derive(Debug)]
-pub struct LinkFixes {
-    pub absolute: RelativeUrl,
-    pub relative: RelativeUrl,
+pub enum LinkHelp {
+    FoundOther {
+        absolute: RelativeUrl,
+        relative: RelativeUrl,
+    },
 }
 
 pub struct LinkSpan<'a>(pub Vec<LinkText<'a>>);
@@ -93,7 +95,10 @@ impl<'a> Link<'a> {
 
     #[inline]
     pub fn unreachable(&mut self, tried: Vec<(Url, PathStatus)>) {
-        let status = LinkUnreachable { tried, helps: None };
+        let status = LinkUnreachable {
+            tried,
+            helps: vec![],
+        };
         self.status = LinkStatus::Unreachable(status);
         trace!(status = ?self.status, link = ?&*self.href);
     }
