@@ -24,7 +24,7 @@ use mdbookkit::{
 };
 
 use self::{
-    link::{ContentHint, LinkStatus, PathFixes, PathStatus, RelativeLink},
+    link::{ContentHint, Link, LinkStatus, PathFixes, PathStatus},
     options::{Config, Options},
     page::Pages,
     vcs::Permalink,
@@ -440,14 +440,14 @@ struct ResolveFile<'a, 'r> {
     hint: ContentHint,
     /// the link was written as an http url rather than a path
     check_mode: bool,
-    link: &'a mut RelativeLink<'r>,
+    link: &'a mut Link<'r>,
 }
 
 struct ResolveBook<'a, 'r> {
     link_url: RelativeUrl,
     page_url: &'a Url,
     page_paths: &'a HashSet<String>,
-    link: &'a mut RelativeLink<'r>,
+    link: &'a mut Link<'r>,
 }
 
 impl<'a, 'r> ResolveFile<'a, 'r> {

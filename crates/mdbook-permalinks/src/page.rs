@@ -15,9 +15,7 @@ use mdbookkit::{
     url::UrlUtil,
 };
 
-use crate::link::{
-    ContentHint, EmitLinkSpan, LinkSpan, LinkStatus, LinkText, RelativeLink, SourceSpan,
-};
+use crate::link::{ContentHint, EmitLinkSpan, Link, LinkSpan, LinkStatus, LinkText, SourceSpan};
 
 pub struct Pages<'a> {
     pages: Vec<(Arc<Url>, Page<'a>)>,
@@ -57,13 +55,13 @@ impl<'a> Pages<'a> {
         self.pages.iter()
     }
 
-    pub fn links(&self) -> impl Iterator<Item = (&Arc<Url>, &RelativeLink<'a>)> {
+    pub fn links(&self) -> impl Iterator<Item = (&Arc<Url>, &Link<'a>)> {
         self.pages.iter().flat_map(|(base, page)| {
             (page.links.iter()).flat_map(move |links| links.links().map(move |link| (base, link)))
         })
     }
 
-    pub fn links_mut(&mut self) -> impl Iterator<Item = (&Arc<Url>, &mut RelativeLink<'a>)> {
+    pub fn links_mut(&mut self) -> impl Iterator<Item = (&Arc<Url>, &mut Link<'a>)> {
         self.pages.iter_mut().flat_map(|(base, page)| {
             let base = &*base;
             (page.links.iter_mut())
@@ -138,7 +136,7 @@ impl<'a> Page<'a> {
                     trace!(?dest, " │ ");
                     trace!(?title, " │ ");
 
-                    let link = RelativeLink {
+                    let link = Link {
                         status: LinkStatus::Ignored,
                         href: dest.clone(),
                         span: SourceSpan {
@@ -198,7 +196,7 @@ impl<'a> Page<'a> {
         self.source
     }
 
-    pub fn links(&self) -> impl Iterator<Item = &RelativeLink<'a>> {
+    pub fn links(&self) -> impl Iterator<Item = &Link<'a>> {
         self.links.iter().flat_map(|span| span.links())
     }
 }

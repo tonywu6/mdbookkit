@@ -37,10 +37,10 @@ pub struct LinkSpan<'a>(pub Vec<LinkText<'a>>);
 
 pub enum LinkText<'a> {
     Text(Event<'a>),
-    Link(RelativeLink<'a>),
+    Link(Link<'a>),
 }
 
-pub struct RelativeLink<'a> {
+pub struct Link<'a> {
     pub status: LinkStatus,
     pub href: CowStr<'a>,
     pub span: SourceSpan,
@@ -60,14 +60,14 @@ pub enum ContentHint {
 }
 
 impl<'a> LinkSpan<'a> {
-    pub fn links_mut(&mut self) -> impl Iterator<Item = &'_ mut RelativeLink<'a>> {
+    pub fn links_mut(&mut self) -> impl Iterator<Item = &'_ mut Link<'a>> {
         self.0.iter_mut().filter_map(|item| match item {
             LinkText::Link(link) => Some(link),
             LinkText::Text(..) => None,
         })
     }
 
-    pub fn links(&self) -> impl Iterator<Item = &'_ RelativeLink<'a>> {
+    pub fn links(&self) -> impl Iterator<Item = &'_ Link<'a>> {
         self.0.iter().filter_map(|item| match item {
             LinkText::Link(link) => Some(link),
             LinkText::Text(..) => None,
@@ -82,7 +82,7 @@ impl<'a> LinkSpan<'a> {
     }
 }
 
-impl<'a> RelativeLink<'a> {
+impl<'a> Link<'a> {
     #[inline]
     pub fn rewritten(&mut self, link: RelativeUrl) {
         self.status = LinkStatus::Rewritten;

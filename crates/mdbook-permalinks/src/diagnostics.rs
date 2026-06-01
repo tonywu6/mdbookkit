@@ -17,7 +17,7 @@ use mdbookkit::{
 
 use crate::{
     Environment, PREPROCESSOR_NAME,
-    link::{LinkStatus, PathFixes, PathStatus, RelativeLink},
+    link::{Link, LinkStatus, PathFixes, PathStatus},
     page::Pages,
 };
 
@@ -44,14 +44,14 @@ impl Environment<'_> {
 }
 
 struct LinkDiagnostic<'a> {
-    link: &'a RelativeLink<'a>,
+    link: &'a Link<'a>,
     base: &'a Url,
     root: &'a Url,
 }
 
 impl<'a> LinkDiagnostic<'a> {
     fn emit(&self) -> IssueReport<'a> {
-        let RelativeLink {
+        let Link {
             status, span, href, ..
         } = self.link;
 
