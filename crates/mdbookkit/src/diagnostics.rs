@@ -411,18 +411,6 @@ impl From<IssueLevel> for tracing::Level {
     }
 }
 
-impl Display for IssueLevel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            IssueLevel::Error => f.write_str("error"),
-            IssueLevel::Warning => f.write_str("warning"),
-            IssueLevel::Info => f.write_str("info"),
-            IssueLevel::Note => f.write_str("note"),
-            IssueLevel::Help => f.write_str("help"),
-        }
-    }
-}
-
 fn byte_to_line_col(text: &str, byte: usize) -> Option<(usize, usize)> {
     if byte >= text.len() {
         return None;

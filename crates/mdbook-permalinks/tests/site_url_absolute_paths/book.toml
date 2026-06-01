@@ -1,4 +1,5 @@
 [preprocessor.permalinks]
+repo-url-template = "https://git.example.org/{tree}/{ref}/{path}"
 
 [output.markdown]
 

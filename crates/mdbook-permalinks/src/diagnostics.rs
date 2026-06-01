@@ -3,7 +3,6 @@ use std::{
     fmt::{Display, Write},
 };
 
-use percent_encoding::percent_decode_str;
 use tap::TapFallible;
 use url::Url;
 
@@ -151,17 +150,18 @@ impl<'a> LinkDiagnostic<'a> {
                         }),
                 } = candidates[0].1
                 {
-                    // TODO: query and fragment
-                    let relative = relative.encoded_path();
-                    let relative = (percent_decode_str(relative).decode_utf8())
-                        .unwrap_or(Cow::Borrowed(relative));
+                    let absolute = (absolute.clone())
+                        .into_decoded()
+                        .consume_with(std::convert::identity);
 
-                    let absolute = format!("/{}", absolute.encoded_path());
-                    let absolute = (percent_decode_str(&absolute).decode_utf8())
-                        .map(Cow::into_owned)
-                        .unwrap_or(absolute);
+                    let relative = (relative.clone())
+                        .into_decoded()
+                        .consume_with(std::convert::identity);
 
-                    let note = format! { "a possible matching path is found at:\n{:?}\n", absolute.show() };
+                    let note = format! {
+                        "the following path is available:\n{:?}\n",
+                        absolute.show()
+                    };
 
                     let help1 = IssueReport::level(IssueLevel::Help)
                         .title("try using a relative path starting from the current page:")

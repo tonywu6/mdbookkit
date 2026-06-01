@@ -29,8 +29,8 @@ pub enum PathStatus {
 
 #[derive(Debug, Clone)]
 pub struct PathFixes {
-    pub relative: RelativeUrl,
     pub absolute: RelativeUrl,
+    pub relative: RelativeUrl,
 }
 
 pub struct LinkSpan<'a>(pub Vec<LinkText<'a>>);

@@ -1,0 +1,11 @@
+ERROR mdbook-permalinks: failed to initialize preprocessor
+
+Caused by:
+    0: failed to read config from book.toml
+    1: TOML parse error at line 6, column 12
+         |
+       6 | site-url = "../book"
+         |            ^^^^^^^^^
+       a base URL cannot contain `..`
+       
+ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

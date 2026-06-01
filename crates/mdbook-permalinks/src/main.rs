@@ -253,7 +253,9 @@ impl Environment<'_> {
                 | PathStatus::NotInRepo),
             ) = relative_to_repo
             {
-                self.try_fix_link(page_url, &file_url, &mut err);
+                if !check_mode {
+                    self.try_fix_link(page_url, &file_url, &mut err);
+                }
                 // at this point `not_in_book` is false
                 // it is okay for `err` to be `Ignored` because the file
                 // will be copied to output anyway
@@ -274,7 +276,9 @@ impl Environment<'_> {
                     link.permalink(href);
                 }
                 Err(mut err) => {
-                    self.try_fix_link(page_url, &file_url, &mut err);
+                    if !check_mode {
+                        self.try_fix_link(page_url, &file_url, &mut err);
+                    }
                     link.unreachable(vec![(file_url, err)]);
                 }
             }
@@ -379,9 +383,10 @@ impl Environment<'_> {
         let Self { vcs, site_url, .. } = self;
         if let Some(alternative) = site_url.transplant(file_url).located_in(&vcs.root)
             && vcs.try_file(&alternative).is_ok()
-            && let Some(relative) = page_url.as_base().make_relative(&alternative)
             && let Some(absolute) = vcs.root.as_base().make_relative(&alternative)
+            && let Some(relative) = page_url.as_base().make_relative(&alternative)
         {
+            let absolute = absolute.into_absolute_path();
             *fix = Some(PathFixes { relative, absolute })
         }
     }

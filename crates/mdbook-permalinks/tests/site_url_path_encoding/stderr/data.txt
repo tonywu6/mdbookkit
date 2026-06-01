@@ -1,0 +1,46 @@
+warning: broken link to "/book/東京都/index.md"
+ --> crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md:1:14
+  |
+1 | - [Homepage](/book/東京都/index.md)
+  |              ^^^^^^^^^^^^^^^^^^^^^ resolves to a path that doesn't exist
+  |
+  = note: the following path is available:
+          "/crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md"
+          
+help: try using a relative path starting from the current page:
+  |
+1 - - [Homepage](/book/東京都/index.md)
+1 + - [Homepage]()
+  |
+help: ... or use an absolute path starting from the root of your repository:
+  |
+1 - - [Homepage](/book/東京都/index.md)
+1 + - [Homepage](/crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md)
+  |
+  = help: `mdbook-permalinks` will convert this path to a format accepted by mdBook
+
+warning: broken link to "/book/%E6%9D%B1%E4%BA%AC都/%69%6E%64%65%78.md"
+ --> crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md:2:14
+  |
+2 | - [Homepage](/book/%E6%9D%B1%E4%BA%AC都/%69%6E%64%65%78.md)
+  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |              |
+  |              resolves to a path that doesn't exist:
+  |              "book/東京都/index.md"
+  |
+  = note: the following path is available:
+          "/crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md"
+          
+help: try using a relative path starting from the current page:
+  |
+2 - - [Homepage](/book/%E6%9D%B1%E4%BA%AC都/%69%6E%64%65%78.md)
+2 + - [Homepage]()
+  |
+help: ... or use an absolute path starting from the root of your repository:
+  |
+2 - - [Homepage](/book/%E6%9D%B1%E4%BA%AC都/%69%6E%64%65%78.md)
+2 + - [Homepage](/crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md)
+  |
+  = help: `mdbook-permalinks` will convert this path to a format accepted by mdBook
+
+ WARN mdbook-permalinks: finished with warnings

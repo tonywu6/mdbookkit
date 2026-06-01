@@ -36,6 +36,7 @@ impl<S: Subscriber> Layer<S> for EventLevelLayer {
     }
 }
 
+#[inline]
 fn level_to_severity(level: Level) -> u8 {
     if level <= Level::ERROR {
         50

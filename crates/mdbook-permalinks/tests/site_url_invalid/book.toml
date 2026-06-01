@@ -1,0 +1,11 @@
+[preprocessor.permalinks]
+
+[output.markdown]
+
+[output.html]
+site-url = "../book"
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

@@ -135,7 +135,26 @@ impl RelativeUrl {
         f(self.url)
     }
 
-    pub fn query(&self) -> Option<&str> {
+    #[inline]
+    pub fn into_absolute_path(self) -> Self {
+        let mut url = self.url;
+        if !url.starts_with('/') {
+            url.insert(0, '/');
+        };
+        Self::new(url)
+    }
+
+    #[inline]
+    pub fn into_decoded(self) -> Self {
+        let url = match percent_decode_str(&self.url).decode_utf8() {
+            Ok(Cow::Borrowed(..)) => self.url,
+            Ok(Cow::Owned(decoded)) => decoded,
+            Err(..) => self.url,
+        };
+        Self::new(url)
+    }
+
+    fn query(&self) -> Option<&str> {
         let start = self.query?;
         if let Some(end) = self.fragment {
             Some(&self.url[start + 1..end])
@@ -144,7 +163,7 @@ impl RelativeUrl {
         }
     }
 
-    pub fn fragment(&self) -> Option<&str> {
+    fn fragment(&self) -> Option<&str> {
         Some(&self.url[self.fragment? + 1..])
     }
 }
