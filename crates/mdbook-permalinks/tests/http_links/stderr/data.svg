@@ -1,8 +1,9 @@
-<svg width="986px" height="1604px" xmlns="http://www.w3.org/2000/svg">
+<svg width="953px" height="1604px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
     .fg-bright-blue { fill: #5CADF1 }
+    .fg-bright-green { fill: #96C475 }
     .fg-yellow { fill: #D19A66 }
     .container {
       padding: 0 10px;
@@ -37,9 +38,9 @@
 </tspan>
     <tspan x="10px" y="172px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="190px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: also tried the following paths</tspan>
+    <tspan x="10px" y="190px"><tspan class="fg-bright-green bold">note</tspan><tspan>: also tried the following paths</tspan>
 </tspan>
-    <tspan x="10px" y="208px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/1.book-links/README.md": path is not part of the book</tspan>
+    <tspan x="10px" y="208px"><tspan>      "crates/mdbook-permalinks/tests/http_links/src/1.book-links/README.md": path is not part of the book</tspan>
 </tspan>
     <tspan x="10px" y="226px">
 </tspan>
@@ -61,9 +62,9 @@
 </tspan>
     <tspan x="10px" y="388px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="406px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: also tried the following paths</tspan>
+    <tspan x="10px" y="406px"><tspan class="fg-bright-green bold">note</tspan><tspan>: also tried the following paths</tspan>
 </tspan>
-    <tspan x="10px" y="424px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.html": path doesn't exist</tspan>
+    <tspan x="10px" y="424px"><tspan>      "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.html": path doesn't exist</tspan>
 </tspan>
     <tspan x="10px" y="442px">
 </tspan>
@@ -85,13 +86,13 @@
 </tspan>
     <tspan x="10px" y="604px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="622px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: also tried the following paths</tspan>
+    <tspan x="10px" y="622px"><tspan class="fg-bright-green bold">note</tspan><tspan>: also tried the following paths</tspan>
 </tspan>
-    <tspan x="10px" y="640px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md/index.md": path is not part of the book</tspan>
+    <tspan x="10px" y="640px"><tspan>      "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md/index.md": path is not part of the book</tspan>
 </tspan>
-    <tspan x="10px" y="658px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md/README.md": path is not part of the book</tspan>
+    <tspan x="10px" y="658px"><tspan>      "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md/README.md": path is not part of the book</tspan>
 </tspan>
-    <tspan x="10px" y="676px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md": path doesn't exist</tspan>
+    <tspan x="10px" y="676px"><tspan>      "crates/mdbook-permalinks/tests/http_links/src/trailing-slash.md": path doesn't exist</tspan>
 </tspan>
     <tspan x="10px" y="694px">
 </tspan>
@@ -113,9 +114,9 @@
 </tspan>
     <tspan x="10px" y="856px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="874px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: also tried the following paths</tspan>
+    <tspan x="10px" y="874px"><tspan class="fg-bright-green bold">note</tspan><tspan>: also tried the following paths</tspan>
 </tspan>
-    <tspan x="10px" y="892px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/staging/README.md": path is not part of the book</tspan>
+    <tspan x="10px" y="892px"><tspan>      "crates/mdbook-permalinks/tests/http_links/src/staging/README.md": path is not part of the book</tspan>
 </tspan>
     <tspan x="10px" y="910px">
 </tspan>
@@ -137,13 +138,13 @@
 </tspan>
     <tspan x="10px" y="1072px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1090px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: also tried the following paths</tspan>
+    <tspan x="10px" y="1090px"><tspan class="fg-bright-green bold">note</tspan><tspan>: also tried the following paths</tspan>
 </tspan>
-    <tspan x="10px" y="1108px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/staging/index.md": path is not part of the book</tspan>
+    <tspan x="10px" y="1108px"><tspan>      "crates/mdbook-permalinks/tests/http_links/src/staging/index.md": path is not part of the book</tspan>
 </tspan>
-    <tspan x="10px" y="1126px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/staging/README.md": path is not part of the book</tspan>
+    <tspan x="10px" y="1126px"><tspan>      "crates/mdbook-permalinks/tests/http_links/src/staging/README.md": path is not part of the book</tspan>
 </tspan>
-    <tspan x="10px" y="1144px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/staging": path is not part of the book</tspan>
+    <tspan x="10px" y="1144px"><tspan>      "crates/mdbook-permalinks/tests/http_links/src/staging": path is not part of the book</tspan>
 </tspan>
     <tspan x="10px" y="1162px">
 </tspan>
@@ -165,13 +166,13 @@
 </tspan>
     <tspan x="10px" y="1324px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1342px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: also tried the following paths</tspan>
+    <tspan x="10px" y="1342px"><tspan class="fg-bright-green bold">note</tspan><tspan>: also tried the following paths</tspan>
 </tspan>
-    <tspan x="10px" y="1360px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/404/index.md": path is not part of the book</tspan>
+    <tspan x="10px" y="1360px"><tspan>      "crates/mdbook-permalinks/tests/http_links/src/404/index.md": path is not part of the book</tspan>
 </tspan>
-    <tspan x="10px" y="1378px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/404/README.md": path is not part of the book</tspan>
+    <tspan x="10px" y="1378px"><tspan>      "crates/mdbook-permalinks/tests/http_links/src/404/README.md": path is not part of the book</tspan>
 </tspan>
-    <tspan x="10px" y="1396px"><tspan>          "crates/mdbook-permalinks/tests/http_links/src/404": path doesn't exist</tspan>
+    <tspan x="10px" y="1396px"><tspan>      "crates/mdbook-permalinks/tests/http_links/src/404": path doesn't exist</tspan>
 </tspan>
     <tspan x="10px" y="1414px">
 </tspan>

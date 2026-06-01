@@ -130,15 +130,15 @@ impl<'a> LinkDiagnostic<'a> {
                     }
                 };
 
-                let mut notes = vec![];
-                let mut helps = vec![];
+                let mut secondary = vec![];
 
                 if unreachable.tried.len() > 1 {
                     let mut note = String::from("also tried the following paths");
                     for (link, status) in unreachable.tried.iter().skip(1) {
                         write!(note, "\n{:?}: path {status}", self.shorten_path(link)).expect_fmt();
                     }
-                    notes.push(Note::note(note));
+                    let note = IssueReport::level(IssueLevel::Note).title(note).build();
+                    secondary.push(note);
                 };
 
                 for help in &unreachable.helps {
@@ -153,9 +153,10 @@ impl<'a> LinkDiagnostic<'a> {
                                 .consume_with(std::convert::identity);
 
                             let note = format! {
-                                "the following path is available:\n{:?}\n",
+                                "the following path is available:\n{:?}",
                                 absolute.show()
                             };
+                            let note = IssueReport::level(IssueLevel::Note).title(note).build();
 
                             let help1 = IssueReport::level(IssueLevel::Help)
                                 .title("try using a relative path starting from the current page:")
@@ -172,14 +173,13 @@ impl<'a> LinkDiagnostic<'a> {
                                 .patches(vec![
                                     Suggestion::span(span.clone()).repl(absolute).build(),
                                 ])
-                                .notes(vec![Note::help(
+                                .notes(vec![Note::note(
                                     concat! { "`", PREPROCESSOR_NAME!(), "`", " will convert ",
                                     "this path to a format accepted by mdBook" },
                                 )])
                                 .build();
 
-                            notes.push(Note::note(note));
-                            helps.extend([help1, help2]);
+                            secondary.extend([note, help1, help2]);
                         }
                     }
                 }
@@ -187,8 +187,7 @@ impl<'a> LinkDiagnostic<'a> {
                 IssueReport::level(IssueLevel::Warning)
                     .title(title)
                     .annotations(labels)
-                    .notes(notes)
-                    .secondary(helps)
+                    .secondary(secondary)
                     .build()
             }
         }
