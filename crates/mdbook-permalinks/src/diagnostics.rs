@@ -1,211 +1,276 @@
-use std::{
-    borrow::Cow,
-    fmt::{Display, Write},
-};
+use std::{borrow::Cow, convert::identity};
 
-use tap::TapFallible;
 use url::Url;
 
 use mdbookkit::{
     diagnostics::{
-        Highlight, IssueLevel, IssueReport, IssueReporter, Note, SourceCode, Suggestion,
-        annotate_snippets::AnnotationKind,
+        Highlight, IssueLevel, IssueReport, Note, Suggestion, annotate_snippets::AnnotationKind,
     },
-    error::{ExpectFmt, Show},
+    error::Show,
     url::UrlUtil,
 };
 
 use crate::{
-    Environment, PREPROCESSOR_NAME,
-    link::{Link, LinkHelp, LinkStatus, PathStatus},
-    page::Pages,
+    PREPROCESSOR_NAME,
+    link::{BookPathError, Link, LinkHelp, LinkState, PathError},
 };
 
-impl Environment<'_> {
-    pub fn issues<'a>(&'a self, contents: &'a Pages<'a>) -> Vec<IssueReporter<'a>> {
-        let root = &self.vcs.root;
-        (contents.pages())
-            .map(|(base, page)| {
-                let issues = (page.links())
-                    .map(|link| LinkDiagnostic { root, base, link }.emit())
-                    .collect();
-                let source_code = page.source();
-                let source_path = root.as_base().show_relative(base).to_string().into();
-                IssueReporter {
-                    issues,
-                    source: SourceCode {
-                        source_code,
-                        source_path,
-                    },
-                }
-            })
-            .collect()
-    }
+pub struct LinkDiagnostic<'a, 'r> {
+    pub link: &'a Link<'r>,
+    pub base: &'a Url,
+    pub root: &'a Url,
 }
 
-struct LinkDiagnostic<'a> {
-    link: &'a Link<'a>,
-    base: &'a Url,
-    root: &'a Url,
-}
+impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
+    pub fn emit(&self) -> IssueReport<'r> {
+        use {BookPathError::*, PathError::*};
 
-impl<'a> LinkDiagnostic<'a> {
-    fn emit(&self) -> IssueReport<'a> {
-        let Link {
-            status, span, href, ..
-        } = self.link;
+        let span = self.link.span().any();
+        let href = self.link.href();
 
-        let span = span.any();
-        let href = &**href;
-
-        match status {
-            LinkStatus::Ignored => IssueReport::level(IssueLevel::Note)
-                .title("these links are not processed")
-                .annotations(vec![
-                    Highlight::span(span.clone())
-                        .kind(AnnotationKind::Context)
-                        .build(),
-                ])
-                .build(),
-
-            LinkStatus::Unchanged => IssueReport::level(IssueLevel::Note)
-                .title("these links point to book pages or static files")
-                .annotations(vec![
-                    Highlight::span(span.clone())
-                        .kind(AnnotationKind::Context)
-                        .build(),
-                ])
-                .build(),
-
-            LinkStatus::Rewritten => IssueReport::level(IssueLevel::Note)
-                .title("rewrote this link as a relative path")
-                .annotations(vec![
-                    Highlight::span(span.clone())
-                        .kind(AnnotationKind::Primary)
-                        .label(href)
-                        .build(),
-                ])
-                .notes(vec![Note::note(
-                    format! { "resolved path is {:?}", self.shorten_href(href) },
-                )])
-                .build(),
-
-            LinkStatus::Permalink => IssueReport::level(IssueLevel::Note)
-                .title("rewrote this link as a permalink")
-                .annotations(vec![
-                    Highlight::span(span.clone())
-                        .kind(AnnotationKind::Primary)
-                        .label(href)
-                        .build(),
-                ])
-                .notes(vec![Note::note(
-                    format! { "resolved path is {:?}", self.shorten_href(href) },
-                )])
-                .build(),
-
-            LinkStatus::Unreachable(unreachable) => {
-                let title = format!("broken link to {href:?}");
-
-                let labels = {
-                    let (link, status) = &unreachable.tried[0];
-                    let shortened = self.shorten_path(link);
-                    if !shortened.starts_with('/') && href.strip_suffix(&*shortened) == Some("/") {
-                        vec![
-                            Highlight::span(span.clone())
-                                .kind(AnnotationKind::Primary)
-                                .label(format!("resolves to a path that {status}"))
-                                .build(),
-                        ]
-                    } else {
-                        vec![
-                            Highlight::span(span.clone())
-                                .kind(AnnotationKind::Primary)
-                                .label(format!("resolves to a path that {status}:"))
-                                .build(),
+        let error = match self.link.state() {
+            Err(error) => error,
+            Ok(state) => {
+                return match state {
+                    LinkState::Unsupported => IssueReport::level(IssueLevel::Note)
+                        .title("the preprocessor does not support these links")
+                        .annotations(vec![
                             Highlight::span(span.clone())
                                 .kind(AnnotationKind::Context)
-                                .label(format!("{shortened:?}"))
                                 .build(),
-                        ]
-                    }
+                        ])
+                        .build(),
+
+                    LinkState::BookLinkChecked => IssueReport::level(IssueLevel::Note)
+                        .title("these links are valid")
+                        .annotations(vec![
+                            Highlight::span(span.clone())
+                                .kind(AnnotationKind::Context)
+                                .build(),
+                        ])
+                        .build(),
+
+                    LinkState::BookLinkUpdated => IssueReport::level(IssueLevel::Note)
+                        .title("updated this link to be a relative path")
+                        .annotations(vec![
+                            Highlight::span(span.clone())
+                                .kind(AnnotationKind::Primary)
+                                .label(href)
+                                .build(),
+                        ])
+                        .notes(vec![Note::note(
+                            format! { "the resolved path is\n{:?}", self.shorten_href(href) },
+                        )])
+                        .build(),
+
+                    LinkState::Permalink => IssueReport::level(IssueLevel::Note)
+                        .title("updated this link to be a permalink")
+                        .annotations(vec![
+                            Highlight::span(span.clone())
+                                .kind(AnnotationKind::Primary)
+                                .label(href)
+                                .build(),
+                        ])
+                        .notes(vec![Note::note(
+                            format! { "the resolved path is\n{:?}", self.shorten_href(href) },
+                        )])
+                        .build(),
                 };
+            }
+        };
 
-                let mut secondary = vec![];
+        let title = format!("broken link to {href:?}");
 
-                if unreachable.tried.len() > 1 {
-                    let mut note = String::from("also tried the following paths");
-                    for (link, status) in unreachable.tried.iter().skip(1) {
-                        write!(note, "\n{:?}: path {status}", self.shorten_path(link)).expect_fmt();
-                    }
-                    let note = IssueReport::level(IssueLevel::Note).title(note).build();
-                    secondary.push(note);
-                };
+        macro_rules! assert_is_md {
+            () => {{
+                let path = error.cause.path();
+                debug_assert! { path.ends_with(".md"), "{href:?} -> {:?}", error.cause.show() };
+            }};
+        }
+        macro_rules! assert_is_http {
+            () => {{
+                debug_assert! { href.starts_with("http:") || href.starts_with("https:"),
+                "{href:?} -> {:?}", error.cause.show() };
+            }};
+        }
 
-                for help in &unreachable.helps {
-                    match help {
-                        LinkHelp::FoundOther { absolute, relative } => {
-                            let absolute = (absolute.clone())
-                                .into_decoded()
-                                .consume_with(std::convert::identity);
+        let mut labels = vec![];
+        let mut notes = vec![];
 
-                            let relative = (relative.clone())
-                                .into_decoded()
-                                .consume_with(std::convert::identity);
+        if let NoSuchPage(ref err) = error.error {
+            let path = self.root.as_base().show_path(&error.cause);
+            match err {
+                NoResourceAtLocation(expected) => {
+                    labels.extend([Highlight::span(span.clone())
+                        .label("link doesn't match any file in the book")
+                        .kind(AnnotationKind::Primary)
+                        .build()]);
 
-                            let note = format! {
-                                "the following path is available:\n{:?}",
-                                absolute.show()
-                            };
-                            let note = IssueReport::level(IssueLevel::Note).title(note).build();
-
-                            let help1 = IssueReport::level(IssueLevel::Help)
-                                .title("try using a relative path starting from the current page:")
-                                .patches(vec![
-                                    Suggestion::span(span.clone()).repl(relative).build(),
-                                ])
-                                .build();
-
-                            let help2 = IssueReport::level(IssueLevel::Help)
-                                .title({
-                                    "... or use an absolute path starting \
-                                    from the root of your repository:"
-                                })
-                                .patches(vec![
-                                    Suggestion::span(span.clone()).repl(absolute).build(),
-                                ])
-                                .notes(vec![Note::note(
-                                    concat! { "`", PREPROCESSOR_NAME!(), "`", " will convert ",
-                                    "this path to a format accepted by mdBook" },
-                                )])
-                                .build();
-
-                            secondary.extend([note, help1, help2]);
+                    let expected = std::fmt::from_fn(|f| {
+                        for c in expected {
+                            let path = self.root.as_base().show_path(&c.cause);
+                            write!(f, "\n{path:?}")?;
                         }
-                    }
+                        Ok(())
+                    });
+
+                    notes.extend([Note::help(format! {
+                        "for this link to be accessible, expected any of the \
+                        following files, but found none:{expected}"
+                    })]);
                 }
 
-                IssueReport::level(IssueLevel::Warning)
-                    .title(title)
-                    .annotations(labels)
-                    .secondary(secondary)
-                    .build()
-            }
-        }
-    }
+                DirectoryHasNoIndexFile => {
+                    labels.extend([Highlight::span(span.clone())
+                        .label("directory has no `index.md` file")
+                        .kind(AnnotationKind::Primary)
+                        .build()]);
 
-    fn shorten_path<'p>(&self, path: &'p Url) -> Cow<'p, str> {
-        if let path = self.root.as_base().show_relative(path).to_string()
-            && !path.starts_with("../")
-        {
-            path.into()
-        } else if path.scheme() == "file" {
-            match path.to_file_path() {
-                Ok(path) => Cow::Owned(path.display().to_string()),
-                Err(()) => Cow::Borrowed(path.path()),
+                    notes.extend([
+                        Note::help({
+                            "without an `index.md` file at this location, the link will \
+                            lead to a 404 error"
+                        }),
+                        Note::note(format!("the resolved path is {path:?}")),
+                    ]);
+                }
+
+                MarkdownFileNotIncluded => {
+                    assert_is_md!();
+
+                    labels.extend([Highlight::span(span.clone())
+                        .label("file is not included in `SUMMARY.md`")
+                        .kind(AnnotationKind::Primary)
+                        .build()]);
+
+                    notes.extend([
+                        Note::help({
+                            "because this Markdown file is not referenced in `SUMMARY.md`, \
+                            it will not be available in the output"
+                        }),
+                        Note::note(format!("the resolved path is {path:?}")),
+                    ]);
+                }
+
+                UnexpectedFileExtension => {
+                    assert_is_md!();
+                    assert_is_http!();
+
+                    labels.extend([Highlight::span(span.clone())
+                        .label("unexpected `.md` extension in link path")
+                        .kind(AnnotationKind::Primary)
+                        .build()]);
+
+                    notes.extend([
+                        Note::help({
+                            "because the output path of this page won't contain \
+                            the `.md` extension, this link won't work correctly"
+                        }),
+                        Note::note(format!("the resolved path is {path:?}")),
+                    ]);
+                }
             }
         } else {
-            Cow::Borrowed(path.as_str())
+            let shortened_path =
+                if let Some(path) = self.root.as_base().make_relative_scoped(&error.cause) {
+                    let path = path.show_path().to_string();
+                    if href.strip_suffix(&path) == Some("/") {
+                        None
+                    } else {
+                        Some(Cow::Owned(path))
+                    }
+                } else if let Ok(path) = error.cause.to_file_path() {
+                    Some(Cow::Owned(path.display().to_string()))
+                } else {
+                    Some(Cow::Borrowed(error.cause.as_str()))
+                };
+
+            #[rustfmt::skip]
+            let label: Cow<_> = match error.error {
+                NotFound => {
+                    "resolves to a path that doesn't exist".into()
+                },
+                NotADirectory => {
+                    "resolves to a path that isn't a directory".into()
+                },
+                GitIgnored => {
+                    "resolves to a path that is gitignored".into()
+                },
+                Inaccessible(e) => { format! {
+                    "resolves to a path that cannot be accessed: I/O error: {e}"
+                }.into() }
+                NotInRepo => {
+                    "resolves to a path that is outside of the repository".into()
+                },
+                InvalidEncoding => {
+                    "link contains characters that are invalid on this system".into()
+                }
+                NoSuchPage(..) => unreachable!(),
+            };
+
+            if let Some(path) = shortened_path {
+                labels.extend([
+                    Highlight::primary(span.clone(), format!("{label}:")),
+                    Highlight::context(span.clone(), format!("{path:?}")),
+                ])
+            } else {
+                labels.extend([Highlight::primary(span.clone(), label)]);
+            }
+        };
+
+        let mut helps = vec![];
+
+        match &error.help {
+            Some(LinkHelp::FoundOther {
+                from_page,
+                from_repo,
+            }) => {
+                let from_repo = from_repo.clone().into_decoded();
+                let from_page = from_page.clone().into_decoded();
+
+                let note = format! {
+                    "the following path is available:\n{:?}",
+                    from_repo.show_path()
+                };
+                let note = IssueReport::level(IssueLevel::Note).title(note).build();
+
+                let help1 = IssueReport::level(IssueLevel::Help)
+                    .title("try using a relative path starting from the current page:")
+                    .patches(vec![
+                        Suggestion::span(span.clone())
+                            .repl(from_page.consume_with(identity))
+                            .build(),
+                    ])
+                    .build();
+
+                let help2 = IssueReport::level(IssueLevel::Help)
+                    .title({
+                        "... or use an absolute path starting \
+                        from the root of your repository:"
+                    })
+                    .patches(vec![
+                        Suggestion::span(span.clone())
+                            .repl(from_repo.consume_with(identity))
+                            .build(),
+                    ])
+                    .notes(vec![Note::note(
+                        concat! { "`", PREPROCESSOR_NAME!(), "`", " will convert ",
+                        "this path to a format accepted by mdBook" },
+                    )])
+                    .build();
+
+                helps.extend([note, help1, help2]);
+            }
+
+            None => {}
         }
+
+        IssueReport::level(IssueLevel::Warning)
+            .title(title)
+            .annotations(labels)
+            .notes(notes)
+            .secondary(helps)
+            .build()
     }
 
     fn shorten_href<'p>(&self, path: &'p str) -> Cow<'p, str> {
@@ -213,30 +278,11 @@ impl<'a> LinkDiagnostic<'a> {
             self.root.join(path)
         } else {
             self.base.join(path)
-        }
-        .tap_ok_mut(|url| {
-            url.set_query(None);
-            url.set_fragment(None);
-        });
+        };
         if let Ok(url) = url {
-            self.shorten_path(&url).into_owned().into()
+            self.root.as_base().show_path(&url).to_string().into()
         } else {
             Cow::Borrowed(path)
         }
-    }
-}
-
-impl Display for PathStatus {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let text = match self {
-            PathStatus::NotFound => "doesn't exist",
-            PathStatus::NotADirectory => "exists but is not a directory",
-            PathStatus::Unreachable => "is inaccessible",
-            PathStatus::GitIgnored => "is ignored by git",
-            PathStatus::NotInRepo => "is outside of this repo",
-            PathStatus::NotInBook => "is not part of the book",
-            PathStatus::InvalidBytes => "is invalid on this system",
-        };
-        f.write_str(text)
     }
 }

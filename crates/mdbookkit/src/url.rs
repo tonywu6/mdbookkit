@@ -17,12 +17,23 @@ use crate::error::{Show, WithDebugContext};
 pub trait UrlUtil {
     fn ensure_trailing_slash(&mut self);
 
+    fn ensure_no_trailing_slash(&mut self);
+
     #[inline]
     fn with_trailing_slash(mut self) -> Self
     where
         Self: Sized,
     {
         self.ensure_trailing_slash();
+        self
+    }
+
+    #[inline]
+    fn with_no_trailing_slash(mut self) -> Self
+    where
+        Self: Sized,
+    {
+        self.ensure_no_trailing_slash();
         self
     }
 
@@ -38,18 +49,11 @@ pub trait UrlUtil {
 
     fn as_base<'a>(&'a self) -> BaseUrl<'a>;
 
-    fn with_after_path(self, url: &RelativeUrl) -> Self;
+    fn include_after_path(self, url: &impl UrlAfterPath) -> Self;
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct BaseUrl<'a>(&'a Url);
-
-#[derive(Debug, Clone)]
-pub struct RelativeUrl {
-    url: String,
-    query: Option<usize>,
-    fragment: Option<usize>,
-}
 
 impl BaseUrl<'_> {
     #[inline]
@@ -59,25 +63,37 @@ impl BaseUrl<'_> {
     }
 
     #[inline]
+    pub fn make_relative_scoped(self, url: &Url) -> Option<RelativeUrl> {
+        let href = self.make_relative(url)?;
+        if !href.encoded_path().starts_with("../") {
+            Some(href)
+        } else if self.0.path().strip_prefix(url.path()) == Some("/") {
+            self.make_relative_scoped(self.0)
+        } else {
+            None
+        }
+    }
+
+    #[inline]
     pub fn make_absolute(self, url: &RelativeUrl) -> Url {
         (self.0.join(&url.url)).expect("`url` was created from `make_relative` and should be valid")
     }
 
-    pub fn show_relative(self, url: &Url) -> impl Debug + Display + Show {
+    pub fn show_path(self, url: &Url) -> impl Display + Debug + Show {
         struct ShowUrl<'a, 'b> {
-            base: &'a Url,
+            base: BaseUrl<'a>,
             url: &'b Url,
-        }
-
-        impl Debug for ShowUrl<'_, '_> {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                self.with_string(|s| write!(f, "{s:?}"))
-            }
         }
 
         impl Display for ShowUrl<'_, '_> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                self.with_string(|s| write!(f, "{s}"))
+                self.with_str(|s| write!(f, "{s}"))
+            }
+        }
+
+        impl Debug for ShowUrl<'_, '_> {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                self.with_str(|s| write!(f, "{s:?}"))
             }
         }
 
@@ -88,31 +104,55 @@ impl BaseUrl<'_> {
         }
 
         impl ShowUrl<'_, '_> {
-            fn with_string<F, T>(&self, f: F) -> T
+            fn with_str<F, T>(&self, f: F) -> T
             where
-                F: FnOnce(Cow<'_, str>) -> T,
+                F: FnOnce(&'_ str) -> T,
             {
                 #[allow(clippy::disallowed_methods)]
-                if let Some(path) = self.base.make_relative(self.url) {
-                    f(percent_decode_str(&path).decode_utf8_lossy())
+                if let Some(path) = self.base.make_relative_scoped(self.url) {
+                    f(&path.show_path().to_string())
                 } else if let Ok(path) = self.url.to_file_path() {
-                    f(path.display().to_string().into())
+                    f(&path.display().to_string())
                 } else {
-                    f(percent_decode_str(self.url.as_str()).decode_utf8_lossy())
+                    f(&percent_decode_str(self.url.path()).decode_utf8_lossy())
                 }
             }
         }
 
-        ShowUrl { base: self.0, url }
+        ShowUrl { base: self, url }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct RelativeUrl {
+    url: String,
+    query: Option<usize>,
+    fragment: Option<usize>,
 }
 
 impl RelativeUrl {
     fn new(url: String) -> Self {
-        Self {
-            query: url.find('?'),
-            fragment: url.find('#'),
-            url,
+        match (url.find('?'), url.find('#')) {
+            (Some(query), Some(fragment)) => {
+                if query < fragment {
+                    Self {
+                        url,
+                        query: Some(query),
+                        fragment: Some(fragment),
+                    }
+                } else {
+                    Self {
+                        url,
+                        query: None,
+                        fragment: Some(fragment),
+                    }
+                }
+            }
+            (query, fragment) => Self {
+                url,
+                query,
+                fragment,
+            },
         }
     }
 
@@ -124,6 +164,39 @@ impl RelativeUrl {
             &self.url[..idx]
         } else {
             &self.url
+        }
+    }
+
+    #[inline]
+    pub fn show_path(&self) -> impl Debug + Display + Show {
+        struct DecodedPath<'a>(&'a str);
+        return DecodedPath(self.encoded_path());
+
+        impl Display for DecodedPath<'_> {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                self.with_str(|s| write!(f, "{s}"))
+            }
+        }
+
+        impl Debug for DecodedPath<'_> {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                self.with_str(|s| write!(f, "{s:?}"))
+            }
+        }
+
+        impl Show for DecodedPath<'_> {
+            fn show(&self) -> impl Debug {
+                self
+            }
+        }
+
+        impl DecodedPath<'_> {
+            fn with_str<F, T>(&self, f: F) -> T
+            where
+                F: FnOnce(&'_ str) -> T,
+            {
+                f(&percent_decode_str(self.0).decode_utf8_lossy())
+            }
         }
     }
 
@@ -168,6 +241,12 @@ impl RelativeUrl {
     }
 }
 
+impl PartialEq<&str> for RelativeUrl {
+    fn eq(&self, other: &&str) -> bool {
+        self.url.eq(other)
+    }
+}
+
 impl UrlUtil for Url {
     #[inline]
     fn ensure_trailing_slash(&mut self) {
@@ -178,6 +257,20 @@ impl UrlUtil for Url {
             if !path.ends_with('/') {
                 self.set_path(&format!("{path}/"));
             }
+        }
+    }
+
+    #[inline]
+    fn ensure_no_trailing_slash(&mut self) {
+        if let Ok(mut paths) = self.path_segments_mut() {
+            paths.pop_if_empty();
+        } else {
+            let mut path = self.path();
+            while let Some(p) = path.strip_suffix('/') {
+                path = p;
+            }
+            #[allow(clippy::unnecessary_to_owned)] // E0502
+            self.set_path(&path.to_owned());
         }
     }
 
@@ -338,7 +431,7 @@ impl UrlUtil for Url {
     }
 
     #[inline]
-    fn with_after_path(mut self, url: &RelativeUrl) -> Self {
+    fn include_after_path(mut self, url: &impl UrlAfterPath) -> Self {
         match (self.query(), url.query()) {
             (_, None) => {}
             (None, Some(query)) => self.set_query(Some(query)),
@@ -355,43 +448,43 @@ impl UrlUtil for Url {
     }
 }
 
-#[derive(Debug)]
-pub struct UrlMatch<'pat, 'url> {
-    pub matches: HashMap<Cow<'pat, str>, Cow<'url, str>>,
-    pub query: Option<Cow<'url, str>>,
-    pub fragment: Option<&'url str>,
+#[doc(hidden)]
+pub trait UrlAfterPath {
+    fn query(&self) -> Option<&str>;
+    fn fragment(&self) -> Option<&str>;
 }
 
-impl UrlMatch<'_, '_> {
-    pub fn to_relative_url(&self, path: &str) -> Option<RelativeUrl> {
-        let mut url = match self.matches.get(path)? {
-            Cow::Borrowed(url) => (*url).to_owned(),
-            Cow::Owned(url) => url.clone(),
-        };
+impl UrlAfterPath for Url {
+    #[inline]
+    fn query(&self) -> Option<&str> {
+        self.query()
+    }
 
-        let query = if let Some(ref query) = self.query {
-            let idx = url.len();
-            url.push('?');
-            url.push_str(query);
-            Some(idx)
-        } else {
-            None
-        };
+    #[inline]
+    fn fragment(&self) -> Option<&str> {
+        self.fragment()
+    }
+}
 
-        let fragment = if let Some(fragment) = self.fragment {
-            let idx = url.len();
-            url.push('#');
-            url.push_str(fragment);
-            Some(idx)
-        } else {
-            None
-        };
+impl UrlAfterPath for RelativeUrl {
+    #[inline]
+    fn query(&self) -> Option<&str> {
+        self.query()
+    }
 
-        Some(RelativeUrl {
-            url,
-            query,
-            fragment,
-        })
+    #[inline]
+    fn fragment(&self) -> Option<&str> {
+        self.fragment()
+    }
+}
+
+impl UrlAfterPath for () {
+    fn query(&self) -> Option<&str> {
+        None
+    }
+
+    fn fragment(&self) -> Option<&str> {
+        None
     }
 }
 
@@ -409,6 +502,26 @@ fn decode_group(segment: &str) -> Option<&str> {
         (segment.strip_suffix("%7D")).or_else(|| segment.strip_suffix('}'))
     } else {
         None
+    }
+}
+
+#[derive(Debug)]
+pub struct UrlMatch<'pat, 'url> {
+    pub matches: HashMap<Cow<'pat, str>, Cow<'url, str>>,
+    pub query: Option<Cow<'url, str>>,
+    pub fragment: Option<&'url str>,
+}
+
+impl UrlMatch<'_, '_> {
+    pub fn to_relative_url(&self, path: &str) -> Option<RelativeUrl> {
+        let path = self.matches.get(path)?;
+        let url = match (&self.query, self.fragment) {
+            (Some(query), Some(fragment)) => format!("{path}?{query}#{fragment}"),
+            (Some(query), None) => format!("{path}?{query}"),
+            (None, Some(fragment)) => format!("{path}#{fragment}"),
+            (None, None) => path.clone().into_owned(),
+        };
+        Some(RelativeUrl::new(url))
     }
 }
 

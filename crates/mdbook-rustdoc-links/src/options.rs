@@ -634,100 +634,95 @@ where
 
 impl Builder {
     pub fn debug(&self) -> impl Debug {
-        struct DebugBuilder<'a>(&'a Builder);
-        return DebugBuilder(self);
+        std::fmt::from_fn(|f| {
+            let mut f = f.debug_list();
 
-        impl Debug for DebugBuilder<'_> {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                let mut f = f.debug_list();
+            let Builder { targets, options } = self;
+            let BuildOptions {
+                packages,
+                preludes,
+                features:
+                    FeatureSelection {
+                        features,
+                        all_features,
+                        no_default_features,
+                    },
+                rustc_args,
+                rustdoc_args,
+                cargo:
+                    CargoOptions {
+                        toolchain,
+                        cargo_args,
+                        runner,
+                    },
+                docs_rs,
+            } = options;
 
-                let Builder { targets, options } = self.0;
-                let BuildOptions {
-                    packages,
-                    preludes,
-                    features:
-                        FeatureSelection {
-                            features,
-                            all_features,
-                            no_default_features,
-                        },
-                    rustc_args,
-                    rustdoc_args,
-                    cargo:
-                        CargoOptions {
-                            toolchain,
-                            cargo_args,
-                            runner,
-                        },
-                    docs_rs,
-                } = options;
+            let mut non_exhaustive = preludes.is_some()
+                || !rustc_args.is_empty()
+                || !rustdoc_args.is_empty()
+                || !cargo_args.is_empty()
+                || !runner.is_undefined();
 
-                let mut non_exhaustive = preludes.is_some()
-                    || !rustc_args.is_empty()
-                    || !rustdoc_args.is_empty()
-                    || !cargo_args.is_empty()
-                    || !runner.is_undefined();
+            if matches!(docs_rs, Some(true)) {
+                f.entry(&format_args!("docs.rs"));
+            }
 
-                if matches!(docs_rs, Some(true)) {
-                    f.entry(&format_args!("docs.rs"));
-                }
+            if let Some(toolchain) = toolchain {
+                f.entry(&format_args!("{toolchain}"));
+            }
 
-                if let Some(toolchain) = toolchain {
-                    f.entry(&format_args!("{toolchain}"));
-                }
-
-                if targets.is_empty() {
-                    f.entry(&format_args!("default targets"));
-                } else {
-                    for t in &self.0.targets {
-                        f.entry(&format_args!("{t}"));
-                    }
-                }
-
-                if features.len() > 3 {
-                    non_exhaustive = true
-                }
-                for feature in features.iter().take(3) {
-                    f.entry(&feature);
-                }
-
-                let packages = packages.as_deref().unwrap_or_default();
-                if packages.len() > 3 {
-                    non_exhaustive = true
-                }
-                for package in packages.iter().take(3) {
-                    if let PackageSpec::Selector(PackageSelector {
-                        name: Some(name), ..
-                    })
-                    | PackageSpec::Name(name) = package
-                    {
-                        f.entry(&name);
-                    } else if let PackageSpec::Selector(PackageSelector {
-                        workspace: WorkspaceMember::Default | WorkspaceMember::All,
-                        ..
-                    }) = package
-                    {
-                        f.entry(&format_args!("workspace members"));
-                    } else {
-                        non_exhaustive = true
-                    }
-                }
-
-                if matches!(all_features, Some(true)) {
-                    f.entry(&format_args!("all-features"));
-                }
-                if matches!(no_default_features, Some(true)) {
-                    f.entry(&format_args!("no-default-features"));
-                }
-
-                if non_exhaustive {
-                    f.entry(&format_args!("(additional options)"));
-                    f.finish_non_exhaustive()
-                } else {
-                    f.finish()
+            if targets.is_empty() {
+                f.entry(&format_args!("default targets"));
+            } else {
+                for t in &self.targets {
+                    f.entry(&format_args!("{t}"));
                 }
             }
-        }
+
+            if features.len() > 3 {
+                non_exhaustive = true
+            }
+            for feature in features.iter().take(3) {
+                f.entry(&feature);
+            }
+
+            let packages = packages.as_deref().unwrap_or_default();
+            if packages.len() > 3 {
+                non_exhaustive = true
+            }
+            for package in packages.iter().take(3) {
+                if let PackageSpec::Selector(PackageSelector {
+                    name: Some(name), ..
+                })
+                | PackageSpec::Name(name) = package
+                {
+                    f.entry(&name);
+                } else if let PackageSpec::Selector(PackageSelector {
+                    workspace: WorkspaceMember::Default | WorkspaceMember::All,
+                    ..
+                }) = package
+                {
+                    f.entry(&format_args!("workspace members"));
+                } else {
+                    non_exhaustive = true
+                }
+            }
+
+            if matches!(all_features, Some(true)) {
+                f.entry(&format_args!("all-features"));
+            }
+            if matches!(no_default_features, Some(true)) {
+                f.entry(&format_args!("no-default-features"));
+            }
+
+            if non_exhaustive {
+                f.entry(&format_args!("(additional options)"));
+                f.finish_non_exhaustive()
+            } else {
+                f.finish()
+            }
+        })
     }
 }
 

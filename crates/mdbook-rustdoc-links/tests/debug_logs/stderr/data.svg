@@ -205,13 +205,13 @@
 </tspan>
     <tspan x="10px" y="1648px"><tspan>                dev: BaseUrl(</tspan>
 </tspan>
-    <tspan x="10px" y="1666px"><tspan>                    "https://docs.rs/%7Bpkg_name%7D/%7Bversion%7D/",</tspan>
+    <tspan x="10px" y="1666px"><tspan>                    "https://docs.rs/{pkg_name}/{version}/",</tspan>
 </tspan>
     <tspan x="10px" y="1684px"><tspan>                ),</tspan>
 </tspan>
     <tspan x="10px" y="1702px"><tspan>                release: BaseUrl(</tspan>
 </tspan>
-    <tspan x="10px" y="1720px"><tspan>                    "https://docs.rs/%7Bpkg_name%7D/%7Bversion%7D/",</tspan>
+    <tspan x="10px" y="1720px"><tspan>                    "https://docs.rs/{pkg_name}/{version}/",</tspan>
 </tspan>
     <tspan x="10px" y="1738px"><tspan>                ),</tspan>
 </tspan>

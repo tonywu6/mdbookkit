@@ -257,27 +257,21 @@ impl Show for BaseUrl {
 
 impl Show for BaseUrlValue {
     fn show(&self) -> impl Debug {
-        struct ShowBaseUrl<'a>(&'a BaseUrlValue);
-        return ShowBaseUrl(self);
-        impl Debug for ShowBaseUrl<'_> {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                match self.0 {
-                    BaseUrlValue::Http { http, .. } => http.show().fmt(f),
-                    BaseUrlValue::Path { path, search, hash } => {
-                        let mut text = format!("{}", path.display());
-                        if let Some(search) = search {
-                            text.push('?');
-                            text.push_str(search);
-                        }
-                        if let Some(hash) = hash {
-                            text.push('#');
-                            text.push_str(hash);
-                        }
-                        text.show().fmt(f)
-                    }
+        std::fmt::from_fn(|f| match self {
+            BaseUrlValue::Http { http, .. } => http.show().fmt(f),
+            BaseUrlValue::Path { path, search, hash } => {
+                let mut text = format!("{}", path.display());
+                if let Some(search) = search {
+                    text.push('?');
+                    text.push_str(search);
                 }
+                if let Some(hash) = hash {
+                    text.push('#');
+                    text.push_str(hash);
+                }
+                text.show().fmt(f)
             }
-        }
+        })
     }
 }
 

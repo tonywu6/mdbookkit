@@ -362,6 +362,22 @@ impl<'a> Note<'a> {
     }
 }
 
+impl<'a> Highlight<'a> {
+    pub fn primary(span: Range<usize>, text: impl Into<Cow<'a, str>>) -> Self {
+        Self::span(span)
+            .kind(AnnotationKind::Primary)
+            .label(text)
+            .build()
+    }
+
+    pub fn context(span: Range<usize>, text: impl Into<Cow<'a, str>>) -> Self {
+        Self::span(span)
+            .kind(AnnotationKind::Context)
+            .label(text)
+            .build()
+    }
+}
+
 impl<'a> From<Highlight<'a>> for Annotation<'a> {
     #[inline]
     fn from(this: Highlight<'a>) -> Self {

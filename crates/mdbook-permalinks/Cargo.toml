@@ -4,7 +4,6 @@ publish = true
 version = "2.0.1"
 
 edition.workspace = true
-rust-version.workspace = true
 
 authors.workspace = true
 license.workspace = true
@@ -20,6 +19,7 @@ exclude = ["src/tests", "tests"]
 
 [dependencies]
 anyhow = { workspace = true }
+bon = { workspace = true }
 clap = { workspace = true }
 git2 = { version = "0.20.4", default-features = false }
 gix-url = { version = "0.35.2" }

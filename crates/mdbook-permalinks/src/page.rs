@@ -1,24 +1,26 @@
-use std::{
-    collections::{HashMap, HashSet},
-    sync::Arc,
-};
+use std::{collections::HashMap, fmt::Debug};
 
 use anyhow::{Result, bail};
 use mdbook_markdown::pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
-use tap::Pipe;
-use tracing::{debug, info, trace};
+use tap::{Pipe, Tap};
+use tracing::{debug, info, instrument, trace};
 use url::Url;
 
 use mdbookkit::{
-    markdown::{PatchStream, Spanned, locate_text},
+    error::Show,
+    markdown::{PatchStream, Spanned},
     plural,
-    url::UrlUtil,
+    url::{RelativeUrl, UrlUtil},
 };
 
-use crate::link::{ContentHint, EmitLinkSpan, Link, LinkSpan, LinkStatus, LinkText, SourceSpan};
+use crate::{
+    link::{ContentKind, EmitLinkSpan, Link, LinkSpan, LinkState, LinkText},
+    vcs::VersionControl,
+};
 
 pub struct Pages<'a> {
-    pages: Vec<(Arc<Url>, Page<'a>)>,
+    root: Url,
+    pages: Vec<(Url, Page<'a>)>,
     markdown: Options,
 }
 
@@ -28,40 +30,26 @@ pub struct Page<'a> {
 }
 
 impl<'a> Pages<'a> {
-    pub fn new(markdown: Options) -> Self {
+    pub fn new(root: Url, markdown: Options) -> Self {
         Self {
+            root: root.with_trailing_slash(),
             pages: Default::default(),
             markdown,
         }
     }
 
-    pub fn paths(&self, root: &Url) -> HashSet<String> {
-        (self.pages.iter())
-            .filter_map(|(url, _)| {
-                let href = root.as_base().make_relative(url)?;
-                Some(href.encoded_path().to_owned())
-            })
-            .collect()
-    }
-
     pub fn insert(&mut self, url: Url, source: &'a str) -> Result<()> {
         let stream = Parser::new_ext(source, self.markdown).into_offset_iter();
         let page = Page::read(source, stream)?;
-        self.pages.push((url.into(), page));
+        self.pages.push((url, page));
         Ok(())
     }
 
-    pub fn pages(&self) -> impl Iterator<Item = &(Arc<Url>, Page<'a>)> {
+    pub fn pages(&self) -> impl Iterator<Item = &(Url, Page<'a>)> {
         self.pages.iter()
     }
 
-    pub fn links(&self) -> impl Iterator<Item = (&Arc<Url>, &Link<'a>)> {
-        self.pages.iter().flat_map(|(base, page)| {
-            (page.links.iter()).flat_map(move |links| links.links().map(move |link| (base, link)))
-        })
-    }
-
-    pub fn links_mut(&mut self) -> impl Iterator<Item = (&Arc<Url>, &mut Link<'a>)> {
+    pub fn links_mut(&mut self) -> impl Iterator<Item = (&Url, &mut Link<'a>)> {
         self.pages.iter_mut().flat_map(|(base, page)| {
             let base = &*base;
             (page.links.iter_mut())
@@ -69,7 +57,7 @@ impl<'a> Pages<'a> {
         })
     }
 
-    pub fn emit(self) -> HashMap<Arc<Url>, Result<String>> {
+    pub fn emit(self) -> HashMap<Url, Result<String>> {
         self.pages
             .into_iter()
             .map(|(key, page)| (key, page.emit()))
@@ -81,28 +69,34 @@ impl<'a> Pages<'a> {
         let mut unchanged = 0;
         let mut rewritten = 0;
         let mut permalink = 0;
-        let mut unreachable = 0;
+        let mut error = 0;
         let mut total = 0;
 
-        for (_, link) in self.links() {
-            total += 1;
-            match link.status {
-                LinkStatus::Ignored => ignored += 1,
-                LinkStatus::Unchanged => unchanged += 1,
-                LinkStatus::Rewritten => rewritten += 1,
-                LinkStatus::Permalink => permalink += 1,
-                LinkStatus::Unreachable(_) => unreachable += 1,
+        for (_, page) in self.pages() {
+            for link in page.links() {
+                total += 1;
+                match link.state() {
+                    Ok(LinkState::Unsupported) => ignored += 1,
+                    Ok(LinkState::BookLinkChecked) => unchanged += 1,
+                    Ok(LinkState::BookLinkUpdated) => rewritten += 1,
+                    Ok(LinkState::Permalink) => permalink += 1,
+                    Err(..) => error += 1,
+                }
             }
         }
 
         info!(
-            "processed {total}: {permalink} to repo; {rewritten} to book; {unreachable}; {unchanged}",
+            "processed {total}: {permalink} to repo; {rewritten} to book; {error}; {unchanged}",
             total = plural!(total, "link"),
             permalink = plural!(permalink, "link"),
             rewritten = plural!(rewritten, "link"),
-            unreachable = plural!(unreachable, "inaccessible path"),
+            error = plural!(error, "has error", "have errors"),
             unchanged = plural!(unchanged + ignored, "unchanged", "unchanged"),
         );
+    }
+
+    pub fn root(&self) -> &Url {
+        &self.root
     }
 }
 
@@ -121,32 +115,30 @@ impl<'a> Page<'a> {
         for (event, span) in stream {
             match event {
                 Event::Start(tag @ (Tag::Link { .. } | Tag::Image { .. })) => {
-                    let (hint, dest, title) = match tag {
+                    let (kind, dest, title) = match tag {
                         Tag::Link {
                             dest_url, title, ..
-                        } => (ContentHint::Tree, dest_url, title),
+                        } => (ContentKind::Web, dest_url, title),
                         Tag::Image {
                             dest_url, title, ..
-                        } => (ContentHint::Raw, dest_url, title),
+                        } => (ContentKind::Raw, dest_url, title),
                         _ => unreachable!(),
                     };
 
                     let parent = opened.as_ref().map(|link| link.span());
-                    trace!(?span, ?parent, ?hint, ">>>");
+                    trace!(?span, ?parent, ?kind, ">>>");
                     trace!(?dest, " │ ");
                     trace!(?title, " │ ");
 
-                    let link = Link {
-                        status: LinkStatus::Ignored,
-                        href: dest.clone(),
-                        span: SourceSpan {
-                            full: span,
-                            link: locate_text(source, &dest),
-                        },
-                        hint,
-                        title,
-                    }
-                    .pipe(LinkText::Link);
+                    let link = Link::builder()
+                        .href(dest.clone())
+                        .span(span)
+                        .kind(kind)
+                        .title(title)
+                        .source(source)
+                        .build()
+                        .pipe(Box::new)
+                        .pipe(LinkText::Link);
 
                     match opened.as_mut() {
                         Some(opened) => opened.0.push(link),
@@ -198,5 +190,130 @@ impl<'a> Page<'a> {
 
     pub fn links(&self) -> impl Iterator<Item = &Link<'a>> {
         self.links.iter().flat_map(|span| span.links())
+    }
+}
+
+pub struct BookPaths {
+    root: RelativeUrl,
+    source_paths: HashMap<String, Url>,
+    public_paths: HashMap<String, Url>,
+}
+
+impl Pages<'_> {
+    pub fn book_paths(&self, vcs: &VersionControl) -> BookPaths {
+        let mut source_paths = HashMap::new();
+        let mut public_paths = HashMap::new();
+
+        let root = vcs.root().as_base();
+
+        for (url, _) in self.pages.iter() {
+            if (url.path().ends_with("/index.md") || url.path().ends_with("/README.md"))
+                && let Ok(mut path) = url.join(".")
+            {
+                path.ensure_trailing_slash();
+                if let Some(href) = root.make_relative(&path) {
+                    let href = href.encoded_path().to_owned();
+                    public_paths.insert(href, url.clone());
+                }
+                path.ensure_no_trailing_slash();
+                if let Some(href) = root.make_relative(&path) {
+                    let href = href.encoded_path().to_owned();
+                    public_paths.insert(href, url.clone());
+                }
+            }
+
+            if let Some(href) = root.make_relative(url) {
+                let href = href.encoded_path().to_owned();
+                if let Some(href) = href.strip_suffix(".md") {
+                    public_paths.insert(format!("{href}.html"), url.clone());
+                    public_paths.insert(href.to_owned(), url.clone());
+                }
+
+                source_paths.insert(href, url.clone());
+            }
+        }
+
+        let root = (vcs.root().as_base())
+            .make_relative(&self.root)
+            .expect("`page_dir` should be under source control");
+
+        BookPaths {
+            root,
+            source_paths,
+            public_paths,
+        }
+    }
+}
+
+impl BookPaths {
+    #[instrument(level = "trace", "book_try_file", skip_all, fields(path = ?url.show_path()))]
+    pub fn try_file(&self, url: &RelativeUrl) -> Option<TryBookPath> {
+        let root = self.root.encoded_path();
+        let path = url.encoded_path();
+        if let Some(canonical) = self.source_paths.get(path) {
+            trace!("source path to {:?}", canonical.show());
+            let resolved = canonical.clone().include_after_path(url);
+            Some(TryBookPath::SourcePath { resolved })
+        } else if let Some(canonical) = self.public_paths.get(path) {
+            trace!("public path to {:?}", canonical.show());
+            let resolved = canonical.clone().include_after_path(url);
+            Some(TryBookPath::PublicPath { resolved })
+        } else if path.starts_with(root) || root.strip_prefix(path) == Some("/") {
+            debug!("no matching source file");
+            Some(TryBookPath::NoSuchPage)
+        } else {
+            trace!("outside the book");
+            None
+        }
+    }
+
+    pub fn source_paths_for(url: &Url) -> Vec<Url> {
+        if url.path().ends_with('/') {
+            vec![
+                (url.clone()).tap_mut(|u| u.set_path(&format!("{}index.md", u.path()))),
+                (url.clone()).tap_mut(|u| u.set_path(&format!("{}README.md", u.path()))),
+            ]
+        } else if let Some(path) = url.path().strip_suffix(".html") {
+            vec![
+                (url.clone()).tap_mut(|u| u.set_path(&format!("{path}.md"))),
+                (url.clone()),
+            ]
+        } else {
+            let mut paths = vec![
+                (url.clone()).tap_mut(|u| u.set_path(&format!("{}.md", url.path()))),
+                (url.clone()).tap_mut(|u| u.set_path(&format!("{}/index.md", url.path()))),
+                (url.clone()).tap_mut(|u| u.set_path(&format!("{}/README.md", url.path()))),
+                (url.clone()),
+            ];
+            if let Some(mut path) = url.path_segments()
+                && let Some(name) = path.next_back()
+                && name.contains('.')
+            {
+                paths.swap(0, 3);
+            }
+            paths
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum TryBookPath {
+    NoSuchPage,
+    SourcePath { resolved: Url },
+    PublicPath { resolved: Url },
+}
+
+impl Debug for BookPaths {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BookPaths")
+            .field(
+                "source_paths",
+                &std::fmt::from_fn(|f| f.debug_set().entries(self.source_paths.keys()).finish()),
+            )
+            .field(
+                "public_paths",
+                &std::fmt::from_fn(|f| f.debug_set().entries(self.public_paths.keys()).finish()),
+            )
+            .finish_non_exhaustive()
     }
 }

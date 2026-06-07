@@ -1,4 +1,4 @@
-<svg width="740px" height="1334px" xmlns="http://www.w3.org/2000/svg">
+<svg width="944px" height="1766px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -19,151 +19,199 @@
   <rect width="100%" height="100%" y="0"  class="bg" />
 
   <text xml:space="preserve" class="container fg">
-    <tspan x="10px" y="28px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "draft.md"</tspan>
+    <tspan x="10px" y="28px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "."</tspan>
 </tspan>
-    <tspan x="10px" y="46px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:1:6</tspan>
+    <tspan x="10px" y="46px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/3.book-paths.md:2:6</tspan>
 </tspan>
     <tspan x="10px" y="64px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="82px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">draft.md</tspan><tspan>)</tspan>
+    <tspan x="10px" y="82px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">.</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="100px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^</tspan>
+    <tspan x="10px" y="100px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^</tspan><tspan> </tspan><tspan class="fg-yellow bold">directory has no `index.md` file</tspan>
 </tspan>
-    <tspan x="10px" y="118px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="118px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="136px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist:</tspan>
+    <tspan x="10px" y="136px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: without an `index.md` file at this location, the link will lead to a 404 error</tspan>
 </tspan>
-    <tspan x="10px" y="154px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">"crates/mdbook-permalinks/tests/file_links/src/draft.md"</tspan>
+    <tspan x="10px" y="154px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the resolved path is "crates/mdbook-permalinks/tests/file_links/src/"</tspan>
 </tspan>
     <tspan x="10px" y="172px">
 </tspan>
-    <tspan x="10px" y="190px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "../../Cargo.lock"</tspan>
+    <tspan x="10px" y="190px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "SUMMARY.md"</tspan>
 </tspan>
-    <tspan x="10px" y="208px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:2:6</tspan>
+    <tspan x="10px" y="208px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/3.book-paths.md:5:6</tspan>
 </tspan>
     <tspan x="10px" y="226px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="244px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">../../Cargo.lock</tspan><tspan>)</tspan>
+    <tspan x="10px" y="244px"><tspan class="fg-bright-blue bold">5</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">SUMMARY.md</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="262px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^</tspan>
+    <tspan x="10px" y="262px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">file is not included in `SUMMARY.md`</tspan>
 </tspan>
-    <tspan x="10px" y="280px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="280px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="298px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist:</tspan>
+    <tspan x="10px" y="298px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
 </tspan>
-    <tspan x="10px" y="316px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">"crates/mdbook-permalinks/tests/Cargo.lock"</tspan>
+    <tspan x="10px" y="316px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the resolved path is "crates/mdbook-permalinks/tests/file_links/src/SUMMARY.md"</tspan>
 </tspan>
     <tspan x="10px" y="334px">
 </tspan>
-    <tspan x="10px" y="352px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "/LICENSE-GPL.md"</tspan>
+    <tspan x="10px" y="352px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "draft.md"</tspan>
 </tspan>
-    <tspan x="10px" y="370px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:3:6</tspan>
+    <tspan x="10px" y="370px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:1:6</tspan>
 </tspan>
     <tspan x="10px" y="388px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="406px"><tspan class="fg-bright-blue bold">3</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">/LICENSE-GPL.md</tspan><tspan>)</tspan>
+    <tspan x="10px" y="406px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">draft.md</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="424px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist</tspan>
+    <tspan x="10px" y="424px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">link doesn't match any file in the book</tspan>
 </tspan>
-    <tspan x="10px" y="442px">
+    <tspan x="10px" y="442px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="460px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "//LICENSE-MIT.md"</tspan>
+    <tspan x="10px" y="460px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
 </tspan>
-    <tspan x="10px" y="478px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:4:6</tspan>
+    <tspan x="10px" y="478px"><tspan>          "crates/mdbook-permalinks/tests/file_links/src/draft.md"</tspan>
 </tspan>
-    <tspan x="10px" y="496px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="496px"><tspan>          "crates/mdbook-permalinks/tests/file_links/src/draft.md/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="514px"><tspan class="fg-bright-blue bold">4</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">//LICENSE-MIT.md</tspan><tspan>)</tspan>
+    <tspan x="10px" y="514px"><tspan>          "crates/mdbook-permalinks/tests/file_links/src/draft.md/README.md"</tspan>
 </tspan>
-    <tspan x="10px" y="532px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^</tspan>
+    <tspan x="10px" y="532px"><tspan>          "crates/mdbook-permalinks/tests/file_links/src/draft.md.md"</tspan>
 </tspan>
-    <tspan x="10px" y="550px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="550px">
 </tspan>
-    <tspan x="10px" y="568px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">resolves to a path that is outside of this repo:</tspan>
+    <tspan x="10px" y="568px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "../../Cargo.lock"</tspan>
 </tspan>
-    <tspan x="10px" y="586px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">"/LICENSE-MIT.md"</tspan>
+    <tspan x="10px" y="586px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:2:6</tspan>
 </tspan>
-    <tspan x="10px" y="604px">
+    <tspan x="10px" y="604px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="622px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "../book.toml/"</tspan>
+    <tspan x="10px" y="622px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">../../Cargo.lock</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="640px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:5:6</tspan>
+    <tspan x="10px" y="640px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^</tspan>
 </tspan>
-    <tspan x="10px" y="658px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="658px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="676px"><tspan class="fg-bright-blue bold">5</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">../book.toml/</tspan><tspan>)</tspan>
+    <tspan x="10px" y="676px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist:</tspan>
 </tspan>
-    <tspan x="10px" y="694px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^</tspan>
+    <tspan x="10px" y="694px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">"crates/mdbook-permalinks/tests/Cargo.lock"</tspan>
 </tspan>
-    <tspan x="10px" y="712px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="712px">
 </tspan>
-    <tspan x="10px" y="730px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">resolves to a path that exists but is not a directory:</tspan>
+    <tspan x="10px" y="730px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "/LICENSE-GPL.md"</tspan>
 </tspan>
-    <tspan x="10px" y="748px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">"crates/mdbook-permalinks/tests/file_links/book.toml/"</tspan>
+    <tspan x="10px" y="748px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:3:6</tspan>
 </tspan>
-    <tspan x="10px" y="766px">
+    <tspan x="10px" y="766px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="784px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "image.jpeg"</tspan>
+    <tspan x="10px" y="784px"><tspan class="fg-bright-blue bold">3</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">/LICENSE-GPL.md</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="802px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:6:7</tspan>
+    <tspan x="10px" y="802px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist</tspan>
 </tspan>
-    <tspan x="10px" y="820px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="820px">
 </tspan>
-    <tspan x="10px" y="838px"><tspan class="fg-bright-blue bold">6</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - ![](</tspan><tspan class="fg-yellow bold">image.jpeg</tspan><tspan>)</tspan>
+    <tspan x="10px" y="838px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "//LICENSE-MIT.md"</tspan>
 </tspan>
-    <tspan x="10px" y="856px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-yellow bold">^^^^^^^^^^</tspan>
+    <tspan x="10px" y="856px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:4:6</tspan>
 </tspan>
-    <tspan x="10px" y="874px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="874px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="892px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist:</tspan>
+    <tspan x="10px" y="892px"><tspan class="fg-bright-blue bold">4</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">//LICENSE-MIT.md</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="910px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-bright-blue bold">"crates/mdbook-permalinks/tests/file_links/src/image.jpeg"</tspan>
+    <tspan x="10px" y="910px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^</tspan>
 </tspan>
-    <tspan x="10px" y="928px">
+    <tspan x="10px" y="928px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="946px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "../static/shinjuku.jpg"</tspan>
+    <tspan x="10px" y="946px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">resolves to a path that is outside of the repository:</tspan>
 </tspan>
-    <tspan x="10px" y="964px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:7:7</tspan>
+    <tspan x="10px" y="964px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">"/LICENSE-MIT.md"</tspan>
 </tspan>
-    <tspan x="10px" y="982px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="982px">
 </tspan>
-    <tspan x="10px" y="1000px"><tspan class="fg-bright-blue bold">7</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - ![](</tspan><tspan class="fg-yellow bold">../static/shinjuku.jpg</tspan><tspan>)</tspan>
+    <tspan x="10px" y="1000px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "../book.toml/"</tspan>
 </tspan>
-    <tspan x="10px" y="1018px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^</tspan>
+    <tspan x="10px" y="1018px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:5:6</tspan>
 </tspan>
-    <tspan x="10px" y="1036px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="1036px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1054px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist:</tspan>
+    <tspan x="10px" y="1054px"><tspan class="fg-bright-blue bold">5</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">../book.toml/</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="1072px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-bright-blue bold">"crates/mdbook-permalinks/tests/file_links/static/shinjuku.jpg"</tspan>
+    <tspan x="10px" y="1072px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^</tspan>
 </tspan>
-    <tspan x="10px" y="1090px">
+    <tspan x="10px" y="1090px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1108px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "/target/.rustc_info.json"</tspan>
+    <tspan x="10px" y="1108px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">resolves to a path that isn't a directory:</tspan>
 </tspan>
-    <tspan x="10px" y="1126px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/6.gitignored.md:1:6</tspan>
+    <tspan x="10px" y="1126px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">"crates/mdbook-permalinks/tests/file_links/book.toml/"</tspan>
 </tspan>
-    <tspan x="10px" y="1144px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="1144px">
 </tspan>
-    <tspan x="10px" y="1162px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">/target/.rustc_info.json</tspan><tspan>)</tspan>
+    <tspan x="10px" y="1162px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "image.jpeg"</tspan>
 </tspan>
-    <tspan x="10px" y="1180px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">resolves to a path that is ignored by git</tspan>
+    <tspan x="10px" y="1180px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:6:7</tspan>
 </tspan>
-    <tspan x="10px" y="1198px">
+    <tspan x="10px" y="1198px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1216px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "/target/debug"</tspan>
+    <tspan x="10px" y="1216px"><tspan class="fg-bright-blue bold">6</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - ![](</tspan><tspan class="fg-yellow bold">image.jpeg</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="1234px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/6.gitignored.md:2:6</tspan>
+    <tspan x="10px" y="1234px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-yellow bold">^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">link doesn't match any file in the book</tspan>
 </tspan>
     <tspan x="10px" y="1252px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1270px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">/target/debug</tspan><tspan>)</tspan>
+    <tspan x="10px" y="1270px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
 </tspan>
-    <tspan x="10px" y="1288px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">resolves to a path that is ignored by git</tspan>
+    <tspan x="10px" y="1288px"><tspan>          "crates/mdbook-permalinks/tests/file_links/src/image.jpeg"</tspan>
 </tspan>
-    <tspan x="10px" y="1306px">
+    <tspan x="10px" y="1306px"><tspan>          "crates/mdbook-permalinks/tests/file_links/src/image.jpeg/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="1324px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: finished with warnings</tspan>
+    <tspan x="10px" y="1324px"><tspan>          "crates/mdbook-permalinks/tests/file_links/src/image.jpeg/README.md"</tspan>
+</tspan>
+    <tspan x="10px" y="1342px"><tspan>          "crates/mdbook-permalinks/tests/file_links/src/image.jpeg.md"</tspan>
+</tspan>
+    <tspan x="10px" y="1360px">
+</tspan>
+    <tspan x="10px" y="1378px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "../static/shinjuku.jpg"</tspan>
+</tspan>
+    <tspan x="10px" y="1396px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:7:7</tspan>
+</tspan>
+    <tspan x="10px" y="1414px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1432px"><tspan class="fg-bright-blue bold">7</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - ![](</tspan><tspan class="fg-yellow bold">../static/shinjuku.jpg</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1450px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^</tspan>
+</tspan>
+    <tspan x="10px" y="1468px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1486px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist:</tspan>
+</tspan>
+    <tspan x="10px" y="1504px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-bright-blue bold">"crates/mdbook-permalinks/tests/file_links/static/shinjuku.jpg"</tspan>
+</tspan>
+    <tspan x="10px" y="1522px">
+</tspan>
+    <tspan x="10px" y="1540px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "/target/.rustc_info.json"</tspan>
+</tspan>
+    <tspan x="10px" y="1558px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/6.gitignored.md:1:6</tspan>
+</tspan>
+    <tspan x="10px" y="1576px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1594px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">/target/.rustc_info.json</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1612px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">resolves to a path that is gitignored</tspan>
+</tspan>
+    <tspan x="10px" y="1630px">
+</tspan>
+    <tspan x="10px" y="1648px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "/target/debug"</tspan>
+</tspan>
+    <tspan x="10px" y="1666px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/file_links/src/6.gitignored.md:2:6</tspan>
+</tspan>
+    <tspan x="10px" y="1684px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1702px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">/target/debug</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1720px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">resolves to a path that is gitignored</tspan>
+</tspan>
+    <tspan x="10px" y="1738px">
+</tspan>
+    <tspan x="10px" y="1756px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: finished with warnings</tspan>
 </tspan>
   </text>
 

@@ -272,14 +272,14 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
                 let id = format!("#{id}");
                 link.set_fragment(None);
                 let src = (out_dir.as_base())
-                    .show_relative(&file_url)
+                    .show_path(&file_url)
                     .to_string()
                     .replace(".html", ".md");
                 let dst = (out_dir.as_base())
-                    .show_relative(&file_url)
+                    .show_path(&file_url)
                     .to_string()
                     .replace(".html", ".md");
-                error!("{src} references non-existent {id:?} in {dst}");
+                error!("{src:?} references non-existent {id:?} in {dst:?}");
             }
         }
     }

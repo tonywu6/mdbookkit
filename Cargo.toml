@@ -6,7 +6,6 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/tonywu6/mdbookkit"
 
 edition = "2024"
-rust-version = "1.89"
 
 [workspace]
 default-members = ["crates/*"]
@@ -15,6 +14,7 @@ resolver = "3"
 
 [workspace.dependencies]
 anyhow = "1.0.102"
+bon = "3.9.1"
 camino = "1.2.2"
 cargo-run-bin = { version = "=1.7.5", default-features = false }
 clap = { version = "4.6.0", features = ["derive"] }

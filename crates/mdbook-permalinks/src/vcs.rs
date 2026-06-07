@@ -1,4 +1,7 @@
-use std::path::Path;
+use std::{
+    fmt::Debug,
+    path::{Path, PathBuf},
+};
 
 use anyhow::{Context, Result, anyhow, bail};
 use git2::{DescribeOptions, Repository, RepositoryOpenFlags};
@@ -7,73 +10,147 @@ use tracing::{debug, info, instrument, trace, warn};
 use url::Url;
 
 use mdbookkit::{
-    emit_debug,
+    emit_debug, emit_warning,
     error::{Show, WithDebugContext},
     url::{RelativeUrl, UrlFromPath, UrlUtil},
 };
 
 use crate::{
-    VersionControl,
-    link::{ContentHint, PathStatus},
+    link::{ContentKind, LinkError, PathError},
     options::{Config, PathParams, TemplateConfig},
 };
 
+pub struct VersionControl {
+    root: Url,
+    link: Permalink,
+    repo: Repository,
+}
+
 impl VersionControl {
-    #[instrument(level="debug", skip_all, fields(
-        file = ?file.show(),
-        root = ?self.root.show(),
-    ))]
-    pub fn try_file(&self, file: &Url) -> Result<TryFile, PathStatus> {
-        let (link, path) = match {
-            if let Some(link) = self.root.as_base().make_relative(file) {
-                if link.encoded_path().starts_with("../") {
-                    Err(PathStatus::NotInRepo)
-                } else if let Ok(path) = file.to_file_path() {
-                    Ok((link, path))
-                } else {
-                    Err(PathStatus::InvalidBytes)
-                }
-            } else {
-                Err(PathStatus::Unreachable)
+    #[instrument(
+        level = "debug",
+        "repo_try_file",
+        skip_all,
+        err(Debug, level = "debug")
+    )]
+    pub fn try_file(&self, url: Url) -> Result<TryRepoPath, LinkError> {
+        let link = self.path_info(url, None)?;
+
+        let real_path = match link.std_path.canonicalize() {
+            Ok(path) => path,
+            Err(err) => {
+                trace!(error = ?err, "could not resolve path");
+                return Err(PathError::from_io(err).at(link.url));
             }
-        }
-        .inspect_err(|s| debug!("{s:?}"))
-        {
-            Ok((link, path)) => (link, path),
-            Err(err) => return Err(err),
         };
 
-        match path.symlink_metadata() {
-            Ok(metadata) => {
-                if !(self.repo.is_path_ignored(&path))
-                    .with_path_debug(&path)
-                    .context("error testing if path is ignored")
-                    .or_else(emit_debug!())
-                    .unwrap_or(false)
-                {
-                    Ok(TryFile { link, metadata })
-                } else {
-                    Err(PathStatus::GitIgnored)
-                }
+        if link.std_path == real_path {
+            trace!("path is canonical");
+
+            Ok(TryRepoPath::Canonical { link })
+        } else {
+            let url = if link.url.path().ends_with('/') {
+                real_path.dir_to_url()
+            } else {
+                real_path.file_to_url()
             }
-            Err(error) => match error.kind() {
-                std::io::ErrorKind::NotFound => Err(PathStatus::NotFound),
-                std::io::ErrorKind::NotADirectory => Err(PathStatus::NotADirectory),
-                _ => Err(PathStatus::Unreachable),
-            },
+            .include_after_path(&link.relative);
+
+            debug! {
+                link_path = ?self.root().as_base().show_path(&link.url),
+                real_path = ?self.root().as_base().show_path(&url),
+                "path is not canonical"
+            };
+
+            let real = self.path_info(url, Some(real_path))?;
+            Ok(TryRepoPath::Noncanonical { link, real })
         }
-        .inspect(|f| trace!("{f:?}"))
-        .inspect_err(|s| debug!("{s:?}"))
+    }
+
+    #[instrument(level = "trace", skip_all)]
+    fn path_info(&self, url: Url, path: Option<PathBuf>) -> Result<RepoPath, LinkError> {
+        let relative = match self.root.as_base().make_relative_scoped(&url) {
+            Some(href) => href,
+            None => return Err(PathError::NotInRepo.at(url)),
+        };
+
+        trace!(relative = ?relative.show_path());
+
+        let std_path = match path {
+            Some(path) => path,
+            None => match url.to_file_path() {
+                Ok(path) => path,
+                Err(()) => return Err(PathError::InvalidEncoding.at(url)),
+            },
+        };
+
+        trace!(std_path = ?std_path.show());
+
+        let is_dir = match std_path.symlink_metadata() {
+            Ok(metadata) => metadata.is_dir(),
+            Err(error) => {
+                trace!(?error, "error reading metadata");
+                return Err(PathError::from_io(error).at(url));
+            }
+        };
+
+        trace!(?is_dir);
+
+        let is_ignored = match self
+            .repo
+            .is_path_ignored(&std_path)
+            .with_path_debug(&std_path)
+            .context({
+                "error while checking if this path is gitignored; \
+                assuming it is not ignored"
+            })
+            .or_else(emit_warning!())
+        {
+            Ok(true) => GitIgnore::Ignored,
+            Ok(false) => GitIgnore::NotIgnored,
+            Err(()) => GitIgnore::NotIgnored,
+        };
+
+        trace!(?is_ignored);
+
+        Ok(RepoPath {
+            url,
+            relative,
+            std_path,
+            is_dir,
+            is_ignored,
+        })
+    }
+
+    pub fn root(&self) -> &Url {
+        &self.root
+    }
+
+    pub fn scheme(&self) -> &Permalink {
+        &self.link
     }
 }
 
 #[derive(Debug)]
-pub struct TryFile {
-    pub link: RelativeUrl,
-    pub metadata: std::fs::Metadata,
+pub enum TryRepoPath {
+    Canonical { link: RepoPath },
+    Noncanonical { link: RepoPath, real: RepoPath },
 }
 
-#[derive(Debug)]
+pub struct RepoPath {
+    pub url: Url,
+    pub relative: RelativeUrl,
+    pub std_path: PathBuf,
+    pub is_ignored: GitIgnore,
+    pub is_dir: bool,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum GitIgnore {
+    Ignored,
+    NotIgnored,
+}
+
 pub struct Permalink {
     pattern: Url,
     refname: RefName,
@@ -88,7 +165,7 @@ enum RefName {
 
 impl Permalink {
     /// Try to convert this relative url to a permalink
-    pub fn to_link(&self, href: &RelativeUrl, hint: ContentHint) -> Url {
+    pub fn to_link(&self, href: &RelativeUrl, kind: ContentKind) -> Url {
         self.pattern
             .pattern_fill(|group| match group {
                 "ref" => Some(
@@ -106,20 +183,20 @@ impl Permalink {
                     .into(),
                 ),
                 "tree" => Some(
-                    match hint {
-                        ContentHint::Tree => &self.params.tree[0],
-                        ContentHint::Raw => &self.params.raw[0],
+                    match kind {
+                        ContentKind::Web => &self.params.tree[0],
+                        ContentKind::Raw => &self.params.raw[0],
                     }
                     .into(),
                 ),
                 "path" => Some(href.encoded_path().into()),
                 _ => None,
             })
-            .with_after_path(href)
+            .include_after_path(href)
     }
 
     /// Try to extract a path (relative to repo root) from this link
-    pub fn extract(&self, link: &Url) -> Option<(RelativeUrl, ContentHint)> {
+    pub fn extract(&self, link: &Url) -> Option<(RelativeUrl, ContentKind)> {
         let matches = self.pattern.pattern_test(Some("path"), link)?;
 
         if matches.matches.get("ref").map(|s| &**s) != Some("HEAD") {
@@ -130,9 +207,9 @@ impl Permalink {
 
         let hint = if let Some(tree) = matches.matches.get("tree").map(|s| &**s) {
             if self.params.tree.iter().any(|plc| plc == tree) {
-                ContentHint::Tree
+                ContentKind::Web
             } else if self.params.raw.iter().any(|plc| plc == tree) {
-                ContentHint::Raw
+                ContentKind::Raw
             } else {
                 return None;
             }
@@ -146,14 +223,9 @@ impl Permalink {
     }
 }
 
-impl Default for PathParams {
-    fn default() -> Self {
-        Self {
-            tree: vec!["tree".into(), "blob".into()],
-            raw: vec!["raw".into()],
-            commit: vec!["commit".into()],
-            tag: vec!["tag".into()],
-        }
+impl Show for Permalink {
+    fn show(&self) -> impl std::fmt::Debug {
+        self.pattern.show()
     }
 }
 
@@ -192,6 +264,8 @@ impl VersionControl {
             .context("could not locate repo root")?
             .dir_to_url();
 
+        trace!(repo = ?root.show());
+
         let refname = match get_git_head(&repo)
             .context("could not get a tag or the commit hash to HEAD")?
         {
@@ -207,7 +281,7 @@ impl VersionControl {
             let TemplateConfig { pattern, params } = &config.options.repo_url_template;
 
             let pattern = if let Some(pattern) = pattern {
-                debug!("using explicitly set repo_url_template");
+                debug!("repo-url-template" = ?pattern.show());
                 pattern.clone()
             } else {
                 let remote = config.options.remote_name.as_deref().unwrap_or("origin");
@@ -303,6 +377,7 @@ fn find_git_remote<'a>(
     config: &'a Config,
 ) -> Result<Result<RepoSource<'a>>> {
     if let Some(ref url) = config.repo_url {
+        debug!("git-repository-url" = ?url.to_string());
         Ok(Ok(RepoSource::Config(url)))
     } else {
         let repo = match repo.find_remote(remote).with_context(|| {
@@ -329,6 +404,7 @@ fn find_git_remote<'a>(
     }
 }
 
+#[instrument(level = "trace", skip_all)]
 fn derive_pattern(url: &gix_url::Url) -> Result<Url> {
     let host = match url.host() {
         Some(host) => host,
@@ -338,8 +414,11 @@ fn derive_pattern(url: &gix_url::Url) -> Result<Url> {
 
     fn is_on_domain(domain: &'static str, host: &str) -> bool {
         match host.strip_suffix(domain) {
-            None => false,
-            Some(sub) => sub.is_empty() || sub.ends_with('.'),
+            Some(sub) if sub.is_empty() || sub.ends_with('.') => {
+                trace!("{host:?} is on domain {domain:?}");
+                true
+            }
+            Some(..) | None => false,
         }
     }
 
@@ -435,5 +514,28 @@ fn derive_params(pat: &Url) -> PathParams {
             ..Default::default()
         },
         _ => Default::default(),
+    }
+}
+
+impl Debug for Permalink {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Permalink")
+            .field("pattern", &self.pattern.show())
+            .field("refname", &self.refname)
+            .finish_non_exhaustive()
+    }
+}
+
+impl Debug for RepoPath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut f = f.debug_struct("RepoPath");
+        f.field("path", &self.relative.show_path())
+            .field("is_dir", &self.is_dir)
+            .field("is_ignored", &self.is_ignored);
+        if self.url.query().is_some() || self.url.fragment().is_some() {
+            f.field("url", &self.url.show()).finish()
+        } else {
+            f.finish_non_exhaustive()
+        }
     }
 }

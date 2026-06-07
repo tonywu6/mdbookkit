@@ -77,7 +77,7 @@ pub fn run() -> Result<(), ()> {
     let mut state = BookState::default();
 
     ctx.for_each_page_mut(&mut book, |path, content| {
-        let name = page_dir.as_base().show_relative(&path).to_string();
+        let name = page_dir.as_base().show_path(&path).to_string();
 
         if let Ok(rendered) = jinja
             .render_named_str(&name, content, ())
@@ -125,7 +125,7 @@ pub fn run() -> Result<(), ()> {
     state.validate_config().or_else(emit_error!())?;
 
     ctx.for_each_page(&book, |path, content| {
-        let name = page_dir.as_base().show_relative(&path).to_string();
+        let name = page_dir.as_base().show_path(&path).to_string();
         if let Some(issues) = state.issues.remove(&name) {
             IssueReporter {
                 issues,

@@ -4,7 +4,6 @@ use serde::{
     Deserialize, Deserializer,
     de::value::{MapAccessDeserializer, SeqAccessDeserializer},
 };
-use tracing::debug;
 use url::Url;
 
 use mdbookkit::{
@@ -17,7 +16,6 @@ use mdbookkit::{
 use crate::PREPROCESSOR_NAME;
 
 #[derive(Debug, Default)]
-#[allow(unused)]
 pub struct Config {
     pub repo_url: Option<gix_url::Url>,
     pub site_url: Option<BaseUrl>,
@@ -30,8 +28,7 @@ impl Config {
             let mut book_toml = ctx.book_toml().with_source();
 
             let options = book_toml
-                .preprocessor::<Options>(&[PREPROCESSOR_NAME, "mdbook-link-forever"])
-                .inspect(|c| debug!("{c:#?}"))?
+                .preprocessor::<Options>(&[PREPROCESSOR_NAME, "mdbook-link-forever"])?
                 .unwrap_or_default();
 
             struct RepoUrl(gix_url::Url);
@@ -132,6 +129,17 @@ impl TemplateConfig {
             {
                 Deserialize::deserialize(MapAccessDeserializer::new(map))
             }
+        }
+    }
+}
+
+impl Default for PathParams {
+    fn default() -> Self {
+        Self {
+            tree: vec!["tree".into(), "blob".into()],
+            raw: vec!["raw".into()],
+            commit: vec!["commit".into()],
+            tag: vec!["tag".into()],
         }
     }
 }

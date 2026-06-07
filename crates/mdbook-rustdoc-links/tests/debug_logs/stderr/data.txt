@@ -89,10 +89,10 @@ DEBUG mdbook-rustdoc-links: Some(
         env: EnvConfig {
             base_url: BaseUrlConfig {
                 dev: BaseUrl(
-                    "https://docs.rs/%7Bpkg_name%7D/%7Bversion%7D/",
+                    "https://docs.rs/{pkg_name}/{version}/",
                 ),
                 release: BaseUrl(
-                    "https://docs.rs/%7Bpkg_name%7D/%7Bversion%7D/",
+                    "https://docs.rs/{pkg_name}/{version}/",
                 ),
             },
         },

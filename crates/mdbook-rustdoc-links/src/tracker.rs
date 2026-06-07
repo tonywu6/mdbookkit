@@ -298,7 +298,7 @@ impl<'a> LinkTracker<'a> {
 
         for (page, links) in iter {
             let name = (self.env.page_dir().as_base())
-                .show_relative(&page.base)
+                .show_path(&page.base)
                 .to_string();
 
             let source = SourceCode {

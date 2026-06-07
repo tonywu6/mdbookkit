@@ -13,7 +13,7 @@ warning: broken link to "../static/%00%00%00%00.jpg"
 7 | ![](../static/%00%00%00%00.jpg)
   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
   |     |
-  |     resolves to a path that is inaccessible:
+  |     resolves to a path that cannot be accessed: I/O error: invalid input parameter:
   |     "crates/mdbook-permalinks/tests/path_encoding/static/\0/0\0/0.jpg"
 
 warning: broken link to "/東京都港区/南青山.md"

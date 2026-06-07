@@ -7,6 +7,7 @@ use std::{
 
 use anyhow::{Context, Result, anyhow};
 use camino::Utf8Path;
+use percent_encoding::percent_decode_str;
 use serde::Deserialize;
 use tap::Pipe;
 use tracing::{Event, Level, Subscriber};
@@ -137,7 +138,10 @@ impl Show for str {
 impl Show for Url {
     #[inline]
     fn show(&self) -> impl Debug {
-        self.as_str()
+        std::fmt::from_fn(|f| {
+            let decoder = percent_decode_str(self.as_str());
+            write!(f, "{:?}", decoder.decode_utf8_lossy())
+        })
     }
 }
 

@@ -22,10 +22,13 @@ warning: broken link to "/book/static/data.txt?utm_source=docs#L15"
  --> crates/mdbook-permalinks/tests/site_url_absolute_paths/src/page.md:2:16
   |
 2 | - [`data.txt`](/book/static/data.txt?utm_source=docs#L15)
-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ resolves to a path that doesn't exist
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |                |
+  |                resolves to a path that doesn't exist:
+  |                "book/static/data.txt"
   |
 note: the following path is available:
-      "/crates/mdbook-permalinks/tests/site_url_absolute_paths/src/static/data.txt?utm_source=docs#L15"
+      "/crates/mdbook-permalinks/tests/site_url_absolute_paths/src/static/data.txt"
 help: try using a relative path starting from the current page:
   |
 2 - - [`data.txt`](/book/static/data.txt?utm_source=docs#L15)
