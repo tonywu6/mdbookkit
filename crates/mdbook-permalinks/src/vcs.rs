@@ -166,17 +166,27 @@ enum RefName {
 impl Permalink {
     /// Try to convert this relative url to a permalink
     pub fn to_link(&self, href: &RelativeUrl, kind: ContentKind) -> Url {
+        self.to_link_with_ref(href, kind, &self.refname)
+    }
+
+    /// Try to convert this relative url to a permalink
+    pub fn to_link_at_head(&self, href: &RelativeUrl, kind: ContentKind) -> Url {
+        self.to_link_with_ref(href, kind, &RefName::Commit("HEAD".into()))
+    }
+
+    #[inline]
+    fn to_link_with_ref(&self, href: &RelativeUrl, kind: ContentKind, refname: &RefName) -> Url {
         self.pattern
             .pattern_fill(|group| match group {
                 "ref" => Some(
-                    match &self.refname {
+                    match refname {
                         RefName::Commit(commit) => commit,
                         RefName::Tag(tag) => tag,
                     }
                     .into(),
                 ),
                 "kind" => Some(
-                    match &self.refname {
+                    match refname {
                         RefName::Commit(..) => &self.params.commit[0],
                         RefName::Tag(..) => &self.params.tag[0],
                     }

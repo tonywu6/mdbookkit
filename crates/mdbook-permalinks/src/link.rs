@@ -51,6 +51,7 @@ pub enum PathError {
     NotADirectory,
     GitIgnored,
     NoSuchPage(BookPathError),
+    AmbiguousLinkToRoot,
 }
 
 #[derive(Debug, Clone)]
@@ -66,6 +67,15 @@ pub enum LinkHelp {
     FoundOther {
         from_page: RelativeUrl,
         from_repo: RelativeUrl,
+    },
+    GenericEdit {
+        help: &'static str,
+        edited: String,
+    },
+    LinkToRoot {
+        to_repo: String,
+        to_book: String,
+        to_book_relative: bool,
     },
 }
 

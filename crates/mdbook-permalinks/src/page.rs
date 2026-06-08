@@ -7,6 +7,7 @@ use tracing::{debug, info, instrument, trace};
 use url::Url;
 
 use mdbookkit::{
+    config::BaseDir,
     error::Show,
     markdown::{PatchStream, Spanned},
     plural,
@@ -19,7 +20,7 @@ use crate::{
 };
 
 pub struct Pages<'a> {
-    root: Url,
+    root: BaseDir,
     pages: Vec<(Url, Page<'a>)>,
     markdown: Options,
 }
@@ -30,9 +31,9 @@ pub struct Page<'a> {
 }
 
 impl<'a> Pages<'a> {
-    pub fn new(root: Url, markdown: Options) -> Self {
+    pub fn new(root: BaseDir, markdown: Options) -> Self {
         Self {
-            root: root.with_trailing_slash(),
+            root,
             pages: Default::default(),
             markdown,
         }
@@ -95,7 +96,7 @@ impl<'a> Pages<'a> {
         );
     }
 
-    pub fn root(&self) -> &Url {
+    pub fn root(&self) -> &BaseDir {
         &self.root
     }
 }
@@ -234,7 +235,7 @@ impl Pages<'_> {
         }
 
         let root = (vcs.root().as_base())
-            .make_relative(&self.root)
+            .make_relative(&self.root.file)
             .expect("`page_dir` should be under source control");
 
         BookPaths {

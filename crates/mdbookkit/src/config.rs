@@ -207,6 +207,13 @@ impl BaseDir {
     }
 }
 
+impl BaseDir {
+    pub fn new(path: impl AsRef<Path>) -> Result<Self> {
+        let path = path.as_ref().canonicalize()?;
+        Ok("/".parse::<BaseUrl>()?.resolve(&path))
+    }
+}
+
 #[bon]
 impl BaseDir {
     #[inline]

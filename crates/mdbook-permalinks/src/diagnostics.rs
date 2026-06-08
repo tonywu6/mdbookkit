@@ -1,4 +1,4 @@
-use std::{borrow::Cow, convert::identity};
+use std::borrow::Cow;
 
 use url::Url;
 
@@ -79,26 +79,31 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
             }
         };
 
-        let title = format!("broken link to {href:?}");
-
-        macro_rules! assert_is_md {
-            () => {{
-                let path = error.cause.path();
-                debug_assert! { path.ends_with(".md"), "{href:?} -> {:?}", error.cause.show() };
-            }};
-        }
-        macro_rules! assert_is_http {
-            () => {{
-                debug_assert! { href.starts_with("http:") || href.starts_with("https:"),
-                "{href:?} -> {:?}", error.cause.show() };
-            }};
-        }
+        let title = match error.error {
+            AmbiguousLinkToRoot => format!("ambiguous link to {href:?}"),
+            _ => format!("broken link to {href:?}"),
+        };
 
         let mut labels = vec![];
         let mut notes = vec![];
+        let mut helps = vec![];
 
         if let NoSuchPage(ref err) = error.error {
             let path = self.root.as_base().show_path(&error.cause);
+
+            macro_rules! assert_is_md {
+                () => {{
+                    let path = error.cause.path();
+                    debug_assert! { path.ends_with(".md"), "{href:?} -> {:?}", error.cause.show() };
+                }};
+            }
+            macro_rules! assert_is_http {
+                () => {{
+                    debug_assert! { href.starts_with("http:") || href.starts_with("https:"),
+                    "{href:?} -> {:?}", error.cause.show() };
+                }};
+            }
+
             match err {
                 NoResourceAtLocation(expected) => {
                     labels.extend([Highlight::span(span.clone())
@@ -138,18 +143,21 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
                 MarkdownFileNotIncluded => {
                     assert_is_md!();
 
-                    labels.extend([Highlight::span(span.clone())
-                        .label("file is not included in `SUMMARY.md`")
-                        .kind(AnnotationKind::Primary)
-                        .build()]);
-
-                    notes.extend([
-                        Note::help({
-                            "because this Markdown file is not referenced in `SUMMARY.md`, \
-                            it will not be available in the output"
-                        }),
-                        Note::note(format!("the resolved path is {path:?}")),
+                    labels.extend([
+                        Highlight::span(span.clone())
+                            .label("file is not included in `SUMMARY.md`:")
+                            .kind(AnnotationKind::Primary)
+                            .build(),
+                        Highlight::span(span.clone())
+                            .label(format!("{path:?}"))
+                            .kind(AnnotationKind::Context)
+                            .build(),
                     ]);
+
+                    notes.extend([Note::help({
+                        "because this Markdown file is not referenced in `SUMMARY.md`, \
+                        it will not be available in the output"
+                    })]);
                 }
 
                 UnexpectedFileExtension => {
@@ -170,6 +178,17 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
                     ]);
                 }
             }
+        } else if let AmbiguousLinkToRoot = error.error {
+            labels.extend([Highlight::span(span.clone())
+                .kind(AnnotationKind::Primary)
+                .build()]);
+
+            helps.extend([IssueReport::level(IssueLevel::Note)
+                .title(concat! {
+                    "with `", PREPROCESSOR_NAME!(), "`, an absolute path could \
+                    also mean a permalink to the root of the repository"
+                })
+                .build()]);
         } else {
             let shortened_path =
                 if let Some(path) = self.root.as_base().make_relative_scoped(&error.cause) {
@@ -205,6 +224,7 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
                 InvalidEncoding => {
                     "link contains characters that are invalid on this system".into()
                 }
+                AmbiguousLinkToRoot => unreachable!(),
                 NoSuchPage(..) => unreachable!(),
             };
 
@@ -218,8 +238,6 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
             }
         };
 
-        let mut helps = vec![];
-
         match &error.help {
             Some(LinkHelp::FoundOther {
                 from_page,
@@ -229,7 +247,7 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
                 let from_page = from_page.clone().into_decoded();
 
                 let note = format! {
-                    "the following path is available:\n{:?}",
+                    "the following path is available: {:?}",
                     from_repo.show_path()
                 };
                 let note = IssueReport::level(IssueLevel::Note).title(note).build();
@@ -238,7 +256,7 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
                     .title("try using a relative path starting from the current page:")
                     .patches(vec![
                         Suggestion::span(span.clone())
-                            .repl(from_page.consume_with(identity))
+                            .repl(from_page.consume_with(String::from))
                             .build(),
                     ])
                     .build();
@@ -250,16 +268,60 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
                     })
                     .patches(vec![
                         Suggestion::span(span.clone())
-                            .repl(from_repo.consume_with(identity))
+                            .repl(from_repo.consume_with(String::from))
                             .build(),
                     ])
                     .notes(vec![Note::note(
-                        concat! { "`", PREPROCESSOR_NAME!(), "`", " will convert ",
-                        "this path to a format accepted by mdBook" },
+                        concat! { "`", PREPROCESSOR_NAME!(), "`", " will convert",
+                        " this path to a format accepted by mdBook" },
                     )])
                     .build();
 
                 helps.extend([note, help1, help2]);
+            }
+
+            Some(LinkHelp::LinkToRoot {
+                to_repo,
+                to_book,
+                to_book_relative,
+            }) => {
+                let help1 = if *to_book_relative {
+                    IssueReport::level(IssueLevel::Help).title({
+                        "to link to the root of the book, try using a \
+                        relative path from the current page"
+                    })
+                } else {
+                    IssueReport::level(IssueLevel::Help).title({
+                        "to link to the root of the book, try using an \
+                        absolute path to the source directory"
+                    })
+                }
+                .patches(vec![Suggestion::span(span.clone()).repl(to_book).build()])
+                .notes(vec![Note::note(
+                    concat! { "`", PREPROCESSOR_NAME!(), "`", " will convert",
+                    " this path to a format accepted by mdBook" },
+                )])
+                .build();
+
+                let help2 = IssueReport::level(IssueLevel::Help)
+                    .title("to link to the root of the repo, try using a full URL")
+                    .patches(vec![Suggestion::span(span.clone()).repl(to_repo).build()])
+                    .notes(vec![Note::note(
+                        concat! { "`", PREPROCESSOR_NAME!(), "`", " will update this link",
+                        " to point to the correct commit or tag" },
+                    )])
+                    .build();
+
+                helps.extend([help1, help2]);
+            }
+
+            Some(LinkHelp::GenericEdit { help, edited }) => {
+                let help = IssueReport::level(IssueLevel::Help)
+                    .title(*help)
+                    .patches(vec![Suggestion::span(span.clone()).repl(edited).build()])
+                    .build();
+
+                helps.extend([help]);
             }
 
             None => {}

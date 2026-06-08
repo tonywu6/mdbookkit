@@ -250,6 +250,7 @@ impl PartialEq<&str> for RelativeUrl {
 impl UrlUtil for Url {
     #[inline]
     fn ensure_trailing_slash(&mut self) {
+        self.ensure_no_trailing_slash();
         if let Ok(mut paths) = self.path_segments_mut() {
             paths.pop_if_empty().push("");
         } else {
@@ -262,15 +263,17 @@ impl UrlUtil for Url {
 
     #[inline]
     fn ensure_no_trailing_slash(&mut self) {
-        if let Ok(mut paths) = self.path_segments_mut() {
-            paths.pop_if_empty();
-        } else {
-            let mut path = self.path();
-            while let Some(p) = path.strip_suffix('/') {
-                path = p;
+        while self.path().ends_with('/') {
+            if let Ok(mut paths) = self.path_segments_mut() {
+                paths.pop_if_empty();
+            } else {
+                let mut path = self.path();
+                while let Some(p) = path.strip_suffix('/') {
+                    path = p;
+                }
+                #[allow(clippy::unnecessary_to_owned)] // E0502
+                self.set_path(&path.to_owned());
             }
-            #[allow(clippy::unnecessary_to_owned)] // E0502
-            self.set_path(&path.to_owned());
         }
     }
 

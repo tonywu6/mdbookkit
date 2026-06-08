@@ -13,24 +13,22 @@ use mdbookkit::{
     book::{PreprocessorHelper, book_from_stdin, should_emit_issues},
     config::{BaseDir, validate_config_examples},
     diagnostics::{IssueReporter, SourceCode},
-    emit, emit_error,
+    emit, emit_debug, emit_error,
     env::is_logging,
     error::{ProgramExit, Show, WithDebugContext, has_severity},
     level_enabled,
     logging::init_logging,
     ticker, ticker_item,
-    url::{RelativeUrl, UrlFromPath, UrlUtil},
+    url::{RelativeUrl, UrlUtil},
 };
 
 use crate::{
     diagnostics::LinkDiagnostic,
-    link::{ContentKind, Link, LinkError, PathError},
+    link::{BookPathError, ContentKind, Link, LinkError, LinkHelp, PathError},
     options::{Config, Options},
     page::{BookPaths, Pages, TryBookPath},
     vcs::{GitIgnore, RepoPath, TryRepoPath, VersionControl},
 };
-
-use self::link::{BookPathError, LinkHelp};
 
 mod diagnostics;
 mod link;
@@ -70,7 +68,9 @@ fn mdbook() -> Result<(), ()> {
     };
 
     let mut contents = Pages::new(
-        ctx.page_dir().or_else(emit_error!())?.dir_to_url(),
+        ctx.page_dir()
+            .and_then(BaseDir::new)
+            .or_else(emit_error!())?,
         ctx.markdown_options(),
     );
 
@@ -200,13 +200,11 @@ impl Environment {
             let (intent, link_url) = if let Some(site) = &self.site_url.http
                 && let Some(href) = site.as_base().make_relative_scoped(&link_url)
             {
-                (Book, book_root.as_base().make_absolute(&href))
+                (Book, book_root.as_file_url().as_base().make_absolute(&href))
             } else if let Some((href, kind)) = self.vcs.scheme().extract(&link_url) {
                 (Repo(kind), self.vcs.root().as_base().make_absolute(&href))
             } else if link_url.scheme() == "file" {
-                if (self.options.always_link)
-                    .iter()
-                    .any(|suffix| link_url.path().ends_with(suffix))
+                if (self.options.always_link.iter()).any(|suffix| link_url.path().ends_with(suffix))
                 {
                     (Repo(link.kind()), link_url)
                 } else {
@@ -268,7 +266,7 @@ impl Environment {
 
 struct Resolver<'a> {
     env: &'a Environment,
-    book_root: &'a Url,
+    book_root: &'a BaseDir,
     book_paths: &'a BookPaths,
     page_url: &'a Url,
     intent: LinkIntent,
@@ -297,6 +295,11 @@ enum LinkResult {
 impl Resolver<'_> {
     fn resolve(&self, link_url: Url, link: &mut Link<'_>) {
         use {BookPathError::*, LinkIntent::*, LinkResult::*, PathError::*};
+
+        if link.repo_relative().is_some() && link_url.path() == self.env.vcs.root().path() {
+            self.ambiguous_link_to_root(link_url, link);
+            return;
+        }
 
         let orig_url = link_url.clone();
 
@@ -344,36 +347,41 @@ impl Resolver<'_> {
             Ok(result) => self.write_link(result, link),
 
             Err(mut e) => {
-                let Environment { vcs, site_url, .. } = self.env;
-
                 match e.error {
                     NotFound if matches!(self.intent, Any(..)) => {
-                        if let Some(alt) = site_url.transplant(&orig_url).located_in(vcs.root())
-                            && let Ok(from_repo) = self.try_derived_links(alt)
-                            && let BookLink { url, relative, .. } | RepoLink { url, relative, .. } =
-                                from_repo
-                            && let Some(from_page) = self.page_url.as_base().make_relative(&url)
+                        e.help = (self.try_find_other(&self.env.site_url, &orig_url))
+                            .or_else(|| self.try_find_other(self.book_root, &orig_url));
+                    }
+
+                    NotADirectory => {
+                        if let Ok(edited) = self
+                            .edit_link(link, |url| {
+                                url.ensure_no_trailing_slash();
+                                Ok(())
+                            })
+                            .context("could not correct the link")
+                            .or_else(emit_debug!())
                         {
-                            let from_repo = relative.into_absolute_path();
-                            e.help = Some(LinkHelp::FoundOther {
-                                from_page,
-                                from_repo,
+                            e.help = Some(LinkHelp::GenericEdit {
+                                help: "try removing the trailing slash",
+                                edited,
                             })
                         }
                     }
-                    NotADirectory => {
-                        // TODO:
-                    }
+
                     _ => {}
                 }
-
                 link.state_mut().error(e)
             }
         };
     }
 
     fn is_in_book(&self, url: &Url) -> bool {
-        self.book_root.as_base().make_relative_scoped(url).is_some()
+        self.book_root
+            .as_file_url()
+            .as_base()
+            .make_relative_scoped(url)
+            .is_some()
     }
 
     #[instrument(level = "debug", skip_all)]
@@ -528,6 +536,74 @@ impl Resolver<'_> {
                     link.state_mut().no_change();
                 }
             }
+        }
+    }
+
+    fn ambiguous_link_to_root(&self, link_url: Url, link: &mut Link<'_>) {
+        let Environment { vcs, .. } = self.env;
+
+        let href = (vcs.root().as_base().make_relative_scoped(&link_url))
+            .expect("`link_url` should be the same as `vcs.root`");
+        debug_assert_eq!(href.encoded_path(), "");
+
+        let to_repo = vcs.scheme().to_link_at_head(&href, link.kind()).into();
+
+        let book_url = self.book_root.file.clone().include_after_path(&link_url);
+        let to_book = (vcs.root().as_base().make_relative_scoped(&book_url))
+            .expect("`book_root` should be under `vcs.root`");
+        let (to_book, to_book_relative) = if to_book == link.href() {
+            let relative = (self.page_url.as_base())
+                .make_relative(&book_url)
+                .expect("both are file urls");
+            (relative, true)
+        } else {
+            (to_book, false)
+        };
+        let to_book = to_book.consume_with(<_>::into);
+
+        link.state_mut().error(LinkError {
+            error: PathError::AmbiguousLinkToRoot,
+            cause: link_url,
+            help: Some(LinkHelp::LinkToRoot {
+                to_repo,
+                to_book,
+                to_book_relative,
+            }),
+        });
+    }
+
+    fn try_find_other(&self, base: &BaseDir, url: &Url) -> Option<LinkHelp> {
+        use LinkResult::*;
+
+        let alternative = base.transplant(url).located_in(self.env.vcs.root())?;
+        let from_repo = self.try_derived_links(alternative).ok()?;
+        let (BookLink { url, relative, .. } | RepoLink { url, relative, .. }) = from_repo;
+
+        Some(LinkHelp::FoundOther {
+            from_page: self.page_url.as_base().make_relative(&url)?,
+            from_repo: relative.into_absolute_path(),
+        })
+    }
+
+    fn edit_link<F>(&self, link: &Link<'_>, edit: F) -> Result<String>
+    where
+        F: FnOnce(&mut Url) -> Result<()>,
+    {
+        if let Ok(mut url) = link.href().parse::<Url>() {
+            edit(&mut url)?;
+            Ok(url.into())
+        } else if let Some(link) = link.repo_relative() {
+            let mut url = self.env.vcs.root().join(link)?;
+            edit(&mut url)?;
+            let url = (self.env.vcs.root().as_base().make_relative(&url))
+                .context("could not restore relative url")?;
+            Ok(url.into_absolute_path().consume_with(<_>::into))
+        } else {
+            let mut url = self.page_url.join(link.href())?;
+            edit(&mut url)?;
+            let url = (self.page_url.as_base().make_relative(&url))
+                .context("could not restore relative url")?;
+            Ok(url.consume_with(<_>::into))
         }
     }
 }
