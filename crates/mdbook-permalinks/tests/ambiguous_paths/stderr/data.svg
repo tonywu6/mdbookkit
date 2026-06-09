@@ -1,0 +1,261 @@
+<svg width="894px" height="2126px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .fg { fill: #B2B2B2 }
+    .bg { fill: #1A1A1A }
+    .fg-bright-blue { fill: #5CADF1 }
+    .fg-bright-cyan { fill: #51B5C3 }
+    .fg-bright-green { fill: #96C475 }
+    .fg-bright-red { fill: #E06C75 }
+    .fg-yellow { fill: #D19A66 }
+    .container {
+      padding: 0 10px;
+      line-height: 18px;
+    }
+    .bold { font-weight: bold; }
+    tspan {
+      font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;
+      white-space: pre;
+      line-height: 18px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" y="0"  class="bg" />
+
+  <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "/index.md"</tspan>
+</tspan>
+    <tspan x="10px" y="46px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:5:6</tspan>
+</tspan>
+    <tspan x="10px" y="64px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="82px"><tspan class="fg-bright-blue bold">5</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">/index.md</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="100px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist</tspan>
+</tspan>
+    <tspan x="10px" y="118px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="136px"><tspan class="fg-bright-green bold">note</tspan><tspan>: the following path is available: "/crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md"</tspan>
+</tspan>
+    <tspan x="10px" y="154px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try using a relative path starting from the current page:</tspan>
+</tspan>
+    <tspan x="10px" y="172px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="190px"><tspan class="fg-bright-blue bold">5</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [](</tspan><tspan class="fg-bright-red">/index.md</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="208px"><tspan class="fg-bright-blue bold">5</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- []()</tspan>
+</tspan>
+    <tspan x="10px" y="226px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="244px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: ... or use an absolute path starting from the root of your repository:</tspan>
+</tspan>
+    <tspan x="10px" y="262px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="280px"><tspan class="fg-bright-blue bold">5</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">/crates/mdbook-permalinks/tests/ambiguous_paths/src</tspan><tspan>/index.md)</tspan>
+</tspan>
+    <tspan x="10px" y="298px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-green">+++++++++++++++++++++++++++++++++++++++++++++++++++</tspan>
+</tspan>
+    <tspan x="10px" y="316px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will convert this path to a format accepted by mdBook</tspan>
+</tspan>
+    <tspan x="10px" y="334px">
+</tspan>
+    <tspan x="10px" y="352px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "/ignored.txt"</tspan>
+</tspan>
+    <tspan x="10px" y="370px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:6:6</tspan>
+</tspan>
+    <tspan x="10px" y="388px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="406px"><tspan class="fg-bright-blue bold">6</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">/ignored.txt</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="424px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist</tspan>
+</tspan>
+    <tspan x="10px" y="442px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="460px"><tspan class="fg-bright-green bold">note</tspan><tspan>: the following path is available: "/crates/mdbook-permalinks/tests/ambiguous_paths/src/ignored.txt"</tspan>
+</tspan>
+    <tspan x="10px" y="478px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try using a relative path starting from the current page:</tspan>
+</tspan>
+    <tspan x="10px" y="496px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="514px"><tspan class="fg-bright-blue bold">6</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [](</tspan><tspan class="fg-bright-red">/ignored.txt</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="532px"><tspan class="fg-bright-blue bold">6</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">ignored.txt</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="550px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="568px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: ... or use an absolute path starting from the root of your repository:</tspan>
+</tspan>
+    <tspan x="10px" y="586px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="604px"><tspan class="fg-bright-blue bold">6</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">/crates/mdbook-permalinks/tests/ambiguous_paths/src</tspan><tspan>/ignored.txt)</tspan>
+</tspan>
+    <tspan x="10px" y="622px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-green">+++++++++++++++++++++++++++++++++++++++++++++++++++</tspan>
+</tspan>
+    <tspan x="10px" y="640px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will convert this path to a format accepted by mdBook</tspan>
+</tspan>
+    <tspan x="10px" y="658px">
+</tspan>
+    <tspan x="10px" y="676px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "/docs/guide"</tspan>
+</tspan>
+    <tspan x="10px" y="694px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:8:6</tspan>
+</tspan>
+    <tspan x="10px" y="712px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="730px"><tspan class="fg-bright-blue bold">8</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">/docs/guide</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="748px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist</tspan>
+</tspan>
+    <tspan x="10px" y="766px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="784px"><tspan class="fg-bright-green bold">note</tspan><tspan>: the following path is available: "/crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md"</tspan>
+</tspan>
+    <tspan x="10px" y="802px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try using a relative path starting from the current page:</tspan>
+</tspan>
+    <tspan x="10px" y="820px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="838px"><tspan class="fg-bright-blue bold">8</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [](</tspan><tspan class="fg-bright-red">/docs/guide</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="856px"><tspan class="fg-bright-blue bold">8</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- []()</tspan>
+</tspan>
+    <tspan x="10px" y="874px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="892px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: ... or use an absolute path starting from the root of your repository:</tspan>
+</tspan>
+    <tspan x="10px" y="910px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="928px"><tspan class="fg-bright-blue bold">8</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [](</tspan><tspan class="fg-bright-red">/docs/guide</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="946px"><tspan class="fg-bright-blue bold">8</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">/crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="964px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="982px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will convert this path to a format accepted by mdBook</tspan>
+</tspan>
+    <tspan x="10px" y="1000px">
+</tspan>
+    <tspan x="10px" y="1018px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "/docs/guide/intro"</tspan>
+</tspan>
+    <tspan x="10px" y="1036px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:9:6</tspan>
+</tspan>
+    <tspan x="10px" y="1054px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1072px"><tspan class="fg-bright-blue bold">9</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">/docs/guide/intro</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1090px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist</tspan>
+</tspan>
+    <tspan x="10px" y="1108px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1126px"><tspan class="fg-bright-green bold">note</tspan><tspan>: the following path is available: "/crates/mdbook-permalinks/tests/ambiguous_paths/src/intro.md"</tspan>
+</tspan>
+    <tspan x="10px" y="1144px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try using a relative path starting from the current page:</tspan>
+</tspan>
+    <tspan x="10px" y="1162px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1180px"><tspan class="fg-bright-blue bold">9</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [](</tspan><tspan class="fg-bright-red">/docs/guide/intro</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1198px"><tspan class="fg-bright-blue bold">9</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">intro.md</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1216px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1234px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: ... or use an absolute path starting from the root of your repository:</tspan>
+</tspan>
+    <tspan x="10px" y="1252px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1270px"><tspan class="fg-bright-blue bold">9</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [](</tspan><tspan class="fg-bright-red">/docs/guide/intro</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1288px"><tspan class="fg-bright-blue bold">9</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">/crates/mdbook-permalinks/tests/ambiguous_paths/src/intro.md</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1306px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1324px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will convert this path to a format accepted by mdBook</tspan>
+</tspan>
+    <tspan x="10px" y="1342px">
+</tspan>
+    <tspan x="10px" y="1360px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "/docs/guide/draft"</tspan>
+</tspan>
+    <tspan x="10px" y="1378px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:10:6</tspan>
+</tspan>
+    <tspan x="10px" y="1396px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1414px"><tspan class="fg-bright-blue bold">10</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">/docs/guide/draft</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1432px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist</tspan>
+</tspan>
+    <tspan x="10px" y="1450px">
+</tspan>
+    <tspan x="10px" y="1468px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: ambiguous link to `/`</tspan>
+</tspan>
+    <tspan x="10px" y="1486px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:12:6</tspan>
+</tspan>
+    <tspan x="10px" y="1504px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1522px"><tspan class="fg-bright-blue bold">12</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">/</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1540px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^</tspan>
+</tspan>
+    <tspan x="10px" y="1558px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1576px"><tspan class="fg-bright-green bold">note</tspan><tspan>: with `mdbook-permalinks`, this link could also mean a permalink to the root of the repository</tspan>
+</tspan>
+    <tspan x="10px" y="1594px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the root of the repo, try using a full URL:</tspan>
+</tspan>
+    <tspan x="10px" y="1612px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1630px"><tspan class="fg-bright-blue bold">12</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">[CARGO_PKG_REPOSITORY]/tree/HEAD</tspan><tspan>/)</tspan>
+</tspan>
+    <tspan x="10px" y="1648px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-green">++++++++++++++++++++++++++++++++++++++++++++++</tspan>
+</tspan>
+    <tspan x="10px" y="1666px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will update this link to point to the correct commit or tag</tspan>
+</tspan>
+    <tspan x="10px" y="1684px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the root of the book, try using an absolute path to the source directory:</tspan>
+</tspan>
+    <tspan x="10px" y="1702px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1720px"><tspan class="fg-bright-blue bold">12</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">crates/mdbook-permalinks/tests/ambiguous_paths/src</tspan><tspan>/)</tspan>
+</tspan>
+    <tspan x="10px" y="1738px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-green">++++++++++++++++++++++++++++++++++++++++++++++++++</tspan>
+</tspan>
+    <tspan x="10px" y="1756px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will convert this path to a format accepted by mdBook</tspan>
+</tspan>
+    <tspan x="10px" y="1774px">
+</tspan>
+    <tspan x="10px" y="1792px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: ambiguous link to `/`</tspan>
+</tspan>
+    <tspan x="10px" y="1810px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:13:6</tspan>
+</tspan>
+    <tspan x="10px" y="1828px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1846px"><tspan class="fg-bright-blue bold">13</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">/#ambiguous-paths</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1864px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^</tspan>
+</tspan>
+    <tspan x="10px" y="1882px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1900px"><tspan class="fg-bright-green bold">note</tspan><tspan>: with `mdbook-permalinks`, this link could also mean a permalink to the root of the repository</tspan>
+</tspan>
+    <tspan x="10px" y="1918px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the root of the repo, try using a full URL:</tspan>
+</tspan>
+    <tspan x="10px" y="1936px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1954px"><tspan class="fg-bright-blue bold">13</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">[CARGO_PKG_REPOSITORY]/tree/HEAD</tspan><tspan>/#ambiguous-paths)</tspan>
+</tspan>
+    <tspan x="10px" y="1972px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-green">++++++++++++++++++++++++++++++++++++++++++++++</tspan>
+</tspan>
+    <tspan x="10px" y="1990px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will update this link to point to the correct commit or tag</tspan>
+</tspan>
+    <tspan x="10px" y="2008px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the root of the book, try using an absolute path to the source directory:</tspan>
+</tspan>
+    <tspan x="10px" y="2026px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2044px"><tspan class="fg-bright-blue bold">13</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">crates/mdbook-permalinks/tests/ambiguous_paths/src</tspan><tspan>/#ambiguous-paths)</tspan>
+</tspan>
+    <tspan x="10px" y="2062px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-green">++++++++++++++++++++++++++++++++++++++++++++++++++</tspan>
+</tspan>
+    <tspan x="10px" y="2080px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will convert this path to a format accepted by mdBook</tspan>
+</tspan>
+    <tspan x="10px" y="2098px">
+</tspan>
+    <tspan x="10px" y="2116px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: finished with warnings</tspan>
+</tspan>
+  </text>
+
+</svg>

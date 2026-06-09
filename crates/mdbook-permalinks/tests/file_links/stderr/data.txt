@@ -1,97 +1,222 @@
-warning: broken link to "."
- --> crates/mdbook-permalinks/tests/file_links/src/3.book-paths.md:2:6
+warning: broken link to "../static/shinjuku.jpg"
+ --> crates/mdbook-permalinks/tests/file_links/src/3.broken-links.md:1:6
   |
-2 | - [](.)
-  |      ^ directory has no `index.md` file
-  |
-  = help: without an `index.md` file at this location, the link will lead to a 404 error
-  = note: the resolved path is "crates/mdbook-permalinks/tests/file_links/src/"
-
-warning: broken link to "SUMMARY.md"
- --> crates/mdbook-permalinks/tests/file_links/src/3.book-paths.md:5:6
-  |
-5 | - [](SUMMARY.md)
-  |      ^^^^^^^^^^ file is not included in `SUMMARY.md`
-  |
-  = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
-  = note: the resolved path is "crates/mdbook-permalinks/tests/file_links/src/SUMMARY.md"
-
-warning: broken link to "draft.md"
- --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:1:6
-  |
-1 | - [](draft.md)
-  |      ^^^^^^^^ link doesn't match any file in the book
-  |
-  = help: for this link to be accessible, expected any of the following files, but found none:
-          "crates/mdbook-permalinks/tests/file_links/src/draft.md"
-          "crates/mdbook-permalinks/tests/file_links/src/draft.md/index.md"
-          "crates/mdbook-permalinks/tests/file_links/src/draft.md/README.md"
-          "crates/mdbook-permalinks/tests/file_links/src/draft.md.md"
-
-warning: broken link to "../../Cargo.lock"
- --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:2:6
-  |
-2 | - [](../../Cargo.lock)
-  |      ^^^^^^^^^^^^^^^^
+1 | - [](../static/shinjuku.jpg)
+  |      ^^^^^^^^^^^^^^^^^^^^^^
   |      |
   |      resolves to a path that doesn't exist:
-  |      "crates/mdbook-permalinks/tests/Cargo.lock"
+  |      "crates/mdbook-permalinks/tests/file_links/static/shinjuku.jpg"
+
+warning: broken link to "../static/LICENSE.txt#L67"
+ --> crates/mdbook-permalinks/tests/file_links/src/3.broken-links.md:2:6
+  |
+2 | - [](../static/LICENSE.txt#L67)
+  |      ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |      |
+  |      resolves to a path that doesn't exist:
+  |      "crates/mdbook-permalinks/tests/file_links/static/LICENSE.txt"
 
 warning: broken link to "/LICENSE-GPL.md"
- --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:3:6
+ --> crates/mdbook-permalinks/tests/file_links/src/3.broken-links.md:4:6
   |
-3 | - [](/LICENSE-GPL.md)
+4 | - [](/LICENSE-GPL.md)
   |      ^^^^^^^^^^^^^^^ resolves to a path that doesn't exist
 
-warning: broken link to "//LICENSE-MIT.md"
- --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:4:6
+warning: broken link to "/LICENSE-MIT"
+ --> crates/mdbook-permalinks/tests/file_links/src/3.broken-links.md:5:6
   |
-4 | - [](//LICENSE-MIT.md)
-  |      ^^^^^^^^^^^^^^^^
-  |      |
-  |      resolves to a path that is outside of the repository:
-  |      "/LICENSE-MIT.md"
+5 | - [](/LICENSE-MIT)
+  |      ^^^^^^^^^^^^ resolves to a path that doesn't exist
 
-warning: broken link to "../book.toml/"
- --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:5:6
+warning: broken link to "/LICENSE-MIT#license"
+ --> crates/mdbook-permalinks/tests/file_links/src/3.broken-links.md:6:6
   |
-5 | - [](../book.toml/)
+6 | - [](/LICENSE-MIT#license)
+  |      ^^^^^^^^^^^^^^^^^^^^
+  |      |
+  |      resolves to a path that doesn't exist:
+  |      "LICENSE-MIT"
+
+warning: broken link to "//LICENSE-MIT"
+ --> crates/mdbook-permalinks/tests/file_links/src/3.broken-links.md:8:6
+  |
+8 | - [](//LICENSE-MIT)
   |      ^^^^^^^^^^^^^
   |      |
-  |      resolves to a path that isn't a directory:
-  |      "crates/mdbook-permalinks/tests/file_links/book.toml/"
+  |      resolves to a path that is outside of the repository:
+  |      "/LICENSE-MIT"
 
-warning: broken link to "image.jpeg"
- --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:6:7
-  |
-6 | - ![](image.jpeg)
-  |       ^^^^^^^^^^ link doesn't match any file in the book
-  |
-  = help: for this link to be accessible, expected any of the following files, but found none:
-          "crates/mdbook-permalinks/tests/file_links/src/image.jpeg"
-          "crates/mdbook-permalinks/tests/file_links/src/image.jpeg/index.md"
-          "crates/mdbook-permalinks/tests/file_links/src/image.jpeg/README.md"
-          "crates/mdbook-permalinks/tests/file_links/src/image.jpeg.md"
+warning: broken link to "data.txt/"
+  --> crates/mdbook-permalinks/tests/file_links/src/3.broken-links.md:10:6
+   |
+10 | - [](data.txt/)
+   |      ^^^^^^^^^
+   |      |
+   |      resolves to a path that isn't a directory:
+   |      "crates/mdbook-permalinks/tests/file_links/src/data.txt/"
+   |
+help: try removing the trailing slash
+   |
+10 - - [](data.txt/)
+10 + - [](data.txt)
+   |
 
-warning: broken link to "../static/shinjuku.jpg"
- --> crates/mdbook-permalinks/tests/file_links/src/5.not-found.md:7:7
-  |
-7 | - ![](../static/shinjuku.jpg)
-  |       ^^^^^^^^^^^^^^^^^^^^^^
-  |       |
-  |       resolves to a path that doesn't exist:
-  |       "crates/mdbook-permalinks/tests/file_links/static/shinjuku.jpg"
+warning: broken link to "data"
+  --> crates/mdbook-permalinks/tests/file_links/src/3.broken-links.md:12:6
+   |
+12 | - [](data)
+   |      ^^^^ link doesn't match any file in the book
+   |
+   = help: for this link to be accessible, expected any of the following files, but found none:
+           "crates/mdbook-permalinks/tests/file_links/src/data.md"
+           "crates/mdbook-permalinks/tests/file_links/src/data/index.md"
+           "crates/mdbook-permalinks/tests/file_links/src/data/README.md"
+           "crates/mdbook-permalinks/tests/file_links/src/data"
 
-warning: broken link to "/target/.rustc_info.json"
- --> crates/mdbook-permalinks/tests/file_links/src/6.gitignored.md:1:6
-  |
-1 | - [](/target/.rustc_info.json)
-  |      ^^^^^^^^^^^^^^^^^^^^^^^^ resolves to a path that is gitignored
+warning: broken link to "data.md"
+  --> crates/mdbook-permalinks/tests/file_links/src/3.broken-links.md:13:6
+   |
+13 | - [](data.md)
+   |      ^^^^^^^ link doesn't match any file in the book
+   |
+   = help: for this link to be accessible, expected any of the following files, but found none:
+           "crates/mdbook-permalinks/tests/file_links/src/data.md"
+           "crates/mdbook-permalinks/tests/file_links/src/data.md/index.md"
+           "crates/mdbook-permalinks/tests/file_links/src/data.md/README.md"
+           "crates/mdbook-permalinks/tests/file_links/src/data.md.md"
 
-warning: broken link to "/target/debug"
- --> crates/mdbook-permalinks/tests/file_links/src/6.gitignored.md:2:6
+warning: broken link to "data.html"
+  --> crates/mdbook-permalinks/tests/file_links/src/3.broken-links.md:14:6
+   |
+14 | - [](data.html)
+   |      ^^^^^^^^^ link doesn't match any file in the book
+   |
+   = help: for this link to be accessible, expected any of the following files, but found none:
+           "crates/mdbook-permalinks/tests/file_links/src/data.md"
+           "crates/mdbook-permalinks/tests/file_links/src/data.html"
+
+warning: broken link to "data/"
+  --> crates/mdbook-permalinks/tests/file_links/src/3.broken-links.md:15:6
+   |
+15 | - [](data/)
+   |      ^^^^^ link doesn't match any file in the book
+   |
+   = help: for this link to be accessible, expected any of the following files, but found none:
+           "crates/mdbook-permalinks/tests/file_links/src/data/index.md"
+           "crates/mdbook-permalinks/tests/file_links/src/data/README.md"
+
+warning: broken link to "api/"
+ --> crates/mdbook-permalinks/tests/file_links/src/4.broken-page-links.md:1:6
   |
-2 | - [](/target/debug)
-  |      ^^^^^^^^^^^^^ resolves to a path that is gitignored
+1 | - [](api/)
+  |      ^^^^ directory has no `index.md` file
+  |
+  = help: without an `index.md` file at this location, the link will lead to a 404 error
+  = note: the resolved path is "crates/mdbook-permalinks/tests/file_links/src/api/"
+
+warning: broken link to "api"
+ --> crates/mdbook-permalinks/tests/file_links/src/4.broken-page-links.md:2:6
+  |
+2 | - [](api)
+  |      ^^^ directory has no `index.md` file
+  |
+  = help: without an `index.md` file at this location, the link will lead to a 404 error
+  = note: the resolved path is "crates/mdbook-permalinks/tests/file_links/src/api"
+
+warning: broken link to "api/lib/"
+ --> crates/mdbook-permalinks/tests/file_links/src/4.broken-page-links.md:4:6
+  |
+4 | - [](api/lib/)
+  |      ^^^^^^^^ directory has no `index.md` file
+  |
+  = help: without an `index.md` file at this location, the link will lead to a 404 error
+  = note: the resolved path is "crates/mdbook-permalinks/tests/file_links/src/api/lib/"
+
+warning: broken link to "drafts/draft.md"
+ --> crates/mdbook-permalinks/tests/file_links/src/4.broken-page-links.md:7:6
+  |
+7 | - [](drafts/draft.md)
+  |      ^^^^^^^^^^^^^^^
+  |      |
+  |      file is not included in `SUMMARY.md`:
+  |      "crates/mdbook-permalinks/tests/file_links/src/drafts/draft.md"
+  |
+  = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+
+warning: broken link to "drafts/draft"
+ --> crates/mdbook-permalinks/tests/file_links/src/4.broken-page-links.md:8:6
+  |
+8 | - [](drafts/draft)
+  |      ^^^^^^^^^^^^
+  |      |
+  |      file is not included in `SUMMARY.md`:
+  |      "crates/mdbook-permalinks/tests/file_links/src/drafts/draft.md"
+  |
+  = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+
+warning: broken link to "drafts/index"
+ --> crates/mdbook-permalinks/tests/file_links/src/4.broken-page-links.md:9:6
+  |
+9 | - [](drafts/index)
+  |      ^^^^^^^^^^^^
+  |      |
+  |      file is not included in `SUMMARY.md`:
+  |      "crates/mdbook-permalinks/tests/file_links/src/drafts/index.md"
+  |
+  = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+
+warning: broken link to "drafts/"
+  --> crates/mdbook-permalinks/tests/file_links/src/4.broken-page-links.md:10:6
+   |
+10 | - [](drafts/)
+   |      ^^^^^^^
+   |      |
+   |      file is not included in `SUMMARY.md`:
+   |      "crates/mdbook-permalinks/tests/file_links/src/drafts/index.md"
+   |
+   = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+
+warning: broken link to "drafts"
+  --> crates/mdbook-permalinks/tests/file_links/src/4.broken-page-links.md:11:6
+   |
+11 | - [](drafts)
+   |      ^^^^^^
+   |      |
+   |      file is not included in `SUMMARY.md`:
+   |      "crates/mdbook-permalinks/tests/file_links/src/drafts/index.md"
+   |
+   = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+
+warning: broken link to "/target/"
+ --> crates/mdbook-permalinks/tests/file_links/src/5.gitignore.md:1:6
+  |
+1 | - [](/target/)
+  |      ^^^^^^^^ resolves to a path that is gitignored
+
+warning: broken link to "/target/debug/mdbook-permalinks"
+ --> crates/mdbook-permalinks/tests/file_links/src/5.gitignore.md:2:6
+  |
+2 | - [](/target/debug/mdbook-permalinks)
+  |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ resolves to a path that is gitignored
+
+warning: broken link to "./symlinks/lib.md"
+ --> crates/mdbook-permalinks/tests/file_links/src/6.symlinks.md:4:6
+  |
+4 | - [](./symlinks/lib.md)
+  |      ^^^^^^^^^^^^^^^^^
+  |      |
+  |      file is not included in `SUMMARY.md`:
+  |      "crates/mdbook-permalinks/tests/file_links/src/symlinks/lib.md"
+  |
+  = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+
+warning: broken link to "ignored.rs"
+ --> crates/mdbook-permalinks/tests/file_links/src/7.always-link.md:3:6
+  |
+3 | - [](ignored.rs)
+  |      ^^^^^^^^^^
+  |      |
+  |      resolves to a path that is gitignored:
+  |      "crates/mdbook-permalinks/tests/file_links/src/ignored.rs"
 
  WARN mdbook-permalinks: finished with warnings

@@ -80,7 +80,7 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
         };
 
         let title = match error.error {
-            AmbiguousLinkToRoot => format!("ambiguous link to {href:?}"),
+            AmbiguousLinkToRoot => "ambiguous link to `/`".into(),
             _ => format!("broken link to {href:?}"),
         };
 
@@ -185,8 +185,8 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
 
             helps.extend([IssueReport::level(IssueLevel::Note)
                 .title(concat! {
-                    "with `", PREPROCESSOR_NAME!(), "`, an absolute path could \
-                    also mean a permalink to the root of the repository"
+                    "with `", PREPROCESSOR_NAME!(), "`, this link could also \
+                    mean a permalink to the root of the repository"
                 })
                 .build()]);
         } else {
@@ -285,15 +285,24 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
                 to_book,
                 to_book_relative,
             }) => {
-                let help1 = if *to_book_relative {
+                let help1 = IssueReport::level(IssueLevel::Help)
+                    .title("to link to the root of the repo, try using a full URL:")
+                    .patches(vec![Suggestion::span(span.clone()).repl(to_repo).build()])
+                    .notes(vec![Note::note(
+                        concat! { "`", PREPROCESSOR_NAME!(), "`", " will update this link",
+                        " to point to the correct commit or tag" },
+                    )])
+                    .build();
+
+                let help2 = if *to_book_relative {
                     IssueReport::level(IssueLevel::Help).title({
                         "to link to the root of the book, try using a \
-                        relative path from the current page"
+                        relative path from the current page:"
                     })
                 } else {
                     IssueReport::level(IssueLevel::Help).title({
                         "to link to the root of the book, try using an \
-                        absolute path to the source directory"
+                        absolute path to the source directory:"
                     })
                 }
                 .patches(vec![Suggestion::span(span.clone()).repl(to_book).build()])
@@ -302,15 +311,6 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
                     " this path to a format accepted by mdBook" },
                 )])
                 .build();
-
-                let help2 = IssueReport::level(IssueLevel::Help)
-                    .title("to link to the root of the repo, try using a full URL")
-                    .patches(vec![Suggestion::span(span.clone()).repl(to_repo).build()])
-                    .notes(vec![Note::note(
-                        concat! { "`", PREPROCESSOR_NAME!(), "`", " will update this link",
-                        " to point to the correct commit or tag" },
-                    )])
-                    .build();
 
                 helps.extend([help1, help2]);
             }

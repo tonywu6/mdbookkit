@@ -22,8 +22,7 @@ warning: broken link to "/東京都港区/南青山.md"
 9 | [](/東京都港区/南青山.md)
   |    ^^^^^^^^^^^^^^^^^^^^^ resolves to a path that doesn't exist
   |
-note: the following path is available:
-      "/crates/mdbook-permalinks/tests/path_encoding/src/東京都港区/南青山.md"
+note: the following path is available: "/crates/mdbook-permalinks/tests/path_encoding/src/東京都港区/南青山.md"
 help: try using a relative path starting from the current page:
   |
 9 - [](/東京都港区/南青山.md)

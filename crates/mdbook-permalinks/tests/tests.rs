@@ -13,18 +13,25 @@ use mdbookkit_testing::{
 };
 use tap::TryConv;
 
+#[allow(unused)]
 macro_rules! test_case {
     [$name:ident, $($args:tt)+] => {
         #[test]
         fn $name() -> Result<()> {
             test_mdbook![$name, $($args)+, redacted = [redacted()]];
-            $name()?.run()
+            let test = $name()?;
+            std::fs::write(test.path.book_dir().join("src/ignored.txt"), "")?;
+            std::fs::write(test.path.book_dir().join("src/ignored.rs"), "")?;
+            test.run()
         }
     };
 }
 
 test_case![file_links, exit(0)];
-test_case![http_links, exit(0)];
+test_case![repo_links, exit(0)];
+test_case![book_links, exit(0)];
+test_case![ambiguous_paths, exit(0)];
+
 test_case![git_url_from_book, exit(0)];
 test_case![git_url_scp_like, exit(0)];
 test_case![git_url_unsupported, exit(101)];
@@ -36,11 +43,6 @@ test_case![git_url_tangled_self_hosted, exit(101)];
 test_case![git_url_tangled_malformed, exit(101)];
 test_case![git_url_custom_params, exit(0)];
 test_case![git_url_invalid_config, exit(101)];
-test_case![
-    book_tutorial_check,
-    exit(0),
-    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
-];
 
 test_case![path_encoding, exit(0)];
 #[cfg(not(windows))]
@@ -50,6 +52,12 @@ test_case![path_encoding_windows, exit(0)];
 test_case![site_url_absolute_paths, exit(0)];
 test_case![site_url_invalid, exit(101)];
 test_case![site_url_path_encoding, exit(0)];
+
+test_case![
+    book_tutorial_check,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
 
 macro_rules! test_in_temp_dir {
     [$name:ident ($($args:tt)+), |$root:ident| { $($setup:tt)* }] => {

@@ -369,6 +369,25 @@ impl Resolver<'_> {
                         }
                     }
 
+                    NoSuchPage(UnexpectedFileExtension) => {
+                        if let Ok(edited) = self
+                            .edit_link(link, |url| {
+                                if let Some(path) = url.path().strip_suffix(".md") {
+                                    #[allow(clippy::unnecessary_to_owned)]
+                                    url.set_path(&path.to_owned());
+                                }
+                                Ok(())
+                            })
+                            .context("could not correct the link")
+                            .or_else(emit_debug!())
+                        {
+                            e.help = Some(LinkHelp::GenericEdit {
+                                help: "try removing the extension",
+                                edited,
+                            })
+                        }
+                    }
+
                     _ => {}
                 }
                 link.state_mut().error(e)

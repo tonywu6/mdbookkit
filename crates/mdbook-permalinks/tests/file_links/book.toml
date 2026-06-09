@@ -1,4 +1,5 @@
 [preprocessor.permalinks]
+always-link = [".rs"]
 
 [output.markdown]
 

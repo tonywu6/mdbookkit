@@ -1,0 +1,12 @@
+[preprocessor.permalinks]
+always-link = [".rs"]
+
+[output.html]
+site-url = "https://example.org/book"
+
+[output.markdown]
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

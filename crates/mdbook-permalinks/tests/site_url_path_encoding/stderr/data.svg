@@ -1,4 +1,4 @@
-<svg width="740px" height="812px" xmlns="http://www.w3.org/2000/svg">
+<svg width="928px" height="776px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -34,81 +34,77 @@
 </tspan>
     <tspan x="10px" y="118px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="136px"><tspan class="fg-bright-green bold">note</tspan><tspan>: the following path is available:</tspan>
+    <tspan x="10px" y="136px"><tspan class="fg-bright-green bold">note</tspan><tspan>: the following path is available: "/crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="154px"><tspan>      "/crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md"</tspan>
+    <tspan x="10px" y="154px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try using a relative path starting from the current page:</tspan>
 </tspan>
-    <tspan x="10px" y="172px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try using a relative path starting from the current page:</tspan>
+    <tspan x="10px" y="172px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="190px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="190px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [Homepage](</tspan><tspan class="fg-bright-red">/book/東京都/index.md</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="208px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [Homepage](</tspan><tspan class="fg-bright-red">/book/東京都/index.md</tspan><tspan>)</tspan>
+    <tspan x="10px" y="208px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [Homepage]()</tspan>
 </tspan>
-    <tspan x="10px" y="226px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [Homepage]()</tspan>
+    <tspan x="10px" y="226px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="244px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="244px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: ... or use an absolute path starting from the root of your repository:</tspan>
 </tspan>
-    <tspan x="10px" y="262px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: ... or use an absolute path starting from the root of your repository:</tspan>
+    <tspan x="10px" y="262px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="280px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="280px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [Homepage](</tspan><tspan class="fg-bright-red">/book/東京都/index.md</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="298px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [Homepage](</tspan><tspan class="fg-bright-red">/book/東京都/index.md</tspan><tspan>)</tspan>
+    <tspan x="10px" y="298px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [Homepage](</tspan><tspan class="fg-bright-green">/crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="316px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [Homepage](</tspan><tspan class="fg-bright-green">/crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md</tspan><tspan>)</tspan>
+    <tspan x="10px" y="316px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="334px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="334px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will convert this path to a format accepted by mdBook</tspan>
 </tspan>
-    <tspan x="10px" y="352px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will convert this path to a format accepted by mdBook</tspan>
+    <tspan x="10px" y="352px">
 </tspan>
-    <tspan x="10px" y="370px">
+    <tspan x="10px" y="370px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "/book/%E6%9D%B1%E4%BA%AC都/%69%6E%64%65%78.md"</tspan>
 </tspan>
-    <tspan x="10px" y="388px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "/book/%E6%9D%B1%E4%BA%AC都/%69%6E%64%65%78.md"</tspan>
+    <tspan x="10px" y="388px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md:2:14</tspan>
 </tspan>
-    <tspan x="10px" y="406px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md:2:14</tspan>
+    <tspan x="10px" y="406px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="424px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="424px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [Homepage](</tspan><tspan class="fg-yellow bold">/book/%E6%9D%B1%E4%BA%AC都/%69%6E%64%65%78.md</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="442px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [Homepage](</tspan><tspan class="fg-yellow bold">/book/%E6%9D%B1%E4%BA%AC都/%69%6E%64%65%78.md</tspan><tspan>)</tspan>
+    <tspan x="10px" y="442px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>              </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan>
 </tspan>
-    <tspan x="10px" y="460px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>              </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan>
+    <tspan x="10px" y="460px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>              </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="478px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>              </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="478px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>              </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist:</tspan>
 </tspan>
-    <tspan x="10px" y="496px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>              </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist:</tspan>
+    <tspan x="10px" y="496px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>              </tspan><tspan class="fg-bright-blue bold">"book/東京都/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="514px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>              </tspan><tspan class="fg-bright-blue bold">"book/東京都/index.md"</tspan>
+    <tspan x="10px" y="514px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="532px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="532px"><tspan class="fg-bright-green bold">note</tspan><tspan>: the following path is available: "/crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md"</tspan>
 </tspan>
-    <tspan x="10px" y="550px"><tspan class="fg-bright-green bold">note</tspan><tspan>: the following path is available:</tspan>
+    <tspan x="10px" y="550px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try using a relative path starting from the current page:</tspan>
 </tspan>
-    <tspan x="10px" y="568px"><tspan>      "/crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md"</tspan>
+    <tspan x="10px" y="568px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="586px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try using a relative path starting from the current page:</tspan>
+    <tspan x="10px" y="586px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [Homepage](</tspan><tspan class="fg-bright-red">/book/%E6%9D%B1%E4%BA%AC都/%69%6E%64%65%78.md</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="604px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="604px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [Homepage]()</tspan>
 </tspan>
-    <tspan x="10px" y="622px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [Homepage](</tspan><tspan class="fg-bright-red">/book/%E6%9D%B1%E4%BA%AC都/%69%6E%64%65%78.md</tspan><tspan>)</tspan>
+    <tspan x="10px" y="622px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="640px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [Homepage]()</tspan>
+    <tspan x="10px" y="640px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: ... or use an absolute path starting from the root of your repository:</tspan>
 </tspan>
     <tspan x="10px" y="658px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="676px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: ... or use an absolute path starting from the root of your repository:</tspan>
+    <tspan x="10px" y="676px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [Homepage](</tspan><tspan class="fg-bright-red">/book/%E6%9D%B1%E4%BA%AC都/%69%6E%64%65%78.md</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="694px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="694px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [Homepage](</tspan><tspan class="fg-bright-green">/crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="712px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [Homepage](</tspan><tspan class="fg-bright-red">/book/%E6%9D%B1%E4%BA%AC都/%69%6E%64%65%78.md</tspan><tspan>)</tspan>
+    <tspan x="10px" y="712px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="730px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [Homepage](</tspan><tspan class="fg-bright-green">/crates/mdbook-permalinks/tests/site_url_path_encoding/src/index.md</tspan><tspan>)</tspan>
+    <tspan x="10px" y="730px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will convert this path to a format accepted by mdBook</tspan>
 </tspan>
-    <tspan x="10px" y="748px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="748px">
 </tspan>
-    <tspan x="10px" y="766px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will convert this path to a format accepted by mdBook</tspan>
-</tspan>
-    <tspan x="10px" y="784px">
-</tspan>
-    <tspan x="10px" y="802px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: finished with warnings</tspan>
+    <tspan x="10px" y="766px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: finished with warnings</tspan>
 </tspan>
   </text>
 
