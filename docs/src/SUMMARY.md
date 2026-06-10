@@ -27,7 +27,7 @@
 
 - [mdbook-permalinks](permalinks/index.md)
 - [Tutorial](permalinks/tutorial.md)
-- [How to ...]()
+- [How to ...](permalinks/how-to/index.md)
   - [Use in CI/CD]()
 - [Configuration](permalinks/configuration.md)
   - [Environment variables]()

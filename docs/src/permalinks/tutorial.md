@@ -115,6 +115,8 @@ like.
 
 ## Write
 
+### Linking by paths
+
 You are now ready to add permalinks to your book!
 
 <aside><p><details>
@@ -132,8 +134,8 @@ GitHub:
 
 - [<code>https://github.com/rust-lang/rust/blob/<strong>a469a4ae63</strong>/README.md</code>](https://github.com/rust-lang/rust/blob/a469a4ae63/README.md)
   - This is a permalink. It always points to the `README.md` file at commit
-    `a469a4ae63`. Unless the commit itself has been deleted[^github], the link will
-    always link to the same copy of the file.
+    `a469a4ae63`. Unless the commit itself has been deleted, the link will always link
+    to the same copy of the file.
 
 </details></p></aside>
 
@@ -171,13 +173,7 @@ book/
 
 </figure>
 
-For this page, which you are currently reading, the link is:
-
-```md
-See [`book.toml`](../../book.toml) for more info.
-```
-
-You may now run `mdbook serve`! In the rendered page, you should see the added link:
+You may now run `mdbook serve`. In the rendered page, you should see the added link:
 
 <figure class="fig-text">
 
@@ -197,20 +193,19 @@ For example, as of writing this, the link to this book's `book.toml` is:
 
 </figure>
 
-Feel free to keep `mdbook serve` running, and experiment by linking to some other files
-or directories in your repository!
+Feel free to keep `mdbook serve` running, and experiment with linking to some other
+files or directories in your repository!
 
 ### Linking by "absolute" paths
 
-You can alternatively **use an "absolute" path,** which starts with a `/`, when writing
-the link.
+You can also **use an "absolute" path,** which starts with a `/`, when writing the link.
 
 Instead of being relative to the current Markdown file, "absolute" paths are relative to
 the root of your Git repository. This could be useful for linking to files that are far
-away and you don't want to traverse multiple levels of parent directories like
+away, and you don't want to traverse multiple levels of parent directories, like
 `../../..`.
 
-Using some more files in this repository as examples:
+Here are some more examples, using various other files in this repository:
 
 > ```md
 > - [One of the preprocessor's test cases](/crates/mdbook-permalinks/tests/file_links)
@@ -232,9 +227,9 @@ Using some more files in this repository as examples:
 
 ### Files in your book
 
-Note that links to other files under your book's source directory are not affected by
-this preprocessor. Because mdBook always copies everything in the source directory to
-the output directory, links to them remain valid after build.
+Note that links pointing to files under your book's source directory are not modified by
+this preprocessor. Since mdBook always copies everything in the source directory to the
+output directory, such links can be kept as-is.
 
 For example, the following link points to a file on this website instead of on GitHub:
 
@@ -264,28 +259,28 @@ link to highlight specific lines in the destination source code:
 
 ### Images
 
-Finally, with this preprocessor, you can display images that are stored anywhere in your
-repository also by just mentioning their paths.
+Finally, with this preprocessor, you can use permalinks to display image files that are
+stored anywhere in your repository.
 
-This is supported by the fact that most forges that support permalinking also support 2
-versions of links for each file:
+Most forges that support permalinking support 2 versions of the links:
 
 - A link that opens up the file's webpage for viewing (with the forge's UI and
   everything)
   - For example, on GitHub, such links are denoted by either `tree` or `blob` in their
     paths: <br>
-    [<code>https://github.com/rust-lang/rust/<strong>blob</strong>/a469a4ae63/TODO:logo.png</code>](https://github.com/rust-lang/rust/blob/a469a4ae63/TODO:logo.png)
+    [<code>https://github.com/tokio-rs/tracing/<strong>blob</strong>/add986d/assets/logo.svg</code>](https://github.com/tokio-rs/tracing/blob/add986d/assets/logo.svg)
 
 - A link that directly serves the file's raw content, suitable for embedding or
   downloading
   - For example, on GitHub, such links are denoted by `raw` in their paths: <br>
-    [<code>https://github.com/rust-lang/rust/<strong>raw</strong>/a469a4ae63/TODO:logo.png</code>](https://github.com/rust-lang/rust/raw/a469a4ae63/TODO:logo.png)
+    [<code>https://github.com/tokio-rs/tracing/<strong>raw</strong>/add986d/assets/logo.svg</code>](https://github.com/tokio-rs/tracing/raw/add986d/assets/logo.svg)
 
-If you add a Markdown image with a file path as its URL, the preprocessor can
-accordingly convert the path to a version of the permalink that serves raw content.
+If use a file path as the URL in a Markdown image, as in `![alt text](path/to/image)`,
+the preprocessor can accordingly convert the path to a version of the permalink that
+serves raw content.
 
-The following example snippet will display an image that is also a clickable link that
-opens up the image's page on GitHub:
+For example, the following snippet will display an image that is also a clickable link
+that opens up the image's page on GitHub:
 
 <!-- prettier-ignore-start -->
 > ```md
@@ -301,12 +296,12 @@ opens up the image's page on GitHub:
 
 ## Check
 
-_It happens._ You may have made a typo when writing the file path. Or perhaps more
-likely, the file or directory that you previously linked to has been moved or deleted,
-but you haven't updated your book yet. _Broken links are simply a fact of life._
+_It happens:_ You made a typo when writing the link. Or perhaps more likely, the file or
+directory that you previously linked to has been moved or deleted, but you haven't
+updated your book yet. _Broken links are simply a fact of life._
 
-The preprocessor will warn you when it detects that a link points to a path that doesn't
-exist.
+The preprocessor will warn you when it detects that a link points to a non-existent
+path.
 
 For this tutorial, let's say you typed it wrong when trying to add a link to the
 `book.toml` file:
@@ -335,8 +330,6 @@ Formatting of diagnostics powered by [annotate-snippets][annotate_snippets]
 
 Thus concludes the tutorial! I hope you find this preprocessor useful.
 
-[^github]: Or if [something happens to GitHub...](TODO://)
-
 [^path-autocomplete]:
     Your code editor may support path auto-completion. For example, see [VS
     Code][vscode-path-completions].
@@ -346,6 +339,6 @@ Thus concludes the tutorial! I hope you find this preprocessor useful.
 [mdbook-include]: https://rust-lang.github.io/mdBook/format/mdbook.html#including-files
 [mdbook-links]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html#:~:text=The%20following%20preprocessors%20are%20built%2Din%20and%20included%20by%20default:
 [mdbook-html]: https://rust-lang.github.io/mdBook/format/configuration/renderers.html#html-renderer-options
-["permalink"]: TODO://
+["permalink"]: https://en.wikipedia.org/wiki/Permalink
 [vscode-path-completions]: https://code.visualstudio.com/docs/languages/markdown#_path-completions
 <!-- prettier-ignore-end -->
