@@ -506,10 +506,20 @@ html.light {
   .fig-text {
     background-color: #f6f7f680;
   }
+
+  details[open] {
+    outline: 0.5rem solid #f6f7f680;
+    background-color: #f6f7f680;
+  }
 }
 
 html.rust {
   .fig-text {
+    background-color: #f6f7f680;
+  }
+
+  details[open] {
+    outline: 0.5rem solid #f6f7f680;
     background-color: #f6f7f680;
   }
 }
@@ -518,16 +528,31 @@ html.coal {
   .fig-text {
     background-color: #1d1f2180;
   }
+
+  details[open] {
+    outline: 0.5rem solid #1d1f2180;
+    background-color: #1d1f2180;
+  }
 }
 
 html.navy {
   .fig-text {
     background-color: #1d1f2180;
   }
+
+  details[open] {
+    outline: 0.5rem solid #1d1f2180;
+    background-color: #1d1f2180;
+  }
 }
 
 html.ayu {
   .fig-text {
+    background-color: #191f2680;
+  }
+
+  details[open] {
+    outline: 0.5rem solid #191f2680;
     background-color: #191f2680;
   }
 }

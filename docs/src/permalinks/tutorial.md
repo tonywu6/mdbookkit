@@ -39,7 +39,7 @@ This tutorial assumes that:
 To be able to use the preprocessor, there are generally 2 required configurations:
 
 1. Enable the preprocessor.
-2. Tell it the URL to your Git repository.
+2. Tell the preprocessor the URL to your Git repository.
 
 First, enable the preprocessor by adding the following table to your `book.toml`:
 
@@ -72,8 +72,8 @@ see text embedded using the [`{{#include}}` directive][mdbook-include].
 
 </details></p>
 
-For the preprocessor to be able to generate permalinks, it must also know where your
-repository can be accessed online.
+Then, for the preprocessor to be able to generate permalinks, it must also know where
+your repository can be accessed online.
 
 There are several ways to provide this information. For this tutorial, add the following
 option to your `book.toml`. Feel free to update the URL to your repo's actual URL:
@@ -88,8 +88,8 @@ option to your `book.toml`. Feel free to update the URL to your repo's actual UR
 
 The `git-repository-url` option is part of mdBook's builtin [HTML renderer
 options][mdbook-html]. When set, mdBook renders an icon link on the right side of the
-top menu bar that opens the repo at the configured URL. The preprocessor reuses this
-option as the base of the generated permalinks.
+top menu bar that opens the configured URL. The preprocessor reuses this option as the
+base of the generated permalinks.
 
 Note that your `book.toml` may already have the `[output.html]` table. You may also have
 already set the `git-repository-url` option. If so, you can simply keep its existing
@@ -260,7 +260,7 @@ link to highlight specific lines in the destination source code:
 ### Images
 
 Finally, with this preprocessor, you can use permalinks to display image files that are
-stored anywhere in your repository.
+stored elsewhere in your repository.
 
 Most forges that support permalinking support 2 versions of the links:
 
@@ -275,12 +275,12 @@ Most forges that support permalinking support 2 versions of the links:
   - For example, on GitHub, such links are denoted by `raw` in their paths: <br>
     [<code>https://github.com/tokio-rs/tracing/<strong>raw</strong>/add986d/assets/logo.svg</code>](https://github.com/tokio-rs/tracing/raw/add986d/assets/logo.svg)
 
-If use a file path as the URL in a Markdown image, as in `![alt text](path/to/image)`,
-the preprocessor can accordingly convert the path to a version of the permalink that
-serves raw content.
+If you use a file path as the URL in a Markdown image, as in
+`![alt text](path/to/image)`, the preprocessor can accordingly convert the link to a
+version of the permalink that serves raw content.
 
-For example, the following snippet will display an image that is also a clickable link
-that opens up the image's page on GitHub:
+As a combined example, the following snippet will link to an image file in this
+repository both as a displayed image and as a clickable link:
 
 <!-- prettier-ignore-start -->
 > ```md
