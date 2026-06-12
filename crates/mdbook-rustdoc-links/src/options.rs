@@ -19,11 +19,14 @@ use tap::{Pipe, Tap};
 use tracing::debug;
 
 use mdbookkit::{
+    book::BookToml,
     config::{BaseUrl, value_or_vec},
     de_struct, doc_link, emit_error,
     env::{is_ci, locate_project},
     error::FailOnWarnings,
 };
+
+use crate::PREPROCESSOR_NAME;
 
 de_struct!(
     #[serde(rename_all = "kebab-case", deny_unknown_fields)]
@@ -80,6 +83,16 @@ de_struct!(
         ))
     )
 );
+
+impl TryFrom<BookToml<'_>> for Config {
+    type Error = anyhow::Error;
+
+    fn try_from(mut value: BookToml<'_>) -> Result<Self, Self::Error> {
+        Ok(value
+            .preprocessor(&[PREPROCESSOR_NAME, "mdbook-rustdoc-link"])?
+            .unwrap_or_default())
+    }
+}
 
 #[derive(Debug, Default)]
 pub struct Config {

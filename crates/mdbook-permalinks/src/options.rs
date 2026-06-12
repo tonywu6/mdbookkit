@@ -7,7 +7,7 @@ use serde::{
 use url::Url;
 
 use mdbookkit::{
-    book::PreprocessorHelper,
+    book::{BookToml, PreprocessorHelper},
     config::{BaseUrl, value_or_vec},
     error::{FailOnWarnings, MapDeserializeError},
     impl_deserialize_from_str, try2,
@@ -24,8 +24,16 @@ pub struct Config {
 
 impl Config {
     pub fn new(ctx: &PreprocessorContext) -> Result<Self> {
+        Self::try_from(ctx.book_toml())
+    }
+}
+
+impl TryFrom<BookToml<'_>> for Config {
+    type Error = anyhow::Error;
+
+    fn try_from(value: BookToml<'_>) -> Result<Self, Self::Error> {
         try2!({
-            let mut book_toml = ctx.book_toml().with_source();
+            let mut book_toml = value.with_source();
 
             let options = book_toml
                 .preprocessor::<Options>(&[PREPROCESSOR_NAME, "mdbook-link-forever"])?
@@ -36,11 +44,15 @@ impl Config {
                 Ok(Self(gix_url::parse(s.into())?))
             });
 
-            let repo_url = book_toml
-                .html_config::<RepoUrl>("git-repository-url")?
-                .map(|u| u.0);
+            let repo_url = if options.repo_url_template.pattern.is_none() {
+                book_toml
+                    .html_config::<RepoUrl>("git-repository-url")?
+                    .map(|u| u.0)
+            } else {
+                None
+            };
 
-            let site_url = book_toml.html_config::<BaseUrl>("site-url")?;
+            let site_url = book_toml.html_config("site-url")?;
 
             Ok(Self {
                 repo_url,

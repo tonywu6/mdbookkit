@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
+use tap::TryConv;
 use tracing::{Level, debug, error_span, info, info_span, warn};
 
 use mdbookkit::{
@@ -31,12 +32,12 @@ mod tracker;
 
 fn main() {
     init_logging();
-    let _span = error_span!({ env!("CARGO_PKG_NAME") }).entered();
+    let _span = error_span!({ PREPROCESSOR_NAME }).entered();
     let Program { command } = clap::Parser::parse();
     match command {
         Some(Command::Supports { .. }) => Ok(()),
         Some(Command::ValidateConfig) => {
-            validate_config_examples::<Config>(PREPROCESSOR_NAME).or_else(emit_error!())
+            validate_config_examples::<Config>().or_else(emit_error!())
         }
 
         None => mdbook(),
@@ -80,11 +81,10 @@ fn mdbook() -> Result<(), ()> {
         fail_on_warnings,
     } = ctx
         .book_toml()
-        .preprocessor(&[PREPROCESSOR_NAME, "mdbook-rustdoc-link"])
+        .try_conv::<Config>()
         .inspect(|c| debug!("{c:#?}"))
         .context("failed to read preprocessor config from book.toml")
-        .or_else(emit_error!())?
-        .unwrap_or_default();
+        .or_else(emit_error!())?;
 
     let env = Environment::new(env, &ctx).or_else(emit_error!())?;
 

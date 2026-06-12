@@ -515,9 +515,9 @@ pub struct ConfigExampleInputs(pub BTreeMap<String, Vec<Spanned<String>>>);
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub struct ConfigExampleErrors(pub BTreeMap<String, Vec<Spanned<String>>>);
 
-pub fn validate_config_examples<T>(preprocessor: &str) -> Result<()>
+pub fn validate_config_examples<T>() -> Result<()>
 where
-    T: for<'de> Deserialize<'de>,
+    T: for<'a> TryFrom<BookToml<'a>, Error = anyhow::Error>,
 {
     let input = string_from_stdin()?;
     let input = serde_json::from_str::<ConfigExampleInputs>(&input)?;
@@ -526,9 +526,9 @@ where
             let errors = examples
                 .into_iter()
                 .filter_map(|(example, span)| {
-                    match (example.parse::<BookToml>())
-                        .and_then(|mut config| config.preprocessor::<T>(&[preprocessor]))
-                        .and_then(|config| config.context("config table not defined"))
+                    match example
+                        .parse::<BookToml>()
+                        .and_then(|config| T::try_from(config))
                     {
                         Ok(..) => None,
                         Err(e) => Some((format!("{e:?}"), span)),

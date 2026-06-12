@@ -38,12 +38,12 @@ mod vcs;
 
 fn main() {
     init_logging();
-    let _span = error_span!({ env!("CARGO_PKG_NAME") }).entered();
+    let _span = error_span!({ PREPROCESSOR_NAME }).entered();
     let Program { command } = clap::Parser::parse();
     match command {
         Some(Command::Supports { .. }) => Ok(()),
         Some(Command::ValidateConfig) => {
-            validate_config_examples::<Options>(PREPROCESSOR_NAME).or_else(emit_error!())
+            validate_config_examples::<Config>().or_else(emit_error!())
         }
         None => mdbook(),
     }

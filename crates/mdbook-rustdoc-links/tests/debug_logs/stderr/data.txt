@@ -1,104 +1,102 @@
-DEBUG mdbook-rustdoc-links: Some(
-    Config {
-        builder: BuilderConfig {
-            manifest_dir: None,
-            build: [
-                Builder {
-                    targets: [
-                        "aarch64-unknown-linux-gnu",
-                    ],
-                    options: BuildOptions {
-                        preludes: None,
-                        packages: None,
-                        features: FeatureSelection {
-                            features: [],
-                            all_features: None,
-                            no_default_features: None,
-                        },
-                        rustc_args: [],
-                        rustdoc_args: [],
-                        cargo: CargoOptions {
-                            toolchain: None,
-                            cargo_args: [],
-                            runner: CommandRunner(
-                                None,
-                            ),
-                        },
-                        docs_rs: None,
+DEBUG mdbook-rustdoc-links: Config {
+    builder: BuilderConfig {
+        manifest_dir: None,
+        build: [
+            Builder {
+                targets: [
+                    "aarch64-unknown-linux-gnu",
+                ],
+                options: BuildOptions {
+                    preludes: None,
+                    packages: None,
+                    features: FeatureSelection {
+                        features: [],
+                        all_features: None,
+                        no_default_features: None,
                     },
-                },
-                Builder {
-                    targets: [],
-                    options: BuildOptions {
-                        preludes: None,
-                        packages: Some(
-                            [
-                                Selector(
-                                    PackageSelector {
-                                        name: None,
-                                        workspace: Default,
-                                        dependencies: false,
-                                    },
-                                ),
-                            ],
+                    rustc_args: [],
+                    rustdoc_args: [],
+                    cargo: CargoOptions {
+                        toolchain: None,
+                        cargo_args: [],
+                        runner: CommandRunner(
+                            None,
                         ),
-                        features: FeatureSelection {
-                            features: [
-                                "fancy",
-                            ],
-                            all_features: None,
-                            no_default_features: None,
-                        },
-                        rustc_args: [],
-                        rustdoc_args: [],
-                        cargo: CargoOptions {
-                            toolchain: None,
-                            cargo_args: [],
-                            runner: CommandRunner(
-                                Some(
-                                    CustomCommand(
-                                        "bash" "-c" "$*",
-                                    ),
+                    },
+                    docs_rs: None,
+                },
+            },
+            Builder {
+                targets: [],
+                options: BuildOptions {
+                    preludes: None,
+                    packages: Some(
+                        [
+                            Selector(
+                                PackageSelector {
+                                    name: None,
+                                    workspace: Default,
+                                    dependencies: false,
+                                },
+                            ),
+                        ],
+                    ),
+                    features: FeatureSelection {
+                        features: [
+                            "fancy",
+                        ],
+                        all_features: None,
+                        no_default_features: None,
+                    },
+                    rustc_args: [],
+                    rustdoc_args: [],
+                    cargo: CargoOptions {
+                        toolchain: None,
+                        cargo_args: [],
+                        runner: CommandRunner(
+                            Some(
+                                CustomCommand(
+                                    "bash" "-c" "$*",
                                 ),
                             ),
-                        },
-                        docs_rs: None,
+                        ),
                     },
+                    docs_rs: None,
                 },
-            ],
-            build_options: BuildOptions {
-                preludes: None,
-                packages: None,
-                features: FeatureSelection {
-                    features: [],
-                    all_features: None,
-                    no_default_features: None,
-                },
-                rustc_args: [],
-                rustdoc_args: [],
-                cargo: CargoOptions {
-                    toolchain: None,
-                    cargo_args: [],
-                    runner: CommandRunner(
-                        None,
-                    ),
-                },
-                docs_rs: None,
             },
-        },
-        env: EnvConfig {
-            base_url: BaseUrlConfig {
-                dev: BaseUrl(
-                    "https://docs.rs/{pkg_name}/{version}/",
-                ),
-                release: BaseUrl(
-                    "https://docs.rs/{pkg_name}/{version}/",
+        ],
+        build_options: BuildOptions {
+            preludes: None,
+            packages: None,
+            features: FeatureSelection {
+                features: [],
+                all_features: None,
+                no_default_features: None,
+            },
+            rustc_args: [],
+            rustdoc_args: [],
+            cargo: CargoOptions {
+                toolchain: None,
+                cargo_args: [],
+                runner: CommandRunner(
+                    None,
                 ),
             },
+            docs_rs: None,
         },
-        fail_on_warnings: Unspecified,
     },
-)
+    env: EnvConfig {
+        base_url: BaseUrlConfig {
+            dev: BaseUrl(
+                "https://docs.rs/{pkg_name}/{version}/",
+            ),
+            release: BaseUrl(
+                "https://docs.rs/{pkg_name}/{version}/",
+            ),
+        },
+    },
+    fail_on_warnings: Unspecified,
+}
 TRACE mdbook-rustdoc-links:page_read: link >>> span=2..11 dest="fancy" title="fancy" file="file://[TEST_DIR]/debug_logs/src/index.md"
 TRACE mdbook-rustdoc-links:page_read: link +++ span=3..10 event=Code(Borrowed("fancy")) parent=2..11 file="file://[TEST_DIR]/debug_logs/src/index.md"
 TRACE mdbook-rustdoc-links:page_read: link <<< span=2..11 file="file://[TEST_DIR]/debug_logs/src/index.md"

@@ -1,5 +1,7 @@
 [preprocessor.permalinks]
-repo-url-template = "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}"
+repo-url-template = """
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/{tree}/{path}?h={ref}
+"""
 
 [output.markdown]
 
