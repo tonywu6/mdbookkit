@@ -569,7 +569,8 @@ impl Resolver<'_> {
 
         let book_url = self.book_root.file.clone().include_after_path(&link_url);
         let to_book = (vcs.root().as_base().make_relative_scoped(&book_url))
-            .expect("`book_root` should be under `vcs.root`");
+            .expect("`book_root` should be under `vcs.root`")
+            .into_absolute_path();
         let (to_book, to_book_relative) = if to_book == link.href() {
             let relative = (self.page_url.as_base())
                 .make_relative(&book_url)

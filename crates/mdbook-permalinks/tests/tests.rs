@@ -58,6 +58,16 @@ test_case![
     exit(0),
     env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
 ];
+test_case![
+    book_hardcoded_repo_link,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
+test_case![
+    book_hardcoded_book_link_not_found,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
 
 macro_rules! test_in_temp_dir {
     [$name:ident ($($args:tt)+), |$root:ident| { $($setup:tt)* }] => {

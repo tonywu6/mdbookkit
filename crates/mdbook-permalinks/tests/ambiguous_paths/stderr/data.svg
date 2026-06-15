@@ -206,13 +206,13 @@
 </tspan>
     <tspan x="10px" y="1666px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will update this link to point to the correct commit or tag</tspan>
 </tspan>
-    <tspan x="10px" y="1684px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the root of the book, try using an absolute path to the source directory:</tspan>
+    <tspan x="10px" y="1684px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the homepage of the book, try using an absolute path to the source directory:</tspan>
 </tspan>
     <tspan x="10px" y="1702px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1720px"><tspan class="fg-bright-blue bold">12</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">crates/mdbook-permalinks/tests/ambiguous_paths/src</tspan><tspan>/)</tspan>
+    <tspan x="10px" y="1720px"><tspan class="fg-bright-blue bold">12</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [](/</tspan><tspan class="fg-bright-green">crates/mdbook-permalinks/tests/ambiguous_paths/src/</tspan><tspan>)</tspan>
 </tspan>
-    <tspan x="10px" y="1738px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-green">++++++++++++++++++++++++++++++++++++++++++++++++++</tspan>
+    <tspan x="10px" y="1738px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>       </tspan><tspan class="fg-bright-green">+++++++++++++++++++++++++++++++++++++++++++++++++++</tspan>
 </tspan>
     <tspan x="10px" y="1756px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will convert this path to a format accepted by mdBook</tspan>
 </tspan>
@@ -242,13 +242,13 @@
 </tspan>
     <tspan x="10px" y="1990px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will update this link to point to the correct commit or tag</tspan>
 </tspan>
-    <tspan x="10px" y="2008px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the root of the book, try using an absolute path to the source directory:</tspan>
+    <tspan x="10px" y="2008px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: to link to the homepage of the book, try using an absolute path to the source directory:</tspan>
 </tspan>
     <tspan x="10px" y="2026px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="2044px"><tspan class="fg-bright-blue bold">13</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">crates/mdbook-permalinks/tests/ambiguous_paths/src</tspan><tspan>/#ambiguous-paths)</tspan>
+    <tspan x="10px" y="2044px"><tspan class="fg-bright-blue bold">13</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">| </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">/crates/mdbook-permalinks/tests/ambiguous_paths/src</tspan><tspan>/#ambiguous-paths)</tspan>
 </tspan>
-    <tspan x="10px" y="2062px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-green">++++++++++++++++++++++++++++++++++++++++++++++++++</tspan>
+    <tspan x="10px" y="2062px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-green">+++++++++++++++++++++++++++++++++++++++++++++++++++</tspan>
 </tspan>
     <tspan x="10px" y="2080px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: `mdbook-permalinks` will convert this path to a format accepted by mdBook</tspan>
 </tspan>

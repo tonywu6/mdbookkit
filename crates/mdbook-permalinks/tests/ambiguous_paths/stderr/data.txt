@@ -90,10 +90,10 @@ help: to link to the root of the repo, try using a full URL:
 12 | - []([CARGO_PKG_REPOSITORY]/tree/HEAD/)
    |      ++++++++++++++++++++++++++++++++++++++++++++++
    = note: `mdbook-permalinks` will update this link to point to the correct commit or tag
-help: to link to the root of the book, try using an absolute path to the source directory:
+help: to link to the homepage of the book, try using an absolute path to the source directory:
    |
-12 | - [](crates/mdbook-permalinks/tests/ambiguous_paths/src/)
-   |      ++++++++++++++++++++++++++++++++++++++++++++++++++
+12 | - [](/crates/mdbook-permalinks/tests/ambiguous_paths/src/)
+   |       +++++++++++++++++++++++++++++++++++++++++++++++++++
    = note: `mdbook-permalinks` will convert this path to a format accepted by mdBook
 
 warning: ambiguous link to `/`
@@ -108,10 +108,10 @@ help: to link to the root of the repo, try using a full URL:
 13 | - []([CARGO_PKG_REPOSITORY]/tree/HEAD/#ambiguous-paths)
    |      ++++++++++++++++++++++++++++++++++++++++++++++
    = note: `mdbook-permalinks` will update this link to point to the correct commit or tag
-help: to link to the root of the book, try using an absolute path to the source directory:
+help: to link to the homepage of the book, try using an absolute path to the source directory:
    |
-13 | - [](crates/mdbook-permalinks/tests/ambiguous_paths/src/#ambiguous-paths)
-   |      ++++++++++++++++++++++++++++++++++++++++++++++++++
+13 | - [](/crates/mdbook-permalinks/tests/ambiguous_paths/src/#ambiguous-paths)
+   |      +++++++++++++++++++++++++++++++++++++++++++++++++++
    = note: `mdbook-permalinks` will convert this path to a format accepted by mdBook
 
  WARN mdbook-permalinks: finished with warnings

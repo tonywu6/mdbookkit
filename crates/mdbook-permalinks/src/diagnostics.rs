@@ -296,12 +296,12 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
 
                 let help2 = if *to_book_relative {
                     IssueReport::level(IssueLevel::Help).title({
-                        "to link to the root of the book, try using a \
+                        "to link to the homepage of the book, try using a \
                         relative path from the current page:"
                     })
                 } else {
                     IssueReport::level(IssueLevel::Help).title({
-                        "to link to the root of the book, try using an \
+                        "to link to the homepage of the book, try using an \
                         absolute path to the source directory:"
                     })
                 }

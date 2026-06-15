@@ -1,8 +1,6 @@
 # Summary
 
-<!-- [mdbookkit](index.md) -->
-
-[mdbookkit]
+[mdbookkit](index.md)
 
 ---
 

@@ -1,4 +1,4 @@
- INFO mdbook-permalinks: using tag name "[GIT_REVISION]" for permalinks
+ INFO mdbook-permalinks: using format "https://github.com/lorem/ipsum/{tree}/{ref}/{path}"; {ref} = [GIT_REVISION] (from tag name)
  INFO mdbook-permalinks:process: started processing links
  INFO mdbook-permalinks: processed 1 link: 1 link to repo; 0 links to book; 0 have errors; 0 unchanged
  INFO mdbook-permalinks: finished

@@ -32,7 +32,7 @@ use mdbookkit::{
     },
     doc_link, emit_debug, emit_trace, emit_warning,
     error::{ExpectFmt, WithDebugContext},
-    markdown::{PatchStream, locate_text},
+    markdown::{PatchStream, locate_text, replace_char_if_needed},
     plural,
     url::UrlUtil,
     util::{Lexicographic, LexicographicOrd},
@@ -607,7 +607,12 @@ impl<'a> Link<'a> {
 
         // https://spec.commonmark.org/0.31.2/#link-title
         // > link titles may span multiple lines
-        let title = title.replace('\r', "&#13;").replace('\n', "&#10;").into();
+        let title = replace_char_if_needed(title, |c| match c {
+            '\r' => Some("&#13;"),
+            '\n' => Some("&#10;"),
+            _ => None,
+        })
+        .into();
 
         let link = match kind {
             ReferenceUnknown | CollapsedUnknown | ShortcutUnknown => Tag::Link {

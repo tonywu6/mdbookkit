@@ -1,0 +1,10 @@
+warning: broken link to "https://github.com/me/awesome-crate/tree/HEAD/target"
+  ╭▸ crates/mdbook-permalinks/tests/book_hardcoded_repo_link/src/hardcoded-links.md:1:26
+  │
+1 │ The [`target` directory](https://github.com/me/awesome-crate/tree/HEAD/target)
+  │                          ┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  │                          │
+  │                          resolves to a path that is gitignored:
+  ╰╴                         "target"
+
+ WARN mdbook-permalinks: finished with warnings

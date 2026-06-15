@@ -140,3 +140,31 @@ pub const fn default_markdown_options() -> Options {
 }
 
 pub type Spanned<T> = (T, Range<usize>);
+
+#[inline(always)]
+pub fn replace_char_if_needed<'a, 'r, F>(text: &'a str, mut replacer: F) -> Cow<'a, str>
+where
+    F: FnMut(char) -> Option<&'r str>,
+{
+    let mut replaced = Cow::Borrowed(text);
+
+    for (b, c) in text.char_indices() {
+        match replaced {
+            Cow::Borrowed(text) => match replacer(c) {
+                None => {}
+                Some(s) => {
+                    let mut buf = String::with_capacity(b + s.len());
+                    buf.push_str(&text[0..b]);
+                    buf.push_str(s);
+                    replaced = Cow::Owned(buf);
+                }
+            },
+            Cow::Owned(ref mut buf) => match replacer(c) {
+                None => buf.push(c),
+                Some(s) => buf.push_str(s),
+            },
+        }
+    }
+
+    replaced
+}

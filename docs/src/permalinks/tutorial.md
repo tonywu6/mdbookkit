@@ -225,6 +225,37 @@ Here are some more examples, using various other files in this repository:
 >
 > [main.rs]: /crates/mdbook-permalinks/src/main.rs
 
+{% raw %}
+
+> [!TIP]
+>
+> Using absolute paths is also likely necessary if you are **trying to link from
+> Markdown files that you plan to use mdBook's [`{{#include}}`
+> directive][mdbook-include] with.**
+>
+> <aside><p><details>
+>
+> <summary>How does <code>{{#include}}</code> complicate linking by paths?</summary>
+>
+> The `{{#include}}` directive allows you to include the content of other text files
+> directly in your book.
+>
+> Due to some architectural limitations, the preprocessor cannot resolve links relative
+> to the file being included. Instead, the preprocessor is only aware of the Markdown
+> files that themselves contain `{{#include}}`. Links using relative paths may be
+> correct when included in one page but incorrect in another.
+>
+> For example, if `chapters/1.md` includes `shared/info.md`, and `shared/info.md`
+> contains a link to `./image.png` (i.e. there exists a `shared/image.png`), then the
+> preprocessor can only resolve `./image.png` starting from `chapters/1.md`, which
+> becomes `chapters/image.png`, which will be broken.
+>
+> When in doubt, always use absolute paths, which are portable.
+>
+> </details></p></aside>
+
+{% endraw %}
+
 ### Files in your book
 
 Note that links pointing to files under your book's source directory are not modified by
@@ -316,7 +347,9 @@ warning in your terminal, similar to the following:
 
 <figure>
 
+{% filter replace("crates/mdbook-permalinks/tests/book_tutorial_check/", "") %}
 {% include "/crates/mdbook-permalinks/tests/book_tutorial_check/stderr/data.svg" %}
+{% endfilter %}
 
 <figcaption>
 

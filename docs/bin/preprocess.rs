@@ -23,7 +23,7 @@ use mdbookkit::{
     emit, emit_error, emit_warning,
     env::locate_project,
     error::{ExpectFmt, FailOnWarnings, WithDebugContext},
-    markdown::{PatchStream, Spanned},
+    markdown::{PatchStream, Spanned, replace_char_if_needed},
     url::{UrlFromPath, UrlUtil},
 };
 
@@ -61,7 +61,23 @@ pub fn run() -> Result<(), ()> {
                 .with_path_debug(name)
                 .context("could not load template")
             {
-                Ok(template) => Ok(Some(template)),
+                Ok(template) => {
+                    if name.ends_with(".svg") {
+                        let template = replace_char_if_needed(&template, |c| match c {
+                            '[' => Some("&#91;"),
+                            ']' => Some("&#93;"),
+                            '(' => Some("&#40;"),
+                            ')' => Some("&#41;"),
+                            '`' => Some("&#96;"),
+                            '\n' => Some("&#10;"),
+                            '\r' => Some("&#13;"),
+                            _ => None,
+                        });
+                        Ok(Some(template.into()))
+                    } else {
+                        Ok(Some(template))
+                    }
+                }
                 Err(err) => Err(minijinja::Error::new(
                     minijinja::ErrorKind::InvalidOperation,
                     format!("{err:?}"),
