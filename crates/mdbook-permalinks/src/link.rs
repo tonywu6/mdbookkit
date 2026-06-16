@@ -89,9 +89,9 @@ impl<'a> State<'a> {
         self.href = href.consume_with(CowStr::from);
     }
 
-    pub fn permalink(&mut self, href: Url) {
+    pub fn permalink(&mut self, href: String) {
         self.state = Ok(LinkState::Permalink);
-        self.href = String::from(href).into();
+        self.href = href.into();
     }
 
     pub fn error(&mut self, error: LinkError) {

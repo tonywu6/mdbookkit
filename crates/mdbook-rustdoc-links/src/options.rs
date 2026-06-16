@@ -9,10 +9,7 @@ use anyhow::{Context, Result, anyhow};
 use cargo_metadata::camino::Utf8PathBuf;
 use serde::{
     Deserialize, Deserializer,
-    de::{
-        IntoDeserializer,
-        value::{MapAccessDeserializer, SeqAccessDeserializer},
-    },
+    de::value::{MapAccessDeserializer, SeqAccessDeserializer},
 };
 use shlex::Shlex;
 use tap::{Pipe, Tap};
@@ -20,7 +17,7 @@ use tracing::debug;
 
 use mdbookkit::{
     book::BookToml,
-    config::{BaseUrl, value_or_vec},
+    config::{BaseUrl, value_or_map, value_or_vec},
     de_struct, doc_link, emit_error,
     env::{is_ci, locate_project},
     error::FailOnWarnings,
@@ -40,7 +37,7 @@ de_struct!(
             build_options
         )),
         env(EnvConfig(
-            #[serde(default, deserialize_with = "base_url_config")]
+            #[serde(default, deserialize_with = "value_or_map::<BaseUrl, _, _>")]
             base_url as BaseUrlConfig
         )),
         #[serde(default)]
@@ -328,47 +325,21 @@ impl FeatureSelection {
     }
 }
 
-fn base_url_config<'de, D>(deserializer: D) -> Result<BaseUrlConfig, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    struct Visitor;
-
-    impl<'de> serde::de::Visitor<'de> for Visitor {
-        type Value = BaseUrlConfig;
-
-        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-            formatter.write_str("a string or a map")
-        }
-
-        fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
-        where
-            A: serde::de::MapAccess<'de>,
-        {
-            Self::Value::deserialize(MapAccessDeserializer::new(map))
-        }
-
-        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: serde::de::Error,
-        {
-            let url = BaseUrl::deserialize(v.into_deserializer())?;
-            Ok(Self::Value {
-                dev: url.clone(),
-                release: url.clone(),
-            })
-        }
-    }
-
-    deserializer.deserialize_any(Visitor)
-}
-
 impl BaseUrlConfig {
     pub fn take(self) -> BaseUrl {
         if is_ci().is_some() {
             self.release
         } else {
             self.dev
+        }
+    }
+}
+
+impl From<BaseUrl> for BaseUrlConfig {
+    fn from(value: BaseUrl) -> Self {
+        Self {
+            dev: value.clone(),
+            release: value,
         }
     }
 }

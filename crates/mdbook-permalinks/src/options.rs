@@ -1,15 +1,15 @@
+use std::ops::Deref;
+
 use anyhow::{Context, Result};
 use mdbook_preprocessor::PreprocessorContext;
-use serde::{
-    Deserialize, Deserializer,
-    de::value::{MapAccessDeserializer, SeqAccessDeserializer},
-};
+use serde::{Deserialize, Deserializer};
 use url::Url;
 
 use mdbookkit::{
     book::{BookToml, PreprocessorHelper},
-    config::{BaseUrl, value_or_vec},
-    error::{FailOnWarnings, MapDeserializeError},
+    config::{BaseUrl, value_or_map, value_or_vec},
+    env::is_ci,
+    error::FailOnWarnings,
     impl_deserialize_from_str, try2,
 };
 
@@ -24,7 +24,7 @@ pub struct Config {
 
 impl Config {
     pub fn new(ctx: &PreprocessorContext) -> Result<Self> {
-        Self::try_from(ctx.book_toml())
+        Self::try_from(ctx.book_toml()).context("failed to read config from book.toml")
     }
 }
 
@@ -60,24 +60,25 @@ impl TryFrom<BookToml<'_>> for Config {
                 options,
             })
         })
-        .context("failed to read config from book.toml")
     }
 }
 
 #[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Options {
-    #[serde(default, deserialize_with = "TemplateConfig::deserialize2")]
+    #[serde(default, deserialize_with = "value_or_map::<Url, _, _>")]
     pub repo_url_template: TemplateConfig,
-    #[deprecated]
-    #[serde(default)]
-    pub book_url: Option<BaseUrl>,
-    #[serde(default)]
-    pub remote_name: Option<String>,
     #[serde(default)]
     pub always_link: Vec<String>,
     #[serde(default)]
+    pub remote_name: Option<String>,
+    #[serde(default, deserialize_with = "value_or_map::<bool, _, _>")]
+    pub dev_mode: DevMode,
+    #[serde(default)]
     pub fail_on_warnings: FailOnWarnings,
+    #[deprecated]
+    #[serde(default)]
+    pub book_url: Option<BaseUrl>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -102,49 +103,6 @@ pub struct PathParams {
     pub tag: Vec<String>,
 }
 
-impl TemplateConfig {
-    fn deserialize2<'de, D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        struct Visitor;
-        return deserializer.deserialize_any(Visitor);
-
-        impl<'de> serde::de::Visitor<'de> for Visitor {
-            type Value = TemplateConfig;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-                formatter.write_str("a URL or a table")
-            }
-
-            fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                let pattern = v.parse().or_serde_error()?;
-                Ok(TemplateConfig {
-                    pattern: Some(pattern),
-                    params: Default::default(),
-                })
-            }
-
-            fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
-            where
-                A: serde::de::SeqAccess<'de>,
-            {
-                Deserialize::deserialize(SeqAccessDeserializer::new(seq))
-            }
-
-            fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
-            where
-                A: serde::de::MapAccess<'de>,
-            {
-                Deserialize::deserialize(MapAccessDeserializer::new(map))
-            }
-        }
-    }
-}
-
 impl Default for PathParams {
     fn default() -> Self {
         Self {
@@ -153,6 +111,69 @@ impl Default for PathParams {
             commit: vec!["commit".into()],
             tag: vec!["tag".into()],
         }
+    }
+}
+
+impl From<Url> for TemplateConfig {
+    fn from(value: Url) -> Self {
+        Self {
+            pattern: Some(value),
+            params: Default::default(),
+        }
+    }
+}
+
+#[derive(Deserialize, Debug, Default, Clone)]
+#[serde(from = "DevModeConfig")]
+pub struct DevMode(Option<DevModeConfig>);
+
+impl Deref for DevMode {
+    type Target = Option<DevModeConfig>;
+
+    fn deref(&self) -> &Self::Target {
+        if is_ci().is_some() { &None } else { &self.0 }
+    }
+}
+
+impl From<bool> for DevMode {
+    fn from(value: bool) -> Self {
+        if value {
+            Self(Some(Default::default()))
+        } else {
+            Self(None)
+        }
+    }
+}
+
+impl From<DevModeConfig> for DevMode {
+    fn from(value: DevModeConfig) -> Self {
+        Self(Some(value))
+    }
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+pub struct DevModeConfig {
+    #[serde(default)]
+    pub embed_images: Option<bool>,
+    #[serde(default = "DevModeConfig::default_editor_uri")]
+    pub editor_uri: Url,
+}
+
+impl Default for DevModeConfig {
+    fn default() -> Self {
+        Self {
+            embed_images: Some(true),
+            editor_uri: Self::default_editor_uri(),
+        }
+    }
+}
+
+impl DevModeConfig {
+    fn default_editor_uri() -> Url {
+        "vscode://file/{path}"
+            .parse()
+            .expect("should be a valid URL")
     }
 }
 

@@ -1,9 +1,10 @@
 #![cfg_attr(not(test), warn(clippy::unwrap_used))]
 #![allow(clippy::result_large_err)]
 
-use std::ffi::OsStr;
+use std::{ffi::OsStr, path::Path};
 
 use anyhow::{Context, Result};
+use data_encoding::BASE64;
 use mdbook_preprocessor::PreprocessorContext;
 use tap::Pipe;
 use tracing::{Level, debug, error_span, info, info_span, instrument, trace, warn};
@@ -22,10 +23,10 @@ use mdbookkit::{
     url::{RelativeUrl, UrlUtil},
 };
 
-use crate::{
+use self::{
     diagnostics::LinkDiagnostic,
     link::{BookPathError, ContentKind, Link, LinkError, LinkHelp, PathError},
-    options::{Config, Options},
+    options::{Config, DevModeConfig, Options},
     page::{BookPaths, Pages, TryBookPath},
     vcs::{GitIgnore, RepoPath, TryRepoPath, VersionControl},
 };
@@ -281,15 +282,8 @@ enum LinkIntent {
 
 #[derive(Debug)]
 enum LinkResult {
-    RepoLink {
-        url: Url,
-        relative: RelativeUrl,
-        kind: ContentKind,
-    },
-    BookLink {
-        url: Url,
-        relative: RelativeUrl,
-    },
+    RepoLink { path: RepoPath, kind: ContentKind },
+    BookLink { url: Url, relative: RelativeUrl },
 }
 
 impl Resolver<'_> {
@@ -440,7 +434,7 @@ impl Resolver<'_> {
             Book | Any(..) => match (self.try_link_in_book(path)?, is_ignored) {
                 (path @ BookLink { .. }, ..) => Ok(path),
                 (path @ RepoLink { .. }, NotIgnored) => Ok(path),
-                (RepoLink { url, .. }, Ignored) => Err(GitIgnored.at(url)),
+                (RepoLink { path, .. }, Ignored) => Err(GitIgnored.at(path.url)),
             },
 
             Repo(..) => match is_ignored {
@@ -513,11 +507,7 @@ impl Resolver<'_> {
     fn repo_link(&self, path: RepoPath) -> LinkResult {
         use {LinkIntent::*, LinkResult::*};
         match self.intent {
-            Repo(kind) | Any(kind) => RepoLink {
-                url: path.url,
-                relative: path.relative,
-                kind,
-            },
+            Repo(kind) | Any(kind) => RepoLink { path, kind },
             Book => unreachable!(),
         }
     }
@@ -537,10 +527,36 @@ impl Resolver<'_> {
         use LinkResult::*;
 
         match result {
-            RepoLink { relative, kind, .. } => {
-                let href = self.env.vcs.scheme().to_link(&relative, kind);
-                trace!("rewriting to permalink: {:?}", href.show());
-                link.state_mut().permalink(href);
+            RepoLink { path, kind } => {
+                let href = if let Some(dev) = &*self.env.options.dev_mode {
+                    if let (ContentKind::Raw, false) = (kind, path.is_dir) {
+                        match dev.to_embed_link(&path.std_path) {
+                            Ok(Some(href)) => {
+                                trace!("rewriting to data uri");
+                                Some(href)
+                            }
+                            Ok(None) => None,
+                            Err(err) => {
+                                let err = err.at(path.url);
+                                link.state_mut().error(err);
+                                return;
+                            }
+                        }
+                    } else {
+                        let href = dev.to_editor_uri(&path.url);
+                        trace!("rewriting to editor uri: {:?}", href.show());
+                        Some(href.into())
+                    }
+                } else {
+                    None
+                };
+                if let Some(href) = href {
+                    link.state_mut().permalink(href);
+                } else {
+                    let href = self.env.vcs.scheme().to_link(&path.relative, kind);
+                    trace!("rewriting to permalink: {:?}", href.show());
+                    link.state_mut().permalink(href.into());
+                };
             }
 
             BookLink { url, .. } => {
@@ -597,7 +613,11 @@ impl Resolver<'_> {
 
         let alternative = base.transplant(url).located_in(self.env.vcs.root())?;
         let from_repo = self.try_derived_links(alternative).ok()?;
-        let (BookLink { url, relative, .. } | RepoLink { url, relative, .. }) = from_repo;
+        let (BookLink { url, relative, .. }
+        | RepoLink {
+            path: RepoPath { url, relative, .. },
+            ..
+        }) = from_repo;
 
         Some(LinkHelp::FoundOther {
             from_page: self.page_url.as_base().make_relative(&url)?,
@@ -625,6 +645,36 @@ impl Resolver<'_> {
                 .context("could not restore relative url")?;
             Ok(url.consume_with(<_>::into))
         }
+    }
+}
+
+impl DevModeConfig {
+    fn to_embed_link(&self, path: &Path) -> Result<Option<String>, PathError> {
+        if self.embed_images == Some(false) {
+            return Ok(None);
+        }
+        let data = match std::fs::read(path) {
+            Ok(data) => data,
+            Err(err) => return Err(PathError::from_io(err)),
+        };
+        static PREFIX: &str = "data:application/octet-stream;base64,";
+        let encoding = BASE64;
+        let mut href = String::with_capacity(PREFIX.len() + encoding.encode_len(data.len()));
+        href.push_str(PREFIX);
+        encoding.encode_append(&data, &mut href);
+        debug_assert!(matches!(href.parse::<Url>(), Ok(..)));
+        Ok(Some(href))
+    }
+
+    fn to_editor_uri(&self, file_url: &Url) -> Url {
+        self.editor_uri.pattern_fill(|group| match group {
+            "path" => {
+                let path = file_url.path();
+                let path = path.strip_prefix('/').unwrap_or(path);
+                Some(path.into())
+            }
+            _ => None,
+        })
     }
 }
 

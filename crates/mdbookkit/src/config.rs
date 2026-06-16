@@ -344,6 +344,7 @@ where
     T: Deserialize<'de>,
 {
     struct Visitor<T>(PhantomData<T>);
+    return deserializer.deserialize_any(Visitor(PhantomData));
 
     macro_rules! forward {
         ($f:ident($v:ty)) => {
@@ -406,8 +407,82 @@ where
         forward!(visit_borrowed_bytes(&'de [u8]));
         forward!(visit_byte_buf(Vec<u8>));
     }
+}
 
-    deserializer.deserialize_any(Visitor(PhantomData))
+pub fn value_or_map<'de, K, D, T>(deserializer: D) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de>,
+    K: Deserialize<'de> + Into<T>,
+{
+    struct Visitor<K, T>(PhantomData<K>, PhantomData<T>);
+    return deserializer.deserialize_any(Visitor(PhantomData::<K>, PhantomData));
+
+    macro_rules! forward {
+        ($f:ident($v:ty)) => {
+            fn $f<E>(self, v: $v) -> Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                use serde::de::IntoDeserializer;
+                Ok(K::deserialize(v.into_deserializer())?.into())
+            }
+        };
+    }
+
+    impl<'de, K, T> serde::de::Visitor<'de> for Visitor<K, T>
+    where
+        T: Deserialize<'de>,
+        K: Deserialize<'de> + Into<T>,
+    {
+        type Value = T;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("a value or table")
+        }
+
+        fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
+        where
+            A: serde::de::SeqAccess<'de>,
+        {
+            T::deserialize(SeqAccessDeserializer::new(seq))
+        }
+
+        fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
+        where
+            A: serde::de::MapAccess<'de>,
+        {
+            T::deserialize(MapAccessDeserializer::new(map))
+        }
+
+        fn visit_enum<A>(self, data: A) -> Result<Self::Value, A::Error>
+        where
+            A: serde::de::EnumAccess<'de>,
+        {
+            T::deserialize(EnumAccessDeserializer::new(data))
+        }
+
+        forward!(visit_bool(bool));
+        forward!(visit_i8(i8));
+        forward!(visit_i16(i16));
+        forward!(visit_i32(i32));
+        forward!(visit_i64(i64));
+        forward!(visit_i128(i128));
+        forward!(visit_u8(u8));
+        forward!(visit_u16(u16));
+        forward!(visit_u32(u32));
+        forward!(visit_u64(u64));
+        forward!(visit_u128(u128));
+        forward!(visit_f32(f32));
+        forward!(visit_f64(f64));
+        forward!(visit_char(char));
+        forward!(visit_str(&str));
+        forward!(visit_borrowed_str(&'de str));
+        forward!(visit_string(String));
+        forward!(visit_bytes(&[u8]));
+        forward!(visit_borrowed_bytes(&'de [u8]));
+        forward!(visit_byte_buf(Vec<u8>));
+    }
 }
 
 #[macro_export]

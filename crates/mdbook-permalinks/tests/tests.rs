@@ -30,7 +30,6 @@ macro_rules! test_case {
 test_case![file_links, exit(0)];
 test_case![repo_links, exit(0)];
 test_case![book_links, exit(0)];
-test_case![ambiguous_paths, exit(0)];
 
 test_case![git_url_from_book, exit(0)];
 test_case![git_url_scp_like, exit(0)];
@@ -44,6 +43,7 @@ test_case![git_url_tangled_malformed, exit(101)];
 test_case![git_url_custom_params, exit(0)];
 test_case![git_url_invalid_config, exit(101)];
 
+test_case![ambiguous_paths, exit(0)];
 test_case![path_encoding, exit(0)];
 #[cfg(not(windows))]
 test_case![path_encoding_unix, exit(0)];
@@ -52,6 +52,7 @@ test_case![path_encoding_windows, exit(0)];
 test_case![site_url_absolute_paths, exit(0)];
 test_case![site_url_invalid, exit(101)];
 test_case![site_url_path_encoding, exit(0)];
+test_case![dev_mode, exit(0), env = ["CI" = ""]];
 
 test_case![
     book_tutorial_check,
