@@ -15,8 +15,9 @@ use tap::TryConv;
 
 #[allow(unused)]
 macro_rules! test_case {
-    [$name:ident, $($args:tt)+] => {
+    [ $(#[$attr:meta])* $name:ident, $($args:tt)+] => {
         #[test]
+        $(#[$attr])*
         fn $name() -> Result<()> {
             test_mdbook![$name, $($args)+, redacted = [redacted()]];
             let test = $name()?;
@@ -45,10 +46,16 @@ test_case![git_url_invalid_config, exit(101)];
 
 test_case![ambiguous_paths, exit(0)];
 test_case![path_encoding, exit(0)];
-#[cfg(not(windows))]
-test_case![path_encoding_unix, exit(0)];
-#[cfg(windows)]
-test_case![path_encoding_windows, exit(0)];
+test_case![
+    #[cfg_attr(windows, ignore)]
+    path_encoding_unix,
+    exit(0)
+];
+test_case![
+    #[cfg_attr(not(windows), ignore)]
+    path_encoding_windows,
+    exit(0)
+];
 test_case![site_url_absolute_paths, exit(0)];
 test_case![site_url_invalid, exit(101)];
 test_case![site_url_path_encoding, exit(0)];

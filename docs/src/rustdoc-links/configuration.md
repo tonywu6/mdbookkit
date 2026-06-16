@@ -455,6 +455,7 @@ rustc-args = ["-C", "opt-level=3"]
 
 ```toml config-example
 [preprocessor.rustdoc-links]
+unstable-features = true
 base-url = "https://rustwasm.github.io/wasm-bindgen/api"
 ```
 
@@ -468,6 +469,7 @@ base-url = "https://rustwasm.github.io/wasm-bindgen/api"
 
 ```toml config-example
 [preprocessor.rustdoc-links]
+unstable-features = true
 base-url.dev = "/api"
 ```
 
@@ -481,6 +483,7 @@ base-url.dev = "/api"
 
 ```toml config-example
 [preprocessor.rustdoc-links]
+unstable-features = true
 base-url.release = "https://staging.docs.rs/{pkg_name}/{version}"
 base-url.dev = "/api"
 ```
@@ -495,6 +498,9 @@ base-url.dev = "/api"
 
 - type: string (URL or path); or [table](#base-urldev--base-urlrelease)
 - default: `"https://docs.rs/{pkg_name}/{version}"`
+
+{% with feature = "`base-url`" %}
+{% include "/docs/src/_snippets/unstable-features.md" %} {% endwith %}
 
 Generate links with an alternative prefix.
 
@@ -529,6 +535,7 @@ and/or `base-url.release` instead of just `base-url`, for example:
 
 ```toml config-example
 [preprocessor.rustdoc-links]
+unstable-features = true
 # generate links to the GitHub Pages site when building in CI
 base-url.release = "https://me.github.io/rust/docs"
 # make docs previewable at `http://localhost:3000/api` when running locally

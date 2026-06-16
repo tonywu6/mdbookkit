@@ -17,11 +17,15 @@ self-host your API docs, then you can write `base-url` instead of `base-url.dev`
 
 ```diff config-example
   [preprocessor.rustdoc-links]
+  unstable-features = true
 - base-url.dev = "/api"
 + base-url = "/api"
 ```
 
 With this, the option will now take effect even in CI environments.
+
+{% with feature = "`base-url`" %}
+{% include "/docs/src/_snippets/unstable-features.md" %} {% endwith %}
 
 ## Caveats
 
@@ -60,6 +64,7 @@ To remedy this, you can:
 
   ```toml config-example
   [preprocessor.rustdoc-links]
+  unstable-features = true
   base-url = "/api"
 
   [preprocessor.rustdoc-links.build]

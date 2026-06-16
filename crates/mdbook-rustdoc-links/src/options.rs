@@ -17,7 +17,7 @@ use tracing::debug;
 
 use mdbookkit::{
     book::BookToml,
-    config::{BaseUrl, value_or_map, value_or_vec},
+    config::{BaseUrl, UnstableFeature, ValueShorthand, value_or_vec, via},
     de_struct, doc_link, emit_error,
     env::{is_ci, locate_project},
     error::FailOnWarnings,
@@ -37,7 +37,8 @@ de_struct!(
             build_options
         )),
         env(EnvConfig(
-            #[serde(default, deserialize_with = "value_or_map::<BaseUrl, _, _>")]
+            #[serde(default)]
+            #[serde(deserialize_with = "via::<UnstableFeature<ValueShorthand<BaseUrl, _>>, _, _>")]
             base_url as BaseUrlConfig
         )),
         #[serde(default)]
@@ -341,6 +342,12 @@ impl From<BaseUrl> for BaseUrlConfig {
             dev: value.clone(),
             release: value,
         }
+    }
+}
+
+impl From<UnstableFeature<ValueShorthand<BaseUrl, Self>>> for BaseUrlConfig {
+    fn from(value: UnstableFeature<ValueShorthand<BaseUrl, Self>>) -> Self {
+        value.0.0
     }
 }
 

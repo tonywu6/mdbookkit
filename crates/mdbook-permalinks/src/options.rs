@@ -7,7 +7,7 @@ use url::Url;
 
 use mdbookkit::{
     book::{BookToml, PreprocessorHelper},
-    config::{BaseUrl, value_or_map, value_or_vec},
+    config::{BaseUrl, UnstableFeature, ValueShorthand, value_or_vec, value_shorthand, via},
     env::is_ci,
     error::FailOnWarnings,
     impl_deserialize_from_str, try2,
@@ -66,13 +66,14 @@ impl TryFrom<BookToml<'_>> for Config {
 #[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct Options {
-    #[serde(default, deserialize_with = "value_or_map::<Url, _, _>")]
+    #[serde(default, deserialize_with = "value_shorthand::<Url, _, _>")]
     pub repo_url_template: TemplateConfig,
     #[serde(default)]
     pub always_link: Vec<String>,
     #[serde(default)]
     pub remote_name: Option<String>,
-    #[serde(default, deserialize_with = "value_or_map::<bool, _, _>")]
+    #[serde(default)]
+    #[serde(deserialize_with = "via::<UnstableFeature<ValueShorthand<bool, _>>, _, _>")]
     pub dev_mode: DevMode,
     #[serde(default)]
     pub fail_on_warnings: FailOnWarnings,
@@ -148,6 +149,12 @@ impl From<bool> for DevMode {
 impl From<DevModeConfig> for DevMode {
     fn from(value: DevModeConfig) -> Self {
         Self(Some(value))
+    }
+}
+
+impl From<UnstableFeature<ValueShorthand<bool, Self>>> for DevMode {
+    fn from(value: UnstableFeature<ValueShorthand<bool, Self>>) -> Self {
+        value.0.0
     }
 }
 

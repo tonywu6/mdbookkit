@@ -1,4 +1,5 @@
 [preprocessor.permalinks]
+unstable-features = true
 
 [preprocessor.permalinks.dev-mode]
 editor-uri = "zed://file/{path}"

@@ -45,6 +45,7 @@ preludes = [
 after = ["doc", "rustdoc-links"]
 command = "cargo run --package mdbook-permalinks"
 dev-mode = true
+unstable-features = true
 
 [preprocessor.app]
 command = "node scripts/preprocessor.ts"

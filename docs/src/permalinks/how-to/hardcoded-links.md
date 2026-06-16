@@ -16,8 +16,8 @@ For example, a scenario that this project has encountered is with its workspace-
   on GitHub. For this reason, I am using full URLs in the README file.
 
 Consider also, that you may want to reuse your crate's README file: if you are
-publishing your crate, then the README will be displayed on
-[crates.io](https://crates.io), where path-based link will not work at all.
+publishing your crate, then your README will be displayed on
+[crates.io](https://crates.io), where path-based links will not work at all.
 
 In any case, if you elect to hard-code URLs in your book, whether to link to other pages
 or to your repository, the preprocessor can validate them during build, and warn you if
@@ -26,10 +26,10 @@ they are broken.
 ## Checking URLs to your repo
 
 To have the preprocessor process URLs that link to your repository, **specify `HEAD`**
-where you normally specify the branch name or commit hash.
+where you would otherwise specify a branch name or commit hash.
 
-During build, the preprocessor will substitute `HEAD` with the actual commit hash or tag
-name, so that they become permalinks:
+The preprocessor will substitute `HEAD` with the actual commit hash or tag name, so that
+they become permalinks in the output:
 
 > ```md
 > Link to [`Cargo.toml`](https://github.com/tonywu6/mdbookkit/tree/HEAD/Cargo.toml)
@@ -90,9 +90,9 @@ accessible:
 >
 > <figure style="margin: 0;">{% include "/crates/mdbook-permalinks/tests/book_hardcoded_book_link_not_found/stderr/data.svg" %}</figure>{% endfilter %}
 
-With book links, there is some flexibility in terms of how you can specify their paths.
-The preprocessor recognizes behaviors that web servers commonly follow when serving
-content:
+With book links, the preprocessor allows some flexibility in terms of how you can
+specify their paths, as it recognizes some common behaviors that web servers follow when
+serving content:
 
 - You can include the `.html` extension in the URL. The preprocessor will remove the
   extension before looking for a matching `.md` file.
@@ -102,9 +102,9 @@ content:
   most web servers and hosting providers will serve the `index.html` file if the link
   reaches a directory.
 
-- For simplicity, you can also completely omit the file extension, in which case the
-  preprocessor will check several paths that could potentially provide the given URL,
-  including if it is the `index.md` page of a directory: see the above example.
+- For simplicity, you can also omit the file extension entirely, as seen in the above
+  example, in which case the preprocessor will check multiple paths that could satisfy
+  the given URL.
 
 <!-- prettier-ignore-start -->
 [mdbook-include]: https://rust-lang.github.io/mdBook/format/mdbook.html#including-files

@@ -13,14 +13,15 @@ use mdbook_preprocessor::{
     book::{Book, BookItem, Chapter},
     config::{self, HtmlConfig},
 };
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer, de::IntoDeserializer};
 use serde_json::{Value, json};
 use tap::Pipe;
 use tracing::warn;
 use url::Url;
 
 use crate::{
-    emit_debug, error::WithDebugContext, markdown::default_markdown_options, url::UrlFromPath,
+    config::FeatureGated, emit_debug, error::WithDebugContext, markdown::default_markdown_options,
+    url::UrlFromPath,
 };
 
 pub fn string_from_stdin() -> Result<String> {
@@ -225,13 +226,13 @@ impl<'a> BookToml<'a> {
     where
         T: for<'de> Deserialize<'de>,
     {
-        let value = match self.config.get::<toml::Value>(path)? {
+        let deserializer = match self.config.get::<toml::Value>(path)? {
             None => return Ok(None),
             Some(value) => value,
         }
-        .preprocess(path);
+        .toml_deserializer(path);
 
-        let error = match T::deserialize(value) {
+        let error = match deserializer.deserialize() {
             Ok(config) => return Ok(Some(config)),
             Err(error) => error,
         };
@@ -300,7 +301,7 @@ where
 {
     let table = toml::de::DeTable::parse(source)?;
     let table = toml::Spanned::new(table.span(), toml::de::DeValue::Table(table.into_inner()));
-    let value = path
+    let deserializer = path
         .split('.')
         .try_fold(table, |parent, key| {
             if let toml::de::DeValue::Table(mut table) = parent.into_inner() {
@@ -310,10 +311,9 @@ where
             }
         })
         .context("value not defined in source")?
-        .preprocess(path);
+        .toml_deserializer(path);
 
-    let value = toml::de::ValueDeserializer::from(value);
-    if let Err(mut error) = T::deserialize(value) {
+    if let Err(mut error) = deserializer.deserialize::<T>() {
         error.set_input(Some(source));
         Ok(error)
     } else {
@@ -321,29 +321,48 @@ where
     }
 }
 
-trait PreprocessBookToml {
-    fn preprocess(self, path: &str) -> Self;
+trait BookTomlDeserializer<'de> {
+    type Deserializer: Deserializer<'de, Error = toml::de::Error>;
+    fn toml_deserializer(self, path: &str) -> FeatureGated<Self::Deserializer>;
 }
 
-impl PreprocessBookToml for toml::Value {
-    fn preprocess(mut self, path: &str) -> Self {
+impl<'de> BookTomlDeserializer<'de> for toml::Value {
+    type Deserializer = toml::Value;
+
+    fn toml_deserializer(mut self, path: &str) -> FeatureGated<Self::Deserializer> {
+        let mut unstable = None;
         if path.starts_with("preprocessor.")
             && let toml::Value::Table(ref mut table) = self
         {
+            if let Some(flag) = table.remove("unstable-features") {
+                unstable = Some(flag);
+            }
             remove_builtin_options(table);
         }
-        self
+        FeatureGated {
+            unstable,
+            deserializer: self.into_deserializer(),
+        }
     }
 }
 
-impl PreprocessBookToml for toml::Spanned<toml::de::DeValue<'_>> {
-    fn preprocess(mut self, path: &str) -> Self {
+impl<'de> BookTomlDeserializer<'de> for toml::Spanned<toml::de::DeValue<'de>> {
+    type Deserializer = toml::de::ValueDeserializer<'de>;
+
+    fn toml_deserializer(mut self, path: &str) -> FeatureGated<Self::Deserializer> {
+        let mut unstable = None;
         if path.starts_with("preprocessor.")
             && let toml::de::DeValue::Table(table) = self.as_mut()
         {
+            if let Some(flag) = table.remove("unstable-features") {
+                unstable = Some(flag.into_deserializer());
+            }
             remove_builtin_options(table);
         }
-        self
+        FeatureGated {
+            unstable,
+            deserializer: self.into_deserializer(),
+        }
     }
 }
 

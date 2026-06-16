@@ -4,6 +4,7 @@ use std::{
     marker::PhantomData,
     path::{self, Path, PathBuf},
     str::FromStr,
+    sync::atomic::{AtomicBool, Ordering},
 };
 
 use anyhow::{Context, Result, bail};
@@ -283,6 +284,105 @@ impl Show for BaseUrlValue {
 }
 
 #[macro_export]
+macro_rules! de_struct {
+    (@derive $(#[$struct_att_:meta])* [$(($(#[$struct_attr:meta])* $name:ident ($($body:tt)*)))*] []) => {$(
+        de_struct!(@deserialize $(#[$struct_attr])* $name ($($body)*));
+    )*};
+    (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$(#[$field_attr:meta])* $field:ident $(as $type:ty)?, $($rest:tt)*]) => {
+        de_struct!(@derive $(#[$struct_attr])* [$($item)*] [$($rest)*]);
+    };
+    (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$(#[$field_attr:meta])* $field:ident $(as $type:ty)?]) => {
+        de_struct!(@derive $(#[$struct_attr])* [$($item)*] []);
+    };
+    (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$_:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
+        de_struct!(@derive $(#[$struct_attr])* [$($item)* ($(#[$struct_attr])* $inner($($body)*))] [$($body)*, $($rest)*]);
+    };
+    (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$_:ident ($inner:ident ($($body:tt)*))]) => {
+        de_struct!(@derive $(#[$struct_attr])* [$($item)* ($(#[$struct_attr])* $inner($($body)*))] [$($body)*]);
+    };
+
+    (@deserialize $(#[$struct_attr:meta])* $name:ident ($($body:tt)*)) => {
+        #[automatically_derived]
+        #[allow(non_camel_case_types)]
+        impl<'de> ::serde::Deserialize<'de> for $name {
+            fn deserialize<D>(deserializer: D) -> ::core::result::Result<Self, D::Error>
+            where
+                D: ::serde::Deserializer<'de>,
+            {
+                de_struct!(@define $(#[$struct_attr])* $name [] [] [$($body)*]);
+                let de_struct!(@unpack $name [] [$($body)*]) = ::serde::Deserialize::deserialize(deserializer)?;
+                #[allow(clippy::redundant_field_names)]
+                Ok(de_struct!(@result Self [] [$($body)*]))
+            }
+        }
+    };
+
+    (@define $(#[$struct_attr:meta])* $name:ident [$(($(#[$field_attr:meta])* $field:ident $type:ty))*] [$($infer:ident)*] []) => {
+        #[derive(::serde::Deserialize)]
+        $(#[$struct_attr])*
+        struct $name<$($infer),*> {
+            $($(#[$field_attr])* $field: $type),*
+        }
+    };
+    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident, $($rest:tt)*]) => {
+        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $next)] [$($infer)* $next] [$($rest)*]);
+    };
+    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident]) => {
+        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $next)] [$($infer)* $next] []);
+    };
+    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident as $type:ty, $($rest:tt)*]) => {
+        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $type)] [$($infer)*] [$($rest)*]);
+    };
+    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident as $type:ty]) => {
+        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $type)] [$($infer)*] []);
+    };
+    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$next:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
+        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))*] [$($infer)*]  [$($body)*, $($rest)*]);
+    };
+    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
+        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))*] [$($infer)*]  [$($body)*]);
+    };
+
+    (@unpack $name:ident [$($field:ident)*] []) => {
+        $name { $($field),* }
+    };
+    (@unpack $name:ident [$($field:ident)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?, $($rest:tt)*]) => {
+        de_struct!(@unpack $name [$($field)* $next] [$($rest)*])
+    };
+    (@unpack $name:ident [$($field:ident)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?]) => {
+        de_struct!(@unpack $name [$($field)* $next] [])
+    };
+    (@unpack $name:ident [$($field:ident)*] [$next:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
+        de_struct!(@unpack $name [$($field)*] [$($body)*, $($rest)*])
+    };
+    (@unpack $name:ident [$($field:ident)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
+        de_struct!(@unpack $name [$($field)*] [$($body)*])
+    };
+
+    (@result $name:ident [$(($field:ident: $($value:tt)*))*] []) => {
+        $name {
+            $($field: $($value)*),*
+        }
+    };
+    (@result $name:ident [$($item:tt)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?, $($rest:tt)*]) => {
+        de_struct!(@result $name [$($item)* ($next: $next)] [$($rest)*])
+    };
+    (@result $name:ident [$($item:tt)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?]) => {
+        de_struct!(@result $name [$($item)* ($next: $next)] [])
+    };
+    (@result $name:ident [$($item:tt)*] [$next:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
+        de_struct!(@result $name [$($item)* ($next: de_struct!(@result $inner [] [$($body)*]))] [$($rest)*])
+    };
+    (@result $name:ident [$($item:tt)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
+        de_struct!(@result $name [$($item)* ($next: de_struct!(@result $inner [] [$($body)*]))] [])
+    };
+
+    ($(#[$struct_attr:meta])* $name:ident ($($body:tt)*)) => {
+        de_struct!(@derive $(#[$struct_attr])* [($(#[$struct_attr])* $name ($($body)*))] [$($body)*]);
+    };
+}
+
+#[macro_export]
 macro_rules! impl_deserialize_from_str {
     ( $ty:ty, $expecting:literal ) => {
         $crate::impl_deserialize_from_str!($ty, $expecting, |s| { s.parse() });
@@ -409,7 +509,8 @@ where
     }
 }
 
-pub fn value_or_map<'de, K, D, T>(deserializer: D) -> Result<T, D::Error>
+#[inline]
+pub fn value_shorthand<'de, K, D, T>(deserializer: D) -> Result<T, D::Error>
 where
     D: Deserializer<'de>,
     T: Deserialize<'de>,
@@ -485,103 +586,87 @@ where
     }
 }
 
-#[macro_export]
-macro_rules! de_struct {
-    (@derive $(#[$struct_att_:meta])* [$(($(#[$struct_attr:meta])* $name:ident ($($body:tt)*)))*] []) => {$(
-        de_struct!(@deserialize $(#[$struct_attr])* $name ($($body)*));
-    )*};
-    (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$(#[$field_attr:meta])* $field:ident $(as $type:ty)?, $($rest:tt)*]) => {
-        de_struct!(@derive $(#[$struct_attr])* [$($item)*] [$($rest)*]);
-    };
-    (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$(#[$field_attr:meta])* $field:ident $(as $type:ty)?]) => {
-        de_struct!(@derive $(#[$struct_attr])* [$($item)*] []);
-    };
-    (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$_:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
-        de_struct!(@derive $(#[$struct_attr])* [$($item)* ($(#[$struct_attr])* $inner($($body)*))] [$($body)*, $($rest)*]);
-    };
-    (@derive $(#[$struct_attr:meta])* [$($item:tt)*] [$_:ident ($inner:ident ($($body:tt)*))]) => {
-        de_struct!(@derive $(#[$struct_attr])* [$($item)* ($(#[$struct_attr])* $inner($($body)*))] [$($body)*]);
-    };
+#[inline]
+pub fn via<'de, T, U, D>(deserializer: D) -> Result<U, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Deserialize<'de> + Into<U>,
+{
+    Ok(T::deserialize(deserializer)?.into())
+}
 
-    (@deserialize $(#[$struct_attr:meta])* $name:ident ($($body:tt)*)) => {
-        #[automatically_derived]
-        #[allow(non_camel_case_types)]
-        impl<'de> ::serde::Deserialize<'de> for $name {
-            fn deserialize<D>(deserializer: D) -> ::core::result::Result<Self, D::Error>
-            where
-                D: ::serde::Deserializer<'de>,
-            {
-                de_struct!(@define $(#[$struct_attr])* $name [] [] [$($body)*]);
-                let de_struct!(@unpack $name [] [$($body)*]) = ::serde::Deserialize::deserialize(deserializer)?;
-                #[allow(clippy::redundant_field_names)]
-                Ok(de_struct!(@result Self [] [$($body)*]))
-            }
+pub struct ValueOrVec<T>(pub Vec<T>);
+
+impl<'de, T> Deserialize<'de> for ValueOrVec<T>
+where
+    T: Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(Self(value_or_vec(deserializer)?))
+    }
+}
+
+pub struct ValueShorthand<K, T>(pub T, PhantomData<K>);
+
+impl<'de, K, T> Deserialize<'de> for ValueShorthand<K, T>
+where
+    K: Deserialize<'de> + Into<T>,
+    T: Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(Self(value_shorthand::<K, _, _>(deserializer)?, PhantomData))
+    }
+}
+
+thread_local! {
+    static UNSTABLE_FEATURES: AtomicBool = const { AtomicBool::new(false) };
+}
+
+pub(crate) struct FeatureGated<D> {
+    pub unstable: Option<D>,
+    pub deserializer: D,
+}
+
+impl<'de, D: Deserializer<'de>> FeatureGated<D> {
+    pub fn deserialize<T: Deserialize<'de>>(self) -> Result<T, D::Error> {
+        let Self {
+            unstable,
+            deserializer,
+        } = self;
+        let unstable = match unstable {
+            Some(value) => bool::deserialize(value)?,
+            None => false,
+        };
+        let outer = UNSTABLE_FEATURES.with(|flag| flag.swap(unstable, Ordering::Relaxed));
+        let result = T::deserialize(deserializer);
+        UNSTABLE_FEATURES.with(|flag| flag.store(outer, Ordering::Relaxed));
+        result
+    }
+}
+
+pub struct UnstableFeature<T>(pub T);
+
+impl<'de, T> Deserialize<'de> for UnstableFeature<T>
+where
+    T: Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        if UNSTABLE_FEATURES.with(|flag| flag.load(Ordering::Relaxed)) {
+            Ok(Self(T::deserialize(deserializer)?))
+        } else {
+            let err = "setting this option requires setting `unstable-features = true`";
+            Err(serde::de::Error::custom(err))
         }
-    };
-
-    (@define $(#[$struct_attr:meta])* $name:ident [$(($(#[$field_attr:meta])* $field:ident $type:ty))*] [$($infer:ident)*] []) => {
-        #[derive(::serde::Deserialize)]
-        $(#[$struct_attr])*
-        struct $name<$($infer),*> {
-            $($(#[$field_attr])* $field: $type),*
-        }
-    };
-    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident, $($rest:tt)*]) => {
-        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $next)] [$($infer)* $next] [$($rest)*]);
-    };
-    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident]) => {
-        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $next)] [$($infer)* $next] []);
-    };
-    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident as $type:ty, $($rest:tt)*]) => {
-        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $type)] [$($infer)*] [$($rest)*]);
-    };
-    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$(#[$field_attr:meta])* $next:ident as $type:ty]) => {
-        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))* ($(#[$field_attr])* $next $type)] [$($infer)*] []);
-    };
-    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$next:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
-        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))*] [$($infer)*]  [$($body)*, $($rest)*]);
-    };
-    (@define $(#[$struct_attr:meta])* $name:ident [$(($($field:tt)*))*] [$($infer:ident)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
-        de_struct!(@define $(#[$struct_attr])* $name [$(($($field)*))*] [$($infer)*]  [$($body)*]);
-    };
-
-    (@unpack $name:ident [$($field:ident)*] []) => {
-        $name { $($field),* }
-    };
-    (@unpack $name:ident [$($field:ident)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?, $($rest:tt)*]) => {
-        de_struct!(@unpack $name [$($field)* $next] [$($rest)*])
-    };
-    (@unpack $name:ident [$($field:ident)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?]) => {
-        de_struct!(@unpack $name [$($field)* $next] [])
-    };
-    (@unpack $name:ident [$($field:ident)*] [$next:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
-        de_struct!(@unpack $name [$($field)*] [$($body)*, $($rest)*])
-    };
-    (@unpack $name:ident [$($field:ident)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
-        de_struct!(@unpack $name [$($field)*] [$($body)*])
-    };
-
-    (@result $name:ident [$(($field:ident: $($value:tt)*))*] []) => {
-        $name {
-            $($field: $($value)*),*
-        }
-    };
-    (@result $name:ident [$($item:tt)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?, $($rest:tt)*]) => {
-        de_struct!(@result $name [$($item)* ($next: $next)] [$($rest)*])
-    };
-    (@result $name:ident [$($item:tt)*] [$(#[$attr:meta])* $next:ident $(as $type:ty)?]) => {
-        de_struct!(@result $name [$($item)* ($next: $next)] [])
-    };
-    (@result $name:ident [$($item:tt)*] [$next:ident ($inner:ident ($($body:tt)*)), $($rest:tt)*]) => {
-        de_struct!(@result $name [$($item)* ($next: de_struct!(@result $inner [] [$($body)*]))] [$($rest)*])
-    };
-    (@result $name:ident [$($item:tt)*] [$next:ident ($inner:ident ($($body:tt)*))]) => {
-        de_struct!(@result $name [$($item)* ($next: de_struct!(@result $inner [] [$($body)*]))] [])
-    };
-
-    ($(#[$struct_attr:meta])* $name:ident ($($body:tt)*)) => {
-        de_struct!(@derive $(#[$struct_attr])* [($(#[$struct_attr])* $name ($($body)*))] [$($body)*]);
-    };
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Default)]

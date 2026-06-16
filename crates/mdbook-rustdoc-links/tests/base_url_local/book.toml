@@ -1,5 +1,6 @@
 [preprocessor.rustdoc-links]
 base-url = "/api"
+unstable-features = true
 
 [[preprocessor.rustdoc-links.build]]
 packages = ["utf8parse"]

@@ -12,12 +12,16 @@ During local development, this behavior may be inconvenient:
 For such reasons, the preprocessor provides a [`base-url`](../configuration.md#base-url)
 option to support locally previewing docs produced by `cargo doc` .
 
+{% with feature = "`base-url`" %}
+{% include "/docs/src/_snippets/unstable-features.md" %} {% endwith %}
+
 ## Using `base-url.dev`
 
-You can specify `base-url.dev`, and supply an absolute path, for example:
+Specify an absolute path for `base-url.dev`:
 
 ```toml config-example
 [preprocessor.rustdoc-links]
+unstable-features = true
 base-url.dev = "/api"
 ```
 
