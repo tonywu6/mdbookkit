@@ -23,7 +23,7 @@
 </tspan>
     <tspan x="10px" y="46px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: help: if so, you can set `output.html.git-repository-url` to your repo's "https://tangled.org" URL</tspan>
 </tspan>
-    <tspan x="10px" y="64px"><tspan class="fg-red">ERROR</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: failed to initialize preprocessor</tspan>
+    <tspan x="10px" y="64px"><tspan class="fg-red">ERROR</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: could not initialize the preprocessor</tspan>
 </tspan>
     <tspan x="10px" y="82px">
 </tspan>

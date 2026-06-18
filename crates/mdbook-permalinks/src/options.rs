@@ -24,7 +24,7 @@ pub struct Config {
 
 impl Config {
     pub fn new(ctx: &PreprocessorContext) -> Result<Self> {
-        Self::try_from(ctx.book_toml()).context("failed to read config from book.toml")
+        Self::try_from(ctx.book_toml()).context("invalid config in book.toml")
     }
 }
 

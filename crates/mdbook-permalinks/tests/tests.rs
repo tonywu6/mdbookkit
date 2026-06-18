@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow};
 
 use mdbookkit_testing::{
     TestBook, TestRoot,
@@ -99,12 +99,20 @@ macro_rules! run {
 
 test_in_temp_dir![git_no_repo(exit(0)), |book| { Ok(()) }];
 
-test_in_temp_dir![git_no_commit(exit(0)), |book| {
+test_in_temp_dir![git_no_commit(exit(0), env = ["CI" = ""]), |book| {
+    git_no_commit_test(book)
+}];
+
+test_in_temp_dir![git_no_commit_in_ci(exit(101), env = ["CI" = "1"]), |book| {
+    git_no_commit_test(book)
+}];
+
+fn git_no_commit_test(book: &TestRoot<'static>) -> Result<()> {
     run!(book, "git", "init");
     #[rustfmt::skip]
     run!(book, "git", "remote", "add", "origin", "https://github.com/lorem/ipsum.git");
     Ok(())
-}];
+}
 
 test_in_temp_dir![git_no_remote(exit(0)), |book| {
     run!(book, "git", "init");
@@ -164,9 +172,14 @@ where
 
     book.run()?;
 
-    (book.path.dist_dir().as_std_path())
-        .write_to_path(template.dist_dir().as_std_path())
-        .context("failed to sync snapshots")?;
+    match book.path.dist_dir().as_std_path().canonicalize() {
+        Ok(path) => path
+            .write_to_path(template.dist_dir().as_std_path())
+            .map_err(<_>::into),
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => anyhow::Ok(()),
+        Err(err) => Err(anyhow!(err)),
+    }
+    .context("failed to sync snapshots")?;
 
     (book.path.stderr_dir().as_std_path())
         .write_to_path(template.stderr_dir().as_std_path())

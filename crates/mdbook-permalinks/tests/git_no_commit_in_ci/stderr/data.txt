@@ -1,11 +1,5 @@
 ERROR mdbook-permalinks: could not initialize the preprocessor
 
 Caused by:
-    0: invalid config in book.toml
-    1: TOML parse error at line 4, column 3
-         |
-       4 |   [
-         |   ^
-       expected at least 1 item
-       
+    the current repo does not have any commit
 ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

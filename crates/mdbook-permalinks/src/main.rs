@@ -64,7 +64,7 @@ fn mdbook() -> Result<(), ()> {
             return Ok(());
         }
         Err(err) => Err(err)
-            .context("failed to initialize preprocessor")
+            .context("could not initialize the preprocessor")
             .or_else(emit_error!())?,
     };
 

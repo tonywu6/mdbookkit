@@ -1,4 +1,4 @@
-ERROR mdbook-permalinks: failed to initialize preprocessor
+ERROR mdbook-permalinks: could not initialize the preprocessor
 
 Caused by:
     0: could not find a supported git remote URL
