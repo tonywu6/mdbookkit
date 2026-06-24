@@ -87,9 +87,9 @@ where
 impl<'a, S> PatchStream<'a, S> {
     /// Create a new patch stream.
     ///
-    /// `stream` should be an [`Iterator`] yielding tuples of `(events, range)`:
+    /// `stream` should be an [`Iterator`] that yields tuples of `(events, range)`:
     ///
-    /// - `events` is an [`Iterator`] yielding [`Event`]s which is the replacement
+    /// - `events` is an [`Iterator`] yielding [`Event`]s which are the replacement
     ///   Markdown to be rendered into `source` using [`pulldown_cmark_to_cmark`].
     ///
     /// - `range` is a [`Range<usize>`] representing the byte span in `source` that

@@ -12,12 +12,13 @@ use annotate_snippets::{
 };
 use bon::Builder;
 use tap::{Pipe, Tap};
+use tracing::Level;
 
 use crate::{
     emit_debug,
     env::{MDBOOKKIT_TERM_GRAPHICAL, TruthyStr, is_colored, is_logging},
     error::put_severity,
-    lexicographic_ordering,
+    level_enabled, lexicographic_ordering,
     logging::{EmitCallsite, stderr},
     util::{Lexicographic, LexicographicOrd},
 };
@@ -233,6 +234,47 @@ pub fn issue_to_traces<'a>(
 }
 
 impl<'a> IssueReport<'a> {
+    #[inline(always)]
+    pub fn if_enabled(level: IssueLevel) -> Option<IssueReportBuilder<'a>> {
+        match level {
+            IssueLevel::Error => {
+                if level_enabled!(Level::ERROR) {
+                    Some(Self::level(level))
+                } else {
+                    None
+                }
+            }
+            IssueLevel::Warning => {
+                if level_enabled!(Level::WARN) {
+                    Some(Self::level(level))
+                } else {
+                    None
+                }
+            }
+            IssueLevel::Info => {
+                if level_enabled!(Level::INFO) {
+                    Some(Self::level(level))
+                } else {
+                    None
+                }
+            }
+            IssueLevel::Help => {
+                if level_enabled!(Level::INFO) {
+                    Some(Self::level(level))
+                } else {
+                    None
+                }
+            }
+            IssueLevel::Note => {
+                if level_enabled!(Level::DEBUG) {
+                    Some(Self::level(level))
+                } else {
+                    None
+                }
+            }
+        }
+    }
+
     #[inline]
     pub fn annotations(&mut self, item: Highlight<'a>) -> &mut Self {
         self.annotations.push(item);

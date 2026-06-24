@@ -1,4 +1,4 @@
-<svg width="877px" height="110px" xmlns="http://www.w3.org/2000/svg">
+<svg width="1087px" height="110px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -25,7 +25,7 @@
 </tspan>
     <tspan x="10px" y="64px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>:</tspan><tspan class="bold">process</tspan><tspan>: started </tspan><tspan class="dimmed">processing links</tspan>
 </tspan>
-    <tspan x="10px" y="82px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: processed 1 link: 1 link to repo; 0 links to book; 0 have errors; 0 unchanged</tspan>
+    <tspan x="10px" y="82px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>:</tspan><tspan class="bold">process</tspan><tspan>: processed 1 link: 1 link to repo; 0 links to book; 0 have errors; 0 unchanged </tspan><tspan class="dimmed">processing links</tspan>
 </tspan>
     <tspan x="10px" y="100px"><tspan class="fg-green"> INFO</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: finished</tspan>
 </tspan>
