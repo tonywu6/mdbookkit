@@ -15,7 +15,7 @@ use mdbookkit::{
 };
 
 use crate::{
-    link::{ContentKind, EmitLinkSpan, Link, LinkSpan, LinkState, LinkText},
+    link::{ContentKind, Link, LinkSpan, LinkState},
     vcs::VersionControl,
 };
 
@@ -106,10 +106,7 @@ impl<'a> Page<'a> {
     where
         S: Iterator<Item = Spanned<Event<'a>>>,
     {
-        let mut this = Self {
-            source,
-            links: Default::default(),
-        };
+        let mut links = vec![];
 
         let mut opened: Option<LinkSpan<'_>> = None;
 
@@ -131,55 +128,52 @@ impl<'a> Page<'a> {
                     trace!(?dest, " │ ");
                     trace!(?title, " │ ");
 
-                    let link = Link::builder()
+                    let link = LinkSpan::markdown()
                         .href(dest.clone())
                         .span(span)
                         .kind(kind)
                         .title(title)
                         .source(source)
-                        .build()
-                        .pipe(Box::new)
-                        .pipe(LinkText::Link);
+                        .open();
 
                     match opened.as_mut() {
-                        Some(opened) => opened.0.push(link),
-                        None => opened = Some(LinkSpan(vec![link])),
+                        Some(opened) => opened.nested(link),
+                        None => opened = Some(link),
                     }
                 }
 
                 event @ Event::End(end @ (TagEnd::Link | TagEnd::Image)) => {
-                    let Some(mut items) = opened.take() else {
+                    let Some(mut link) = opened.take() else {
                         debug!(?span, "unexpected {end:?}");
                         bail!("markdown stream malformed at byte position {span:?}");
                     };
 
                     trace!(?span, "<<<");
 
-                    items.0.push(LinkText::Text(event));
+                    link.text(event);
 
-                    if &span == items.span() {
-                        this.links.push(items);
+                    if &span == link.span() {
+                        links.push(link);
                     } else {
-                        opened = Some(items)
+                        opened = Some(link)
                     }
                 }
 
                 event => {
                     if let Some(link) = opened.as_mut() {
                         trace!(?span, " │ ");
-                        link.0.push(LinkText::Text(event))
+                        link.text(event);
                     }
                 }
             }
         }
 
-        Ok(this)
+        Ok(Self { source, links })
     }
 
     fn emit(&self) -> Result<String> {
-        self.links
-            .iter()
-            .filter_map(EmitLinkSpan::new)
+        (self.links.iter())
+            .filter_map(LinkSpan::emit)
             .pipe(|stream| PatchStream::new(self.source, stream))
             .into_string()?
             .pipe(Ok)

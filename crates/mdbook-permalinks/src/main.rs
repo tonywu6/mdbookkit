@@ -384,7 +384,7 @@ impl Resolver<'_> {
 
                     _ => {}
                 }
-                link.state_mut().error(e)
+                link.error(e)
             }
         };
     }
@@ -538,7 +538,7 @@ impl Resolver<'_> {
                             Ok(None) => None,
                             Err(err) => {
                                 let err = err.at(path.url);
-                                link.state_mut().error(err);
+                                link.error(err);
                                 return;
                             }
                         }
@@ -551,11 +551,11 @@ impl Resolver<'_> {
                     None
                 };
                 if let Some(href) = href {
-                    link.state_mut().permalink(href);
+                    link.permalink(href);
                 } else {
                     let href = self.env.vcs.scheme().to_link(&path.relative, kind);
                     trace!("rewriting to permalink: {:?}", href.show());
-                    link.state_mut().permalink(href.into());
+                    link.permalink(href.into());
                 };
             }
 
@@ -565,10 +565,10 @@ impl Resolver<'_> {
                     .expect("both are file urls");
                 if href != link.href() {
                     trace!("rewriting to book link: {:?}", href.show_path());
-                    link.state_mut().book_link(href);
+                    link.book_link(href);
                 } else {
                     trace!("keeping the link as-is");
-                    link.state_mut().no_change();
+                    link.no_change();
                 }
             }
         }
@@ -597,7 +597,7 @@ impl Resolver<'_> {
         };
         let to_book = to_book.consume_with(<_>::into);
 
-        link.state_mut().error(LinkError {
+        link.error(LinkError {
             error: PathError::AmbiguousLinkToRoot,
             cause: link_url,
             help: Some(LinkHelp::LinkToRoot {

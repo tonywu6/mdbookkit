@@ -9,16 +9,11 @@ use mdbookkit::{error::Show, markdown::locate_text, url::RelativeUrl};
 
 #[derive(Debug)]
 pub struct Link<'a> {
-    state: State<'a>,
-    span: SourceSpan,
-}
-
-#[derive(Debug)]
-pub struct State<'a> {
     state: Result<LinkState, LinkError>,
     href: CowStr<'a>,
     kind: ContentKind,
     title: CowStr<'a>,
+    span: Range<usize>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -79,7 +74,27 @@ pub enum LinkHelp {
     },
 }
 
-impl<'a> State<'a> {
+impl<'a> Link<'a> {
+    pub fn href(&'a self) -> &'a str {
+        &self.href
+    }
+
+    pub fn repo_relative(&'a self) -> Option<&'a str> {
+        self.href.strip_prefix('/')
+    }
+
+    pub fn kind(&self) -> ContentKind {
+        self.kind
+    }
+
+    pub fn span(&self) -> &Range<usize> {
+        &self.span
+    }
+
+    pub fn state(&self) -> &Result<LinkState, LinkError> {
+        &self.state
+    }
+
     pub fn no_change(&mut self) {
         self.state = Ok(LinkState::BookLinkChecked)
     }
@@ -98,14 +113,14 @@ impl<'a> State<'a> {
         self.state = Err(error)
     }
 
-    fn should_emit(&self) -> Option<ContentKind> {
+    fn changed(&self) -> Option<ContentKind> {
         match self.state {
             Ok(LinkState::BookLinkUpdated | LinkState::Permalink) => Some(self.kind),
             _ => None,
         }
     }
 
-    fn emit(&self) -> Tag<'a> {
+    fn to_markdown(&self) -> Tag<'a> {
         match self.kind {
             ContentKind::Web => Tag::Link {
                 link_type: LinkType::Inline,
@@ -120,44 +135,6 @@ impl<'a> State<'a> {
                 id: CowStr::Borrowed(""),
             },
         }
-    }
-}
-
-#[derive(Debug)]
-pub struct SourceSpan {
-    pub full: Range<usize>,
-    pub link: Option<Range<usize>>,
-}
-
-impl<'a> Link<'a> {
-    pub fn state(&self) -> &Result<LinkState, LinkError> {
-        &self.state.state
-    }
-
-    pub fn state_mut(&mut self) -> &mut State<'a> {
-        &mut self.state
-    }
-
-    pub fn repo_relative(&'a self) -> Option<&'a str> {
-        self.state.href.strip_prefix('/')
-    }
-
-    pub fn href(&'a self) -> &'a str {
-        &self.state.href
-    }
-
-    pub fn kind(&self) -> ContentKind {
-        self.state.kind
-    }
-
-    pub fn span(&self) -> &SourceSpan {
-        &self.span
-    }
-}
-
-impl SourceSpan {
-    pub fn any(&self) -> &Range<usize> {
-        self.link.as_ref().unwrap_or(&self.full)
     }
 }
 
@@ -179,63 +156,80 @@ impl PathError {
     }
 }
 
-#[bon]
-impl<'a> Link<'a> {
-    #[builder]
-    pub fn new(
-        kind: ContentKind,
-        href: CowStr<'a>,
-        span: Range<usize>,
-        source: &'a str,
-        title: CowStr<'a>,
-    ) -> Self {
-        Self {
-            span: SourceSpan {
-                full: span,
-                link: locate_text(source, &href),
-            },
-            state: State {
-                state: Ok(LinkState::Unsupported),
-                href,
-                kind,
-                title,
-            },
-        }
-    }
+pub struct LinkSpan<'a> {
+    elem: Vec<LinkElem<'a>>,
+    span: Range<usize>,
 }
 
-pub struct LinkSpan<'a>(pub Vec<LinkText<'a>>);
-
-pub enum LinkText<'a> {
+enum LinkElem<'a> {
     Text(Event<'a>),
-    Link(Box<Link<'a>>), // large variant
+    Link {
+        link: Box<Link<'a>>, // Box: large variant
+    },
 }
 
 impl<'a> LinkSpan<'a> {
+    pub fn text(&mut self, event: Event<'a>) {
+        self.elem.push(LinkElem::Text(event));
+    }
+
+    pub fn nested(&mut self, link: LinkSpan<'a>) {
+        self.elem.extend(link.elem);
+    }
+
     pub fn links_mut(&mut self) -> impl Iterator<Item = &'_ mut Link<'a>> {
-        self.0.iter_mut().filter_map(|item| match item {
-            LinkText::Link(link) => Some(link.as_mut()),
-            LinkText::Text(..) => None,
+        self.elem.iter_mut().flat_map(|item| match item {
+            LinkElem::Link { link } => std::slice::from_mut(link.as_mut()),
+            LinkElem::Text(..) => &mut [],
         })
     }
 
     pub fn links(&self) -> impl Iterator<Item = &'_ Link<'a>> {
-        self.0.iter().filter_map(|item| match item {
-            LinkText::Link(link) => Some(link.as_ref()),
-            LinkText::Text(..) => None,
+        self.elem.iter().flat_map(|item| match item {
+            LinkElem::Link { link } => std::slice::from_ref(link.as_ref()),
+            LinkElem::Text(..) => &[],
         })
     }
 
     pub fn span(&self) -> &Range<usize> {
-        match &self.0[0] {
-            LinkText::Link(link) => &link.span.full,
-            LinkText::Text(..) => unreachable!("first item in LinkSpan must be a Link"),
+        &self.span
+    }
+
+    pub fn emit(&'a self) -> Option<(impl Iterator<Item = Event<'a>>, Range<usize>)> {
+        EmitLinkSpan::new(self)
+    }
+}
+
+#[bon]
+impl<'a> LinkSpan<'a> {
+    #[builder(finish_fn = open)]
+    pub fn markdown(
+        href: CowStr<'a>,
+        kind: ContentKind,
+        span: Range<usize>,
+        source: &'a str,
+        title: CowStr<'a>,
+    ) -> Self {
+        let link = Link {
+            span: locate_text(source, &href).unwrap_or_else(|| span.clone()),
+            state: Ok(LinkState::Unsupported),
+            href,
+            kind,
+            title,
+        };
+        let elem = LinkElem::Link {
+            link: Box::new(link),
+        };
+        Self {
+            elem: vec![elem],
+            span,
         }
     }
 }
 
-pub struct EmitLinkSpan<'a> {
-    iter: std::slice::Iter<'a, LinkText<'a>>,
+struct EmitLinkSpan<'a> {
+    iter: std::slice::Iter<'a, LinkElem<'a>>,
+    span: &'a Range<usize>,
     opened: Vec<ContentKind>,
 }
 
@@ -245,17 +239,17 @@ impl<'a> Iterator for EmitLinkSpan<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         for next in self.iter.by_ref() {
             match next {
-                LinkText::Link(link) => {
-                    let span = &link.span.full;
-                    match (link.state.should_emit(), self.opened.is_empty()) {
+                LinkElem::Link { link } => {
+                    let span = &self.span;
+                    match (link.changed(), self.opened.is_empty()) {
                         (Some(usage), top_level) => {
                             self.opened.push(usage);
-                            let link = link.state.emit();
+                            let link = link.to_markdown();
                             trace!(?span, ?link, "{}", if top_level { ">" } else { ">>" });
                             return Some(Event::Start(link));
                         }
                         (None, false) => {
-                            let link = link.state.emit();
+                            let link = link.to_markdown();
                             trace!(?span, ?link, ">│ skipped, link in link");
                             return Some(Event::Start(link));
                         }
@@ -265,7 +259,8 @@ impl<'a> Iterator for EmitLinkSpan<'a> {
                         }
                     };
                 }
-                LinkText::Text(text) => {
+
+                LinkElem::Text(text) => {
                     match (text, self.opened.last()) {
                         (Event::End(TagEnd::Link), Some(ContentKind::Web))
                         | (Event::End(TagEnd::Image), Some(ContentKind::Raw)) => {
@@ -293,20 +288,19 @@ impl<'a> Iterator for EmitLinkSpan<'a> {
 
 impl<'a> EmitLinkSpan<'a> {
     pub fn new(links: &'a LinkSpan<'a>) -> Option<(Self, Range<usize>)> {
-        let span = links.0.iter().find_map(|link| match &link {
-            LinkText::Link(link) => {
-                if link.state.should_emit().is_some() {
-                    Some(link.span.full.clone())
-                } else {
-                    None
-                }
-            }
-            _ => None,
-        })?;
+        let changed = links.elem.iter().any(|elem| match elem {
+            LinkElem::Link { link } => link.changed().is_some(),
+            _ => false,
+        });
+        if !changed {
+            return None;
+        }
         let iter = EmitLinkSpan {
-            iter: links.0.iter(),
+            iter: links.elem.iter(),
+            span: &links.span,
             opened: vec![],
         };
+        let span = links.span.clone();
         Some((iter, span))
     }
 }

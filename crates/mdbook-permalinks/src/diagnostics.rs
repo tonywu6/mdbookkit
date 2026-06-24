@@ -25,7 +25,7 @@ impl<'a: 'r, 'r> LinkDiagnostic<'a, 'r> {
     pub fn emit(&self) -> IssueReport<'r> {
         use {BookPathError::*, PathError::*};
 
-        let span = self.link.span().any();
+        let span = self.link.span();
         let href = self.link.href();
 
         let error = match self.link.state() {

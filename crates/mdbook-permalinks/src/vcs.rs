@@ -349,7 +349,8 @@ impl VersionControl {
         };
 
         debug!("{link:#?}");
-        info! { "using format {:?}; {{ref}} = {:?}", link.pattern.show(), link.refname.show() };
+        info!("using format {:?}", link.pattern.show());
+        info!("using ref {:?}", link.refname.show());
 
         Ok(Ok(Self { root, repo, link }))
     }
