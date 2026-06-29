@@ -1,26 +1,24 @@
-use std::{fmt::Debug, ops::Range};
+use std::{borrow::Cow, fmt::Debug, ops::Range};
 
 use anyhow::{Result, bail};
-use bon::bon;
+use lol_html::{HtmlRewriter, Settings, element, html_content::Element};
 use mdbook_markdown::pulldown_cmark::{CowStr, Event, LinkType, Tag, TagEnd};
 use tracing::{debug, trace};
 use url::Url;
 
-use mdbookkit::{error::Show, markdown::locate_text, url::RelativeUrl};
+use mdbookkit::{
+    error::Show,
+    markdown::{Spanned, locate_text},
+    url::RelativeUrl,
+};
 
 #[derive(Debug)]
 pub struct Link<'a> {
     state: Result<LinkState, LinkError>,
     href: CowStr<'a>,
-    kind: ContentKind,
+    interest: ContentInterest,
+    span: LinkSpan,
     title: CowStr<'a>,
-    span: Range<usize>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ContentKind {
-    Web,
-    Raw,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -29,6 +27,18 @@ pub enum LinkState {
     BookLinkChecked,
     BookLinkUpdated,
     Permalink,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ContentInterest {
+    Nav,
+    Raw,
+}
+
+#[derive(Debug)]
+pub enum LinkSpan {
+    Exact(Range<usize>),
+    Fuzzy(Range<usize>),
 }
 
 #[derive(Clone)]
@@ -84,11 +94,11 @@ impl<'a> Link<'a> {
         self.href.strip_prefix('/')
     }
 
-    pub fn kind(&self) -> ContentKind {
-        self.kind
+    pub fn interest(&self) -> ContentInterest {
+        self.interest
     }
 
-    pub fn span(&self) -> &Range<usize> {
+    pub fn span(&self) -> &LinkSpan {
         &self.span
     }
 
@@ -114,22 +124,23 @@ impl<'a> Link<'a> {
         self.state = Err(error)
     }
 
-    fn changed(&self) -> Option<ContentKind> {
+    fn changed(&self) -> Option<ContentInterest> {
         match self.state {
-            Ok(LinkState::BookLinkUpdated | LinkState::Permalink) => Some(self.kind),
+            Ok(LinkState::BookLinkUpdated) => Some(self.interest),
+            Ok(LinkState::Permalink) => Some(self.interest),
             _ => None,
         }
     }
 
     fn to_markdown(&self) -> Tag<'a> {
-        match self.kind {
-            ContentKind::Web => Tag::Link {
+        match self.interest {
+            ContentInterest::Nav => Tag::Link {
                 link_type: LinkType::Inline,
                 dest_url: self.href.clone(),
                 title: self.title.clone(),
                 id: CowStr::Borrowed(""),
             },
-            ContentKind::Raw => Tag::Image {
+            ContentInterest::Raw => Tag::Image {
                 link_type: LinkType::Inline,
                 dest_url: self.href.clone(),
                 title: self.title.clone(),
@@ -157,73 +168,58 @@ impl PathError {
     }
 }
 
-pub struct LinkSpan<'a> {
+#[derive(Debug)]
+pub struct LinkSlice<'a> {
     elem: Vec<LinkElem<'a>>,
     span: Range<usize>,
 }
 
+#[derive(Debug)]
 enum LinkElem<'a> {
     Text(Event<'a>),
     Link {
         link: Box<Link<'a>>, // Box: large variant
     },
+    Html {
+        html: Vec<Event<'a>>,
+        links: Vec<Link<'a>>,
+    },
 }
 
-impl<'a> LinkSpan<'a> {
-    pub fn text(&mut self, event: Event<'a>) {
-        self.elem.push(LinkElem::Text(event));
-    }
-
-    pub fn nested(&mut self, link: LinkSpan<'a>) {
-        self.elem.extend(link.elem);
-    }
-
+impl<'a> LinkSlice<'a> {
     pub fn links_mut(&mut self) -> impl Iterator<Item = &'_ mut Link<'a>> {
         self.elem.iter_mut().flat_map(|item| match item {
             LinkElem::Link { link } => std::slice::from_mut(link.as_mut()),
+            LinkElem::Html { links, .. } => links,
             LinkElem::Text(..) => &mut [],
         })
     }
 
-    pub fn span(&self) -> &Range<usize> {
-        &self.span
+    fn links(&self) -> impl Iterator<Item = &'_ Link<'a>> {
+        self.elem.iter().flat_map(|item| match item {
+            LinkElem::Link { link } => std::slice::from_ref(link.as_ref()),
+            LinkElem::Html { links, .. } => links,
+            LinkElem::Text(..) => &[],
+        })
     }
 
     pub fn emit(self) -> Option<(impl Iterator<Item = Event<'a>>, Range<usize>)> {
-        EmitLinkSpan::new(self)
+        EmitLinkSlice::new(self)
     }
-}
 
-#[bon]
-impl<'a> LinkSpan<'a> {
-    #[builder(finish_fn = open)]
-    pub fn markdown(
-        href: CowStr<'a>,
-        kind: ContentKind,
-        span: Range<usize>,
-        source: &'a str,
-        title: CowStr<'a>,
-    ) -> Self {
-        let link = Link {
-            span: locate_text(source, &href).unwrap_or_else(|| span.clone()),
-            state: Ok(LinkState::Unsupported),
-            href,
-            kind,
-            title,
-        };
-        let elem = LinkElem::Link {
-            link: Box::new(link),
-        };
-        Self {
-            elem: vec![elem],
-            span,
-        }
+    fn text(&mut self, event: Event<'a>) {
+        self.elem.push(LinkElem::Text(event));
+    }
+
+    fn nest(&mut self, link: LinkSlice<'a>) {
+        self.elem.extend(link.elem);
     }
 }
 
 pub struct LinkReader<'a> {
     source: &'a str,
-    opened: Option<LinkSpan<'a>>,
+    opened: Option<LinkSlice<'a>>,
+    html: Vec<Spanned<Event<'a>>>,
 }
 
 impl<'a> LinkReader<'a> {
@@ -231,77 +227,209 @@ impl<'a> LinkReader<'a> {
         Self {
             source,
             opened: None,
+            html: vec![],
         }
     }
 
-    pub fn read(&mut self, event: Event<'a>, span: Range<usize>) -> Result<Option<LinkSpan<'a>>> {
-        let Self { source, opened } = self;
+    pub fn read(&mut self, event: Option<Spanned<Event<'a>>>) -> Result<Option<LinkSlice<'a>>> {
+        use Event::*;
+
+        let Self {
+            source,
+            opened,
+            html,
+        } = self;
+
+        let event = match (event, html.last()) {
+            (Some((event @ InlineHtml(..), span)), None | Some((InlineHtml(..), ..)))
+            | (Some((event @ Html(..), span)), None | Some((Html(..), ..))) => {
+                html.push((event, span));
+                return Ok(None);
+            }
+            (event, _) => event,
+        };
+
+        let queued = match LinkSlice::html(std::mem::take(html)) {
+            Ok(link) => {
+                trace!(span = ?link.span, ">>> HTML");
+                if let Some(opened) = opened.as_mut() {
+                    opened.nest(link);
+                    None
+                } else {
+                    Some(link)
+                }
+            }
+            Err(queued) => {
+                if let Some(opened) = opened {
+                    for (event, _) in queued {
+                        opened.text(event);
+                    }
+                }
+                None
+            }
+        };
+
         match event {
-            Event::Start(tag @ (Tag::Link { .. } | Tag::Image { .. })) => {
-                let (kind, dest, title) = match tag {
+            Some((Start(tag @ (Tag::Link { .. } | Tag::Image { .. })), span)) => {
+                let (interest, dest, title) = match tag {
                     Tag::Link {
                         dest_url, title, ..
-                    } => (ContentKind::Web, dest_url, title),
+                    } => (ContentInterest::Nav, dest_url, title),
                     Tag::Image {
                         dest_url, title, ..
-                    } => (ContentKind::Raw, dest_url, title),
+                    } => (ContentInterest::Raw, dest_url, title),
                     _ => unreachable!(),
                 };
 
-                let parent = opened.as_ref().map(|link| link.span());
-                trace!(?span, ?parent, ?kind, ">>>");
+                trace!(?span, ?interest, opened = ?opened.as_ref().map(|link| &link.span), ">>>");
                 trace!(?dest, " │ ");
                 trace!(?title, " │ ");
 
-                let link = LinkSpan::markdown()
-                    .href(dest.clone())
-                    .span(span)
-                    .kind(kind)
-                    .title(title)
-                    .source(source)
-                    .open();
-
-                match opened.as_mut() {
-                    Some(opened) => opened.nested(link),
-                    None => *opened = Some(link),
-                }
-            }
-
-            event @ Event::End(end @ (TagEnd::Link | TagEnd::Image)) => {
-                let Some(mut link) = opened.take() else {
-                    debug!(?span, "unexpected {end:?}");
-                    bail!("markdown stream malformed at byte position {span:?}");
+                let link = {
+                    let link = Link {
+                        state: Ok(LinkState::Unsupported),
+                        span: match locate_text(source, &dest) {
+                            Some(span) => LinkSpan::Exact(span),
+                            None => LinkSpan::Fuzzy(span.clone()),
+                        },
+                        href: dest.clone(),
+                        interest,
+                        title,
+                    };
+                    LinkSlice {
+                        elem: vec![LinkElem::Link {
+                            link: Box::new(link),
+                        }],
+                        span,
+                    }
                 };
 
-                trace!(?span, "<<<");
-
-                link.text(event);
-
-                if &span == link.span() {
-                    return Ok(Some(link));
+                if let Some(opened) = opened {
+                    opened.nest(link)
                 } else {
                     *opened = Some(link)
                 }
             }
 
-            event => {
-                if let Some(link) = opened.as_mut() {
-                    trace!(?span, " │ ");
-                    link.text(event);
+            Some((event @ End(end @ (TagEnd::Link | TagEnd::Image)), span)) => {
+                let mut parent = match opened.take() {
+                    Some(parent) => {
+                        trace!(?span, "<<<");
+                        parent
+                    }
+                    None => {
+                        debug!(?span, "unexpected {end:?}");
+                        bail!("markdown stream malformed at byte position {span:?}");
+                    }
+                };
+
+                parent.text(event);
+
+                debug_assert!(queued.is_none());
+
+                if span == parent.span {
+                    return Ok(Some(parent));
+                } else {
+                    *opened = Some(parent)
                 }
             }
+
+            Some((event, _)) => {
+                if let Some(opened) = opened {
+                    opened.text(event);
+                }
+            }
+
+            None => {}
         }
-        Ok(None)
+
+        Ok(queued)
     }
 }
 
-struct EmitLinkSpan<'a> {
-    iter: std::vec::IntoIter<LinkElem<'a>>,
-    span: Range<usize>,
-    opened: Vec<ContentKind>,
+impl<'a> LinkSlice<'a> {
+    fn html(events: Vec<Spanned<Event<'a>>>) -> Result<Self, Vec<Spanned<Event<'a>>>> {
+        if events.is_empty() {
+            return Err(events);
+        }
+
+        let span = events[0].1.start..events[events.len() - 1].1.end;
+        let origin = span.start;
+
+        let mut links = vec![];
+
+        let handler = Settings {
+            element_content_handlers: element_handler(|elem, name, value| {
+                let span = elem.source_location().bytes();
+                let span = span.start + origin..span.end + origin;
+                let interest = match (name, &*elem.tag_name()) {
+                    ("href", "a") => {
+                        if elem.has_attribute("download") {
+                            ContentInterest::Raw
+                        } else {
+                            ContentInterest::Nav
+                        }
+                    }
+                    ("href", "link") => {
+                        // https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/rel
+                        match &*elem.get_attribute("rel").unwrap_or_default() {
+                            "icon" | "stylesheet" | "preconnect" | "prefetch" | "preload"
+                            | "modulepreload" | "dns-prefetch" => ContentInterest::Raw,
+                            _ => ContentInterest::Nav,
+                        }
+                    }
+                    ("href", _) => ContentInterest::Nav,
+                    ("data", "object") => ContentInterest::Raw,
+                    ("src", _) => ContentInterest::Raw,
+                    (_, _) => ContentInterest::Raw,
+                };
+                let link = Link {
+                    state: Ok(LinkState::Unsupported),
+                    href: value.into(),
+                    interest,
+                    title: CowStr::Borrowed(""),
+                    span: LinkSpan::Fuzzy(span),
+                };
+                links.push(link);
+                None
+            }),
+            ..Default::default()
+        };
+
+        let mut wr = HtmlRewriter::new(handler, |_: &[u8]| ());
+        events
+            .iter()
+            .try_for_each(|(chunk, _)| {
+                let chunk = match chunk {
+                    Event::InlineHtml(html) => html.as_bytes(),
+                    Event::Html(html) => html.as_bytes(),
+                    _ => unreachable!(),
+                };
+                wr.write(chunk)
+            })
+            .and_then(|_| wr.end())
+            .expect("HTML lax parsing should be infallible");
+
+        if links.is_empty() {
+            return Err(events);
+        }
+
+        let html = events.into_iter().map(|(chunk, _)| chunk).collect();
+
+        Ok(Self {
+            elem: vec![LinkElem::Html { html, links }],
+            span,
+        })
+    }
 }
 
-impl<'a> Iterator for EmitLinkSpan<'a> {
+struct EmitLinkSlice<'a> {
+    iter: std::vec::IntoIter<LinkElem<'a>>,
+    span: Range<usize>,
+    opened: Vec<ContentInterest>,
+}
+
+impl<'a> Iterator for EmitLinkSlice<'a> {
     type Item = Event<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -328,10 +456,54 @@ impl<'a> Iterator for EmitLinkSpan<'a> {
                     };
                 }
 
+                LinkElem::Html { html, links } => {
+                    let mut links = links.into_iter();
+
+                    let handler = Settings {
+                        element_content_handlers: element_handler(|_, _, _| {
+                            let link = (links.next())
+                                .expect("2nd parse should result in the same number of links");
+                            if link.changed().is_some() {
+                                Some(link.href.into())
+                            } else {
+                                None
+                            }
+                        }),
+                        ..Default::default()
+                    };
+
+                    let mut output = String::new();
+                    let mut writer = HtmlRewriter::new(handler, |chunk: &[u8]| {
+                        let chunk = str::from_utf8(chunk)
+                            .expect("`lol_html` guarantees that HTML is encoded");
+                        output.push_str(chunk);
+                    });
+
+                    html.iter()
+                        .try_for_each(|chunk| {
+                            let chunk = match chunk {
+                                Event::InlineHtml(chunk) => chunk.as_bytes(),
+                                Event::Html(chunk) => chunk.as_bytes(),
+                                _ => unreachable!(),
+                            };
+                            writer.write(chunk)
+                        })
+                        .and_then(|_| writer.end())
+                        .expect("HTML lax parsing should be infallible");
+
+                    let elem = match &html[0] {
+                        Event::InlineHtml(_) => Event::InlineHtml(output.into()),
+                        Event::Html(_) => Event::Html(output.into()),
+                        _ => unreachable!(),
+                    };
+
+                    return Some(elem);
+                }
+
                 LinkElem::Text(elem) => {
                     match (elem, self.opened.last()) {
-                        (elem @ Event::End(TagEnd::Link), Some(ContentKind::Web))
-                        | (elem @ Event::End(TagEnd::Image), Some(ContentKind::Raw)) => {
+                        (elem @ Event::End(TagEnd::Link), Some(ContentInterest::Nav))
+                        | (elem @ Event::End(TagEnd::Image), Some(ContentInterest::Raw)) => {
                             self.opened.pop();
                             let top_level = self.opened.is_empty();
                             trace!(?elem, "{}", if top_level { "<" } else { "<<" });
@@ -354,22 +526,38 @@ impl<'a> Iterator for EmitLinkSpan<'a> {
     }
 }
 
-impl<'a> EmitLinkSpan<'a> {
-    pub fn new(links: LinkSpan<'a>) -> Option<(Self, Range<usize>)> {
-        let changed = links.elem.iter().any(|elem| match elem {
-            LinkElem::Link { link } => link.changed().is_some(),
-            _ => false,
-        });
+impl<'a> EmitLinkSlice<'a> {
+    fn new(links: LinkSlice<'a>) -> Option<(Self, Range<usize>)> {
+        let changed = links.links().any(|link| link.changed().is_some());
         if !changed {
             return None;
         }
-        let iter = EmitLinkSpan {
+        let iter = EmitLinkSlice {
             iter: links.elem.into_iter(),
             span: links.span.clone(),
             opened: vec![],
         };
         Some((iter, links.span))
     }
+}
+
+fn element_handler<'cb>(
+    mut cb: impl FnMut(&Element, &'static str, String) -> Option<String> + 'cb,
+) -> Vec<(
+    Cow<'static, lol_html::Selector>,
+    lol_html::ElementContentHandlers<'cb, lol_html::LocalHandlerTypes>,
+)> {
+    vec![element!("  [href], [src], [data]", move |elem| {
+        for name in ["href", "src", "data"] {
+            if let Some(attr) = elem.get_attribute(name)
+                && let Some(attr) = cb(elem, name, attr)
+            {
+                elem.set_attribute(name, &attr)
+                    .expect("attribute name is valid");
+            }
+        }
+        Ok(())
+    })]
 }
 
 impl Debug for LinkError {

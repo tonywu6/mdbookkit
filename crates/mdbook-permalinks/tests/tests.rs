@@ -31,6 +31,7 @@ macro_rules! test_case {
 test_case![file_links, exit(0)];
 test_case![repo_links, exit(0)];
 test_case![book_links, exit(0)];
+test_case![html_links, exit(0)];
 
 test_case![git_url_from_book, exit(0)];
 test_case![git_url_scp_like, exit(0)];

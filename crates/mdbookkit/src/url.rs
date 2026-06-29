@@ -123,6 +123,12 @@ impl BaseUrl<'_> {
     }
 }
 
+impl Show for BaseUrl<'_> {
+    fn show(&self) -> impl Debug {
+        self.0.show()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RelativeUrl {
     url: String,
@@ -263,6 +269,9 @@ impl UrlUtil for Url {
 
     #[inline]
     fn ensure_no_trailing_slash(&mut self) {
+        if self.path() == "/" {
+            return;
+        }
         while self.path().ends_with('/') {
             if let Ok(mut paths) = self.path_segments_mut() {
                 paths.pop_if_empty();

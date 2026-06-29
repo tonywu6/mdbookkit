@@ -36,7 +36,7 @@ warning: broken link to "https://example.org/book/1.book-links.md"
   |
   = help: because the output path of this page won't contain the `.md` extension, this link won't work correctly
   = note: the resolved path is "crates/mdbook-permalinks/tests/book_links/src/1.book-links.md"
-help: try removing the extension
+help: try removing the extension:
   |
 5 - - [](https://example.org/book/1.book-links.md)
 5 + - [](https://example.org/book/1.book-links)
@@ -50,7 +50,7 @@ warning: broken link to "https://example.org/book/1.book-links.md#links"
   |
   = help: because the output path of this page won't contain the `.md` extension, this link won't work correctly
   = note: the resolved path is "crates/mdbook-permalinks/tests/book_links/src/1.book-links.md"
-help: try removing the extension
+help: try removing the extension:
   |
 6 - - [](https://example.org/book/1.book-links.md#links)
 6 + - [](https://example.org/book/1.book-links#links)

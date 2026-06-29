@@ -19,11 +19,11 @@ exclude = ["src/tests", "tests"]
 
 [dependencies]
 anyhow = { workspace = true }
-bon = { workspace = true }
 clap = { workspace = true }
 data-encoding = "2.11.0"
 git2 = { version = "0.20.4", default-features = false }
 gix-url = { version = "0.35.2" }
+lol_html = { workspace = true }
 mdbook-markdown = { workspace = true }
 mdbook-preprocessor = { workspace = true }
 mdbookkit = { workspace = true }

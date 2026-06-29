@@ -13,7 +13,7 @@ use mdbookkit::{
 
 use crate::{
     PREPROCESSOR_NAME,
-    link::{BookPathError, Link, LinkHelp, LinkState, PathError},
+    link::{BookPathError, Link, LinkHelp, LinkSpan, LinkState, PathError},
 };
 
 pub fn link_issue<'a, 'r>(
@@ -23,7 +23,10 @@ pub fn link_issue<'a, 'r>(
 ) -> Option<IssueReport<'r>> {
     use {BookPathError::*, PathError::*};
 
-    let span = link.span();
+    let span = match link.span() {
+        LinkSpan::Exact(span) => span,
+        LinkSpan::Fuzzy(span) => span,
+    };
     let href = link.href();
 
     let error = match link.state() {
@@ -203,7 +206,10 @@ pub fn link_issue<'a, 'r>(
     } else {
         let shortened_path = if let Some(path) = root.as_base().make_relative_scoped(&error.cause) {
             let path = path.show_path().to_string();
-            if href.strip_suffix(&path) == Some("/") {
+            // don't repeat the path in the labels if it looks
+            // the same as the highlighted Markdown (which would be
+            // if the Markdown link already specified a full path)
+            if href.len() == span.len() && href.strip_suffix(&path) == Some("/") {
                 None
             } else {
                 Some(Cow::Owned(path))
@@ -248,6 +254,15 @@ pub fn link_issue<'a, 'r>(
         }
     };
 
+    let send_patch = |message: &'r str, patch: String| match link.span() {
+        LinkSpan::Exact(span) => IssueReport::level(IssueLevel::Help)
+            .title(format!("{message}:"))
+            .patches(vec![Suggestion::span(span.clone()).repl(patch).build()]),
+        LinkSpan::Fuzzy(_) => IssueReport::level(IssueLevel::Help)
+            .title(format!("{message}:\n  {patch:?}"))
+            .patches(vec![]),
+    };
+
     match &error.help {
         Some(LinkHelp::FoundOther {
             from_page,
@@ -262,30 +277,21 @@ pub fn link_issue<'a, 'r>(
             };
             let note = IssueReport::level(IssueLevel::Note).title(note).build();
 
-            let help1 = IssueReport::level(IssueLevel::Help)
-                .title("try using a relative path starting from the current page:")
-                .patches(vec![
-                    Suggestion::span(span.clone())
-                        .repl(from_page.consume_with(String::from))
-                        .build(),
-                ])
-                .build();
+            let help1 = send_patch(
+                "try using a relative path starting from the current page",
+                from_page.consume_with(String::from),
+            )
+            .build();
 
-            let help2 = IssueReport::level(IssueLevel::Help)
-                .title({
-                    "... or use an absolute path starting \
-                        from the root of your repository:"
-                })
-                .patches(vec![
-                    Suggestion::span(span.clone())
-                        .repl(from_repo.consume_with(String::from))
-                        .build(),
-                ])
-                .notes(vec![Note::note(
-                    concat! { "`", PREPROCESSOR_NAME!(), "`", " will convert",
-                    " this path to a format accepted by mdBook" },
-                )])
-                .build();
+            let help2 = send_patch(
+                "... or use an absolute path starting from the root of your repository",
+                from_repo.consume_with(String::from),
+            )
+            .notes(vec![Note::note(
+                concat! { "`", PREPROCESSOR_NAME!(), "`", " will convert",
+                " this path to a format accepted by mdBook" },
+            )])
+            .build();
 
             helps.extend([note, help1, help2]);
         }
@@ -295,31 +301,26 @@ pub fn link_issue<'a, 'r>(
             to_book,
             to_book_relative,
         }) => {
-            let help1 = IssueReport::level(IssueLevel::Help)
-                .title("to link to the root of the repo, try using a full URL:")
-                .patches(vec![
-                    Suggestion::span(span.clone()).repl(to_repo.clone()).build(),
-                ])
-                .notes(vec![Note::note(
-                    concat! { "`", PREPROCESSOR_NAME!(), "`", " will update this link",
-                    " to point to the correct commit or tag" },
-                )])
-                .build();
+            let help1 = send_patch(
+                "to link to the root of the repo, try using a full URL",
+                to_repo.clone(),
+            )
+            .notes(vec![Note::note(
+                concat! { "`", PREPROCESSOR_NAME!(), "`", " will update this link",
+                " to point to the correct commit or tag" },
+            )])
+            .build();
 
-            let help2 = if *to_book_relative {
-                IssueReport::level(IssueLevel::Help).title({
+            let help2 = send_patch(
+                if *to_book_relative {
                     "to link to the homepage of the book, try using a \
-                        relative path from the current page:"
-                })
-            } else {
-                IssueReport::level(IssueLevel::Help).title({
+                     relative path from the current page"
+                } else {
                     "to link to the homepage of the book, try using an \
-                        absolute path to the source directory:"
-                })
-            }
-            .patches(vec![
-                Suggestion::span(span.clone()).repl(to_book.clone()).build(),
-            ])
+                    absolute path to the source directory"
+                },
+                to_book.clone(),
+            )
             .notes(vec![Note::note(
                 concat! { "`", PREPROCESSOR_NAME!(), "`", " will convert",
                 " this path to a format accepted by mdBook" },
@@ -330,12 +331,7 @@ pub fn link_issue<'a, 'r>(
         }
 
         Some(LinkHelp::GenericEdit { help, edited }) => {
-            let help = IssueReport::level(IssueLevel::Help)
-                .title(*help)
-                .patches(vec![
-                    Suggestion::span(span.clone()).repl(edited.clone()).build(),
-                ])
-                .build();
+            let help = send_patch(help, edited.clone()).build();
 
             helps.extend([help]);
         }

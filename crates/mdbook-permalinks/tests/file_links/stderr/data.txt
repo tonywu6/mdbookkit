@@ -55,7 +55,7 @@ warning: broken link to "data.txt/"
    |      resolves to a path that isn't a directory:
    |      "crates/mdbook-permalinks/tests/file_links/src/data.txt/"
    |
-help: try removing the trailing slash
+help: try removing the trailing slash:
    |
 10 - - [](data.txt/)
 10 + - [](data.txt)

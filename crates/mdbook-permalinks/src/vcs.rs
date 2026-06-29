@@ -16,7 +16,7 @@ use mdbookkit::{
 };
 
 use crate::{
-    link::{ContentKind, LinkError, PathError},
+    link::{ContentInterest, LinkError, PathError},
     options::{Config, PathParams, TemplateConfig},
 };
 
@@ -166,17 +166,22 @@ enum RefName {
 
 impl Permalink {
     /// Try to convert this relative url to a permalink
-    pub fn to_link(&self, href: &RelativeUrl, kind: ContentKind) -> Url {
-        self.to_link_with_ref(href, kind, &self.refname)
+    pub fn to_link(&self, href: &RelativeUrl, interest: ContentInterest) -> Url {
+        self.to_link_with_ref(href, interest, &self.refname)
     }
 
     /// Try to convert this relative url to a permalink
-    pub fn to_link_at_head(&self, href: &RelativeUrl, kind: ContentKind) -> Url {
-        self.to_link_with_ref(href, kind, &RefName::Head)
+    pub fn to_link_at_head(&self, href: &RelativeUrl, interest: ContentInterest) -> Url {
+        self.to_link_with_ref(href, interest, &RefName::Head)
     }
 
     #[inline]
-    fn to_link_with_ref(&self, href: &RelativeUrl, kind: ContentKind, refname: &RefName) -> Url {
+    fn to_link_with_ref(
+        &self,
+        href: &RelativeUrl,
+        interest: ContentInterest,
+        refname: &RefName,
+    ) -> Url {
         self.pattern
             .pattern_fill(|group| match group {
                 "ref" => Some(
@@ -195,9 +200,9 @@ impl Permalink {
                     .into(),
                 ),
                 "tree" => Some(
-                    match kind {
-                        ContentKind::Web => &self.params.tree[0],
-                        ContentKind::Raw => &self.params.raw[0],
+                    match interest {
+                        ContentInterest::Nav => &self.params.tree[0],
+                        ContentInterest::Raw => &self.params.raw[0],
                     }
                     .into(),
                 ),
@@ -208,7 +213,7 @@ impl Permalink {
     }
 
     /// Try to extract a path (relative to repo root) from this link
-    pub fn extract(&self, link: &Url) -> Option<(RelativeUrl, ContentKind)> {
+    pub fn extract(&self, link: &Url) -> Option<(RelativeUrl, ContentInterest)> {
         let matches = self.pattern.pattern_test(Some("path"), link)?;
 
         if matches.matches.get("ref").map(|s| &**s) != Some("HEAD") {
@@ -219,9 +224,9 @@ impl Permalink {
 
         let hint = if let Some(tree) = matches.matches.get("tree").map(|s| &**s) {
             if self.params.tree.iter().any(|plc| plc == tree) {
-                ContentKind::Web
+                ContentInterest::Nav
             } else if self.params.raw.iter().any(|plc| plc == tree) {
-                ContentKind::Raw
+                ContentInterest::Raw
             } else {
                 return None;
             }

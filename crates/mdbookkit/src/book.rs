@@ -56,13 +56,13 @@ pub trait PreprocessorHelper {
 
     fn page_dir(&self) -> Result<PathBuf>;
 
-    fn for_each_page<'a, F>(&self, book: &'a Book, func: F) -> Result<(), ()>
+    fn for_each_page<'a, F, E>(&self, book: &'a Book, func: F) -> Result<(), E>
     where
-        F: FnMut(Url, &'a str) -> Result<(), ()>;
+        F: FnMut(Url, &'a str) -> Result<(), E>;
 
-    fn for_each_page_mut<F>(&self, book: &mut Book, func: F) -> Result<(), ()>
+    fn for_each_page_mut<F, E>(&self, book: &mut Book, func: F) -> Result<(), E>
     where
-        F: FnMut(Url, &mut String) -> Result<(), ()>;
+        F: FnMut(Url, &mut String) -> Result<(), E>;
 
     fn print(&self, book: Book) -> Result<()>;
 }
@@ -108,9 +108,9 @@ impl PreprocessorHelper for PreprocessorContext {
         Ok(self.book_dir()?.join(&self.config.book.src))
     }
 
-    fn for_each_page<'a, F>(&self, book: &'a Book, mut func: F) -> Result<(), ()>
+    fn for_each_page<'a, F, E>(&self, book: &'a Book, mut func: F) -> Result<(), E>
     where
-        F: FnMut(Url, &'a str) -> Result<(), ()>,
+        F: FnMut(Url, &'a str) -> Result<(), E>,
     {
         for item in book.iter() {
             let BookItem::Chapter(ch) = item else {
@@ -124,9 +124,9 @@ impl PreprocessorHelper for PreprocessorContext {
         Ok(())
     }
 
-    fn for_each_page_mut<F>(&self, book: &mut Book, mut func: F) -> Result<(), ()>
+    fn for_each_page_mut<F, E>(&self, book: &mut Book, mut func: F) -> Result<(), E>
     where
-        F: FnMut(Url, &mut String) -> Result<(), ()>,
+        F: FnMut(Url, &mut String) -> Result<(), E>,
     {
         let mut result = Ok(());
         book.for_each_chapter_mut(|ch| {

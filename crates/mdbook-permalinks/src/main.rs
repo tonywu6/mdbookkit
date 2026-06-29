@@ -1,7 +1,7 @@
 #![cfg_attr(not(test), warn(clippy::unwrap_used))]
 #![allow(clippy::result_large_err)]
 
-use std::{collections::HashMap, ffi::OsStr, fmt::Debug, path::Path};
+use std::{collections::HashMap, convert::Infallible, ffi::OsStr, fmt::Debug, path::Path};
 
 use anyhow::{Context, Result};
 use data_encoding::BASE64;
@@ -28,7 +28,7 @@ use mdbookkit::{
 use self::{
     diagnostics::link_issue,
     link::{
-        BookPathError, ContentKind, Link, LinkError, LinkHelp, LinkReader, LinkState, PathError,
+        BookPathError, ContentInterest, Link, LinkError, LinkHelp, LinkReader, LinkState, PathError,
     },
     options::{Config, DevModeConfig, Options},
     vcs::{GitIgnore, RepoPath, TryRepoPath, VersionControl},
@@ -152,16 +152,24 @@ impl Environment {
 
             let stream = Parser::new_ext(source, markdown)
                 .into_offset_iter()
-                .filter_map(|(event, span)| {
+                .map(Some)
+                .chain(std::iter::once(None)) // EOF
+                .filter_map(|event| {
+                    trace! { "{:?}", std::fmt::from_fn(|f| if let Some((event, span)) = &event {
+                        write!(f, "{span:?} {event:?}")
+                    } else {
+                        write!(f, "(EOF)")
+                    }) };
+
                     let mut chunk = reader
-                        .read(event, span)
+                        .read(event)
                         .with_debug(&page_url, "file")
                         .context("failed to parse file as markdown")
                         .or_else(emit_error!())
                         .ok()??;
 
                     for link in chunk.links_mut() {
-                        let Some((intent, link_url)) = self.triage(&page_url, link) else {
+                        let Some((resolver, link_url)) = self.triage(&page_url, link) else {
                             continue;
                         };
 
@@ -170,7 +178,8 @@ impl Environment {
                         } else if level_enabled!(Level::TRACE) {
                             ticker_item! {
                                 &progress, Level::TRACE, "resolve",
-                                kind = ?intent,
+                                interest = ?resolver.interest,
+                                location = ?resolver.location,
                                 page = ?repo_url.as_base().show_path(&page_url),
                                 link = ?link.href(),
                                 url  = ?repo_url.as_base().show_path(&link_url),
@@ -180,12 +189,7 @@ impl Environment {
                         }
                         .entered();
 
-                        Resolver {
-                            env: self,
-                            page_url: &page_url,
-                            intent,
-                        }
-                        .resolve(link_url, link);
+                        resolver.resolve(link_url, link);
 
                         report.issues.extend(link_issue(repo_url, &page_url, link));
 
@@ -226,12 +230,10 @@ impl Environment {
         Ok(())
     }
 
-    fn triage(&self, page: &Url, link: &Link<'_>) -> Option<(LinkIntent, Url)> {
-        use LinkIntent::*;
-
+    fn triage<'a>(&'a self, page_url: &'a Url, link: &Link<'_>) -> Option<(Resolver<'a>, Url)> {
         let link_url = match match link.repo_relative() {
             Some(href) => self.repo.root().join(href),
-            None => page.join(link.href()),
+            None => page_url.join(link.href()),
         } {
             Ok(url) => url,
             Err(e) => {
@@ -243,20 +245,38 @@ impl Environment {
         if let Some(site) = &self.site_url.http
             && let Some(href) = site.as_base().make_relative_scoped(&link_url)
         {
-            let link_url = (self.book.base_dir)
-                .as_file_url()
-                .as_base()
-                .make_absolute(&href);
-            Some((Book, link_url))
-        } else if let Some((href, kind)) = self.repo.scheme().extract(&link_url) {
-            let link_url = self.repo.root().as_base().make_absolute(&href);
-            Some((Repo(kind), link_url))
+            let link_url = (self.book.base_dir.as_file_url().as_base()).make_absolute(&href);
+            let resolver = Resolver {
+                env: self,
+                page_url,
+                location: ContentLocation::Book,
+                interest: link.interest(),
+            };
+            Some((resolver, link_url))
+        } else if let Some((href, interest)) = self.repo.scheme().extract(&link_url) {
+            let link_url = (self.repo.root().as_base()).make_absolute(&href);
+            let resolver = Resolver {
+                env: self,
+                page_url,
+                location: ContentLocation::Repo,
+                interest,
+            };
+            Some((resolver, link_url))
         } else if link_url.scheme() == "file" {
-            if (self.options.always_link.iter()).any(|suffix| link_url.path().ends_with(suffix)) {
-                Some((Repo(link.kind()), link_url))
+            let location = if (self.options.always_link.iter())
+                .any(|suffix| link_url.path().ends_with(suffix))
+            {
+                ContentLocation::Repo
             } else {
-                Some((Any(link.kind()), link_url))
-            }
+                ContentLocation::Any
+            };
+            let resolver = Resolver {
+                env: self,
+                page_url,
+                location,
+                interest: link.interest(),
+            };
+            Some((resolver, link_url))
         } else {
             None
         }
@@ -266,25 +286,27 @@ impl Environment {
 struct Resolver<'a> {
     env: &'a Environment,
     page_url: &'a Url,
-    intent: LinkIntent,
+    location: ContentLocation,
+    interest: ContentInterest,
 }
 
 #[derive(Debug, Clone, Copy)]
-enum LinkIntent {
+enum ContentLocation {
     Book,
-    Repo(ContentKind),
-    Any(ContentKind),
+    Repo,
+    Any,
 }
 
 #[derive(Debug)]
 enum LinkResult {
-    RepoLink { path: RepoPath, kind: ContentKind },
-    BookLink { url: Url, relative: RelativeUrl },
+    RepoLink { path: RepoPath },
+    BookResource { path: RepoPath },
+    MarkdownPage { file: Url },
 }
 
 impl Resolver<'_> {
     fn resolve(&self, link_url: Url, link: &mut Link<'_>) {
-        use {BookPathError::*, LinkIntent::*, LinkResult::*, PathError::*};
+        use {BookPathError::*, ContentLocation::*, LinkResult::*, PathError::*};
 
         if link.repo_relative().is_some() && link_url.path() == self.env.repo.root().path() {
             self.ambiguous_link_to_root(link_url, link);
@@ -293,29 +315,29 @@ impl Resolver<'_> {
 
         let orig_url = link_url.clone();
 
-        match match match self.intent {
-            Any(..) | Repo(..) => self.try_link(link_url),
+        match match match self.location {
+            Any | Repo => self.try_link(link_url),
             Book => self.try_derived_links(link_url),
         } {
-            Ok(link) => match self.intent {
-                Any(..) | Repo(..) => Ok(link),
+            Ok(link) => match self.location {
+                Any | Repo => Ok(link),
                 Book => match link {
                     link @ RepoLink { .. } => Ok(link),
-
-                    BookLink { url, relative } => {
+                    link @ BookResource { .. } => Ok(link),
+                    MarkdownPage { file } => {
                         if orig_url.path().ends_with(".md") {
                             debug!("unexpected `.md` extension in link");
-                            Err(NoSuchPage(UnexpectedFileExtension).at(url))
+                            Err(NoSuchPage(UnexpectedFileExtension).at(file))
                         } else {
-                            Ok(BookLink { url, relative })
+                            Ok(MarkdownPage { file })
                         }
                     }
                 },
             },
-            Err(err) => match self.intent {
-                Any(..) => match &err.error {
-                    NotFound if self.is_in_book(&err.cause) => self.try_derived_links(err.cause),
 
+            Err(err) => match self.location {
+                Any => match &err.error {
+                    NotFound if self.is_in_book(&err.cause) => self.try_derived_links(err.cause),
                     NoSuchPage(DirectoryHasNoIndexFile) => {
                         match self.try_derived_links(err.cause) {
                             Ok(path) => Ok(path),
@@ -328,17 +350,16 @@ impl Resolver<'_> {
                             Err(err) => Err(err),
                         }
                     }
-
                     _ => Err(err),
                 },
-                Repo(..) | Book => Err(err),
+                Repo | Book => Err(err),
             },
         } {
             Ok(result) => self.write_link(result, link),
 
             Err(mut e) => {
                 match e.error {
-                    NotFound if matches!(self.intent, Any(..)) => {
+                    NotFound if matches!(self.location, Any) => {
                         e.help = (self.try_find_other(&self.env.site_url, &orig_url))
                             .or_else(|| self.try_find_other(&self.env.book.base_dir, &orig_url));
                     }
@@ -395,19 +416,19 @@ impl Resolver<'_> {
 
     #[instrument(level = "debug", skip_all)]
     fn try_link(&self, url: Url) -> Result<LinkResult, LinkError> {
-        use {LinkIntent::*, LinkResult::*};
+        use {ContentLocation::*, LinkResult::*};
 
         match self.env.repo.try_file(url)? {
             TryRepoPath::Canonical { link } => self.try_link_in_repo(link),
 
-            TryRepoPath::Noncanonical { link, real } => match self.intent {
-                Repo(..) => self.try_link_in_repo(real),
+            TryRepoPath::Noncanonical { link, real } => match self.location {
+                Repo => self.try_link_in_repo(real),
 
-                Book | Any(..) => {
+                Book | Any => {
                     debug!("could be a symlink? trying the verbatim path");
                     let link = self.try_link_in_book(link)?;
                     match link {
-                        BookLink { .. } => {
+                        BookResource { .. } | MarkdownPage { .. } => {
                             debug!("path is in the book and available in output");
                             Ok(link)
                         }
@@ -423,18 +444,19 @@ impl Resolver<'_> {
 
     #[instrument(level = "trace", skip_all)]
     fn try_link_in_repo(&self, path: RepoPath) -> Result<LinkResult, LinkError> {
-        use {GitIgnore::*, LinkIntent::*, LinkResult::*, PathError::*};
+        use {ContentLocation::*, GitIgnore::*, LinkResult::*, PathError::*};
 
         let is_ignored = path.is_ignored;
-        match self.intent {
-            Book | Any(..) => match (self.try_link_in_book(path)?, is_ignored) {
-                (path @ BookLink { .. }, ..) => Ok(path),
-                (path @ RepoLink { .. }, NotIgnored) => Ok(path),
+        match self.location {
+            Book | Any => match (self.try_link_in_book(path)?, is_ignored) {
+                (link @ BookResource { .. }, ..) => Ok(link),
+                (link @ MarkdownPage { .. }, ..) => Ok(link),
+                (link @ RepoLink { .. }, NotIgnored) => Ok(link),
                 (RepoLink { path, .. }, Ignored) => Err(GitIgnored.at(path.url)),
             },
 
-            Repo(..) => match is_ignored {
-                NotIgnored => Ok(self.repo_link(path)),
+            Repo => match is_ignored {
+                NotIgnored => Ok(RepoLink { path }),
                 Ignored => Err(GitIgnored.at(path.url)),
             },
         }
@@ -449,11 +471,7 @@ impl Resolver<'_> {
                 if path.is_dir {
                     trace!("directory exists and has an index file");
                 }
-                let relative = (self.env.repo.root().as_base())
-                    .make_relative(&resolved)
-                    .expect("both are file urls");
-                let url = resolved;
-                Ok(BookLink { url, relative })
+                Ok(MarkdownPage { file: resolved })
             }
 
             Some(NoSuchPage) => {
@@ -465,11 +483,11 @@ impl Resolver<'_> {
                     Err(PathError::NoSuchPage(MarkdownFileNotIncluded).at(path.url))
                 } else {
                     debug!("path is a static file to be copied to output");
-                    Ok(self.book_link(path))
+                    Ok(BookResource { path })
                 }
             }
 
-            None => Ok(self.repo_link(path)),
+            None => Ok(RepoLink { path }),
         }
     }
 
@@ -500,72 +518,64 @@ impl Resolver<'_> {
         Err(NoSuchPage(NoResourceAtLocation(errors)).at(url))
     }
 
-    fn repo_link(&self, path: RepoPath) -> LinkResult {
-        use {LinkIntent::*, LinkResult::*};
-        match self.intent {
-            Repo(kind) | Any(kind) => RepoLink { path, kind },
-            Book => unreachable!(),
-        }
-    }
-
-    fn book_link(&self, path: RepoPath) -> LinkResult {
-        use {LinkIntent::*, LinkResult::*};
-        match self.intent {
-            Book | Any(..) => BookLink {
-                url: path.url,
-                relative: path.relative,
-            },
-            Repo(..) => unreachable!(),
-        }
-    }
-
     fn write_link(&self, result: LinkResult, link: &mut Link<'_>) {
         use LinkResult::*;
 
-        match result {
-            RepoLink { path, kind } => {
-                let href = if let Some(dev) = &*self.env.options.dev_mode {
-                    if let (ContentKind::Raw, false) = (kind, path.is_dir) {
-                        match dev.to_embed_link(&path.std_path) {
-                            Ok(Some(href)) => {
-                                trace!("rewriting to data uri");
-                                Some(href)
-                            }
-                            Ok(None) => None,
-                            Err(err) => {
-                                let err = err.at(path.url);
-                                link.error(err);
-                                return;
-                            }
+        if let RepoLink { path } = result {
+            let href = if let Some(dev) = &*self.env.options.dev_mode {
+                if let (ContentInterest::Raw, false) = (self.interest, path.is_dir) {
+                    match dev.to_embed_link(&path.std_path) {
+                        Ok(Some(href)) => {
+                            trace!("rewriting to data uri");
+                            Some(href)
                         }
-                    } else {
-                        let href = dev.to_editor_uri(&path.url);
-                        trace!("rewriting to editor uri: {:?}", href.show());
-                        Some(href.into())
+                        Ok(None) => None,
+                        Err(err) => {
+                            let err = err.at(path.url);
+                            link.error(err);
+                            return;
+                        }
                     }
                 } else {
-                    None
-                };
-                if let Some(href) = href {
-                    link.permalink(href);
-                } else {
-                    let href = self.env.repo.scheme().to_link(&path.relative, kind);
-                    trace!("rewriting to permalink: {:?}", href.show());
-                    link.permalink(href.into());
-                };
-            }
-
-            BookLink { url, .. } => {
-                let href = (self.page_url.as_base())
-                    .make_relative(&url)
-                    .expect("both are file urls");
-                if href != link.href() {
-                    trace!("rewriting to book link: {:?}", href.show_path());
-                    link.book_link(href);
-                } else {
-                    trace!("keeping the link as-is");
-                    link.no_change();
+                    let href = dev.to_editor_uri(&path.url);
+                    trace!("rewriting to editor uri: {:?}", href.show());
+                    Some(href.into())
                 }
+            } else {
+                None
+            };
+
+            if let Some(href) = href {
+                link.permalink(href);
+            } else {
+                let href = (self.env.repo.scheme()).to_link(&path.relative, self.interest);
+                trace!("rewriting to permalink: {:?}", href.show());
+                link.permalink(href.into());
+            };
+        } else {
+            let file = match result {
+                BookResource { path } => path.url,
+                MarkdownPage { mut file } => {
+                    if self.interest == ContentInterest::Raw
+                        && let Some((path, "md")) = file.path().rsplit_once('.')
+                    {
+                        file.set_path(&format!("{path}.html"));
+                    }
+                    file
+                }
+                RepoLink { .. } => unreachable!(),
+            };
+
+            let href = (self.page_url.as_base())
+                .make_relative(&file)
+                .expect("both should be file urls");
+
+            if href != link.href() {
+                trace!("rewriting to book link: {:?}", href.show_path());
+                link.book_link(href);
+            } else {
+                trace!("keeping the link as-is");
+                link.no_change();
             }
         }
     }
@@ -577,7 +587,7 @@ impl Resolver<'_> {
             .expect("`link_url` should be the same as `repo.root`");
         debug_assert_eq!(href.encoded_path(), "");
 
-        let to_repo = repo.scheme().to_link_at_head(&href, link.kind()).into();
+        let to_repo = repo.scheme().to_link_at_head(&href, link.interest()).into();
 
         let book_url = (self.env.book.base_dir.file)
             .clone()
@@ -588,7 +598,7 @@ impl Resolver<'_> {
         let (to_book, to_book_relative) = if to_book == link.href() {
             let relative = (self.page_url.as_base())
                 .make_relative(&book_url)
-                .expect("both are file urls");
+                .expect("both should be file urls");
             (relative, true)
         } else {
             (to_book, false)
@@ -610,12 +620,19 @@ impl Resolver<'_> {
         use LinkResult::*;
 
         let alternative = base.transplant(url).located_in(self.env.repo.root())?;
-        let from_repo = self.try_derived_links(alternative).ok()?;
-        let (BookLink { url, relative, .. }
-        | RepoLink {
-            path: RepoPath { url, relative, .. },
-            ..
-        }) = from_repo;
+
+        let (url, relative) = match self.try_derived_links(alternative).ok()? {
+            RepoLink {
+                path: RepoPath { url, relative, .. },
+            } => (url, relative),
+            BookResource {
+                path: RepoPath { url, relative, .. },
+            } => (url, relative),
+            MarkdownPage { file, .. } => {
+                let relative = self.env.repo.root().as_base().make_relative_scoped(&file)?;
+                (file, relative)
+            }
+        };
 
         Some(LinkHelp::FoundOther {
             from_page: self.page_url.as_base().make_relative(&url)?,
@@ -660,7 +677,7 @@ impl BookLayout {
 
         let vcs_root = vcs.root().as_base();
 
-        ctx.for_each_page(book, |url, _| {
+        ctx.for_each_page(book, |url, _| -> Result<_, Infallible> {
             if (url.path().ends_with("/index.md") || url.path().ends_with("/README.md"))
                 && let Ok(mut path) = url.join(".")
             {
@@ -687,14 +704,15 @@ impl BookLayout {
             }
 
             Ok(())
-        })
-        .expect("infallible");
+        });
 
         let base_dir = BaseDir::new(ctx.page_dir()?)?;
 
         let base_url = vcs_root
             .make_relative(&base_dir.file)
-            .expect("`page_dir` should be under source control");
+            .with_debug(&vcs_root, "repo")
+            .with_debug(&*base_dir.path, "book")
+            .context("book is outside of repo")?;
 
         Ok(Self {
             base_dir,

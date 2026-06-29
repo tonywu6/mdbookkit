@@ -178,9 +178,8 @@ impl Default for DevModeConfig {
 
 impl DevModeConfig {
     fn default_editor_uri() -> Url {
-        "vscode://file/{path}"
-            .parse()
-            .expect("should be a valid URL")
+        #[allow(clippy::unwrap_used)]
+        "vscode://file/{path}".parse().unwrap()
     }
 }
 

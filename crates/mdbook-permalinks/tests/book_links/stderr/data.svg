@@ -98,7 +98,7 @@
 </tspan>
     <tspan x="10px" y="694px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the resolved path is "crates/mdbook-permalinks/tests/book_links/src/1.book-links.md"</tspan>
 </tspan>
-    <tspan x="10px" y="712px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try removing the extension</tspan>
+    <tspan x="10px" y="712px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try removing the extension:</tspan>
 </tspan>
     <tspan x="10px" y="730px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
@@ -126,7 +126,7 @@
 </tspan>
     <tspan x="10px" y="946px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the resolved path is "crates/mdbook-permalinks/tests/book_links/src/1.book-links.md"</tspan>
 </tspan>
-    <tspan x="10px" y="964px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try removing the extension</tspan>
+    <tspan x="10px" y="964px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try removing the extension:</tspan>
 </tspan>
     <tspan x="10px" y="982px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>

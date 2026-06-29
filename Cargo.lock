@@ -974,11 +974,11 @@ name = "mdbook-permalinks"
 version = "2.0.1"
 dependencies = [
  "anyhow",
- "bon",
  "clap",
  "data-encoding",
  "git2",
  "gix-url",
+ "lol_html",
  "mdbook-markdown",
  "mdbook-preprocessor",
  "mdbookkit",
