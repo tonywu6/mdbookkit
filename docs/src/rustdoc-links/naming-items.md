@@ -36,11 +36,11 @@ items[^prelude]:
 
   > ```md
   > - [`mdbookkit::env::is_ci`]
-  > - [`mdbookkit::markdown::PatchStream`]
+  > - [`mdbookkit::markdown::patch_stream`]
   > ```
   >
   > - [`mdbookkit::env::is_ci`]
-  > - [`mdbookkit::markdown::PatchStream`]
+  > - [`mdbookkit::markdown::patch_stream`]
 
 ## Referring to your own crate
 
@@ -57,11 +57,11 @@ example, we have:
 
 > ```md
 > - [`env::is_ci`]
-> - [`PatchStream`][crate::markdown::PatchStream]
+> - [`patch_stream`][crate::markdown::patch_stream]
 > ```
 >
 > - [`env::is_ci`]
-> - [`PatchStream`][crate::markdown::PatchStream]
+> - [`patch_stream`][crate::markdown::patch_stream]
 
 ## Using the `build.preludes` option
 

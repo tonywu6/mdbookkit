@@ -32,8 +32,8 @@ use mdbookkit::{
     },
     doc_link, emit_debug, emit_trace, emit_warning,
     error::{ExpectFmt, WithDebugContext},
-    markdown::{PatchStream, locate_text, replace_char_if_needed},
-    plural,
+    markdown::{locate_text, patch_stream, replace_char_if_needed},
+    plural, try2,
     url::UrlUtil,
     util::{Lexicographic, LexicographicOrd},
     with_bug_report,
@@ -60,6 +60,7 @@ struct Page<'a> {
     text: &'a str,
     base: Url,
     link_end: usize,
+    trivia: Vec<Vec<Event<'a>>>,
 }
 
 #[derive(Debug)]
@@ -67,8 +68,7 @@ struct Link<'a> {
     href: Option<Url>,
     kind: LinkType,
     span: SourceSpan,
-    dest: CowStr<'a>,
-    title: CowStr<'a>,
+    elem: Tag<'a>,
     inner_elem: Vec<Event<'a>>,
     normalized: NormalizedLink<'a>,
     diagnostics: Vec<Diagnostic>,
@@ -99,20 +99,40 @@ impl<'a> LinkTracker<'a> {
     }
 
     pub fn read(&mut self, text: &'a str, base: Url) -> Result<()> {
-        let mut state = None;
+        #[allow(clippy::large_enum_variant)]
+        enum State<'a> {
+            Link(Link<'a>),
+            Trivia(Vec<Event<'a>>),
+        }
+
+        let mut state = State::Trivia(vec![]);
+        let mut trivia = vec![];
 
         for (event, span) in markdown(text).into_offset_iter() {
-            match state.take() {
-                None => {
-                    state = Link::try_open(text, event, span);
-                }
-                Some(mut link) => match link.push(event, span)? {
-                    ControlFlow::Continue(()) => {
-                        state = Some(link);
+            match &mut state {
+                State::Trivia(events) => match Link::try_open(text, &event, span) {
+                    None => events.push(event),
+                    Some(link) => {
+                        trivia.push(std::mem::take(events));
+                        state = State::Link(link);
                     }
+                },
+
+                State::Link(link) => match link.push(event, span)? {
+                    ControlFlow::Continue(()) => {}
                     ControlFlow::Break(()) => {
-                        if let Ok(link) = link.normalized() {
-                            self.links.push(link);
+                        let link = match std::mem::replace(&mut state, State::Trivia(vec![])) {
+                            State::Link(link) => link,
+                            State::Trivia(..) => unreachable!(),
+                        };
+                        match link.normalized() {
+                            ControlFlow::Continue(link) => self.links.push(link),
+
+                            ControlFlow::Break(link) => {
+                                let trivia = (trivia.last_mut())
+                                    .expect("`trivia` should have at least 1 item");
+                                trivia.extend(link.export_original());
+                            }
                         }
                     }
                 },
@@ -123,6 +143,7 @@ impl<'a> LinkTracker<'a> {
             text,
             base,
             link_end: self.links.len(),
+            trivia,
         });
 
         Ok(())
@@ -179,7 +200,7 @@ impl<'a> LinkTracker<'a> {
 
                     if let Some(href) = elem.get_attribute("href")
                         && let Some(link) = state.borrow_mut().link()
-                        && !eq_escaped(&link.dest, &href)
+                        && !eq_escaped(link.dest(), &href)
                     {
                         if let Ok(url) = resolve_url(self.env.base_dir(), &output, &href)
                             .with_debug(&*href, "URL")
@@ -189,7 +210,7 @@ impl<'a> LinkTracker<'a> {
                             link.href = Some(url)
                         }
                         if let Some(title) = elem.get_attribute("title") {
-                            link.title = title.into()
+                            *link.title_mut() = title.into()
                         }
                     }
 
@@ -259,7 +280,7 @@ impl<'a> LinkTracker<'a> {
                     .or_else(emit_debug!())
             {
                 trace! {
-                    "line {}, link {:?}, {}", line + 1, &*link.dest,
+                    "line {}, link {:?}, {}", line + 1, &**link.dest(),
                     diag.rendered.as_deref().unwrap_or(&diag.message)
                 };
                 link.diagnostics.push(diag);
@@ -314,15 +335,26 @@ impl<'a> LinkTracker<'a> {
 
             reporters.push(IssueReporter { issues, source });
 
-            let patches = links.iter().filter_map(|link| {
-                let span = link.span.full.clone();
-                let link = link.export(&page.base)?;
-                Some((link, span))
-            });
+            let mut trivia = page.trivia.iter();
+            let mut links = links.iter();
 
-            let text = PatchStream::new(page.text, patches)
-                .into_string()
-                .map_err(<_>::into);
+            let stream = std::iter::from_fn(|| {
+                let (trivia, link) = match (trivia.next(), links.next()) {
+                    (Some(trivia), Some(link)) => {
+                        let link = Some(link.export(&page.base));
+                        (Some((Patch::Trivial(trivia.iter().cloned()), None)), link)
+                    }
+                    (Some(trivia), None) => {
+                        (Some((Patch::Trivial(trivia.iter().cloned()), None)), None)
+                    }
+                    (None, Some(link)) => (None, Some(link.export(&page.base))),
+                    (None, None) => return None,
+                };
+                Some(trivia.into_iter().chain(link))
+            })
+            .flatten();
+
+            let text = patch_stream(page.text, stream).map_err(<_>::into);
 
             contents.insert(page.base.clone(), text);
         }
@@ -501,37 +533,60 @@ static COMMENT_PREFIX: &str = concat!("//! - <span ", data_attr!(), ">");
 static COMMENT_SUFFIX: &str = "</span>";
 
 impl<'a> Link<'a> {
-    fn try_open(text: &'a str, event: Event<'a>, span: Range<usize>) -> Option<Self> {
-        let Event::Start(Tag::Link {
-            link_type,
-            dest_url,
-            title,
-            ..
-        }) = event
+    fn try_open(text: &'a str, event: &Event<'a>, span: Range<usize>) -> Option<Self> {
+        let Event::Start(
+            elem @ Tag::Link {
+                link_type,
+                dest_url,
+                title,
+                ..
+            },
+        ) = event
         else {
             return None;
         };
 
-        if !could_be_item_link(link_type, &dest_url) {
-            trace!(?span, dest = ?&*dest_url, "link ...");
+        if !could_be_item_link(*link_type, dest_url) {
+            trace!(?span, dest = ?&**dest_url, "link ...");
             return None;
         }
 
-        trace!(?span, dest = ?&*dest_url, title = ?&*title, "link >>>");
+        trace!(?span, dest = ?&**dest_url, title = ?&**title, "link >>>");
         Some(Link {
             href: None,
-            kind: link_type,
+            kind: *link_type,
             span: SourceSpan {
                 full: span.clone(),
                 text: text.len()..0, // empty span
-                dest: locate_text(text, &dest_url),
+                dest: locate_text(text, dest_url),
             },
-            dest: dest_url,
-            title,
+            elem: elem.clone(),
             inner_elem: Default::default(),
             normalized: NormalizedLink::borrowed(&text[span]),
             diagnostics: Default::default(),
         })
+    }
+
+    #[inline]
+    fn dest(&self) -> &CowStr<'a> {
+        match self.elem {
+            Tag::Link { ref dest_url, .. } => dest_url,
+            _ => unreachable!(),
+        }
+    }
+
+    fn title(&self) -> &CowStr<'a> {
+        match self.elem {
+            Tag::Link { ref title, .. } => title,
+            _ => unreachable!(),
+        }
+    }
+
+    fn title_mut(&mut self) -> &mut CowStr<'a> {
+        match self.elem {
+            Tag::Link { ref mut title, .. } => title,
+            _ => unreachable!(),
+        }
     }
 
     fn push(&mut self, event: Event<'a>, span: Range<usize>) -> Result<ControlFlow<()>> {
@@ -573,12 +628,10 @@ impl<'a> Link<'a> {
         }
     }
 
-    #[instrument(level = "debug", skip_all, fields(link = ?&*self.dest, span = ?self.span.full))]
-    fn normalized(mut self) -> Result<Self, ()> {
+    #[instrument(level = "debug", skip_all, fields(link = ?&**self.dest(), span = ?self.span.full))]
+    fn normalized(mut self) -> ControlFlow<Self, Self> {
         let Self {
             kind,
-            dest,
-            title,
             inner_elem,
             normalized,
             ..
@@ -587,7 +640,7 @@ impl<'a> Link<'a> {
         let is_shortcut = if matches!(kind, CollapsedUnknown | ShortcutUnknown)
             && inner_elem.len() == 1
             && let Some(Event::Text(text) | Event::Code(text)) = inner_elem.first()
-            && text == dest
+            && text == self.dest()
         {
             true
         } else {
@@ -602,12 +655,12 @@ impl<'a> Link<'a> {
         } && !normalized.as_ref().contains('\n');
 
         if is_one_line {
-            return Ok(self);
+            return ControlFlow::Continue(self);
         }
 
         // https://spec.commonmark.org/0.31.2/#link-title
         // > link titles may span multiple lines
-        let title = replace_char_if_needed(title, |c| match c {
+        let title = replace_char_if_needed(self.title(), |c| match c {
             '\r' => Some("&#13;"),
             '\n' => Some("&#10;"),
             _ => None,
@@ -619,11 +672,11 @@ impl<'a> Link<'a> {
                 link_type: Reference,
                 dest_url: "".into(),
                 title,
-                id: dest.clone(),
+                id: self.dest().clone(),
             },
             link_class!(href_defined) => Tag::Link {
                 link_type: Inline,
-                dest_url: dest.clone(),
+                dest_url: self.dest().clone(),
                 title,
                 id: "".into(),
             },
@@ -636,7 +689,7 @@ impl<'a> Link<'a> {
             .chain(inner_elem.clone())
             .chain([Event::End(TagEnd::Link)]);
 
-        let (text, span) = (|| -> Result<_> {
+        let Ok((text, span)) = try2!({
             let mut text = String::with_capacity(normalized.as_ref().len());
 
             // dropping the state because we are not
@@ -648,7 +701,7 @@ impl<'a> Link<'a> {
                 for (event, span) in markdown(&text).into_offset_iter() {
                     match state.as_mut() {
                         None => {
-                            state = Link::try_open(&text, event, span);
+                            state = Link::try_open(&text, &event, span);
                         }
                         Some(link) => {
                             if let ControlFlow::Break(()) = link.push(event, span)? {
@@ -661,9 +714,11 @@ impl<'a> Link<'a> {
             };
 
             Ok((text, span))
-        })()
-        .context("internal error while parsing link; the link will be skipped")
-        .or_else(emit_warning!())?;
+        })
+        .context("internal error while parsing link")
+        .or_else(emit_debug!()) else {
+            return ControlFlow::Break(self);
+        };
 
         // link text may still contain newlines
         let text = text.replace('\n', " ");
@@ -672,15 +727,25 @@ impl<'a> Link<'a> {
 
         self.normalized = NormalizedLink::Normalized { text, span };
 
-        Ok(self)
+        ControlFlow::Continue(self)
     }
 
-    fn export(&'a self, base: &Url) -> Option<impl Iterator<Item = Event<'a>>> {
+    fn export<T>(
+        &'a self,
+        base: &Url,
+    ) -> (
+        Patch<T, impl Iterator<Item = Event<'a>>, impl Iterator<Item = Event<'a>>>,
+        Option<Range<usize>>,
+    ) {
+        match self.export_modified(base) {
+            Some(link) => (Patch::Updated(link), Some(self.span.full.clone())),
+            None => (Patch::Skipped(self.export_original()), None),
+        }
+    }
+
+    fn export_modified(&'a self, base: &Url) -> Option<impl Iterator<Item = Event<'a>>> {
         let Self {
-            href,
-            title,
-            inner_elem,
-            ..
+            href, inner_elem, ..
         } = self;
 
         let href = href.as_ref()?;
@@ -693,13 +758,42 @@ impl<'a> Link<'a> {
         let iter = std::iter::once(Event::Start(Tag::Link {
             link_type: Inline,
             dest_url: href,
-            title: title.clone(),
+            title: self.title().clone(),
             id: CowStr::Borrowed(""),
         }))
         .chain(inner_elem.iter().cloned())
         .chain(std::iter::once(Event::End(TagEnd::Link)));
 
         Some(iter)
+    }
+
+    fn export_original(&self) -> impl Iterator<Item = Event<'a>> {
+        std::iter::once(Event::Start(self.elem.clone()))
+            .chain(self.inner_elem.iter().cloned())
+            .chain(std::iter::once(Event::End(TagEnd::Link)))
+    }
+}
+
+enum Patch<T, S, L> {
+    Trivial(T),
+    Skipped(S),
+    Updated(L),
+}
+
+impl<'a, T, S, L> Iterator for Patch<T, S, L>
+where
+    T: Iterator<Item = Event<'a>>,
+    S: Iterator<Item = Event<'a>>,
+    L: Iterator<Item = Event<'a>>,
+{
+    type Item = Event<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Trivial(iter) => iter.next(),
+            Self::Skipped(iter) => iter.next(),
+            Self::Updated(iter) => iter.next(),
+        }
     }
 }
 
@@ -780,8 +874,8 @@ impl<'a> IssueReportContext<'a> {
 
     fn augment_unresolved(&mut self, link: &Link<'_>, report: &mut IssueReport<'_>) {
         let could_be_a_path = matches!(link.kind, link_class!(href_defined))
-            && !link.dest.contains("::")
-            && !link.dest.contains("<");
+            && !link.dest().contains("::")
+            && !link.dest().contains("<");
 
         if could_be_a_path {
             let help = {
@@ -808,9 +902,9 @@ impl<'a> IssueReportContext<'a> {
             report.note(Note::note(note));
         }
 
-        let specifies_crate = if link.dest.starts_with("crate::") {
+        let specifies_crate = if link.dest().starts_with("crate::") {
             Some("crate")
-        } else if link.dest.starts_with("self::") {
+        } else if link.dest().starts_with("self::") {
             Some("self")
         } else {
             None

@@ -23,7 +23,7 @@ use mdbookkit::{
     emit, emit_error, emit_warning,
     env::locate_project,
     error::{ExpectFmt, FailOnWarnings, WithDebugContext},
-    markdown::{PatchStream, Spanned, replace_char_if_needed},
+    markdown::{Spanned, patch_stream, replace_char_if_needed},
     url::{UrlFromPath, UrlUtil},
 };
 
@@ -109,7 +109,8 @@ pub fn run() -> Result<(), ()> {
             .scan(PageState::default(), |inner, chunk| {
                 Some(match inner.scan(chunk) {
                     Some((Ok(elem), span)) => match state.consume(&name, (elem, span.clone())) {
-                        Ok(chunk) => chunk,
+                        Ok(Some((chunk, span))) => Some((chunk.into_iter(), Some(span))),
+                        Ok(None) => None,
                         Err(err) => {
                             state.report(&name, error_report(&err, span));
                             None
@@ -126,8 +127,7 @@ pub fn run() -> Result<(), ()> {
             .collect::<Vec<_>>();
 
         if !stream.is_empty()
-            && let Ok(rendered) = PatchStream::new(content, stream.into_iter())
-                .into_string()
+            && let Ok(rendered) = patch_stream(content, stream.into_iter())
                 .with_path_debug(&name)
                 .context("failed to patch page content")
                 .or_else(emit_warning!())

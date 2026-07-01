@@ -241,9 +241,9 @@ Here are some more examples, using various other files in this repository:
 > directly in your book.
 >
 > Due to some architectural limitations, the preprocessor cannot resolve links relative
-> to the file being included. Instead, the preprocessor is only aware of the Markdown
-> files that themselves contain `{{#include}}`. Links using relative paths may be
-> correct when included in one page but incorrect in another.
+> to the file being included. Instead, the preprocessor is only aware of the locations
+> of the Markdown files that themselves contain `{{#include}}`. Links using relative
+> paths may be correct when included in one page but incorrect in another.
 >
 > For example, if `chapters/1.md` includes `shared/info.md`, and `shared/info.md`
 > contains a link to `./image.png` (i.e. there exists a `shared/image.png`), then the
@@ -256,13 +256,13 @@ Here are some more examples, using various other files in this repository:
 
 {% endraw %}
 
-### Files in your book
+### Links to files in your book
 
-Note that links pointing to files under your book's source directory are not modified by
-this preprocessor. Since mdBook always copies everything in the source directory to the
-output directory, such links can be kept as-is.
+The preprocessor does not modify links that point to files under your book's source
+directory. Since mdBook always copies everything in the source directory to the output,
+such links can be kept unchanged.
 
-For example, the following link points to a file on this website instead of on GitHub:
+For example, the following link opens the file on this website instead of on GitHub:
 
 > ```md
 > [Social image for this page](./_media/social.webp)
@@ -290,13 +290,12 @@ link to highlight specific lines in the destination source code:
 
 ### Images
 
-Finally, with this preprocessor, you can use permalinks to display image files that are
-stored elsewhere in your repository.
+Using this preprocessor, you can display images that are stored elsewhere in your
+repository.
 
 Most forges that support permalinking support 2 versions of the links:
 
-- A link that opens up the file's webpage for viewing (with the forge's UI and
-  everything)
+- A link that opens up the file's webpage for viewing (with the UI and everything)
   - For example, on GitHub, such links are denoted by either `tree` or `blob` in their
     paths: <br>
     [<code>https://github.com/tokio-rs/tracing/<strong>blob</strong>/add986d/assets/logo.svg</code>](https://github.com/tokio-rs/tracing/blob/add986d/assets/logo.svg)
@@ -324,6 +323,46 @@ repository both as a displayed image and as a clickable link:
 >
 > [minato-city]: /crates/mdbook-permalinks/tests/file_links/static/Minato_City,_Tokyo,_Japan.jpg
 <!-- prettier-ignore-end -->
+
+### HTML links
+
+Finally, in case Markdown isn't sufficient and you would like to use HTML code in your
+book, the preprocessor has builtin support for processing links in HTML elements as
+well.
+
+Some useful things you can do with HTML in Markdown:
+
+> ```md
+> Make a link <a href="/Cargo.toml" target="_blank">open in a new tab</a> by using an
+> `<a>` element and adding [`target="_blank"`][target-blank].
+> ```
+>
+> Make a link <a href="/Cargo.toml" target="_blank">open in a new tab</a> by using an
+> `<a>` element and adding [`target="_blank"`][target-blank].
+>
+> ```html
+> <figure>
+>   <video controls>
+>     <source src="/docs/static/flower.webm" type="video/webm" />
+>     Your browser doesn't support WebM videos! Click here for the
+>     <a href="https://developer.mozilla.org/shared-assets/videos/flower.mp4">
+>       MP4 version
+>     </a>
+>   </video>
+>   <figcaption>Provide image captions and show videos.</figcaption>
+> </figure>
+> ```
+>
+> <figure>
+>   <video controls>
+>     <source src="/docs/static/flower.webm" type="video/webm" />
+>     Your browser doesn't support WebM videos! Click here for the
+>     <a href="https://developer.mozilla.org/shared-assets/videos/flower.mp4">
+>       MP4 version
+>     </a>
+>   </video>
+>   <figcaption>Provide image captions and show videos.</figcaption>
+> </figure>
 
 ## Check
 
@@ -374,4 +413,5 @@ Thus concludes the tutorial! I hope you find this preprocessor useful.
 [mdbook-html]: https://rust-lang.github.io/mdBook/format/configuration/renderers.html#html-renderer-options
 ["permalink"]: https://en.wikipedia.org/wiki/Permalink
 [vscode-path-completions]: https://code.visualstudio.com/docs/languages/markdown#_path-completions
+[target-blank]: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/a#target
 <!-- prettier-ignore-end -->

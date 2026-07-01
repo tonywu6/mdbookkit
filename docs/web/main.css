@@ -174,19 +174,25 @@ body {
       }
     }
 
-    &[open] > summary {
-      margin-block-end: 1rem;
+    &[open] {
+      padding-inline-start: 0.25rem;
+      margin-inline-start: -0.25rem;
+      outline: 0.5rem solid transparent;
 
-      &::before {
-        content: "⊖ ";
-      }
+      > summary {
+        margin-block-end: 1rem;
 
-      > .summary-collapsed {
-        display: none;
-      }
+        &::before {
+          content: "⊖ ";
+        }
 
-      > .summary-expanded {
-        display: inline;
+        > .summary-collapsed {
+          display: none;
+        }
+
+        > .summary-expanded {
+          display: inline;
+        }
       }
     }
 
@@ -508,7 +514,7 @@ html.light {
   }
 
   details[open] {
-    outline: 0.5rem solid #f6f7f680;
+    outline-color: #f6f7f680;
     background-color: #f6f7f680;
   }
 }
@@ -519,7 +525,7 @@ html.rust {
   }
 
   details[open] {
-    outline: 0.5rem solid #f6f7f680;
+    outline-color: #f6f7f680;
     background-color: #f6f7f680;
   }
 }
@@ -530,7 +536,7 @@ html.coal {
   }
 
   details[open] {
-    outline: 0.5rem solid #1d1f2180;
+    outline-color: #1d1f2180;
     background-color: #1d1f2180;
   }
 }
@@ -541,7 +547,7 @@ html.navy {
   }
 
   details[open] {
-    outline: 0.5rem solid #1d1f2180;
+    outline-color: #1d1f2180;
     background-color: #1d1f2180;
   }
 }
@@ -552,7 +558,7 @@ html.ayu {
   }
 
   details[open] {
-    outline: 0.5rem solid #191f2680;
+    outline-color: #191f2680;
     background-color: #191f2680;
   }
 }

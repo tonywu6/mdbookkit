@@ -12,6 +12,8 @@ use mdbookkit::{
     url::RelativeUrl,
 };
 
+use crate::Patch;
+
 #[derive(Debug)]
 pub struct Link<'a> {
     state: Result<LinkState, LinkError>,
@@ -203,8 +205,38 @@ impl<'a> LinkSlice<'a> {
         })
     }
 
-    pub fn emit(self) -> Option<(impl Iterator<Item = Event<'a>>, Range<usize>)> {
-        EmitLinkSlice::new(self)
+    pub fn emit(
+        self,
+    ) -> (
+        Patch<'a, impl Iterator<Item = Event<'a>>>,
+        Option<Range<usize>>,
+    ) {
+        let changed = self.links().any(|link| link.changed().is_some());
+        if !changed {
+            let len = (self.elem.iter())
+                .map(|elem| match elem {
+                    LinkElem::Text(..) => 1,
+                    LinkElem::Link { .. } => 1,
+                    LinkElem::Html { html, .. } => html.len(),
+                })
+                .sum();
+            let mut iter = Vec::with_capacity(len);
+            for elem in self.elem {
+                match elem {
+                    LinkElem::Text(event) => iter.push(event),
+                    LinkElem::Link { link } => iter.push(Event::Start(link.to_markdown())),
+                    LinkElem::Html { html, .. } => iter.extend(html),
+                }
+            }
+            (Patch::Skip(iter.into_iter()), None)
+        } else {
+            let iter = EmitLinkSlice {
+                iter: self.elem.into_iter(),
+                span: self.span.clone(),
+                opened: vec![],
+            };
+            (Patch::Link(iter), Some(self.span))
+        }
     }
 
     fn text(&mut self, event: Event<'a>) {
@@ -231,7 +263,10 @@ impl<'a> LinkReader<'a> {
         }
     }
 
-    pub fn read(&mut self, event: Option<Spanned<Event<'a>>>) -> Result<Option<LinkSlice<'a>>> {
+    pub fn read(
+        &mut self,
+        event: Option<Spanned<Event<'a>>>,
+    ) -> Result<impl Iterator<Item = Patch<'a, LinkSlice<'a>>> + use<'a>> {
         use Event::*;
 
         let Self {
@@ -244,7 +279,7 @@ impl<'a> LinkReader<'a> {
             (Some((event @ InlineHtml(..), span)), None | Some((InlineHtml(..), ..)))
             | (Some((event @ Html(..), span)), None | Some((Html(..), ..))) => {
                 html.push((event, span));
-                return Ok(None);
+                return Ok(None.into_iter().chain(None));
             }
             (event, _) => event,
         };
@@ -252,11 +287,11 @@ impl<'a> LinkReader<'a> {
         let queued = match LinkSlice::html(std::mem::take(html)) {
             Ok(link) => {
                 trace!(span = ?link.span, ">>> HTML");
-                if let Some(opened) = opened.as_mut() {
+                if let Some(opened) = opened {
                     opened.nest(link);
                     None
                 } else {
-                    Some(link)
+                    Some(Patch::Link(link))
                 }
             }
             Err(queued) => {
@@ -264,12 +299,20 @@ impl<'a> LinkReader<'a> {
                     for (event, _) in queued {
                         opened.text(event);
                     }
+                    None
+                } else if queued.is_empty() {
+                    None
+                } else {
+                    let queued = queued
+                        .into_iter()
+                        .map(|(event, _)| event)
+                        .collect::<Vec<_>>();
+                    Some(Patch::Skip(queued.into_iter()))
                 }
-                None
             }
         };
 
-        match event {
+        let patch = match event {
             Some((Start(tag @ (Tag::Link { .. } | Tag::Image { .. })), span)) => {
                 let (interest, dest, title) = match tag {
                     Tag::Link {
@@ -281,7 +324,8 @@ impl<'a> LinkReader<'a> {
                     _ => unreachable!(),
                 };
 
-                trace!(?span, ?interest, opened = ?opened.as_ref().map(|link| &link.span), ">>>");
+                trace!(?span, ?interest, ">>>");
+                trace!(opened = ?opened.as_ref().map(|link| &link.span));
                 trace!(?dest, " │ ");
                 trace!(?title, " │ ");
 
@@ -309,41 +353,44 @@ impl<'a> LinkReader<'a> {
                 } else {
                     *opened = Some(link)
                 }
+
+                None
             }
 
             Some((event @ End(end @ (TagEnd::Link | TagEnd::Image)), span)) => {
-                let mut parent = match opened.take() {
-                    Some(parent) => {
-                        trace!(?span, "<<<");
-                        parent
-                    }
+                let mut link = match opened.take() {
+                    Some(link) => link,
                     None => {
                         debug!(?span, "unexpected {end:?}");
                         bail!("markdown stream malformed at byte position {span:?}");
                     }
                 };
 
-                parent.text(event);
+                trace!(?span, "<<<");
 
-                debug_assert!(queued.is_none());
+                link.text(event);
 
-                if span == parent.span {
-                    return Ok(Some(parent));
+                if span == link.span {
+                    Some(Patch::Link(link))
                 } else {
-                    *opened = Some(parent)
+                    *opened = Some(link);
+                    None
                 }
             }
 
             Some((event, _)) => {
                 if let Some(opened) = opened {
                     opened.text(event);
+                    None
+                } else {
+                    Some(Patch::SkipOne(std::iter::once(event)))
                 }
             }
 
-            None => {}
-        }
+            None => None,
+        };
 
-        Ok(queued)
+        Ok(queued.into_iter().chain(patch))
     }
 }
 
@@ -523,21 +570,6 @@ impl<'a> Iterator for EmitLinkSlice<'a> {
             };
         }
         None
-    }
-}
-
-impl<'a> EmitLinkSlice<'a> {
-    fn new(links: LinkSlice<'a>) -> Option<(Self, Range<usize>)> {
-        let changed = links.links().any(|link| link.changed().is_some());
-        if !changed {
-            return None;
-        }
-        let iter = EmitLinkSlice {
-            iter: links.elem.into_iter(),
-            span: links.span.clone(),
-            opened: vec![],
-        };
-        Some((iter, links.span))
     }
 }
 

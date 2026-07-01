@@ -20,8 +20,8 @@ publishing your crate, then your README will be displayed on
 [crates.io](https://crates.io), where path-based links will not work at all.
 
 In any case, if you elect to hard-code URLs in your book, whether to link to other pages
-or to your repository, the preprocessor can validate them during build, and warn you if
-they are broken.
+or to your repository, the preprocessor can validate them during build, and notify you
+if they are broken.
 
 ## Checking URLs to your repo
 
@@ -59,8 +59,8 @@ The preprocessor can also check links that point to your published book (i.e. to
 website).
 
 For the preprocessor to recognize links to your book, you must set mdBook's
-`output.html.site-url` option to the full URL where your book will be hosted. For
-example:
+<code class="nowrap">output.html.site-url</code> option to the full URL where your book
+will be hosted. For example:
 
 ```toml config-example
 [output.html]
@@ -77,7 +77,7 @@ site-url = "https://me.example.org/my/book"
 The `site-url` option is part of mdBook's builtin [HTML renderer options][mdbook-html],
 although mdBook only uses it to ensure that links are correct in the 404 page.
 
-By providing a full URL, you enable the preprocessor to extract the corresponding local
+By providing a full URL for this option, you enable the preprocessor to extract a local
 file path from any eligible link. The preprocessor can then verify that the path is
 accessible:
 

@@ -5,7 +5,7 @@ use std::{collections::HashMap, convert::Infallible, ffi::OsStr, fmt::Debug, pat
 
 use anyhow::{Context, Result};
 use data_encoding::BASE64;
-use mdbook_markdown::pulldown_cmark::Parser;
+use mdbook_markdown::pulldown_cmark::{Event, Parser};
 use mdbook_preprocessor::{PreprocessorContext, book::Book};
 use tap::Tap;
 use tracing::{Level, debug, error_span, info, instrument, trace, warn};
@@ -20,7 +20,7 @@ use mdbookkit::{
     error::{ProgramExit, Show, WithDebugContext, has_severity},
     level_enabled,
     logging::init_logging,
-    markdown::PatchStream,
+    markdown::patch_stream,
     plural, ticker, ticker_item,
     url::{RelativeUrl, UrlUtil},
 };
@@ -154,21 +154,28 @@ impl Environment {
                 .into_offset_iter()
                 .map(Some)
                 .chain(std::iter::once(None)) // EOF
-                .filter_map(|event| {
+                .flat_map(|event| {
                     trace! { "{:?}", std::fmt::from_fn(|f| if let Some((event, span)) = &event {
                         write!(f, "{span:?} {event:?}")
                     } else {
                         write!(f, "(EOF)")
                     }) };
-
-                    let mut chunk = reader
+                    reader
                         .read(event)
                         .with_debug(&page_url, "file")
                         .context("failed to parse file as markdown")
                         .or_else(emit_error!())
-                        .ok()??;
+                        .ok()
+                })
+                .flatten()
+                .map(|patch| {
+                    let mut links = match patch {
+                        Patch::Link(links) => links,
+                        Patch::Skip(chunk) => return (Patch::Skip(chunk), None),
+                        Patch::SkipOne(elem) => return (Patch::SkipOne(elem), None),
+                    };
 
-                    for link in chunk.links_mut() {
+                    for link in links.links_mut() {
                         let Some((resolver, link_url)) = self.triage(&page_url, link) else {
                             continue;
                         };
@@ -196,11 +203,10 @@ impl Environment {
                         stats.count(link);
                     }
 
-                    chunk.emit()
+                    links.emit()
                 });
 
-            let output = PatchStream::new(source, stream)
-                .into_string()
+            let output = patch_stream(source, stream)
                 .with_debug(&page_url, "file")
                 .context("error generating output for file")
                 .or_else(emit_error!())?;
@@ -791,6 +797,24 @@ impl Debug for BookLayout {
                 &std::fmt::from_fn(|f| f.debug_set().entries(self.public_paths.keys()).finish()),
             )
             .finish_non_exhaustive()
+    }
+}
+
+enum Patch<'a, E> {
+    Link(E),
+    Skip(std::vec::IntoIter<Event<'a>>),
+    SkipOne(std::iter::Once<Event<'a>>),
+}
+
+impl<'a, E: Iterator<Item = Event<'a>>> Iterator for Patch<'a, E> {
+    type Item = Event<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Link(events) => events.next(),
+            Self::Skip(events) => events.next(),
+            Self::SkipOne(event) => event.next(),
+        }
     }
 }
 
