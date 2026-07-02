@@ -78,6 +78,21 @@ test_case![
     env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
 ];
 
+test_case![
+    fail_on_warnings_in_ci,
+    exit(101),
+    env = [
+        "CI" = "1",
+        "MDBOOK_LOG" = "warn",
+        "MDBOOKKIT_TERM_GRAPHICAL" = ""
+    ]
+];
+test_case![
+    book_mdbookkit_term_logging,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = ""]
+];
+
 macro_rules! test_in_temp_dir {
     [$name:ident ($($args:tt)+), |$root:ident| { $($setup:tt)* }] => {
         #[test]

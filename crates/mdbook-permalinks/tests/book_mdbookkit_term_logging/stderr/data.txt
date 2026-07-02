@@ -1,0 +1,7 @@
+ WARN mdbook-permalinks: crates/mdbook-permalinks/tests/book_mdbookkit_term_logging/src/environment-variables.md:1:7: broken link to "../static/cover.png"
+  crates/mdbook-permalinks/tests/book_mdbookkit_term_logging/src/environment-variables.md:1:7: resolves to a path that doesn't exist:
+  crates/mdbook-permalinks/tests/book_mdbookkit_term_logging/src/environment-variables.md:1:7: "crates/mdbook-permalinks/tests/book_mdbookkit_term_logging/static/cover.png"
+ WARN mdbook-permalinks: crates/mdbook-permalinks/tests/book_mdbookkit_term_logging/src/environment-variables.md:2:6: broken link to "draft/"
+  crates/mdbook-permalinks/tests/book_mdbookkit_term_logging/src/environment-variables.md:2:6: file is not included in `SUMMARY.md`:
+  crates/mdbook-permalinks/tests/book_mdbookkit_term_logging/src/environment-variables.md:2:6: "crates/mdbook-permalinks/tests/book_mdbookkit_term_logging/src/draft/index.md"
+ WARN mdbook-permalinks: finished with warnings
