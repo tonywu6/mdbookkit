@@ -1,6 +1,6 @@
 # How to use the preprocessor to check hard-coded URLs
 
-You may find that in some situations, you cannot use path-based links, and must fallback
+You may find that in some situations, you cannot use path-based links, and must resort
 to writing full URLs instead, whether it's for linking to your repo or your book.
 
 For example, a scenario that this project has encountered is with its workspace-level
@@ -13,7 +13,9 @@ For example, a scenario that this project has encountered is with its workspace-
 
 - Furthermore, while the README is intended to be viewed on GitHub, I'd prefer if the
   documentation-related links in it would open this website instead of the file browser
-  on GitHub. For this reason, I am using full URLs in the README file.
+  on GitHub.
+
+- For these reasons, I am using full URLs in the README file.
 
 Consider also, that you may want to reuse your crate's README file: if you are
 publishing your crate, then your README will be displayed on

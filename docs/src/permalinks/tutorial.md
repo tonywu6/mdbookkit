@@ -330,7 +330,7 @@ Finally, in case Markdown isn't sufficient and you would like to use HTML code i
 book, the preprocessor has builtin support for processing links in HTML elements as
 well.
 
-Some useful things you can do with HTML in Markdown:
+Here are some useful things you can do with HTML in Markdown:
 
 > ```md
 > Make a link <a href="/Cargo.toml" target="_blank">open in a new tab</a> by using an
@@ -339,7 +339,7 @@ Some useful things you can do with HTML in Markdown:
 >
 > Make a link <a href="/Cargo.toml" target="_blank">open in a new tab</a> by using an
 > `<a>` element and adding [`target="_blank"`][target-blank].
->
+
 > ```html
 > <figure>
 >   <video controls>

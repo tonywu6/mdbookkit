@@ -182,6 +182,9 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
                     Ok(())
                 }),
                 element!(r#"img[src]"#, |elem| {
+                    if elem.has_attribute("width") || elem.has_attribute("height") {
+                        return Ok(());
+                    }
                     let src = elem.get_attribute("src").unwrap();
                     let src = file_url.join(&src)?;
                     let src = match src.scheme() {

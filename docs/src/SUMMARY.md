@@ -28,6 +28,7 @@
 - [How to ...](permalinks/how-to/index.md)
   - [Configure the remote URL](permalinks/how-to/remote-url.md)
   - [Check hard-coded links](permalinks/how-to/hardcoded-links.md)
+  - [Local development](permalinks/how-to/local-development.md)
   - [Use in CI/CD](permalinks/how-to/continuous-integration.md)
 - [Configuration](permalinks/configuration.md)
   - [Environment variables]()

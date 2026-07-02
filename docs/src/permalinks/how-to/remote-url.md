@@ -44,8 +44,8 @@ It is OK to use a subpage for the URL. The following example uses a URL that ope
 git-repository-url = "https://tangled.org/tangled.org/core/blob/master/docs"
 ```
 
-So long as the URL provides the repo's owner and name, the preprocessor will be able to
-use it.
+So long as the URL contains essential information such as the repo's owner and name, the
+preprocessor will be able to use it.
 
 ## Configuring `git remote`
 
@@ -74,9 +74,9 @@ this and use a differently-named remote by setting the `remote-name` option.
 
 ## Using a custom permalink format
 
-Finally, in case you are not using any of the forges with built-in support, the
-preprocessor allows you to fully customize the format of the generated permalinks via
-the `repo-url-template` option. For example:
+Finally, if you are not using any of the forges that the preprocessor supports, the
+preprocessor also allows you to fully customize the format of the generated permalinks
+via the `repo-url-template` option. For example:
 
 ```toml config-example
 [preprocessor.permalinks]
@@ -98,7 +98,7 @@ With the above example, the preprocessor will generate links such as: [^sha-shor
 - [<code>https://gitlab.haskell.org/ghc/ghc/-/<strong>raw</strong>/<strong>7ab9028</strong>/<strong>docs/users_guide/images/prof_scc.svg</strong></code>](https://gitlab.haskell.org/ghc/ghc/-/raw/7ab9028/docs/users_guide/images/prof_scc.svg)
   (for images)
 
-For reference, the following configuration defines GitHub's permalink format:
+For reference, permalinks to GitHub can be explicitly specified as:
 
 ```toml config-example
 [preprocessor.permalinks]

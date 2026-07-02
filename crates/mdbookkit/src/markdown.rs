@@ -40,6 +40,7 @@ pub fn locate_text(source: &str, sliced: &str) -> Option<Range<usize>> {
 ///   in between two patches. When applying patches that span multiple lines, the original
 ///   events are necessary for generating Markdown with the correct indentation, such as
 ///   when the patch occurs within a blockquote.
+#[inline]
 pub fn patch_stream<'a, E, S>(source: &'a str, stream: S) -> Result<String, Error>
 where
     E: Iterator<Item = Event<'a>>,
