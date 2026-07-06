@@ -12,7 +12,7 @@ sites. If you are not using any of the following sites, feel free to skip to
 [Using a custom permalink format](#using-a-custom-permalink-format) instead.
 
 The preprocessor has built-in support for linking to [GitHub](https://github.com),
-[Codeberg](https://codeberg.org), or [tangled](https://tangled.org).
+[Codeberg](https://codeberg.org), or [Tangled](https://tangled.org).
 
 ## Setting `git-repository-url`
 
@@ -86,11 +86,7 @@ repo-url-template = "https://gitlab.haskell.org/ghc/ghc/-/{tree}/{ref}/{path}"
 Set the option to the URL to your repository. In this URL, you can include the following
 placeholders, which the preprocessor will substitute with actual values during build:
 
-| Placeholder | Replaced with                                                                           |
-| :---------: | :-------------------------------------------------------------------------------------- |
-|  `{tree}`   | The string `tree` or `raw`, depending on where the link is being used.                  |
-|   `{ref}`   | The commit hash (or tag name) your repo was checked out at <br> when the book is built. |
-|  `{path}`   | Path to the linked file, starting from repo root.                                       |
+{% include "../_snippets/repo-url-template-placeholders.md" %}
 
 With the above example, the preprocessor will generate links such as: [^sha-shortened]
 

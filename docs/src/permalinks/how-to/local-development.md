@@ -1,11 +1,11 @@
 # How to preview links locally
 
 As much as permalinks offer many benefits, using this preprocessor could also make it
-more cumbersome to preview changes to your documentation!
+more cumbersome to preview changes to your documentation.
 
 Because the preprocessor generates permalinks using what's locally present in your
 repository, until you have committed and pushed to remote, your links may not work
-correctly:
+correctly!
 
 - Links may be reachable but will continue to refer to an older commit, showing stale
   content;
@@ -33,13 +33,12 @@ dev-mode = true
 
 When `dev-mode` is in effect, instead of generating permalinks as usual:
 
-- For `raw` links, such as those to be used in Markdown images, the preprocessor reads
-  the corresponding local files, then embeds[^data-url] their content directly into the
-  book. Your images will correctly show on the mdBook preview page.
+- For `raw` links, such as those to be used in Markdown images, the preprocessor
+  embeds[^data-url] their content directly into build output. Your images will correctly
+  show in the mdBook preview.
 
 - For other links, the preprocessor generates URLs that will
-  [open the file or directory in your text editor](#opening-files-in-your-editor) when
-  clicked.
+  [open the file or in your text editor](#opening-files-in-your-editor) when clicked.
 
 In other words, while you won't be able to see the exact URLs being generated, you will
 be able to preview how your links behave!
@@ -47,16 +46,16 @@ be able to preview how your links behave!
 ## Opening files in your editor
 
 While `dev-mode` is in effect, for any clickable link that are supposed to open a
-webpage on your Git forge's website (that is, any non-`raw` links), the preprocessor
-will instead generate a link that tries to open the file or directory in your text
-editor.
+webpage on your Git forge's website, the preprocessor will instead generate a link that
+tries to open the file or directory in your text editor.
 
-By default, the text editor is VS Code. In other words, the preprocessor will generate
-links with URLs in the form of `vscode://file/path/to/file`[^vscode-uri].
+By default, the text editor is VS Code. The preprocessor will generate links with URLs
+in the form of `vscode://file/path/to/file`, which VS Code should have setup your system
+to handle[^vscode-uri].
 
-If you are using a different editor, you can change the format of the generated links
-via the <code class="nowrap">dev-mode.editor-uri</code> option. For example, you can set
-the preprocessor to open links in [Zed](https://zed.dev/) by specifying [its URL
+If you are using a different editor, you can change the format of the generated links by
+setting the <code class="nowrap">dev-mode.editor-uri</code> option. For example, you can
+set the preprocessor to open links in [Zed](https://zed.dev/) by specifying [its URL
 scheme][zed-uri]:
 
 ```toml config-example
@@ -70,14 +69,12 @@ editor-uri = "zed://file/{path}"
 > [!NOTE]
 >
 > For security reasons[^file-url-issues], browsers do not allow a webpage on an HTTP(S)
-> address to directly link to a local file or folder (such a link would have a [file
-> URI][file-uri]).
->
-> This restriction applies even to webpages on localhost! Because of this, the
-> preprocessor implemented opening paths in text editors as a compromise.
+> address to link to a local file or folder (such a link, if allowed, would have a [file
+> URI][file-uri]). This restriction applies even to webpages on localhost! Because of
+> this, the preprocessor implemented opening paths in text editors as a compromise.
 >
 > Even so, out of an abundance of caution, your browser/editor may still require extra
-> confirmation when you click on such links.
+> confirmation when you click on such links. Prompts like the one below are expected:
 >
 > <figure>
 >   <img src="_media/vscode-link-confirm.png"
@@ -107,9 +104,8 @@ However, if you are manually building and deploying your book, such as by runnin
 CI=1 mdbook build
 ```
 
-Without the `CI` variable, `dev-mode` will continue to take effect, and the special
-editor URIs and embedded data will remain in the build output, which is very likely not
-what you wanted!
+Without the `CI` variable, the special editor URIs and embedded data due to `dev-mode`
+will remain in your build output, which is very likely not what you wanted!
 
 To learn more about how the preprocessor's default behaviors change when it is running
 in CI, see [the next chapter](continuous-integration.md).

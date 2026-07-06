@@ -381,7 +381,7 @@ impl BuildCounter {
 
     fn prebuild(&self, id: usize, build: &Builder) {
         if self.num_builds == 1 {
-            info!("building docs")
+            info!("generating docs")
         } else {
             info!("running build #{id} {:?}", build.debug())
         }

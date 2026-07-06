@@ -21,9 +21,8 @@ This tutorial assumes that:
   links, which requires the presence of a Cargo project. Outside of a Cargo project,
   this preprocessor isn't really useful.
 
-  If you aren't currently working on a package, for this tutorial, the quickest way to
-  get started is to run [`cargo init`] in your book's top-level directory (where the
-  `book.toml` file is).
+  If you are not currently working on a package, then for this tutorial, you can run
+  [`cargo init`] in your book's top-level directory (where the `book.toml` file is).
 
   </details>
 

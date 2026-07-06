@@ -44,7 +44,7 @@ impl TryFrom<BookToml<'_>> for Config {
                 Ok(Self(gix_url::parse(s.into())?))
             });
 
-            let repo_url = if options.repo_url_template.pattern.is_none() {
+            let repo_url = if options.repo_url_template.template.is_none() {
                 book_toml
                     .html_config::<RepoUrl>("git-repository-url")?
                     .map(|u| u.0)
@@ -86,7 +86,7 @@ pub struct Options {
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct TemplateConfig {
     #[serde(default)]
-    pub pattern: Option<Url>,
+    pub template: Option<Url>,
     #[serde(default)]
     pub params: Option<PathParams>,
 }
@@ -118,7 +118,7 @@ impl Default for PathParams {
 impl From<Url> for TemplateConfig {
     fn from(value: Url) -> Self {
         Self {
-            pattern: Some(value),
+            template: Some(value),
             params: Default::default(),
         }
     }

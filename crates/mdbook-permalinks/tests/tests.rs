@@ -88,6 +88,16 @@ test_case![
     ]
 ];
 test_case![
+    book_mdbookkit_term_ascii,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "ascii"]
+];
+test_case![
+    book_mdbookkit_term_unicode,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
+test_case![
     book_mdbookkit_term_logging,
     exit(0),
     env = ["MDBOOKKIT_TERM_GRAPHICAL" = ""]

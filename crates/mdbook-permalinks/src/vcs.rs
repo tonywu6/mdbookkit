@@ -302,11 +302,11 @@ impl VersionControl {
             };
 
         let link = {
-            let TemplateConfig { pattern, params } = &config.options.repo_url_template;
+            let TemplateConfig { template, params } = &config.options.repo_url_template;
 
-            let pattern = if let Some(pattern) = pattern {
-                debug!("repo-url-template" = ?pattern.show());
-                pattern.clone()
+            let pattern = if let Some(template) = template {
+                debug!("repo-url-template" = ?template.show());
+                template.clone()
             } else {
                 let remote = config.options.remote_name.as_deref().unwrap_or("origin");
                 let repo = match find_git_remote(&repo, remote, config)
@@ -494,7 +494,7 @@ fn derive_pattern(url: &gix_url::Url) -> Result<Url> {
     }
 
     if host.starts_with("knot.") {
-        warn! { "help: it looks like you are using a self-hosted tangled knot" };
+        warn! { "help: it looks like you are using a self-hosted Tangled knot" };
         warn! { "help: if so, you can set `output.html.git-repository-url` \
         to your repo's \"https://tangled.org\" URL" }
     }

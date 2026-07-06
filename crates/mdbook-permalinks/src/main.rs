@@ -899,6 +899,7 @@ impl DevModeConfig {
                 let path = path.strip_prefix('/').unwrap_or(path);
                 Some(path.into())
             }
+            "url" => Some(file_url.as_str().into()),
             _ => None,
         })
     }

@@ -1,0 +1,21 @@
+warning: broken link to "../static/cover.png"
+ --> crates/mdbook-permalinks/tests/book_mdbookkit_term_ascii/src/environment-variables.md:1:7
+  |
+1 | - ![](../static/cover.png)
+  |       ^^^^^^^^^^^^^^^^^^^
+  |       |
+  |       resolves to a path that doesn't exist:
+  |       "crates/mdbook-permalinks/tests/book_mdbookkit_term_ascii/static/cover.png"
+
+warning: broken link to "draft/"
+ --> crates/mdbook-permalinks/tests/book_mdbookkit_term_ascii/src/environment-variables.md:2:6
+  |
+2 | - [](draft/)
+  |      ^^^^^^
+  |      |
+  |      file is not included in `SUMMARY.md`:
+  |      "crates/mdbook-permalinks/tests/book_mdbookkit_term_ascii/src/draft/index.md"
+  |
+  = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+
+ WARN mdbook-permalinks: finished with warnings

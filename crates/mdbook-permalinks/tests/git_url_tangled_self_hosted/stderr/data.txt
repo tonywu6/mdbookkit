@@ -1,4 +1,4 @@
- WARN mdbook-permalinks: help: it looks like you are using a self-hosted tangled knot
+ WARN mdbook-permalinks: help: it looks like you are using a self-hosted Tangled knot
  WARN mdbook-permalinks: help: if so, you can set `output.html.git-repository-url` to your repo's "https://tangled.org" URL
 ERROR mdbook-permalinks: could not initialize the preprocessor
 
