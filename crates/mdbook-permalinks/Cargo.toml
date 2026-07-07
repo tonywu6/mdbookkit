@@ -22,8 +22,8 @@ exclude = ["src/tests", "tests"]
 anyhow = { workspace = true }
 clap = { workspace = true }
 data-encoding = "2.11.0"
-git2 = { version = "0.20.4", default-features = false }
-gix-url = { version = "0.35.2" }
+git2 = { version = "0.21.0", default-features = false }
+gix-url = { version = "0.36.1" }
 lol_html = { workspace = true }
 mdbook-markdown = { workspace = true }
 mdbook-preprocessor = { workspace = true }

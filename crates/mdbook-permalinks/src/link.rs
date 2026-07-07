@@ -405,8 +405,8 @@ impl<'a> LinkSlice<'a> {
 
         let mut links = vec![];
 
-        let handler = Settings {
-            element_content_handlers: element_handler(|elem, name, value| {
+        let handler =
+            Settings::new().append_element_content_handler(element_handler(|elem, name, value| {
                 let span = elem.source_location().bytes();
                 let span = span.start + origin..span.end + origin;
                 let interest = match (name, &*elem.tag_name()) {
@@ -439,10 +439,7 @@ impl<'a> LinkSlice<'a> {
                 };
                 links.push(link);
                 None
-            }),
-            ..Default::default()
-        };
-
+            }));
         let mut wr = HtmlRewriter::new(handler, |_: &[u8]| ());
         events
             .iter()
@@ -506,8 +503,8 @@ impl<'a> Iterator for EmitLinkSlice<'a> {
                 LinkElem::Html { html, links } => {
                     let mut links = links.into_iter();
 
-                    let handler = Settings {
-                        element_content_handlers: element_handler(|_, _, _| {
+                    let handler = Settings::new().append_element_content_handler(element_handler(
+                        |_, _, _| {
                             let link = (links.next())
                                 .expect("2nd parse should result in the same number of links");
                             if link.changed().is_some() {
@@ -515,9 +512,8 @@ impl<'a> Iterator for EmitLinkSlice<'a> {
                             } else {
                                 None
                             }
-                        }),
-                        ..Default::default()
-                    };
+                        },
+                    ));
 
                     let mut output = String::new();
                     let mut writer = HtmlRewriter::new(handler, |chunk: &[u8]| {
@@ -575,11 +571,11 @@ impl<'a> Iterator for EmitLinkSlice<'a> {
 
 fn element_handler<'cb>(
     mut cb: impl FnMut(&Element, &'static str, String) -> Option<String> + 'cb,
-) -> Vec<(
+) -> (
     Cow<'static, lol_html::Selector>,
     lol_html::ElementContentHandlers<'cb, lol_html::LocalHandlerTypes>,
-)> {
-    vec![element!("  [href], [src], [data]", move |elem| {
+) {
+    element!("  [href], [src], [data]", move |elem| {
         for name in ["href", "src", "data"] {
             if let Some(attr) = elem.get_attribute(name)
                 && let Some(attr) = cb(elem, name, attr)
@@ -589,7 +585,7 @@ fn element_handler<'cb>(
             }
         }
         Ok(())
-    })]
+    })
 }
 
 impl Debug for LinkError {

@@ -203,8 +203,8 @@ fn rustdoc_parity() -> Result<()> {
             url.as_str().starts_with(base.as_str())
         };
 
-        lol_html::Settings {
-            element_content_handlers: vec![element!(".top-doc a", |elem| {
+        lol_html::Settings::new()
+            .append_element_content_handler(element!(".top-doc a", |elem| {
                 if elem.get_attribute("class").as_deref() == Some("doc-anchor") {
                     return Ok(());
                 }
@@ -219,11 +219,9 @@ fn rustdoc_parity() -> Result<()> {
                 let title = title.replace("\r\n", "\n"); // windows
                 writeln!(upstream, "{href} {title:?}",)?;
                 Ok(())
-            })],
-            ..Default::default()
-        }
-        .pipe(|cb| HtmlRewriter::new(cb, |_: &[u8]| ()))
-        .pipe(|mut wr| wr.write(html.as_bytes()).and_then(|_| wr.end()))?;
+            }))
+            .pipe(|cb| HtmlRewriter::new(cb, |_: &[u8]| ()))
+            .pipe(|mut wr| wr.write(html.as_bytes()).and_then(|_| wr.end()))?;
 
         let rendered = page.expected().to_string();
 

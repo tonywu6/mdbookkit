@@ -425,10 +425,10 @@ fn find_git_remote<'a>(
             Err(err) => return Ok(Err(err)),
         };
         let repo = match repo.url() {
-            Some(url) => url,
-            None => {
-                return anyhow!("expected remote {remote:?} to have a URL, but found none")
-                    .pipe(Err)
+            Ok(url) => url,
+            Err(err) => {
+                return Err(err)
+                    .context(format!("expected remote {remote:?} to have a URL"))
                     .pipe(Ok);
             }
         };

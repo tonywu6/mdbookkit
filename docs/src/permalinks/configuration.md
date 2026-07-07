@@ -161,7 +161,7 @@ URL query instead of the path, unlike other common permalink formats.
 
 </details></p>
 
-- type: string (a URL) or [table](#repo-url-templatepattern)
+- type: string (a URL) or [table](#repo-url-templateparams--repo-url-templatetemplate)
 - default: detected from environment
 
 Customize the URL format that the preprocessor will use to generate permalinks.

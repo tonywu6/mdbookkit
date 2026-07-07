@@ -16,6 +16,6 @@ anyhow = { workspace = true }
 camino = { workspace = true }
 clap = { workspace = true }
 mdbookkit = { workspace = true }
-regex = "1.12.3"
+regex = "1.12.4"
 snapbox = { workspace = true, features = ["term-svg", "dir", "regex"] }
 tap = { workspace = true }

@@ -13,24 +13,24 @@ members = ["crates/*", "scripts/*", "docs"]
 resolver = "3"
 
 [workspace.dependencies]
-anyhow = "1.0.102"
-bon = "3.9.1"
-camino = "1.2.2"
+anyhow = "1.0.103"
+bon = "3.9.3"
+camino = "1.2.4"
 cargo-run-bin = { version = "=1.7.5", default-features = false }
-clap = { version = "4.6.0", features = ["derive"] }
-indicatif = "0.18.4"
-lol_html = "2.7.2"
-mdbook-markdown = { version = "0.5.3" }
-mdbook-preprocessor = { version = "0.5.3" }
+clap = { version = "4.6.1", features = ["derive"] }
+indicatif = "0.18.6"
+lol_html = "3.0.0"
+mdbook-markdown = { version = "0.5.4" }
+mdbook-preprocessor = { version = "0.5.4" }
 mdbookkit = { path = "crates/mdbookkit", version = "2" }
 mdbookkit-testing = { path = "crates/mdbookkit-testing", version = "0.1" }
-minijinja = "2.19.0"
+minijinja = "2.21.0"
 percent-encoding = "2.3.2"
 pulldown-cmark-to-cmark = "22.0.0"
 serde = { version = "1", features = ["derive"] }
-serde_json = "1.0.149"
-shlex = "1.3.0"
-snapbox = "1.2.1"
+serde_json = "1.0.150"
+shlex = "2.0.1"
+snapbox = "1.2.2"
 tap = "=1.0.1"
 tempfile = "3.27.0"
 toml = "1.1.2"

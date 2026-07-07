@@ -5,11 +5,11 @@ use std::{
     path::PathBuf,
 };
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result};
 use glob::glob;
 use lol_html::{
-    HtmlRewriter, RewriteStrSettings, Settings, element, errors::RewritingError,
-    html_content::ContentType, rewrite_str, text,
+    HtmlRewriter, RewriteStrSettings, Settings, element, html_content::ContentType, rewrite_str,
+    text,
 };
 use minijinja::Environment;
 use serde::Deserialize;
@@ -99,29 +99,25 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
             let mut title = String::new();
             let mut description = String::new();
 
-            Settings {
-                element_content_handlers: vec![
-                    text!("main > h1:first-of-type", |text| {
-                        title.push_str(text.as_str());
-                        Ok(())
-                    }),
-                    text!("main > p:first-of-type", |text| {
-                        description.push_str(text.as_str());
-                        Ok(())
-                    }),
-                    element!("[id]", |elem| {
-                        if let Some(id) = elem.get_attribute("id") {
-                            let url = file_url.clone().tap_mut(|u| u.set_fragment(Some(&id)));
-                            fragments.insert(url);
-                        }
-                        Ok(())
-                    }),
-                ],
-                ..Default::default()
-            }
-            .pipe(|settings| HtmlRewriter::new(settings, |_: &[u8]| ()))
-            .pipe(|mut wr| wr.write(html.as_bytes()).and(Ok(wr)))?
-            .pipe(|wr| wr.end())?;
+            Settings::new()
+                .append_element_content_handler(text!("main > h1:first-of-type", |text| {
+                    title.push_str(text.as_str());
+                    Ok(())
+                }))
+                .append_element_content_handler(text!("main > p:first-of-type", |text| {
+                    description.push_str(text.as_str());
+                    Ok(())
+                }))
+                .append_element_content_handler(element!("[id]", |elem| {
+                    if let Some(id) = elem.get_attribute("id") {
+                        let url = file_url.clone().tap_mut(|u| u.set_fragment(Some(&id)));
+                        fragments.insert(url);
+                    }
+                    Ok(())
+                }))
+                .pipe(|settings| HtmlRewriter::new(settings, |_: &[u8]| ()))
+                .pipe(|mut wr| wr.write(html.as_bytes()).and(Ok(wr)))?
+                .pipe(|wr| wr.end())?;
 
             (collapse_whitespace(title), collapse_whitespace(description))
         };
@@ -171,98 +167,93 @@ pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
 
         debug!(?ctx);
 
-        let html = RewriteStrSettings {
-            element_content_handlers: vec![
-                element!("title", |elem| {
-                    let title = suffix.iter().fold(og_title.clone(), |mut out, suffix| {
-                        write!(&mut out, " | {suffix}").and(Ok(out)).unwrap()
-                    });
-                    trace!(title);
-                    elem.set_inner_content(&title, ContentType::Text);
-                    Ok(())
-                }),
-                element!(r#"img[src]"#, |elem| {
-                    if elem.has_attribute("width") || elem.has_attribute("height") {
-                        return Ok(());
-                    }
-                    let src = elem.get_attribute("src").unwrap();
-                    let src = file_url.join(&src)?;
-                    let src = match src.scheme() {
-                        "file" => src,
-                        _ => return Ok(()),
-                    };
-                    let src = match src.to_file_path() {
-                        Ok(path) => path,
-                        Err(()) => return Ok(()),
-                    };
-                    match src.extension().map(|e| e.as_encoded_bytes()) {
-                        None => return Ok(()),
-                        Some(b"svg") => return Ok(()),
-                        _ => {}
-                    }
-                    let img = image::open(&src)
-                        .with_path_debug(&*src)
-                        .context("failed to read image")?;
-                    elem.set_attribute("width", &img.width().to_string())?;
-                    elem.set_attribute("height", &img.height().to_string())?;
-                    trace!(?elem);
-                    Ok(())
-                }),
-                element!(r#"img[src^="https://img.shields.io/"]"#, |elem| {
+        let html = RewriteStrSettings::new()
+            .append_element_content_handler(element!("title", |elem| {
+                let title = suffix.iter().fold(og_title.clone(), |mut out, suffix| {
+                    write!(&mut out, " | {suffix}").and(Ok(out)).unwrap()
+                });
+                trace!(title);
+                elem.set_inner_content(&title, ContentType::Text);
+                Ok(())
+            }))
+            .append_element_content_handler(element!(r#"img[src]"#, |elem| {
+                if elem.has_attribute("width") || elem.has_attribute("height") {
+                    return Ok(());
+                }
+                let src = elem.get_attribute("src").unwrap();
+                let src = file_url.join(&src)?;
+                let src = match src.scheme() {
+                    "file" => src,
+                    _ => return Ok(()),
+                };
+                let src = match src.to_file_path() {
+                    Ok(path) => path,
+                    Err(()) => return Ok(()),
+                };
+                match src.extension().map(|e| e.as_encoded_bytes()) {
+                    None => return Ok(()),
+                    Some(b"svg") => return Ok(()),
+                    _ => {}
+                }
+                let img = image::open(&src)
+                    .with_path_debug(&*src)
+                    .context("failed to read image")?;
+                elem.set_attribute("width", &img.width().to_string())?;
+                elem.set_attribute("height", &img.height().to_string())?;
+                trace!(?elem);
+                Ok(())
+            }))
+            .append_element_content_handler(element!(
+                r#"img[src^="https://img.shields.io/"]"#,
+                |elem| {
                     elem.set_attribute("height", "20")?;
                     elem.set_attribute("fetchpriority", "low")?;
                     trace!(?elem);
                     Ok(())
-                }),
-                element!(r#"meta[property^="og:"]"#, |elem| {
-                    elem.remove();
-                    Ok(())
-                }),
-                element!(r#"meta[name="description"]"#, |elem| {
-                    let meta = jinja.get_template("index.html").unwrap().render(&ctx)?;
-                    elem.set_attribute("content", &og_description)?;
-                    elem.before(&meta, ContentType::Html);
-                    Ok(())
-                }),
-                element!(r#"h1.menu-title"#, |elem| {
-                    if let Some(suffix) = suffix.iter().nth_back(1) {
-                        elem.set_inner_content(suffix, ContentType::Text);
-                    }
-                    Ok(())
-                }),
-                element!(r#"a"#, |elem| {
-                    let Some(href) = elem
-                        .get_attribute("href")
-                        .and_then(|href| file_url.join(&href).ok())
-                    else {
-                        return Ok(());
-                    };
-                    if href.scheme() == "file" {
-                        if href.fragment().is_some() {
-                            if let Some(set) = book_links.get_mut(&file_url) {
-                                set.insert(href);
-                            } else {
-                                let mut set = HashSet::default();
-                                set.insert(href);
-                                book_links.insert(file_url.clone(), set);
-                            }
+                }
+            ))
+            .append_element_content_handler(element!(r#"meta[property^="og:"]"#, |elem| {
+                elem.remove();
+                Ok(())
+            }))
+            .append_element_content_handler(element!(r#"meta[name="description"]"#, |elem| {
+                let meta = jinja.get_template("index.html").unwrap().render(&ctx)?;
+                elem.set_attribute("content", &og_description)?;
+                elem.before(&meta, ContentType::Html);
+                Ok(())
+            }))
+            .append_element_content_handler(element!(r#"h1.menu-title"#, |elem| {
+                if let Some(suffix) = suffix.iter().nth_back(1) {
+                    elem.set_inner_content(suffix, ContentType::Text);
+                }
+                Ok(())
+            }))
+            .append_element_content_handler(element!(r#"a"#, |elem| {
+                let Some(href) = elem
+                    .get_attribute("href")
+                    .and_then(|href| file_url.join(&href).ok())
+                else {
+                    return Ok(());
+                };
+                if href.scheme() == "file" {
+                    if href.fragment().is_some() {
+                        if let Some(set) = book_links.get_mut(&file_url) {
+                            set.insert(href);
+                        } else {
+                            let mut set = HashSet::default();
+                            set.insert(href);
+                            book_links.insert(file_url.clone(), set);
                         }
-                    } else if href.origin() != site_url.origin() {
-                        elem.set_attribute("target", "_blank").unwrap();
-                        elem.set_attribute("rel", "noreferrer").unwrap();
                     }
-                    trace!(?elem);
-                    Ok(())
-                }),
-            ],
-            ..Default::default()
-        }
-        .pipe(|settings| rewrite_str(&html, settings))
-        .map_err(|err| match err {
-            RewritingError::MemoryLimitExceeded(err) => anyhow!(err),
-            RewritingError::ParsingAmbiguity(err) => anyhow!(err),
-            RewritingError::ContentHandlerError(err) => anyhow!(err),
-        })?;
+                } else if href.origin() != site_url.origin() {
+                    elem.set_attribute("target", "_blank").unwrap();
+                    elem.set_attribute("rel", "noreferrer").unwrap();
+                }
+                trace!(?elem);
+                Ok(())
+            }))
+            .pipe(|settings| rewrite_str(&html, settings))
+            .map_err(anyhow::Error::from)?;
 
         std::fs::write(file_url.path(), html)?;
     }

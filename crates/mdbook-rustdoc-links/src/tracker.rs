@@ -186,69 +186,65 @@ impl<'a> LinkTracker<'a> {
             text_content: String::new(),
         });
 
-        lol_html::Settings {
-            element_content_handlers: vec![
-                element!(OUTER_SELECTOR, |_| {
-                    state.borrow_mut().enter();
-                    Ok(())
-                }),
-                element!("a[href]", |elem| {
-                    if !state.borrow().has_link() {
-                        return Ok(());
-                    };
-                    trace!("{elem:?}");
+        lol_html::Settings::new()
+            .append_element_content_handler(element!(OUTER_SELECTOR, |_| {
+                state.borrow_mut().enter();
+                Ok(())
+            }))
+            .append_element_content_handler(element!("a[href]", |elem| {
+                if !state.borrow().has_link() {
+                    return Ok(());
+                };
+                trace!("{elem:?}");
 
-                    if let Some(href) = elem.get_attribute("href")
-                        && let Some(link) = state.borrow_mut().link()
-                        && !eq_escaped(link.dest(), &href)
+                if let Some(href) = elem.get_attribute("href")
+                    && let Some(link) = state.borrow_mut().link()
+                    && !eq_escaped(link.dest(), &href)
+                {
+                    if let Ok(url) = resolve_url(self.env.base_dir(), &output, &href)
+                        .with_debug(&*href, "URL")
+                        .context("could not convert to a full URL")
+                        .or_else(with_bug_report!(emit_warning))
                     {
-                        if let Ok(url) = resolve_url(self.env.base_dir(), &output, &href)
-                            .with_debug(&*href, "URL")
-                            .context("could not convert to a full URL")
-                            .or_else(with_bug_report!(emit_warning))
-                        {
-                            link.href = Some(url)
-                        }
-                        if let Some(title) = elem.get_attribute("title") {
-                            *link.title_mut() = title.into()
-                        }
+                        link.href = Some(url)
                     }
-
-                    Ok(())
-                }),
-                text!("a[href]", |text| {
-                    if !state.borrow().has_link() {
-                        return Ok(());
-                    };
-
-                    let text = text.as_str();
-                    if text.is_empty() {
-                        let mut state = state.borrow_mut();
-                        let text = std::mem::take(&mut state.text_content);
-                        #[allow(clippy::unwrap_used)]
-                        let link = state.link().unwrap();
-                        if matches!(link.kind, CollapsedUnknown | ShortcutUnknown)
-                            && link.inner_elem.len() == 1
-                            && let Some(Event::Text(original) | Event::Code(original)) =
-                                link.inner_elem.first_mut()
-                        {
-                            let text = decode_html_entities(&text);
-                            *original = CowStr::Boxed(text.into())
-                        }
-                    } else {
-                        state.borrow_mut().text_content.push_str(text);
+                    if let Some(title) = elem.get_attribute("title") {
+                        *link.title_mut() = title.into()
                     }
+                }
 
-                    Ok(())
-                }),
-            ],
-            ..Default::default()
-        }
-        .pipe(|cb| HtmlRewriter::new(cb, |_: &[u8]| ()))
-        .pipe(|mut wr| wr.write(output.stdout.as_bytes()).and_then(|_| wr.end()))
-        .context("unexpected error from HtmlRewriter")
-        .or_else(emit_debug!())
-        .ok();
+                Ok(())
+            }))
+            .append_element_content_handler(text!("a[href]", |text| {
+                if !state.borrow().has_link() {
+                    return Ok(());
+                };
+
+                let text = text.as_str();
+                if text.is_empty() {
+                    let mut state = state.borrow_mut();
+                    let text = std::mem::take(&mut state.text_content);
+                    #[allow(clippy::unwrap_used)]
+                    let link = state.link().unwrap();
+                    if matches!(link.kind, CollapsedUnknown | ShortcutUnknown)
+                        && link.inner_elem.len() == 1
+                        && let Some(Event::Text(original) | Event::Code(original)) =
+                            link.inner_elem.first_mut()
+                    {
+                        let text = decode_html_entities(&text);
+                        *original = CowStr::Boxed(text.into())
+                    }
+                } else {
+                    state.borrow_mut().text_content.push_str(text);
+                }
+
+                Ok(())
+            }))
+            .pipe(|cb| HtmlRewriter::new(cb, |_: &[u8]| ()))
+            .pipe(|mut wr| wr.write(output.stdout.as_bytes()).and_then(|_| wr.end()))
+            .context("unexpected error from HtmlRewriter")
+            .or_else(emit_debug!())
+            .ok();
 
         impl<'a> State<'_, 'a> {
             fn enter(&mut self) {
