@@ -26,7 +26,7 @@ and good practice — choose all three!_
 
 > [!TIP]
 >
-> This style of linking is also known as "intra-doc links" — read more about it in the
+> This style of linking is also known as "intra-doc links." You can read about it in the
 > [original RFC][intra-doc-link].
 
 <!-- prettier-ignore-start -->

@@ -33,13 +33,13 @@ Note that the executable name has changed. You should also update the table name
 
 ### New features
 
-- The preprocessor now processes URLs that point to the `HEAD` of your repo. You can read more about [why such URLs instead of paths may be desirable](/docs/src/permalinks/more-ways-to-link.md) in the documentation.
+- The preprocessor now processes URLs that point to the `HEAD` of your repo. You can read more about [why such URLs instead of paths may be desirable](/docs/src/permalinks/how-to/hardcoded-links.md) in the documentation.
 
 - The preprocessor now warns about links pointing to files/directories that are gitignored.
 
 ### Fixes
 
-- Path-based links that are used in Markdown images are now [correctly converted to `raw` URLs instead of `tree` URLs](/docs/src/permalinks/features.md#markdown-images).
+- Path-based links that are used in Markdown images are now [correctly converted to `raw` URLs instead of `tree` URLs](/docs/src/permalinks/tutorial.md#images).
 
 ### Changes
 
@@ -47,15 +47,15 @@ Note that the executable name has changed. You should also update the table name
   - mdBook 0.4 is now unsupported, although as of mdBook 0.5.2, the preprocessor can still run under mdBook 0.4. There is no guarantee that it will remain compatible in the future.
 
 - `MDBOOK_LOG` is now the environment variable to control logging. This variable also controls logging in the main `mdbook` program. Previously, the variable was ~~`RUST_LOG`~~.
-  - Logging is now implemented through `tracing`. The `MDBOOK_LOG` variable therefore supports [all syntax supported by `tracing`][tracing_subscriber::filter::EnvFilter]. See [Logging](/docs/src/permalinks/logging.md) for more information.
+  - Logging is now implemented through `tracing`. The `MDBOOK_LOG` variable therefore supports [all syntax supported by `tracing`][tracing_subscriber::filter::EnvFilter]. See [Logging](/docs/src/permalinks/configuration/environment-variables.md#mdbook_log) for more information.
 
 - **\[BREAKING\]** The `book.toml` config table for this preprocessor is now `[preprocessor.permalinks]`.
 
 ### Documentation
 
-- Added a ["More ways to link"](/docs/src/permalinks/more-ways-to-link.md) page that clarifies the different types of linking supported by this preprocessor, as well as when to use which.
+- Added a "More ways to link" page that clarifies the different types of linking supported by this preprocessor, as well as when to use which.
 
-- Added a dedicated ["Logging"](/docs/src/permalinks/logging.md) page.
+- Added a dedicated "Logging" page.
 
 <!-- prettier-ignore-start -->
 [mdbook-0.5]: https://github.com/rust-lang/mdBook/blob/master/CHANGELOG.md#05-migration-guide
