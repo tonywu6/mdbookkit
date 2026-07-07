@@ -1,5 +1,6 @@
 ERROR mdbook-permalinks: could not initialize the preprocessor
 
 Caused by:
-    the current repo does not have any commit
+    0: could not obtain the necessary git information to generate permalinks
+    1: repo does not have any commit
 ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

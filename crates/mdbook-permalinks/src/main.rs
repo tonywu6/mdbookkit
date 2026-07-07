@@ -101,9 +101,11 @@ impl Environment {
 
         let repo = match VersionControl::try_from_git(&config, &ctx.root) {
             Ok(Ok(repo)) => repo,
-            Ok(Err(err)) => return Ok(Err(err)),
-            Err(err) => return Err(err),
+            Ok(Err(err)) => return Ok(Err(err.context(GIT_ERROR))),
+            Err(err) => return Err(err.context(GIT_ERROR)),
         };
+        static GIT_ERROR: &str =
+            "could not obtain the necessary git information to generate permalinks";
 
         let book = BookLayout::new(ctx, book, &repo)?;
 

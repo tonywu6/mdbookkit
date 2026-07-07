@@ -12,6 +12,7 @@ repository.workspace = true
 categories = ["text-processing", "development-tools", "command-line-utilities"]
 description = "Generate permalinks in mdBook using paths"
 documentation = "https://docs.tonywu.dev/mdbookkit/permalinks"
+homepage = "https://docs.tonywu.dev/mdbookkit/permalinks"
 keywords = ["mdbook", "markdown", "documentation", "git", "permalink"]
 readme = "README.md"
 

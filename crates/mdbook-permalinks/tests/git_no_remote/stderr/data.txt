@@ -1,6 +1,8 @@
  WARN mdbook-permalinks: preprocessor will be disabled
 
 Caused by:
-    0: failed to determine the remote URL prefix for permalinks
-    1: expected repo to have a remote named "origin", but found none
-    2: help: set `output.html.git-repository-url` to a supported URL, or use `repo-url-template` option
+    0: could not obtain the necessary git information to generate permalinks
+    1: could not determine the URL format of permalinks
+    2: expected repo to have a remote named "origin", but found none
+    3: help: set `output.html.git-repository-url` to a supported URL, or use `repo-url-template` option
+    4: help: for more info, see https://docs.tonywu.dev/mdbookkit/permalinks/how-to/remote-url

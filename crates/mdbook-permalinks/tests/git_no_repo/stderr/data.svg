@@ -1,4 +1,4 @@
-<svg width="877px" height="110px" xmlns="http://www.w3.org/2000/svg">
+<svg width="877px" height="128px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -24,9 +24,11 @@
 </tspan>
     <tspan x="10px" y="64px"><tspan>Caused by:</tspan>
 </tspan>
-    <tspan x="10px" y="82px"><tspan>    0: this preprocessor requires a git repository to work</tspan>
+    <tspan x="10px" y="82px"><tspan>    0: could not obtain the necessary git information to generate permalinks</tspan>
 </tspan>
     <tspan x="10px" y="100px"><tspan>    1: could not find repository at '[TEST_DIR]/git_no_repo'; class=Repository (6); code=NotFound (-3)</tspan>
+</tspan>
+    <tspan x="10px" y="118px"><tspan>    2: help: this preprocessor requires a git repository to work</tspan>
 </tspan>
   </text>
 

@@ -148,7 +148,7 @@ pub fn link_issue<'a, 'r>(
                 notes.extend([
                     Note::help({
                         "without an `index.md` file at this location, the link will \
-                            lead to a 404 error"
+                        lead to a 404 error"
                     }),
                     Note::note(format!("the resolved path is {path:?}")),
                 ]);
@@ -170,7 +170,7 @@ pub fn link_issue<'a, 'r>(
 
                 notes.extend([Note::help({
                     "because this Markdown file is not referenced in `SUMMARY.md`, \
-                        it will not be available in the output"
+                    it will not be available in the output"
                 })]);
             }
 
@@ -186,7 +186,7 @@ pub fn link_issue<'a, 'r>(
                 notes.extend([
                     Note::help({
                         "because the output path of this page won't contain \
-                            the `.md` extension, this link won't work correctly"
+                        the `.md` extension, this link won't work correctly"
                     }),
                     Note::note(format!("the resolved path is {path:?}")),
                 ]);

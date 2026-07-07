@@ -1,4 +1,4 @@
-<svg width="953px" height="182px" xmlns="http://www.w3.org/2000/svg">
+<svg width="953px" height="200px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -24,17 +24,19 @@
 </tspan>
     <tspan x="10px" y="64px"><tspan>Caused by:</tspan>
 </tspan>
-    <tspan x="10px" y="82px"><tspan>    0: could not find a supported git remote URL</tspan>
+    <tspan x="10px" y="82px"><tspan>    0: could not obtain the necessary git information to generate permalinks</tspan>
 </tspan>
-    <tspan x="10px" y="100px"><tspan>    1: in `output.html.git-repository-url`:</tspan>
+    <tspan x="10px" y="100px"><tspan>    1: unsupported remote repo</tspan>
 </tspan>
-    <tspan x="10px" y="118px"><tspan>    2: "https://tangled.org/tonywu.org"</tspan>
+    <tspan x="10px" y="118px"><tspan>    2: in `output.html.git-repository-url`: "https://tangled.org/tonywu.org"</tspan>
 </tspan>
     <tspan x="10px" y="136px"><tspan>    3: malformed path "/tonywu.org": expected URL for "tangled.org" to begin with `/&lt;owner&gt;/&lt;repo&gt;` or `/&lt;did&gt;`</tspan>
 </tspan>
     <tspan x="10px" y="154px"><tspan>    4: help: use the `repo-url-template` option to define a custom URL scheme</tspan>
 </tspan>
-    <tspan x="10px" y="172px"><tspan>ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status</tspan>
+    <tspan x="10px" y="172px"><tspan>    5: help: for more info, see https://docs.tonywu.dev/mdbookkit/permalinks/how-to/remote-url</tspan>
+</tspan>
+    <tspan x="10px" y="190px"><tspan>ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status</tspan>
 </tspan>
   </text>
 

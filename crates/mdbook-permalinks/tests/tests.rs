@@ -61,6 +61,8 @@ test_case![site_url_absolute_paths, exit(0)];
 test_case![site_url_invalid, exit(101)];
 test_case![site_url_path_encoding, exit(0)];
 test_case![dev_mode, exit(0), env = ["CI" = ""]];
+test_case![dev_mode_editor_uri, exit(0), env = ["CI" = ""]];
+test_case![dev_mode_in_ci, exit(0), env = ["CI" = "1"]];
 
 test_case![
     book_tutorial_check,

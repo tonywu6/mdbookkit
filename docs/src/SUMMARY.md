@@ -32,7 +32,6 @@
   - [Use in CI/CD](permalinks/how-to/continuous-integration.md)
 - [Configuration](permalinks/configuration.md)
   - [Environment variables](permalinks/configuration/environment-variables.md)
-- [Common issues]()
 - [CHANGELOG]()
 
 ---

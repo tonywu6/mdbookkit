@@ -1,6 +1,8 @@
 [preprocessor.permalinks]
-dev-mode = true
 unstable-features = true
+
+[preprocessor.permalinks.dev-mode]
+editor-uri = "zed://file/{path}"
 
 [output.markdown]
 
