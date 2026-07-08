@@ -193,12 +193,6 @@ warning: broken link to "/target/"
 1 | - [](/target/)
   |      ^^^^^^^^ resolves to a path that is gitignored
 
-warning: broken link to "/target/debug/mdbook-permalinks"
- --> crates/mdbook-permalinks/tests/file_links/src/5.gitignore.md:2:6
-  |
-2 | - [](/target/debug/mdbook-permalinks)
-  |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ resolves to a path that is gitignored
-
 warning: broken link to "./symlinks/lib.md"
  --> crates/mdbook-permalinks/tests/file_links/src/6.symlinks.md:4:6
   |

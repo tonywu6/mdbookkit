@@ -4,7 +4,7 @@ warning: broken link to "../static/%90V%8Fh%93%F1%92%9A%96%DA.jpg"
 1 | ![`[*"新宿二丁目".encode("shift-jis")]`](../static/%90V%8Fh%93%F1%92%9A%96%DA.jpg)
   |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   |                                          |
-  |                                          resolves to a path that is invalid on this system:
+  |                                          link contains characters that are invalid on this system:
   |                                          "crates/mdbook-permalinks/tests/path_encoding_windows/static/�V�h�\u{52696}�.jpg"
 
  WARN mdbook-permalinks: finished with warnings

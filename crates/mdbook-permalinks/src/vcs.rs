@@ -44,7 +44,41 @@ impl VersionControl {
             }
         };
 
-        if link.std_path == real_path {
+        if if cfg!(not(windows)) {
+            link.std_path == real_path
+        } else {
+            use std::path::{Component::*, Prefix::*};
+            let mut lhs = link.std_path.components();
+            let mut rhs = real_path.components();
+            loop {
+                let lhs = lhs.next();
+                let rhs = rhs.next();
+                if let (None, None) = (lhs, rhs) {
+                    break true;
+                }
+                if let (Some(Prefix(lhs)), Some(Prefix(rhs))) = (lhs, rhs)
+                    && let (VerbatimDisk(lhs) | Disk(lhs), VerbatimDisk(rhs) | Disk(rhs)) =
+                        (lhs.kind(), rhs.kind())
+                {
+                    if lhs != rhs {
+                        break false;
+                    }
+                } else if let (Some(Prefix(lhs)), Some(Prefix(rhs))) = (lhs, rhs)
+                    && let (
+                        VerbatimUNC(server1, share1) | UNC(server1, share1),
+                        VerbatimUNC(server2, share2) | UNC(server2, share2),
+                    ) = (lhs.kind(), rhs.kind())
+                {
+                    if (server1, share1) != (server2, share2) {
+                        break false;
+                    }
+                } else {
+                    if lhs != rhs {
+                        break false;
+                    }
+                }
+            }
+        } {
             trace!("path is canonical");
 
             Ok(TryRepoPath::Canonical { link })
