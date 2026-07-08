@@ -31,7 +31,7 @@
 </tspan>
     <tspan x="10px" y="118px"><tspan>    0: could not obtain the necessary git information to generate permalinks</tspan>
 </tspan>
-    <tspan x="10px" y="136px"><tspan>    1: unsupported remote repo</tspan>
+    <tspan x="10px" y="136px"><tspan>    1: unsupported repository URL</tspan>
 </tspan>
     <tspan x="10px" y="154px"><tspan>    2: in `output.html.git-repository-url`: "git@knot.example.org:lorem/ipsum"</tspan>
 </tspan>

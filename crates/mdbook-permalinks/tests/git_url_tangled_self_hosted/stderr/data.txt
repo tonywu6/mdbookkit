@@ -4,7 +4,7 @@ ERROR mdbook-permalinks: could not initialize the preprocessor
 
 Caused by:
     0: could not obtain the necessary git information to generate permalinks
-    1: unsupported remote repo
+    1: unsupported repository URL
     2: in `output.html.git-repository-url`: "git@knot.example.org:lorem/ipsum"
     3: unsupported remote "knot.example.org"
     4: help: use the `repo-url-template` option to define a custom URL scheme

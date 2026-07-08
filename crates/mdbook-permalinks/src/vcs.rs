@@ -345,11 +345,11 @@ impl VersionControl {
                                         format!("in `output.html.git-repository-url`: {url:?}")
                                     }
                                     RepoSource::Remote(..) => {
-                                        format!("from git remote {remote:?}: {url:?}")
+                                        format!("in git remote {remote:?}: {url:?}")
                                     }
                                 }
                             })
-                            .context("unsupported remote repo")
+                            .context("unsupported repository URL")
                             .pipe(Err);
                     }
                 }
