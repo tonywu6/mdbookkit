@@ -50,6 +50,8 @@ pub trait UrlUtil {
     fn as_base<'a>(&'a self) -> BaseUrl<'a>;
 
     fn include_after_path(self, url: &impl UrlAfterPath) -> Self;
+
+    fn replace_suffix(&mut self, suffix: &str, repl: &str);
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -457,6 +459,12 @@ impl UrlUtil for Url {
             self.set_fragment(Some(fragment));
         }
         self
+    }
+
+    fn replace_suffix(&mut self, suffix: &str, repl: &str) {
+        if let Some(prefix) = self.path().strip_suffix(suffix) {
+            self.set_path(&format!("{prefix}{repl}"));
+        }
     }
 }
 

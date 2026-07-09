@@ -79,6 +79,9 @@ pub struct Options {
     pub fail_on_warnings: FailOnWarnings,
     #[serde(default, alias = "book-url")]
     pub site_url: Option<BaseUrl>,
+    #[serde(default)]
+    #[serde(deserialize_with = "via::<UnstableFeature<QualifyBookLinks>, _, _>")]
+    pub qualify_book_links: QualifyBookLinks,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -193,5 +196,14 @@ where
         Err(err)
     } else {
         Ok(values)
+    }
+}
+
+#[derive(Deserialize, Debug, Default)]
+pub struct QualifyBookLinks(pub bool);
+
+impl From<UnstableFeature<QualifyBookLinks>> for QualifyBookLinks {
+    fn from(UnstableFeature(value): UnstableFeature<QualifyBookLinks>) -> Self {
+        value
     }
 }

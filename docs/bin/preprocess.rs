@@ -4,11 +4,9 @@ use std::{
     io::Write as _,
     ops::Range,
     process::{Command, Stdio},
-    sync::LazyLock,
 };
 
 use anyhow::{Context, Result, anyhow};
-use camino::Utf8PathBuf;
 use heck::ToSnakeCase;
 use mdbook_markdown::pulldown_cmark::{CodeBlockKind, CowStr, Event, Parser, Tag, TagEnd};
 use minijinja::{Environment, UndefinedBehavior};
@@ -21,11 +19,12 @@ use mdbookkit::{
         annotate_snippets::AnnotationKind,
     },
     emit, emit_error, emit_warning,
-    env::locate_project,
     error::{ExpectFmt, FailOnWarnings, WithDebugContext},
     markdown::{Spanned, patch_stream, replace_char_if_needed},
     url::{UrlFromPath, UrlUtil},
 };
+
+use crate::CARGO_WORKSPACE;
 
 pub fn run() -> Result<(), ()> {
     let (ctx, mut book) = book_from_stdin()
@@ -159,9 +158,6 @@ pub fn run() -> Result<(), ()> {
 
     ctx.print(book).or_else(emit_error!())
 }
-
-static CARGO_WORKSPACE: LazyLock<Utf8PathBuf> =
-    LazyLock::new(|| locate_project(None).or_else(emit_error!()).unwrap());
 
 fn error_report(error: &anyhow::Error, span: Range<usize>) -> IssueReport<'static> {
     IssueReport::level(IssueLevel::Error)

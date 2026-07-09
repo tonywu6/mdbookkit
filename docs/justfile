@@ -22,3 +22,6 @@ types:
 
 upload: build
     pnpm exec wrangler {{wrangler_flags}} versions upload
+
+readme:
+    cargo run -- readme

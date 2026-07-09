@@ -2,7 +2,6 @@ use std::{
     collections::{HashMap, HashSet},
     env::current_dir,
     fmt::Write,
-    path::PathBuf,
 };
 
 use anyhow::{Context, Result};
@@ -24,13 +23,11 @@ use mdbookkit::{
     url::{ToUtf8Path, UrlFromPath, UrlUtil},
 };
 
-pub fn run(root_dir: Option<PathBuf>) -> Result<()> {
-    let root_dir = root_dir.unwrap_or(current_dir()?);
-
+pub fn run() -> Result<()> {
     let jinja =
         Environment::new().tap_mut(|env| env.add_template("index.html", OPEN_GRAPH).unwrap());
 
-    let root_dir = root_dir.canonicalize()?.into_utf8_path()?;
+    let root_dir = current_dir()?.into_utf8_path()?;
 
     let mut book_toml = root_dir
         .join("book.toml")

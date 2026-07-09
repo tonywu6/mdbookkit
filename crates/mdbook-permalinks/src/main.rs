@@ -573,7 +573,13 @@ impl Resolver<'_> {
                 .make_relative(&file)
                 .expect("both should be file urls");
 
-            if href != link.href() {
+            if self.env.options.qualify_book_links.0
+                && let Some(base) = self.env.site_url.as_http_url()
+            {
+                let mut href = base.as_base().make_absolute(&href);
+                href.replace_suffix(".md", ".html");
+                link.permalink(href.into());
+            } else if href != link.href() {
                 trace!("rewriting to book link: {:?}", href.show_path());
                 link.book_link(href);
             } else {
@@ -811,18 +817,6 @@ impl<'a, E: Iterator<Item = Event<'a>>> Iterator for Patch<'a, E> {
             Self::Link(events) => events.next(),
             Self::Skip(events) => events.next(),
             Self::SkipOne(event) => event.next(),
-        }
-    }
-}
-
-trait UrlPathReplaceSuffix {
-    fn replace_suffix(&mut self, suffix: &str, repl: &str);
-}
-
-impl UrlPathReplaceSuffix for Url {
-    fn replace_suffix(&mut self, suffix: &str, repl: &str) {
-        if let Some(prefix) = self.path().strip_suffix(suffix) {
-            self.set_path(&format!("{prefix}{repl}"));
         }
     }
 }
