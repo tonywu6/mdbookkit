@@ -66,8 +66,8 @@ impl Command {
 
         let path_env = var_os("PATH").unwrap_or_default();
         let path_env = split_paths(&path_env);
-        #[cfg(windows)] // cargo-xtask
-        let path_env = path_env.filter(|p| !p.ends_with("target/release"));
+        let path_env =
+            path_env.filter(|p| !p.ends_with("target/debug") && !p.ends_with("target/release"));
         let path_env = path_env.map(PathBuf::into_os_string);
 
         let paths = paths.into_iter().chain(path_env);

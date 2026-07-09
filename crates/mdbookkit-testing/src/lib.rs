@@ -1,4 +1,9 @@
-use std::{borrow::Cow, ffi::OsStr, fmt::Display, path::Path, sync::LazyLock};
+use std::{
+    ffi::{OsStr, OsString},
+    fmt::Display,
+    path::{Path, PathBuf},
+    sync::LazyLock,
+};
 
 use anstyle::RgbColor;
 use anstyle_svg::Palette;
@@ -10,7 +15,7 @@ use snapbox::{
     Assert, Data, IntoData, RedactedValue, Redactions, assert::DEFAULT_ACTION_ENV, cmd::Command,
     data::DataFormat, dir::DirRoot, utils::current_dir,
 };
-use tap::TryConv;
+use tap::{Pipe, TryConv};
 
 pub use anyhow;
 pub use camino;
@@ -27,28 +32,12 @@ pub struct TestBook {
 
 impl TestBook {
     pub fn run(&self) -> Result<()> {
-        let path_env = std::env::var_os("PATH");
-        let path_env = (path_env.iter())
-            .flat_map(std::env::split_paths)
-            .map(|path| path.into_os_string());
-
-        let path_env = std::env::vars_os()
-            .filter_map(|(k, v)| {
-                if k.as_encoded_bytes().starts_with(b"CARGO_BIN_EXE_")
-                    && let Some(dir) = Path::new(&v).parent()
-                {
-                    Some(dir.as_os_str().to_owned())
-                } else {
-                    None
-                }
-            })
-            .chain(path_env);
-
-        #[cfg(windows)]
-        let path_env =
-            std::iter::once(OsStr::new("C:\\Program Files\\Git\\bin").to_owned()).chain(path_env);
-
-        let path_env = std::env::join_paths(path_env)?;
+        let test_exe = std::env::vars_os().filter_map(|(k, v)| {
+            let k = (k.as_encoded_bytes()).strip_prefix(b"CARGO_BIN_EXE_mdbook-")?;
+            let k = String::from_utf8_lossy(k);
+            let k = format!("MDBOOK_preprocessor__{k}__command");
+            Some((k, v))
+        });
 
         let temp_dir = DirRoot::mutable_temp()?;
         let temp_dir = temp_dir
@@ -60,9 +49,8 @@ impl TestBook {
             .cargo("bin", current_dir!())
             .args(["mdbook", "build"])
             .arg(self.path.book_dir())
-            .env("PATH", path_env)
             .env("MDBOOK_build__build_dir", temp_dir)
-            .envs(load_env(&[
+            .envs(load_env([
                 ("MDBOOK_LOG", "warn,mdbookkit::diagnostics=info"),
                 ("MDBOOKKIT_TERM_GRAPHICAL", "ascii"),
                 ("FORCE_COLOR", "1"),
@@ -70,7 +58,22 @@ impl TestBook {
                 ("RUST_BACKTRACE", "0"),
                 ("CI", ""),
             ]))
-            .envs(load_env(&self.env_vars))
+            .envs(load_env(self.env_vars.iter().copied()))
+            .envs(load_env(test_exe))
+            .pipe(|this| {
+                if cfg!(windows) {
+                    let path = std::env::var_os("PATH");
+                    let path = (path.iter())
+                        .flat_map(std::env::split_paths)
+                        .map(PathBuf::into_os_string);
+                    let path = std::iter::once(OsStr::new("C:\\Program Files\\Git\\bin").into())
+                        .chain(path);
+                    let path = std::env::join_paths(path).unwrap();
+                    this.env("PATH", path)
+                } else {
+                    this
+                }
+            })
             .assert()
             .code(self.code);
 
@@ -270,18 +273,22 @@ impl TestPage<'_> {
     }
 }
 
-fn load_env<'a>(vars: &[(&'a str, &str)]) -> impl Iterator<Item = (&'a str, impl AsRef<OsStr>)> {
-    vars.iter().map(|(key, default)| {
+fn load_env<'a, A, K, V>(vars: A) -> impl Iterator<Item = (OsString, OsString)>
+where
+    A: IntoIterator<Item = (K, V)>,
+    K: AsRef<str> + 'a,
+    V: AsRef<OsStr> + 'a,
+{
+    vars.into_iter().map(|(key, default)| {
+        let key = key.as_ref();
         let val = if let Some(overridden) = std::env::var_os(format!("TESTING_{key}")) {
-            eprintln!(
-                "--- overriding env var {key:?} = {:?} (over {default:?})",
-                &*overridden.to_string_lossy()
-            );
-            Cow::Owned(overridden)
+            eprintln! { "--- overriding env var {key:?} = {:?} (over {:?})",
+            &*overridden.to_string_lossy(), default.as_ref().display() };
+            overridden
         } else {
-            Cow::Borrowed(default.as_ref())
+            default.as_ref().to_owned()
         };
-        (*key, val)
+        (key.into(), val)
     })
 }
 

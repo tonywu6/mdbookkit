@@ -77,9 +77,8 @@ pub struct Options {
     pub dev_mode: DevMode,
     #[serde(default)]
     pub fail_on_warnings: FailOnWarnings,
-    #[deprecated]
-    #[serde(default)]
-    pub book_url: Option<BaseUrl>,
+    #[serde(default, alias = "book-url")]
+    pub site_url: Option<BaseUrl>,
 }
 
 #[derive(Debug, Default, Deserialize)]

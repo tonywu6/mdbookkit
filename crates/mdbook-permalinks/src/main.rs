@@ -116,10 +116,7 @@ impl Environment {
         } = config;
 
         let site_url = site_url
-            .or_else(|| {
-                #[allow(deprecated)]
-                options.book_url.take()
-            })
+            .or_else(|| options.site_url.take())
             .unwrap_or_default()
             .resolve(&book.base_dir.path);
 
@@ -564,10 +561,8 @@ impl Resolver<'_> {
             let file = match result {
                 BookResource { path } => path.url,
                 MarkdownPage { mut file } => {
-                    if self.interest == ContentInterest::Raw
-                        && let Some((path, "md")) = file.path().rsplit_once('.')
-                    {
-                        file.set_path(&format!("{path}.html"));
+                    if self.interest == ContentInterest::Raw {
+                        file.replace_suffix(".md", ".html");
                     }
                     file
                 }
@@ -816,6 +811,18 @@ impl<'a, E: Iterator<Item = Event<'a>>> Iterator for Patch<'a, E> {
             Self::Link(events) => events.next(),
             Self::Skip(events) => events.next(),
             Self::SkipOne(event) => event.next(),
+        }
+    }
+}
+
+trait UrlPathReplaceSuffix {
+    fn replace_suffix(&mut self, suffix: &str, repl: &str);
+}
+
+impl UrlPathReplaceSuffix for Url {
+    fn replace_suffix(&mut self, suffix: &str, repl: &str) {
+        if let Some(prefix) = self.path().strip_suffix(suffix) {
+            self.set_path(&format!("{prefix}{repl}"));
         }
     }
 }
