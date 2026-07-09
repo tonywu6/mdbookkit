@@ -48,7 +48,7 @@ collections. [^1]
 
 ## Overview
 
-Follow the [quickstart tutorial](getting-started.md) to try out the preprocessor.
+Follow the [quickstart tutorial](getting-started.md) to try out the preprocessor!
 
 For **writing documentation,**
 

@@ -76,7 +76,7 @@ site-url = "https://me.example.org/my/book"
 > This option is set **under the `[output.html]` table** instead of the preprocessor
 > table!
 
-The `site-url` option is part of mdBook's builtin [HTML renderer options][mdbook-html],
+The `site-url` option is part of mdBook's built-in [HTML renderer options][mdbook-html],
 although mdBook only uses it to ensure that links are correct in the 404 page.
 
 By providing a full URL for this option, you enable the preprocessor to extract a local

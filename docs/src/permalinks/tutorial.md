@@ -86,7 +86,7 @@ option to your `book.toml`. Feel free to update the URL to your repo's actual UR
   after = ["links"]
 ```
 
-The `git-repository-url` option is part of mdBook's builtin [HTML renderer
+The `git-repository-url` option is part of mdBook's built-in [HTML renderer
 options][mdbook-html]. When set, mdBook renders an icon link on the right side of the
 top menu bar that opens the configured URL. The preprocessor reuses this option as the
 base of the generated permalinks.
@@ -122,7 +122,7 @@ You are now ready to add permalinks to your book!
 <aside><p><details>
   <summary>Side note: What is a permalink?</summary>
 
-To recap, a ["permalink"] is a link that always opens up a file or directory in your Git
+A ["permalink"] is a link that always opens up a file or directory in your Git
 repository _at a specific commit._ The link is considered "permanent" because the
 content it points to does not change even as your Git history evolves. For example,
 compare the following links to the `README.md` file in the rust-lang/rust repository on
@@ -302,7 +302,8 @@ Most forges that support permalinking support 2 versions of the links:
 
 - A link that directly serves the file's raw content, suitable for embedding or
   downloading
-  - For example, on GitHub, such links are denoted by `raw` in their paths: <br>
+  - For example, [on GitHub][github-raw], such links are denoted by `raw` in their
+    paths: <br>
     [<code>https://github.com/tokio-rs/tracing/<strong>raw</strong>/add986d/assets/logo.svg</code>](https://github.com/tokio-rs/tracing/raw/add986d/assets/logo.svg)
 
 If you use a file path as the URL in a Markdown image, as in
@@ -327,7 +328,7 @@ repository both as a displayed image and as a clickable link:
 ### HTML links
 
 Finally, in case Markdown isn't sufficient and you would like to use HTML code in your
-book, the preprocessor has builtin support for processing links in HTML elements as
+book, the preprocessor has built-in support for processing links in HTML elements as
 well.
 
 Here are some useful things you can do with HTML in Markdown:
@@ -414,4 +415,5 @@ Thus concludes the tutorial! I hope you find this preprocessor useful.
 ["permalink"]: https://en.wikipedia.org/wiki/Permalink
 [vscode-path-completions]: https://code.visualstudio.com/docs/languages/markdown#_path-completions
 [target-blank]: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/a#target
+[github-raw]: https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files#viewing-or-copying-the-raw-file-content
 <!-- prettier-ignore-end -->

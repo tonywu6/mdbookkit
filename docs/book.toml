@@ -7,7 +7,15 @@ title = "mdbookkit"
 [build]
 build-dir = "dist/mdbookkit"
 create-missing = false
-extra-watch-dirs = ["bin", "scripts", "web", "Cargo.toml", "../README.md"]
+extra-watch-dirs = [
+  "bin",
+  "scripts",
+  "web",
+  "Cargo.toml",
+  "../README.md",
+  "../crates/mdbook-rustdoc-links/README.md",
+  "../crates/mdbook-permalinks/README.md",
+]
 use-default-preprocessors = false
 
 [output.html]

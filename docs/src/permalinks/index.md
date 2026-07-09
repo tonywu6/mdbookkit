@@ -8,9 +8,8 @@
 
 Permalinks in [mdBook]!
 
-With this [preprocessor], you can easily add hyperlinks for any file in your Git
-repository to your mdBook documentation without having to hard-code URLs or worry about
-broken links.
+With this [preprocessor], you can easily link to any file in your Git repository in your
+mdBook documentation, without having to hard-code URLs or worry about broken links.
 
 You simply write ...
 
@@ -26,7 +25,37 @@ Here is a link to the project's [Cargo.toml](/Cargo.toml).
 
 </figure>
 
-## Feature overview
+## Overview
+
+Follow the [quickstart tutorial](tutorial.md) to try out the preprocessor!
+
+- [Use file paths as links](tutorial.md#linking-by-paths) and get links to your Git
+  repository.
+
+- Links are anchored to the Git commit at the time your book is built.
+
+- Display [images](tutorial.md#images) and [media files](tutorial.md#html-links) in your
+  repository.
+
+- Supports repositories on GitHub, Codeberg, and Tangled out of the box, but you can
+  also
+  [define your own permalink format](how-to/remote-url.md#using-a-custom-permalink-format).
+
+- [Get warnings](tutorial.md#check) when links become broken.
+
+<figure>
+
+{% filter replace("crates/mdbook-permalinks/tests/book_tutorial_check/", "") %}
+{% include "/crates/mdbook-permalinks/tests/book_tutorial_check/stderr/data.svg" %}
+{% endfilter %}
+
+<figcaption>
+
+Link rot happens all the time. The preprocessor will tell you about it.
+
+</figcaption>
+
+</figure>
 
 ## License
 

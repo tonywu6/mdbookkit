@@ -49,7 +49,7 @@ The URL to your git repository.
 >
 > This option is set under the `[build.html]` table.
 
-`git-repository-url` is one of mdBook's builtin [HTML renderer options][mdbook-html].
+`git-repository-url` is one of mdBook's built-in [HTML renderer options][mdbook-html].
 When set, mdBook renders a button on the right side of the top menu bar.
 
 If your repository is hosted on one of the following supported sites, then the
@@ -112,7 +112,7 @@ The base URL where your book is hosted.
 >
 > This option is set under the `[build.html]` table.
 
-`site-url` is one of mdBook's builtin [HTML renderer options][mdbook-html]. mdBook uses
+`site-url` is one of mdBook's built-in [HTML renderer options][mdbook-html]. mdBook uses
 this option to ensure that links on the 404 page are correct.
 
 Setting this to a fully-qualified URL (that begins with `https://` and contains a domain

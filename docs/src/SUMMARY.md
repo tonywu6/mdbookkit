@@ -33,9 +33,3 @@
 - [Configuration](permalinks/configuration.md)
   - [Environment variables](permalinks/configuration/environment-variables.md)
 - [CHANGELOG](permalinks/CHANGELOG.md)
-
----
-
-<!--
-[](_internal/mdbook-rustdoc-links-README.md) [](_internal/mdbook-permalinks-README.md)
-[](_internal/mdbookkit-README.md) -->

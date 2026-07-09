@@ -31,7 +31,7 @@ git-repository-url = "https://github.com/me/awesome-book"
 > This option is set **under the `[output.html]` table** instead of the preprocessor
 > table!
 
-The `git-repository-url` option is part of mdBook's builtin [HTML renderer
+The `git-repository-url` option is part of mdBook's built-in [HTML renderer
 options][mdbook-html]. When set, mdBook renders a button on the right side of the top
 menu bar, which will open the repo at the configured URL. Chances are, you are already
 using it, in which case no further setup is required!
