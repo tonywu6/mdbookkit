@@ -198,7 +198,7 @@ as `[Vec]`:
 > ```
 >
 > [`Vec<T>`], a heap-allocated _vector_ that is resizable at runtime.
->
+
 > ```md
 > | Phantom type               | variance of `T`   |
 > | :------------------------- | :---------------- |

@@ -7,7 +7,7 @@ warning: broken link to "SUMMARY.md"
   | file is not included in `SUMMARY.md`:
   | "crates/mdbook-permalinks/tests/html_links/src/SUMMARY.md"
   |
-  = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+  = note: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
 
 warning: broken link to "https://git.example.org/tree/HEAD/LICENSE-GPL.md"
  --> crates/mdbook-permalinks/tests/html_links/src/diagnostics.md:3:1

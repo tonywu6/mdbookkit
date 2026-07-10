@@ -24,7 +24,7 @@ Unfortunately, due to the way the preprocessor works, this is unsupported. This 
 will not help if you are trying to mention items from dependencies that are
 conditionally-compiled.
 
-In lieu of `#[cfg(doc)]`, the preprocessor offer several options to control the
+In lieu of `#[cfg(doc)]`, the preprocessor offers several options to control the
 compilation process.
 
 ## Specifying features

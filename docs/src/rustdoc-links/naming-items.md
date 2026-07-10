@@ -106,7 +106,7 @@ packages using the same syntax:
 > - [`fmt`][fn@tracing_subscriber::fmt]
 
 To learn how to use the option, please see the dedicated
-[How-to guide](how-to/package-selection.md)
+[How-to guide](how-to/package-selection.md).
 
 ## Items that cannot be linked to
 

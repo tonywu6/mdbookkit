@@ -29,6 +29,8 @@ Here is a link to the project's [Cargo.toml](/Cargo.toml).
 
 Follow the [quickstart tutorial](tutorial.md) to try out the preprocessor!
 
+Feature highlights:
+
 - [Use file paths as links](tutorial.md#linking-by-paths) and get links to your Git
   repository.
 

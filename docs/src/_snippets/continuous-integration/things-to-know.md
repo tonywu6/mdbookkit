@@ -4,17 +4,17 @@ However, some of the preprocessor's default behaviors are different when it
 
 In most cases, no extra configurations are necessary for the preprocessor to work in CI.
 
-### Exit status
+### Exiting with failure
 
 When running locally, if the preprocessor detects non-fatal issues with your book, such
-as broken links, it emits warnings but otherwise exits with a success (0) status. This
-is so that mdBook will keep running even as there may be temporary errors as you are
-editing your book.
+as broken links, it will emit warnings but otherwise exits with a success (0) status.
+This is so that mdBook will keep running even as there may be temporary errors as you
+are editing your book.
 
-When running in CI, any warnings emitted during the build process will cause the
-preprocessor to exit with a failure (1) status at the end, in which case mdBook will
+When running in CI, **any warnings emitted during the build process will cause the
+preprocessor to exit with a failure (1) status at the end,** in which case mdBook will
 also exit early. This way, the preprocessor can fail your pipeline if you accidentally
-pushed changes that contain problems.
+pushed changes that contained problems.
 
 <figure>
   {% include exit_status %}

@@ -421,17 +421,7 @@ in the `[[build]]` array.
 - You cannot specify `targets` in `build-options`. Instead, specify it in each
   `[[build]]` table.
 
-For example, the following configuration snippets are equivalent to each other:
-
-```toml config-example
-[preprocessor.rustdoc-links]
-build = [
-  { targets = ["aarch64-unknown-linux-gnu"], rustc-args = ["--cfg", "mdbook"] },
-  { targets = ["wasm32-wasip2"], no-default-features = true },
-]
-build-options.toolchain = "nightly"
-build-options.rustc-args = "-C opt-level=3"
-```
+For example, the following configuration snippet ...
 
 ```toml config-example
 [[preprocessor.rustdoc-links.build]]
@@ -444,6 +434,18 @@ targets = ["wasm32-wasip2"]
 no-default-features = true
 toolchain = "nightly"
 rustc-args = ["-C", "opt-level=3"]
+```
+
+... can be simplified using `build-options` as:
+
+```toml config-example
+[preprocessor.rustdoc-links]
+build-options.toolchain = "nightly"
+build-options.rustc-args = "-C opt-level=3"
+build = [
+  { targets = ["aarch64-unknown-linux-gnu"], rustc-args = ["--cfg", "mdbook"] },
+  { targets = ["wasm32-wasip2"], no-default-features = true },
+]
 ```
 
 ## `base-url`

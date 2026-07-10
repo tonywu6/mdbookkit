@@ -55,9 +55,9 @@ To remedy this, you can:
   may not be possible.
 
 - Use [`build.packages = "unspecified"`](package-selection.md#documenting-everything),
-  which causes `cargo doc` to document all your dependencies. This may have
-  [performance implication](local-development.md#caveats) if your project depends on a
-  large number of packages.
+  which causes `cargo doc` to document all your dependencies. Do note that this may
+  significantly [slowdown](local-development.md#caveats) your build if your project
+  depends on a large number of packages.
 
 - If you have the option to use a nightly toolchain, configure your `book.toml` to have
   the following:

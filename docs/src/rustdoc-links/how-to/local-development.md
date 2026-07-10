@@ -2,7 +2,7 @@
 
 By default, for any item that is not in [`std`], the preprocessor will generate links
 that point to [docs.rs](https://docs.rs). This includes items from your local packages.
-During local development, this behavior may be inconvenient:
+This may be inconvenient for local development:
 
 - Your package may not have been published yet, in which case such links leads to a 404
   page.
@@ -17,7 +17,7 @@ option to support locally previewing docs produced by `cargo doc` .
 
 ## Using `base-url.dev`
 
-Specify an absolute path for `base-url.dev`:
+Specify an absolute path for the `base-url.dev` option:
 
 ```toml config-example
 [preprocessor.rustdoc-links]

@@ -84,10 +84,6 @@ jobs:
           path: docs/book
 ```
 
-## Example: Tangled Spindles
-
-TODO:
-
 <!-- prettier-ignore-start -->
 [`cargo binstall`]: https://github.com/cargo-bins/cargo-binstall
 [`dtolnay/rust-toolchain`]: https://github.com/dtolnay/rust-toolchain

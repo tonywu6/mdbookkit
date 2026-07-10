@@ -9,7 +9,7 @@ correctly!
 
 - Links may be reachable but will continue to refer to an older commit, showing stale
   content;
-- If you have added/moved/deleted files, or if your local branch has diverged, then
+- If you have added, moved, or deleted files, or if your local branch has diverged, then
   links become "broken" until you have updated your remote repository;
 - If you rely on the preprocessor to [show images](../tutorial.md#images), the images
   may not load.
@@ -73,8 +73,8 @@ editor-uri = "zed://file/{path}"
 > URI][file-uri]). This restriction applies even to webpages on localhost! Because of
 > this, the preprocessor implemented opening paths in text editors as a compromise.
 >
-> Even so, out of an abundance of caution, your browser/editor may still require extra
-> confirmation when you click on such links. Prompts like the one below are expected:
+> Even so, your browser/editor may still require extra confirmation out of an abundance
+> of caution when you click on such links. Prompts like the one below are expected:
 >
 > <figure>
 >   <img src="_media/vscode-link-confirm.png"

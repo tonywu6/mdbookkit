@@ -8,23 +8,23 @@ works.
 
 This tutorial assumes that:
 
-- You already have a working mdBook project. If you need to, feel free to follow
-  [mdBook's tutorial][mdbook-tutorial] to first create a book.
+1. You already have a working mdBook project. If you need to, feel free to follow
+   [mdBook's tutorial][mdbook-tutorial] to first create a book.
 
-- You already have a Cargo [project][cargo-project], and your book is in the project's
-  directory.
+2. You already have a Cargo [project][cargo-project], and your book is in the project's
+   directory.
 
-  <details>
-    <summary>Explanation</summary>
+   <details>
+     <summary>Explanation</summary>
 
-  Under the hood, the preprocessor runs [`cargo doc`] so that it can correctly generate
-  links, which requires the presence of a Cargo project. Outside of a Cargo project,
-  this preprocessor isn't really useful.
+   Under the hood, the preprocessor runs [`cargo doc`] so that it can correctly generate
+   links, which requires the presence of a Cargo project. Outside of a Cargo project,
+   this preprocessor isn't really useful.
 
-  If you are not currently working on a package, then for this tutorial, you can run
-  [`cargo init`] in your book's top-level directory (where the `book.toml` file is).
+   If you are not currently working on a package, then for this tutorial, you can run
+   [`cargo init`] in your book's top-level directory (where the `book.toml` file is).
 
-  </details>
+   </details>
 
 ## Install
 

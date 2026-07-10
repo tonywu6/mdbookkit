@@ -26,7 +26,7 @@ The [`option`](https://doc.rust-lang.org/stable/std/option/index.html) and
 optional and error-handling types ...
 ```
 
-You simply mention items by name ...
+You simply mention items by name, as if writing doc comments ...
 
 ```md
 The [`option`][std::option] and [`result`][std::result] modules define optional and
@@ -46,6 +46,15 @@ collections. [^1]
 
 </figure>
 
+Should you want to refactor your code, the preprocessor also checks your links, so you
+can keep them up-to-date.
+
+<figure>
+
+{% include "/crates/mdbook-rustdoc-links/tests/book_homepage/stderr/data.svg" %}
+
+</figure>
+
 ## Overview
 
 Follow the [quickstart tutorial](getting-started.md) to try out the preprocessor!
@@ -60,7 +69,7 @@ For **writing documentation,**
 
 See how to configure the preprocessor **for specific scenarios,** such as:
 
-- How to link to [items from dependencies](how-to/package-selection.md)
+- How to link to [items in dependencies](how-to/package-selection.md)
 
 - How to link to [conditionally-compiled items](how-to/conditional-compilation.md)
 

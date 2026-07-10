@@ -1,0 +1,11 @@
+[package]
+edition = "2024"
+name = "book_homepage"
+publish = false
+version = "0.1.0"
+
+[dependencies]
+shlex = "2.0.1"
+
+[workspace]
+resolver = "3"

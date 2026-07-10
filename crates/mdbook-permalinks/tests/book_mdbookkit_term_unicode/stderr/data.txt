@@ -16,6 +16,6 @@ warning: broken link to "draft/"
   │      file is not included in `SUMMARY.md`:
   │      "crates/mdbook-permalinks/tests/book_mdbookkit_term_unicode/src/draft/index.md"
   │
-  ╰ help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+  ╰ note: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
 
  WARN mdbook-permalinks: finished with warnings

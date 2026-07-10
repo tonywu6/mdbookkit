@@ -106,10 +106,6 @@ jobs:
           path: docs/book
 ```
 
-## Example: Tangled Spindles
-
-TODO:
-
 [^fetch-tags]:
     Currently, a [bug](https://github.com/actions/checkout/issues/1471) has prevented
     `fetch-tags` from taking effect unless you also specify `fetch-depth: 0`.

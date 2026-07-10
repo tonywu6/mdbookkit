@@ -67,7 +67,7 @@ warning: broken link to "data"
 12 | - [](data)
    |      ^^^^ link doesn't match any file in the book
    |
-   = help: for this link to be accessible, expected any of the following files, but found none:
+   = note: for this link to be accessible, expected any of the following files, but found none:
            "crates/mdbook-permalinks/tests/file_links/src/data.md"
            "crates/mdbook-permalinks/tests/file_links/src/data/index.md"
            "crates/mdbook-permalinks/tests/file_links/src/data/README.md"
@@ -79,7 +79,7 @@ warning: broken link to "data.md"
 13 | - [](data.md)
    |      ^^^^^^^ link doesn't match any file in the book
    |
-   = help: for this link to be accessible, expected any of the following files, but found none:
+   = note: for this link to be accessible, expected any of the following files, but found none:
            "crates/mdbook-permalinks/tests/file_links/src/data.md"
            "crates/mdbook-permalinks/tests/file_links/src/data.md/index.md"
            "crates/mdbook-permalinks/tests/file_links/src/data.md/README.md"
@@ -91,7 +91,7 @@ warning: broken link to "data.html"
 14 | - [](data.html)
    |      ^^^^^^^^^ link doesn't match any file in the book
    |
-   = help: for this link to be accessible, expected any of the following files, but found none:
+   = note: for this link to be accessible, expected any of the following files, but found none:
            "crates/mdbook-permalinks/tests/file_links/src/data.md"
            "crates/mdbook-permalinks/tests/file_links/src/data.html"
 
@@ -101,7 +101,7 @@ warning: broken link to "data/"
 15 | - [](data/)
    |      ^^^^^ link doesn't match any file in the book
    |
-   = help: for this link to be accessible, expected any of the following files, but found none:
+   = note: for this link to be accessible, expected any of the following files, but found none:
            "crates/mdbook-permalinks/tests/file_links/src/data/index.md"
            "crates/mdbook-permalinks/tests/file_links/src/data/README.md"
 
@@ -111,7 +111,7 @@ warning: broken link to "api/"
 1 | - [](api/)
   |      ^^^^ directory has no `index.md` file
   |
-  = help: without an `index.md` file at this location, the link will lead to a 404 error
+  = note: without an `index.md` file at this location, the link will lead to a 404 error
   = note: the resolved path is "crates/mdbook-permalinks/tests/file_links/src/api/"
 
 warning: broken link to "api"
@@ -120,7 +120,7 @@ warning: broken link to "api"
 2 | - [](api)
   |      ^^^ directory has no `index.md` file
   |
-  = help: without an `index.md` file at this location, the link will lead to a 404 error
+  = note: without an `index.md` file at this location, the link will lead to a 404 error
   = note: the resolved path is "crates/mdbook-permalinks/tests/file_links/src/api"
 
 warning: broken link to "api/lib/"
@@ -129,7 +129,7 @@ warning: broken link to "api/lib/"
 4 | - [](api/lib/)
   |      ^^^^^^^^ directory has no `index.md` file
   |
-  = help: without an `index.md` file at this location, the link will lead to a 404 error
+  = note: without an `index.md` file at this location, the link will lead to a 404 error
   = note: the resolved path is "crates/mdbook-permalinks/tests/file_links/src/api/lib/"
 
 warning: broken link to "drafts/draft.md"
@@ -141,7 +141,7 @@ warning: broken link to "drafts/draft.md"
   |      file is not included in `SUMMARY.md`:
   |      "crates/mdbook-permalinks/tests/file_links/src/drafts/draft.md"
   |
-  = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+  = note: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
 
 warning: broken link to "drafts/draft"
  --> crates/mdbook-permalinks/tests/file_links/src/4.broken-page-links.md:8:6
@@ -152,7 +152,7 @@ warning: broken link to "drafts/draft"
   |      file is not included in `SUMMARY.md`:
   |      "crates/mdbook-permalinks/tests/file_links/src/drafts/draft.md"
   |
-  = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+  = note: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
 
 warning: broken link to "drafts/index"
  --> crates/mdbook-permalinks/tests/file_links/src/4.broken-page-links.md:9:6
@@ -163,7 +163,7 @@ warning: broken link to "drafts/index"
   |      file is not included in `SUMMARY.md`:
   |      "crates/mdbook-permalinks/tests/file_links/src/drafts/index.md"
   |
-  = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+  = note: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
 
 warning: broken link to "drafts/"
   --> crates/mdbook-permalinks/tests/file_links/src/4.broken-page-links.md:10:6
@@ -174,7 +174,7 @@ warning: broken link to "drafts/"
    |      file is not included in `SUMMARY.md`:
    |      "crates/mdbook-permalinks/tests/file_links/src/drafts/index.md"
    |
-   = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+   = note: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
 
 warning: broken link to "drafts"
   --> crates/mdbook-permalinks/tests/file_links/src/4.broken-page-links.md:11:6
@@ -185,7 +185,7 @@ warning: broken link to "drafts"
    |      file is not included in `SUMMARY.md`:
    |      "crates/mdbook-permalinks/tests/file_links/src/drafts/index.md"
    |
-   = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+   = note: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
 
 warning: broken link to "/target/"
  --> crates/mdbook-permalinks/tests/file_links/src/5.gitignore.md:1:6
@@ -202,7 +202,7 @@ warning: broken link to "./symlinks/lib.md"
   |      file is not included in `SUMMARY.md`:
   |      "crates/mdbook-permalinks/tests/file_links/src/symlinks/lib.md"
   |
-  = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+  = note: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
 
 warning: broken link to "ignored.rs"
  --> crates/mdbook-permalinks/tests/file_links/src/7.always-link.md:3:6

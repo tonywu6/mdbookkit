@@ -47,10 +47,8 @@ The URL to your git repository.
 
 > [!NOTE]
 >
-> This option is set under the `[build.html]` table.
-
-`git-repository-url` is one of mdBook's built-in [HTML renderer options][mdbook-html].
-When set, mdBook renders a button on the right side of the top menu bar.
+> This option is set under the `[build.html]` table. This is one of mdBook's [built-in
+> options][mdbook-html].
 
 If your repository is hosted on one of the following supported sites, then the
 preprocessor can reuse this setting to know how to generate permalinks:
@@ -110,14 +108,12 @@ The base URL where your book is hosted.
 
 > [!NOTE]
 >
-> This option is set under the `[build.html]` table.
+> This option is set under the `[build.html]` table. This is one of mdBook's [built-in
+> options][mdbook-html].
 
-`site-url` is one of mdBook's built-in [HTML renderer options][mdbook-html]. mdBook uses
-this option to ensure that links on the 404 page are correct.
-
-Setting this to a fully-qualified URL (that begins with `https://` and contains a domain
-name) enables the preprocessor to
-[validate links to your book with hardcoded URLs](how-to/hardcoded-links.md#checking-urls-to-your-book).
+Set this to a fully-qualified URL (that begins with `https://` and contains a domain
+name) to enable the preprocessor to
+[validate links to your book that use hardcoded URLs instead of paths](how-to/hardcoded-links.md#checking-urls-to-your-book).
 
 ## `repo-url-template`
 
@@ -174,8 +170,6 @@ walkthrough.
 If your remote repository is on one of the
 [supported sites](#outputhtmlgit-repository-url), you do not need to use the
 <code class="nowrap">repo-url-template</code> option. Otherwise, it is required.
-
-### Syntax
 
 Within the template URL, you can specify the following placeholders, which will be
 replaced at runtime by their actual values:
@@ -272,8 +266,8 @@ always-link = [".rs", ".yml"]
 - default: none
 
 By default, the preprocessor does not convert a link to a permalink if it points to a
-path within your book. Because mdBook always copies files within the `src` directory to
-the output, such links remain intact.
+location within your book. Because mdBook always copies files within the `src` directory
+to the output, such links remain intact.
 
 If you want the preprocessor to always generate permalinks for certain files even if
 they are in the book, then you can use the `always-link` option. The option accepts a

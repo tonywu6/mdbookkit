@@ -140,6 +140,11 @@ test_case![
     exit(0),
     env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
 ];
+test_case![
+    book_homepage,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
 
 #[test]
 fn base_url_local() -> Result<()> {

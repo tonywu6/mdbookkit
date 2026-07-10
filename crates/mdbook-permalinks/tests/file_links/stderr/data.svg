@@ -160,7 +160,7 @@
 </tspan>
     <tspan x="10px" y="1252px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1270px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+    <tspan x="10px" y="1270px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
 </tspan>
     <tspan x="10px" y="1288px"><tspan>           "crates/mdbook-permalinks/tests/file_links/src/data.md"</tspan>
 </tspan>
@@ -184,7 +184,7 @@
 </tspan>
     <tspan x="10px" y="1468px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1486px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+    <tspan x="10px" y="1486px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
 </tspan>
     <tspan x="10px" y="1504px"><tspan>           "crates/mdbook-permalinks/tests/file_links/src/data.md"</tspan>
 </tspan>
@@ -208,7 +208,7 @@
 </tspan>
     <tspan x="10px" y="1684px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1702px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+    <tspan x="10px" y="1702px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
 </tspan>
     <tspan x="10px" y="1720px"><tspan>           "crates/mdbook-permalinks/tests/file_links/src/data.md"</tspan>
 </tspan>
@@ -228,7 +228,7 @@
 </tspan>
     <tspan x="10px" y="1864px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1882px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+    <tspan x="10px" y="1882px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
 </tspan>
     <tspan x="10px" y="1900px"><tspan>           "crates/mdbook-permalinks/tests/file_links/src/data/index.md"</tspan>
 </tspan>
@@ -248,7 +248,7 @@
 </tspan>
     <tspan x="10px" y="2044px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="2062px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: without an `index.md` file at this location, the link will lead to a 404 error</tspan>
+    <tspan x="10px" y="2062px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: without an `index.md` file at this location, the link will lead to a 404 error</tspan>
 </tspan>
     <tspan x="10px" y="2080px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the resolved path is "crates/mdbook-permalinks/tests/file_links/src/api/"</tspan>
 </tspan>
@@ -266,7 +266,7 @@
 </tspan>
     <tspan x="10px" y="2206px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="2224px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: without an `index.md` file at this location, the link will lead to a 404 error</tspan>
+    <tspan x="10px" y="2224px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: without an `index.md` file at this location, the link will lead to a 404 error</tspan>
 </tspan>
     <tspan x="10px" y="2242px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the resolved path is "crates/mdbook-permalinks/tests/file_links/src/api"</tspan>
 </tspan>
@@ -284,7 +284,7 @@
 </tspan>
     <tspan x="10px" y="2368px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="2386px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: without an `index.md` file at this location, the link will lead to a 404 error</tspan>
+    <tspan x="10px" y="2386px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: without an `index.md` file at this location, the link will lead to a 404 error</tspan>
 </tspan>
     <tspan x="10px" y="2404px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the resolved path is "crates/mdbook-permalinks/tests/file_links/src/api/lib/"</tspan>
 </tspan>
@@ -308,7 +308,7 @@
 </tspan>
     <tspan x="10px" y="2584px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="2602px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
+    <tspan x="10px" y="2602px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
 </tspan>
     <tspan x="10px" y="2620px">
 </tspan>
@@ -330,7 +330,7 @@
 </tspan>
     <tspan x="10px" y="2782px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="2800px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
+    <tspan x="10px" y="2800px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
 </tspan>
     <tspan x="10px" y="2818px">
 </tspan>
@@ -352,7 +352,7 @@
 </tspan>
     <tspan x="10px" y="2980px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="2998px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
+    <tspan x="10px" y="2998px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
 </tspan>
     <tspan x="10px" y="3016px">
 </tspan>
@@ -374,7 +374,7 @@
 </tspan>
     <tspan x="10px" y="3178px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="3196px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
+    <tspan x="10px" y="3196px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
 </tspan>
     <tspan x="10px" y="3214px">
 </tspan>
@@ -396,7 +396,7 @@
 </tspan>
     <tspan x="10px" y="3376px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="3394px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
+    <tspan x="10px" y="3394px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
 </tspan>
     <tspan x="10px" y="3412px">
 </tspan>
@@ -430,7 +430,7 @@
 </tspan>
     <tspan x="10px" y="3682px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="3700px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
+    <tspan x="10px" y="3700px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
 </tspan>
     <tspan x="10px" y="3718px">
 </tspan>

@@ -4,7 +4,7 @@ warning: broken link to "https://example.org/book"
 1 | - [](https://example.org/book)
   |      ^^^^^^^^^^^^^^^^^^^^^^^^ link doesn't match any file in the book
   |
-  = help: for this link to be accessible, expected any of the following files, but found none:
+  = note: for this link to be accessible, expected any of the following files, but found none:
           "crates/mdbook-permalinks/tests/book_links/src/index.md"
           "crates/mdbook-permalinks/tests/book_links/src/README.md"
 
@@ -14,7 +14,7 @@ warning: broken link to "https://example.org/book/"
 2 | - [](https://example.org/book/)
   |      ^^^^^^^^^^^^^^^^^^^^^^^^^ link doesn't match any file in the book
   |
-  = help: for this link to be accessible, expected any of the following files, but found none:
+  = note: for this link to be accessible, expected any of the following files, but found none:
           "crates/mdbook-permalinks/tests/book_links/src/index.md"
           "crates/mdbook-permalinks/tests/book_links/src/README.md"
 
@@ -24,7 +24,7 @@ warning: broken link to "https://example.org/book/1.book-links/"
 4 | - [](https://example.org/book/1.book-links/)
   |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ link doesn't match any file in the book
   |
-  = help: for this link to be accessible, expected any of the following files, but found none:
+  = note: for this link to be accessible, expected any of the following files, but found none:
           "crates/mdbook-permalinks/tests/book_links/src/1.book-links/index.md"
           "crates/mdbook-permalinks/tests/book_links/src/1.book-links/README.md"
 
@@ -34,7 +34,7 @@ warning: broken link to "https://example.org/book/1.book-links.md"
 5 | - [](https://example.org/book/1.book-links.md)
   |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unexpected `.md` extension in link path
   |
-  = help: because the output path of this page won't contain the `.md` extension, this link won't work correctly
+  = note: because the output path of this page won't contain the `.md` extension, this link won't work correctly
   = note: the resolved path is "crates/mdbook-permalinks/tests/book_links/src/1.book-links.md"
 help: try removing the extension:
   |
@@ -48,7 +48,7 @@ warning: broken link to "https://example.org/book/1.book-links.md#links"
 6 | - [](https://example.org/book/1.book-links.md#links)
   |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unexpected `.md` extension in link path
   |
-  = help: because the output path of this page won't contain the `.md` extension, this link won't work correctly
+  = note: because the output path of this page won't contain the `.md` extension, this link won't work correctly
   = note: the resolved path is "crates/mdbook-permalinks/tests/book_links/src/1.book-links.md"
 help: try removing the extension:
   |
@@ -65,7 +65,7 @@ warning: broken link to "https://example.org/book/trailing-slash/draft.md"
   |      file is not included in `SUMMARY.md`:
   |      "crates/mdbook-permalinks/tests/book_links/src/trailing-slash/draft.md"
   |
-  = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+  = note: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
 
 warning: broken link to "https://example.org/book/trailing-slash/draft"
  --> crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:9:6
@@ -76,7 +76,7 @@ warning: broken link to "https://example.org/book/trailing-slash/draft"
   |      file is not included in `SUMMARY.md`:
   |      "crates/mdbook-permalinks/tests/book_links/src/trailing-slash/draft.md"
   |
-  = help: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+  = note: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
 
 warning: broken link to "https://example.org/book/trailing-slash.html"
   --> crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:11:6
@@ -84,7 +84,7 @@ warning: broken link to "https://example.org/book/trailing-slash.html"
 11 | - [](https://example.org/book/trailing-slash.html)
    |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ link doesn't match any file in the book
    |
-   = help: for this link to be accessible, expected any of the following files, but found none:
+   = note: for this link to be accessible, expected any of the following files, but found none:
            "crates/mdbook-permalinks/tests/book_links/src/trailing-slash.md"
            "crates/mdbook-permalinks/tests/book_links/src/trailing-slash.html"
 
@@ -94,7 +94,7 @@ warning: broken link to "https://example.org/book/trailing-slash.md"
 12 | - [](https://example.org/book/trailing-slash.md)
    |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ link doesn't match any file in the book
    |
-   = help: for this link to be accessible, expected any of the following files, but found none:
+   = note: for this link to be accessible, expected any of the following files, but found none:
            "crates/mdbook-permalinks/tests/book_links/src/trailing-slash.md"
            "crates/mdbook-permalinks/tests/book_links/src/trailing-slash.md/index.md"
            "crates/mdbook-permalinks/tests/book_links/src/trailing-slash.md/README.md"
@@ -106,7 +106,7 @@ warning: broken link to "https://example.org/book/staging/"
 14 | - [](https://example.org/book/staging/)
    |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ link doesn't match any file in the book
    |
-   = help: for this link to be accessible, expected any of the following files, but found none:
+   = note: for this link to be accessible, expected any of the following files, but found none:
            "crates/mdbook-permalinks/tests/book_links/src/staging/index.md"
            "crates/mdbook-permalinks/tests/book_links/src/staging/README.md"
 
@@ -116,7 +116,7 @@ warning: broken link to "https://example.org/book/staging"
 15 | - [](https://example.org/book/staging)
    |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ directory has no `index.md` file
    |
-   = help: without an `index.md` file at this location, the link will lead to a 404 error
+   = note: without an `index.md` file at this location, the link will lead to a 404 error
    = note: the resolved path is "crates/mdbook-permalinks/tests/book_links/src/staging"
 
 warning: broken link to "https://example.org/book/404"
@@ -125,7 +125,7 @@ warning: broken link to "https://example.org/book/404"
 17 | - [](https://example.org/book/404)
    |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ link doesn't match any file in the book
    |
-   = help: for this link to be accessible, expected any of the following files, but found none:
+   = note: for this link to be accessible, expected any of the following files, but found none:
            "crates/mdbook-permalinks/tests/book_links/src/404.md"
            "crates/mdbook-permalinks/tests/book_links/src/404/index.md"
            "crates/mdbook-permalinks/tests/book_links/src/404/README.md"

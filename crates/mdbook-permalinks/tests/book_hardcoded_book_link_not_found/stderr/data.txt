@@ -4,7 +4,7 @@ warning: broken link to "https://me.example.org/my/book/api/legacy-options"
 1 │ [Legacy options](https://me.example.org/my/book/api/legacy-options) will be deprecated
   │                  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ link doesn't match any file in the book
   │
-  ╰ help: for this link to be accessible, expected any of the following files, but found none:
+  ╰ note: for this link to be accessible, expected any of the following files, but found none:
           "crates/mdbook-permalinks/tests/book_hardcoded_book_link_not_found/src/api/legacy-options.md"
           "crates/mdbook-permalinks/tests/book_hardcoded_book_link_not_found/src/api/legacy-options/index.md"
           "crates/mdbook-permalinks/tests/book_hardcoded_book_link_not_found/src/api/legacy-options/README.md"

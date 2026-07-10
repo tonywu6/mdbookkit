@@ -34,7 +34,7 @@
 </tspan>
     <tspan x="10px" y="118px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="136px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+    <tspan x="10px" y="136px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
 </tspan>
     <tspan x="10px" y="154px"><tspan>          "crates/mdbook-permalinks/tests/book_links/src/index.md"</tspan>
 </tspan>
@@ -54,7 +54,7 @@
 </tspan>
     <tspan x="10px" y="298px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="316px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+    <tspan x="10px" y="316px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
 </tspan>
     <tspan x="10px" y="334px"><tspan>          "crates/mdbook-permalinks/tests/book_links/src/index.md"</tspan>
 </tspan>
@@ -74,7 +74,7 @@
 </tspan>
     <tspan x="10px" y="478px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="496px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+    <tspan x="10px" y="496px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
 </tspan>
     <tspan x="10px" y="514px"><tspan>          "crates/mdbook-permalinks/tests/book_links/src/1.book-links/index.md"</tspan>
 </tspan>
@@ -94,7 +94,7 @@
 </tspan>
     <tspan x="10px" y="658px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="676px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: because the output path of this page won't contain the `.md` extension, this link won't work correctly</tspan>
+    <tspan x="10px" y="676px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because the output path of this page won't contain the `.md` extension, this link won't work correctly</tspan>
 </tspan>
     <tspan x="10px" y="694px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the resolved path is "crates/mdbook-permalinks/tests/book_links/src/1.book-links.md"</tspan>
 </tspan>
@@ -122,7 +122,7 @@
 </tspan>
     <tspan x="10px" y="910px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="928px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: because the output path of this page won't contain the `.md` extension, this link won't work correctly</tspan>
+    <tspan x="10px" y="928px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because the output path of this page won't contain the `.md` extension, this link won't work correctly</tspan>
 </tspan>
     <tspan x="10px" y="946px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the resolved path is "crates/mdbook-permalinks/tests/book_links/src/1.book-links.md"</tspan>
 </tspan>
@@ -156,7 +156,7 @@
 </tspan>
     <tspan x="10px" y="1216px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1234px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
+    <tspan x="10px" y="1234px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
 </tspan>
     <tspan x="10px" y="1252px">
 </tspan>
@@ -178,7 +178,7 @@
 </tspan>
     <tspan x="10px" y="1414px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1432px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
+    <tspan x="10px" y="1432px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
 </tspan>
     <tspan x="10px" y="1450px">
 </tspan>
@@ -194,7 +194,7 @@
 </tspan>
     <tspan x="10px" y="1558px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1576px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+    <tspan x="10px" y="1576px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
 </tspan>
     <tspan x="10px" y="1594px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/trailing-slash.md"</tspan>
 </tspan>
@@ -214,7 +214,7 @@
 </tspan>
     <tspan x="10px" y="1738px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1756px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+    <tspan x="10px" y="1756px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
 </tspan>
     <tspan x="10px" y="1774px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/trailing-slash.md"</tspan>
 </tspan>
@@ -238,7 +238,7 @@
 </tspan>
     <tspan x="10px" y="1954px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="1972px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+    <tspan x="10px" y="1972px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
 </tspan>
     <tspan x="10px" y="1990px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/staging/index.md"</tspan>
 </tspan>
@@ -258,7 +258,7 @@
 </tspan>
     <tspan x="10px" y="2134px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="2152px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: without an `index.md` file at this location, the link will lead to a 404 error</tspan>
+    <tspan x="10px" y="2152px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: without an `index.md` file at this location, the link will lead to a 404 error</tspan>
 </tspan>
     <tspan x="10px" y="2170px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the resolved path is "crates/mdbook-permalinks/tests/book_links/src/staging"</tspan>
 </tspan>
@@ -276,7 +276,7 @@
 </tspan>
     <tspan x="10px" y="2296px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="2314px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">help</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+    <tspan x="10px" y="2314px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
 </tspan>
     <tspan x="10px" y="2332px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/404.md"</tspan>
 </tspan>
