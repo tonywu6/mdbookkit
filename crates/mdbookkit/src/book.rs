@@ -6,7 +6,7 @@ use std::{
     str::FromStr,
 };
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result, anyhow, bail};
 use mdbook_markdown::pulldown_cmark::Options as MarkdownOptions;
 use mdbook_preprocessor::{
     PreprocessorContext,
@@ -32,18 +32,28 @@ pub fn string_from_stdin() -> Result<String> {
 
 /// This uses [`serde_json::from_str`] whereas [`mdbook_preprocessor::parse_input`] uses
 /// [`serde_json::from_reader`], which could be slow.
-pub fn book_from_stdin() -> Result<(PreprocessorContext, Book)> {
+pub fn book_from_stdin(doc_url: &'static str) -> Result<(PreprocessorContext, Book)> {
     let input = string_from_stdin()?;
-    match serde_json::from_str(&input) {
-        Ok(book) => Ok(book),
-        Err(err) => {
-            if !err.is_data() {
-                Err(err)?
-            } else {
-                patch_mdbook_input(input, err)
-            }
+    let error = match serde_json::from_str(&input) {
+        Ok(book) => return Ok(book),
+        Err(err) => err,
+    };
+    let error = if error.is_data() {
+        match patch_mdbook_input(input, error) {
+            Ok(book) => return Ok(book),
+            Err(err) => err,
         }
-    }
+    } else {
+        error.into()
+    };
+    let error =
+        anyhow!("https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html")
+            .context(doc_url)
+            .context("help: for more information, please visit the following links:")
+            .context("help: this program is meant to be invoked by mdBook")
+            .context(error)
+            .context("error reading book content from stdin");
+    Err(error)
 }
 
 #[allow(clippy::result_unit_err)]

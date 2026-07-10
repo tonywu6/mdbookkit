@@ -39,7 +39,6 @@ fn main() {
         Some(Command::ValidateConfig) => {
             validate_config_examples::<Config>().or_else(emit_error!())
         }
-
         None => mdbook(),
     }
     .exit()
@@ -71,9 +70,7 @@ struct MarkdownCommand {
 }
 
 fn mdbook() -> Result<(), ()> {
-    let (ctx, mut book) = book_from_stdin()
-        .context("failed to read from mdBook")
-        .or_else(emit_error!())?;
+    let (ctx, mut book) = book_from_stdin(env!("CARGO_PKG_HOMEPAGE")).or_else(emit_error!())?;
 
     let Config {
         builder,

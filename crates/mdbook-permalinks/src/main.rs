@@ -54,9 +54,7 @@ fn main() {
 }
 
 fn mdbook() -> Result<(), ()> {
-    let (ctx, mut book) = book_from_stdin()
-        .context("failed to read from mdBook")
-        .or_else(emit_error!())?;
+    let (ctx, mut book) = book_from_stdin(env!("CARGO_PKG_HOMEPAGE")).or_else(emit_error!())?;
 
     let env = match Environment::new(&ctx, &book) {
         Ok(Ok(env)) => env,

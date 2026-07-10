@@ -27,9 +27,7 @@ use mdbookkit::{
 use crate::CARGO_WORKSPACE;
 
 pub fn run() -> Result<(), ()> {
-    let (ctx, mut book) = book_from_stdin()
-        .context("failed to read from mdBook")
-        .or_else(emit_error!())?;
+    let (ctx, mut book) = book_from_stdin(env!("CARGO_PKG_HOMEPAGE")).or_else(emit_error!())?;
 
     let page_dir = ctx.page_dir().or_else(emit_error!())?.dir_to_url();
 
