@@ -110,7 +110,8 @@ You will see an error when running the preprocessor if your repo URL is not supp
 In which case, to continue with this tutorial, you can temporarily set the option to a
 repo on one of the above sites, such as `https://github.com/rust-lang/mdBook`. The
 generated links will likely open up to a 404 page, but you will be able to see how the
-links will look like.
+links will look like. Or, if you would like to skip ahead, check out the
+[remote URL guide](how-to/remote-url.md#using-a-custom-permalink-format).
 
 </details></p>
 
@@ -160,17 +161,17 @@ See [`book.toml`](../book.toml) for more info.
 
 <figure>
 
+<figcaption>
+  In this example, <code>../book.toml</code> is the path from
+  <code>book/src/chapter_1.md</code> to <code>book/book.toml</code>
+</figcaption>
+
 ```
 book/
 ├── src/
-│   └── intro.md
+│   └── chapter_1.md
 └── book.toml
 ```
-
-<figcaption>
-  <code>../book.toml</code> is the path from <code>book/src/intro.md</code> to
-  <code>book/book.toml</code>
-</figcaption>
 
 </figure>
 
@@ -263,13 +264,13 @@ The preprocessor does not modify links that point to files under your book's sou
 directory. Since mdBook always copies everything in the source directory to the output,
 such links can be kept unchanged.
 
-For example, the following link opens the file on this website instead of on GitHub:
+For example, the following link opens a file on this website instead of on GitHub:
 
 > ```md
-> [Social image for this page](./_media/social.webp)
+> [An example video on this website](./_media/example-video.webm)
 > ```
 >
-> [Social image for this page](./_media/social.webp)
+> [An example video on this website](./_media/example-video.webm)
 
 ### Links with fragments
 

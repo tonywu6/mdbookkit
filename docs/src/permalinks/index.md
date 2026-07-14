@@ -31,17 +31,17 @@ Follow the [quickstart tutorial](tutorial.md) to try out the preprocessor!
 
 Feature highlights:
 
-- [Use file paths as links](tutorial.md#linking-by-paths) and get links to your Git
-  repository.
+- [Use file paths as links](tutorial.md#linking-by-paths). The preprocessor converts
+  them to links to your Git repository.
 
 - Links are anchored to the Git commit at the time your book is built.
-
-- Display [images](tutorial.md#images) and [media files](tutorial.md#html-links) in your
-  repository.
 
 - Supports repositories on GitHub, Codeberg, and Tangled out of the box, but you can
   also
   [define your own permalink format](how-to/remote-url.md#using-a-custom-permalink-format).
+
+- Use permalinks to display [images](tutorial.md#images) and
+  [media files](tutorial.md#html-links).
 
 - [Get warnings](tutorial.md#check) when links become broken.
 

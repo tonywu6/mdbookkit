@@ -62,13 +62,10 @@ command = "node scripts/preprocessor.ts"
 command = "cargo run -- preprocess"
 
 [preprocessor.doc.socials."/"]
-image = "src/media/social.webp"
 title = "mdbookkit"
 
 [preprocessor.doc.socials."/rustdoc-links/"]
-image = "src/rustdoc-links/media/social.webp"
 title = "mdbook-rustdoc-links"
 
 [preprocessor.doc.socials."/permalinks/"]
-image = "src/permalinks/media/social.webp"
 title = "mdbook-permalinks"

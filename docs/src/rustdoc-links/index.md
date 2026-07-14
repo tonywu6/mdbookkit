@@ -10,10 +10,10 @@
 Documenting your Rust project using [mdBook]? Link to your API docs à la rustdoc!
 
 > Rustdoc is capable of directly linking to other rustdoc pages using the path of the
-> item as a link. This is referred to as an ["intra-doc link"][intra-doc-link].
+> item as a link. This is referred to as an "intra-doc link".
 
-This [preprocessor] brings such _intra-doc links_ to mdBook. With it, you can
-effortlessly add hyperlinks from your book to documentation hosted on
+This [preprocessor] brings such [_intra-doc links_][intra-doc-link] to mdBook. With it,
+you can effortlessly add hyperlinks from your book to documentation hosted on
 [docs.rs](https://docs.rs), as well as to Rust's
 [Standard Library documentation](https://doc.rust-lang.org/stable/std).
 
@@ -61,8 +61,7 @@ Follow the [quickstart tutorial](getting-started.md) to try out the preprocessor
 
 For **writing documentation,**
 
-- Learn about all the [syntax features for writing links](writing-links.md) when using
-  this preprocessor. Hint: it's almost exactly the same as when writing doc comments.
+- Learn how to [write links](writing-links.md) when using this preprocessor.
 
 - Learn how to [refer to Rust items by name](naming-items.md) in links so that the
   preprocessor can resolve them.

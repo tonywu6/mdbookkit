@@ -68,9 +68,9 @@ builds.
 
 {% raw %}
 
-Adding this tells mdBook to run this preprocessor after the default [`links`
-preprocessor][mdbook-links]. This is recommended because it allows the preprocessor to
-see text embedded using the [`{{#include}}` directive][mdbook-include].
+Adding this tells mdBook to run this preprocessor [after][mdbook-after] the default
+[`links` preprocessor][mdbook-links]. This is recommended because it allows the
+preprocessor to see text embedded using the [`{{#include}}` directive][mdbook-include].
 
 {% endraw %}
 
@@ -179,4 +179,5 @@ Continue reading to learn more about the preprocessor!
 [rustdoc-lints]: https://doc.rust-lang.org/rustdoc/lints.html
 [doc-comment]: https://doc.rust-lang.org/reference/comments.html#doc-comments
 [publishing-to-crates-io]: https://doc.rust-lang.org/book/ch14-02-publishing-to-crates-io.html
+[mdbook-after]: https://rust-lang.github.io/mdBook/format/configuration/preprocessors.html#require-a-certain-order
 <!-- prettier-ignore-end -->

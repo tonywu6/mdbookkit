@@ -146,8 +146,8 @@ repo-url-template = "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/li
 
 <figcaption>
 
-With this template, the preprocessor generates permalinks that would link to the
-[Linux kernel](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git). <br>
+With this template, the preprocessor generates permalinks that would link to
+[kernel.org](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git). <br>
 Note that [cgit], kernel.org's Git frontend, places the reference (commit hash) in the
 URL query instead of the path, unlike other common permalink formats.
 

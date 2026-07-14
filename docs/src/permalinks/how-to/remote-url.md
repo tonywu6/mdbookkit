@@ -94,11 +94,12 @@ With the above example, the preprocessor will generate links such as: [^sha-shor
 - [<code>https://gitlab.haskell.org/ghc/ghc/-/<strong>raw</strong>/<strong>7ab9028</strong>/<strong>docs/users_guide/images/prof_scc.svg</strong></code>](https://gitlab.haskell.org/ghc/ghc/-/raw/7ab9028/docs/users_guide/images/prof_scc.svg)
   (for images)
 
-For reference, permalinks to GitHub can be explicitly specified as:
+As an illustration, if you have a repo on GitHub called `example/example`, you could
+specify the template as:
 
 ```toml config-example
 [preprocessor.permalinks]
-repo-url-template = "https://github.com/tonywu6/mdbookkit/{tree}/{ref}/{path}"
+repo-url-template = "https://github.com/example/example/{tree}/{ref}/{path}"
 ```
 
 > [!IMPORTANT]

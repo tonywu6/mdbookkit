@@ -220,9 +220,9 @@ Do note some caveats with this syntax though:
 
 Rust allows different kinds of items to [share the same name][namespace] in the same
 scope. In rustdoc (and this preprocessor), you can clarify the kind of item you want to
-link to using _disambiguators,_ which takes the form `disambiguator@item`. For example,
-the following snippet uses the `fn@` and `mod@` disambiguator to distinguish between a
-function and module of the same name:
+link to by using _disambiguators,_ which takes the form `disambiguator@item`. For
+example, the following snippet uses the `fn@` and `mod@` disambiguator to distinguish
+between a function and module of the same name:
 
 > ```md
 > `tracing_subscriber::fmt` is both a [function][fn@tracing_subscriber::fmt] and a

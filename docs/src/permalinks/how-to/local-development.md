@@ -108,7 +108,8 @@ Without the `CI` variable, the special editor URIs and embedded data due to `dev
 will remain in your build output, which is very likely not what you wanted!
 
 To learn more about how the preprocessor's default behaviors change when it is running
-in CI, see [the next chapter](continuous-integration.md).
+in CI, see the [continuous integration guide](continuous-integration.md) in the next
+chapter.
 
 [^data-url]:
     Instead of generating regular HTTP URLs, the preprocessor uses
