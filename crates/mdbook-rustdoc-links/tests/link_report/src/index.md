@@ -1,0 +1,3 @@
+- [`crate::example_fn`]
+- [`std::fmt::from_fn`]
+- [`std::slice::from_ref`]

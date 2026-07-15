@@ -2,7 +2,7 @@
 
 Quality-of-life plugins for your [mdBook] project!
 
-[![link to documentation](https://img.shields.io/github/actions/workflow/status/tonywu6/mdbookkit/docs.yml?event=release&style=flat-square&label=docs)]()
+[![link to documentation](https://img.shields.io/github/actions/workflow/status/tonywu6/mdbookkit/docs.yml?event=release&style=flat-square&label=docs)](.)
 [![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](/LICENSE-APACHE.md)
 
 ## mdbook-rustdoc-links

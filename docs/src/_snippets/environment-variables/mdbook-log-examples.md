@@ -11,6 +11,10 @@ MDBOOK_LOG=info mdbook build
   Enable logging at level <code>info</code> or above (which is the default level)
 </figcaption>
 
+</figure>
+
+<figure>
+
 ```shell
 MDBOOK_LOG=debug mdbook build
 ```
@@ -18,6 +22,10 @@ MDBOOK_LOG=debug mdbook build
 <figcaption>
   Enable logging at level <code>debug</code> or above (more verbose logging)
 </figcaption>
+
+</figure>
+
+<figure>
 
 ```shell
 MDBOOK_LOG=info,{{ preprocessor|snake_case }}=trace mdbook build

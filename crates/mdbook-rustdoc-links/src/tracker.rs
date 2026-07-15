@@ -1,6 +1,6 @@
 use std::{
     cell::RefCell,
-    collections::{BTreeSet, HashMap},
+    collections::{BTreeMap, BTreeSet, HashMap},
     fmt::{Debug, Display, Write},
     ops::{ControlFlow, Range},
     path::PathBuf,
@@ -298,8 +298,7 @@ impl<'a> LinkTracker<'a> {
     }
 
     pub fn export<'d: 'a>(&'d self) -> ExportedPages<'a> {
-        let mut contents = HashMap::with_capacity(self.pages.len());
-        let mut reporters = Vec::with_capacity(self.pages.len());
+        let mut export = ExportedPages::default();
 
         let iter = self.pages.iter().scan(0usize, |start, page| {
             let links = &self.links[*start..page.link_end];
@@ -329,7 +328,13 @@ impl<'a> LinkTracker<'a> {
                 .chain(self.link_summary(links))
                 .collect();
 
-            reporters.push(IssueReporter { issues, source });
+            export.issues.push(IssueReporter { issues, source });
+
+            for link in links {
+                if let Some(href) = &link.href {
+                    export.links.insert(link.dest(), href.as_str());
+                }
+            }
 
             let mut trivia = page.trivia.iter();
             let mut links = links.iter();
@@ -352,14 +357,11 @@ impl<'a> LinkTracker<'a> {
 
             let text = patch_stream(page.text, stream).map_err(<_>::into);
 
-            contents.insert(page.base.clone(), text);
+            export.contents.insert(page.base.clone(), text);
         }
 
-        ExportedPages {
-            contents,
-            issues: reporters,
-            stats: ctx.stats,
-        }
+        export.stats = ctx.stats;
+        export
     }
 
     pub fn symlink_docs(&self) -> Result<()> {
@@ -414,10 +416,12 @@ impl<'a> LinkTracker<'a> {
     }
 }
 
+#[derive(Default)]
 pub struct ExportedPages<'a> {
     pub contents: HashMap<Url, Result<String>>,
     pub issues: Vec<IssueReporter<'a>>,
     pub stats: Statistics,
+    pub links: BTreeMap<&'a str, &'a str>,
 }
 
 fn resolve_url(base: &BaseDir, output: &BuildOutput<'_>, href: &str) -> Result<Url> {

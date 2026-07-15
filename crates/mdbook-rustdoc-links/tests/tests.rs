@@ -102,6 +102,14 @@ test_case![
         "CARGO_TERM_QUIET" = "true" // flaky cargo logs
     ]
 ];
+test_case![
+    link_report,
+    exit(0),
+    env = [
+        "MDBOOK_LOG" = "warn,mdbook_rustdoc_links[link-report]=info",
+        "MDBOOKKIT_LINK_REPORT" = "1"
+    ]
+];
 
 test_case![base_url, exit(0), env = ["CI" = "1"]];
 

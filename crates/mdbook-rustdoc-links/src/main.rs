@@ -11,6 +11,8 @@ use mdbookkit::{
     config::validate_config_examples,
     diagnostics::IssueReporter,
     emit, emit_error, emit_warning,
+    env::TruthyStr,
+    env_var,
     error::{ProgramExit, Show, WithDebugContext, has_severity},
     logging::init_logging,
 };
@@ -103,7 +105,16 @@ fn mdbook() -> Result<(), ()> {
         mut contents,
         issues,
         stats,
+        links,
     } = tracker.export();
+
+    if MDBOOKKIT_LINK_REPORT.truthy().is_some() {
+        info_span!("link-report").in_scope(|| {
+            for (item, href) in links {
+                info!("{item} => {href}")
+            }
+        });
+    }
 
     if should_emit_issues(&ctx) {
         for issues in IssueReporter::sorted(issues) {
@@ -143,3 +154,5 @@ fn mdbook() -> Result<(), ()> {
 }
 
 static PREPROCESSOR_NAME: &str = env!("CARGO_PKG_NAME");
+
+env_var!(MDBOOKKIT_LINK_REPORT);
