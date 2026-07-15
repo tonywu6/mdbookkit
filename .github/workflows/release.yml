@@ -1,4 +1,4 @@
-name: release-plz
+name: Release
 
 permissions:
   pull-requests: write
@@ -35,8 +35,9 @@ jobs:
           # otherwise CI will not run
           token: ${{ secrets.RELEASE_PLZ_GITHUB_TOKEN }}
 
-      - name: Setup docs building
-        uses: ./.github/workflows/docs-setup.yml
+      - uses: ./.github/actions/docs-setup
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - run: just docs readme
 
