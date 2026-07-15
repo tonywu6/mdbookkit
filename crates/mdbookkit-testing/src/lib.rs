@@ -32,14 +32,14 @@ pub struct TestBook {
 
 impl TestBook {
     pub fn run(&self) -> Result<()> {
-        let test_exe = std::env::vars_os().filter_map(|(k, v)| {
-            let k = (k.as_encoded_bytes()).strip_prefix(b"CARGO_BIN_EXE_mdbook-")?;
-            let k = String::from_utf8_lossy(k);
+        let test_exe = std::env::vars().filter_map(|(k, v)| {
+            let k = k.strip_prefix("CARGO_BIN_EXE_mdbook-")?;
             let k = format!("MDBOOK_preprocessor__{k}__command");
             let v = if cfg!(windows) {
-                PathBuf::from(v).components().collect()
+                // https://github.com/comex/rust-shlex/issues/20
+                v.escape_default().to_string()
             } else {
-                PathBuf::from(v)
+                v
             };
             Some((k, v))
         });
