@@ -22,75 +22,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           fetch-tags: true
 
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rust-src # speeds up rust-analyzer indexing
-        id: rustup
-      - uses: cargo-bins/cargo-binstall@v1.16.6
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: pnpm
+      - name: Setup docs building
+        uses: ./.github/workflows/docs-setup.yml
 
-      - uses: tonywu6/cache-hit-please@v1.1.0
-        id: cache
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        with:
-          deps: |
-            ${{runner.os}}
-            ${{runner.arch}}
-            ${{steps.rustup.outputs.cachekey}}
-            ${{hashFiles('**/Cargo.toml')}}
-            ${{hashFiles('**/Cargo.lock')}}
-            ${{hashFiles('**/package.json')}}
-            ${{hashFiles('**/pnpm-lock.yaml')}}
-            ${{github.workflow}}
-            ${{github.run_id}}
-          path: |
-            .bin/
-            target/
+      - run: just docs build
 
-      - uses: tonywu6/cache-hit-please@v1.1.0
-        id: cache2
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        with:
-          deps: |
-            ${{runner.os}}
-            ${{runner.arch}}
-            ${{hashFiles('**/package.json')}}
-            ${{hashFiles('**/pnpm-lock.yaml')}}
-            ${{github.workflow}}
-            ${{github.run_id}}
-          path: |
-            .pnpm-store/
-            node_modules/
-
-      - run: pnpm install
-      - run: cargo bin --install
-      - run: cargo xtask rust-analyzer download
-
-      - run: cargo bin mdbook build
-        working-directory: docs
-      - run: cargo run -- postprocess
-        working-directory: docs
-
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           path: docs/dist
           retention-days: 1
           if-no-files-found: warn
 
-      - uses: cloudflare/wrangler-action@v3
+      - uses: cloudflare/wrangler-action@v4
         name: wrangler versions upload
         with:
           command: versions upload --cwd docs
@@ -98,7 +46,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         if: ${{ github.event_name == 'workflow_dispatch' }}
 
-      - uses: cloudflare/wrangler-action@v3
+      - uses: cloudflare/wrangler-action@v4
         name: wrangler deploy
         with:
           command: deploy --cwd docs

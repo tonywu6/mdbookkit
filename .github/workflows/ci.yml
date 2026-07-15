@@ -72,8 +72,6 @@ jobs:
           git config --global core.eol lf
 
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
@@ -98,7 +96,7 @@ jobs:
         with:
           tool: |
             cargo-binstall
-            just@1.51.0
+            just@1.56.0
 
       - uses: tonywu6/cache-hit-please@v1.1.1
         id: cache
