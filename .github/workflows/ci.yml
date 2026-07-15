@@ -125,11 +125,10 @@ jobs:
           just cov --no-fail-fast
         shell: bash
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: llvm-cov-target
-          path: target/llvm-cov-target
+      - run: |
+          find target/llvm-cov-target
+          realpath .
+        shell: bash
         if: always()
 
       - name: Upload coverage
