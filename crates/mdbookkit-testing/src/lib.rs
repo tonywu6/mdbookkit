@@ -36,6 +36,9 @@ impl TestBook {
             let k = (k.as_encoded_bytes()).strip_prefix(b"CARGO_BIN_EXE_mdbook-")?;
             let k = String::from_utf8_lossy(k);
             let k = format!("MDBOOK_preprocessor__{k}__command");
+            let v = PathBuf::from(v)
+                .canonicalize()
+                .expect("CARGO_BIN_EXE should give a valid path");
             Some((k, v))
         });
 
