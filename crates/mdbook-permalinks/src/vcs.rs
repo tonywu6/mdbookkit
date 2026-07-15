@@ -256,7 +256,8 @@ impl Permalink {
 
         let href = matches.to_relative_url("path")?;
 
-        let hint = if let Some(tree) = matches.matches.get("tree").map(|s| &**s) {
+        let hint = {
+            let tree = matches.matches.get("tree").map(|s| &**s)?;
             if self.params.tree.iter().any(|plc| plc == tree) {
                 ContentInterest::Nav
             } else if self.params.raw.iter().any(|plc| plc == tree) {
@@ -264,8 +265,6 @@ impl Permalink {
             } else {
                 return None;
             }
-        } else {
-            return None;
         };
 
         debug!(?href, ?hint, "path matched");

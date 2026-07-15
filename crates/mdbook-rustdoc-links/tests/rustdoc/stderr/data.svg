@@ -1,4 +1,4 @@
-<svg width="827px" height="5816px" xmlns="http://www.w3.org/2000/svg">
+<svg width="827px" height="5222px" xmlns="http://www.w3.org/2000/svg">
   <style>
     .fg { fill: #B2B2B2 }
     .bg { fill: #1A1A1A }
@@ -584,87 +584,21 @@
 </tspan>
     <tspan x="10px" y="5068px">
 </tspan>
-    <tspan x="10px" y="5086px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: redundant explicit link target</tspan>
+    <tspan x="10px" y="5086px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link</tspan>
 </tspan>
-    <tspan x="10px" y="5104px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>4.known-issues.md:16:10</tspan>
+    <tspan x="10px" y="5104px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>5.syntax.md:70:1</tspan>
 </tspan>
     <tspan x="10px" y="5122px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
 </tspan>
-    <tspan x="10px" y="5140px"><tspan class="fg-bright-blue bold">16</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [drop](</tspan><tspan class="fg-yellow bold">drop "This function is not magic"</tspan><tspan>)</tspan>
+    <tspan x="10px" y="5140px"><tspan class="fg-bright-blue bold">70</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> </tspan><tspan class="fg-yellow bold">/</tspan><tspan> [std::marker::</tspan>
 </tspan>
-    <tspan x="10px" y="5158px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">----</tspan><tspan>  </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">explicit target is redundant</tspan>
+    <tspan x="10px" y="5158px"><tspan class="fg-bright-blue bold">71</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> </tspan><tspan class="fg-yellow bold">|</tspan><tspan> PhantomData]</tspan>
 </tspan>
-    <tspan x="10px" y="5176px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">|</tspan>
+    <tspan x="10px" y="5176px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> </tspan><tspan class="fg-yellow bold">|____________^</tspan><tspan> </tspan><tspan class="fg-yellow bold">rustdoc did not process this link</tspan>
 </tspan>
-    <tspan x="10px" y="5194px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">because label contains path that resolves to same destination</tspan>
+    <tspan x="10px" y="5194px">
 </tspan>
-    <tspan x="10px" y="5212px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
-</tspan>
-    <tspan x="10px" y="5230px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: when a link's destination is not specified,</tspan>
-</tspan>
-    <tspan x="10px" y="5248px"><tspan>           the label is used to resolve intra-doc links</tspan>
-</tspan>
-    <tspan x="10px" y="5266px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: remove explicit link target</tspan>
-</tspan>
-    <tspan x="10px" y="5284px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
-</tspan>
-    <tspan x="10px" y="5302px"><tspan class="fg-bright-blue bold">16</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- </tspan><tspan class="fg-bright-red">[drop](drop "This function is not magic")</tspan>
-</tspan>
-    <tspan x="10px" y="5320px"><tspan class="fg-bright-blue bold">16</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- </tspan><tspan class="fg-bright-green">[drop]</tspan>
-</tspan>
-    <tspan x="10px" y="5338px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
-</tspan>
-    <tspan x="10px" y="5356px">
-</tspan>
-    <tspan x="10px" y="5374px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: redundant explicit link target</tspan>
-</tspan>
-    <tspan x="10px" y="5392px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>4.known-issues.md:21:9</tspan>
-</tspan>
-    <tspan x="10px" y="5410px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
-</tspan>
-    <tspan x="10px" y="5428px"><tspan class="fg-bright-blue bold">17</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [drop][drop]</tspan>
-</tspan>
-    <tspan x="10px" y="5446px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>    </tspan><tspan class="fg-bright-blue bold">----</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">because label contains path that resolves to same destination</tspan>
-</tspan>
-    <tspan x="10px" y="5464px"><tspan class="fg-bright-blue bold">...</tspan>
-</tspan>
-    <tspan x="10px" y="5482px"><tspan class="fg-bright-blue bold">21</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> [drop]: </tspan><tspan class="fg-yellow bold">drop</tspan><tspan> "This function is not magic"</tspan>
-</tspan>
-    <tspan x="10px" y="5500px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>         </tspan><tspan class="fg-yellow bold">^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">explicit target is redundant</tspan>
-</tspan>
-    <tspan x="10px" y="5518px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
-</tspan>
-    <tspan x="10px" y="5536px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: when a link's destination is not specified,</tspan>
-</tspan>
-    <tspan x="10px" y="5554px"><tspan>           the label is used to resolve intra-doc links</tspan>
-</tspan>
-    <tspan x="10px" y="5572px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: remove explicit link target</tspan>
-</tspan>
-    <tspan x="10px" y="5590px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
-</tspan>
-    <tspan x="10px" y="5608px"><tspan class="fg-bright-blue bold">17</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- </tspan><tspan class="fg-bright-red">[drop][drop]</tspan>
-</tspan>
-    <tspan x="10px" y="5626px"><tspan class="fg-bright-blue bold">17</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- </tspan><tspan class="fg-bright-green">[drop]</tspan>
-</tspan>
-    <tspan x="10px" y="5644px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
-</tspan>
-    <tspan x="10px" y="5662px">
-</tspan>
-    <tspan x="10px" y="5680px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link</tspan>
-</tspan>
-    <tspan x="10px" y="5698px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>5.syntax.md:70:1</tspan>
-</tspan>
-    <tspan x="10px" y="5716px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
-</tspan>
-    <tspan x="10px" y="5734px"><tspan class="fg-bright-blue bold">70</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> </tspan><tspan class="fg-yellow bold">/</tspan><tspan> [std::marker::</tspan>
-</tspan>
-    <tspan x="10px" y="5752px"><tspan class="fg-bright-blue bold">71</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> </tspan><tspan class="fg-yellow bold">|</tspan><tspan> PhantomData]</tspan>
-</tspan>
-    <tspan x="10px" y="5770px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> </tspan><tspan class="fg-yellow bold">|____________^</tspan><tspan> </tspan><tspan class="fg-yellow bold">rustdoc did not process this link</tspan>
-</tspan>
-    <tspan x="10px" y="5788px">
-</tspan>
-    <tspan x="10px" y="5806px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: finished with warnings</tspan>
+    <tspan x="10px" y="5212px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: finished with warnings</tspan>
 </tspan>
   </text>
 

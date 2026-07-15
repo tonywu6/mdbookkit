@@ -279,39 +279,6 @@ help: remove explicit link target
 8 + - [f64]
   |
 
-warning: redundant explicit link target
-  --> 4.known-issues.md:16:10
-   |
-16 | - [drop](drop "This function is not magic")
-   |    ----  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ explicit target is redundant
-   |    |
-   |    because label contains path that resolves to same destination
-   |
-   = note: when a link's destination is not specified,
-           the label is used to resolve intra-doc links
-help: remove explicit link target
-   |
-16 - - [drop](drop "This function is not magic")
-16 + - [drop]
-   |
-
-warning: redundant explicit link target
-  --> 4.known-issues.md:21:9
-   |
-17 | - [drop][drop]
-   |    ---- because label contains path that resolves to same destination
-...
-21 | [drop]: drop "This function is not magic"
-   |         ^^^^ explicit target is redundant
-   |
-   = note: when a link's destination is not specified,
-           the label is used to resolve intra-doc links
-help: remove explicit link target
-   |
-17 - - [drop][drop]
-17 + - [drop]
-   |
-
 warning: unresolved link
   --> 5.syntax.md:70:1
    |

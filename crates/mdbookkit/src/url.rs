@@ -412,19 +412,12 @@ impl UrlUtil for Url {
         };
 
         let fragment = if let Some(lhs) = self.fragment() {
+            let rhs = value.fragment()?;
             if let Some(grp) = decode_group(lhs) {
-                if let Some(rhs) = value.fragment() {
-                    matches.insert(grp.into(), rhs.into());
-                    None
-                } else {
-                    return None;
-                }
-            } else if let Some(rhs) = value.fragment() {
-                if lhs == rhs {
-                    None
-                } else {
-                    return None;
-                }
+                matches.insert(grp.into(), rhs.into());
+                None
+            } else if lhs == rhs {
+                None
             } else {
                 return None;
             }

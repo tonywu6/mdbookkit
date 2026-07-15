@@ -874,7 +874,7 @@ fn load_docs_rs_options(
         bail!("build config selected multiple workspace packages to read config from")
     }
 
-    let package_name = || format!("the selected workspace package is {:?}", &*selected[0].name);
+    let package_name = || format!("the selected workspace package is {:?}", *selected[0].name);
 
     let metadata = &selected[0].metadata;
     let metadata = (|| metadata.get("docs")?.get("rs")?.as_object())()
