@@ -33,7 +33,7 @@ When running in CI, the preprocessor prints diagnostic messages as log messages:
 </figure>
 
 You can override this behavior using the
-[`MDBOOKKIT_TERM_GRAPHICAL`](../configuration/environment-variables.md#mdbookkit_term_graphical)
+[`MDBOOKKIT_TERM_GRAPHICAL`](../reference/environment-variables.md#mdbookkit_term_graphical)
 environment variable.
 
 ### Detecting CI

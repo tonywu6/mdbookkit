@@ -9,8 +9,9 @@ This may be inconvenient for local development:
 - If you are simultaneously working on API docs, pages on docs.rs will not reflect your
   local modifications.
 
-For such reasons, the preprocessor provides a [`base-url`](../configuration.md#base-url)
-option to support locally previewing docs produced by `cargo doc` .
+For such reasons, the preprocessor provides a
+[`base-url`](../reference/configuration.md#base-url) option to support locally
+previewing docs produced by `cargo doc` .
 
 {% with feature = "`base-url`" %}
 {% include "/docs/src/_snippets/unstable-features.md" %} {% endwith %}

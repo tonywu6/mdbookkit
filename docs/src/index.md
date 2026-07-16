@@ -14,7 +14,7 @@ Use [intra-doc links][rustdoc] in [mdBook].
 [About](rustdoc-links/index.md)
 | [Quickstart](rustdoc-links/getting-started.md)
 | [Guides](rustdoc-links/how-to/index.md)
-| [Options](rustdoc-links/configuration.md)
+| [Options](rustdoc-links/reference/configuration.md)
 
 <!-- prettier-ignore-end -->
 
@@ -29,9 +29,9 @@ Generate permalinks to files in your Git repository.
 <!-- prettier-ignore-start -->
 
 [About](permalinks/index.md)
-| [Quickstart](permalinks/tutorial.md)
+| [Quickstart](permalinks/getting-started.md)
 | [Guides](permalinks/how-to/index.md)
-| [Options](permalinks/configuration.md)
+| [Options](permalinks/reference/configuration.md)
 
 <!-- prettier-ignore-end -->
 

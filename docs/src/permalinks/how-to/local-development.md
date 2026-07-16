@@ -11,8 +11,8 @@ correctly!
   content;
 - If you have added, moved, or deleted files, or if your local branch has diverged, then
   links become "broken" until you have updated your remote repository;
-- If you rely on the preprocessor to [show images](../tutorial.md#images), the images
-  may not load.
+- If you rely on the preprocessor to [show images](../getting-started.md#images), the
+  images may not load.
 
 While the preprocessor assures that the links it generates are _eventually correct_ so
 long as your remote is up-to-date, to make local editing more intuitive, the

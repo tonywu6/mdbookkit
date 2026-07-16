@@ -24,9 +24,9 @@ Since the preprocessor [needs to run `cargo doc`](../naming-items.md#under-the-h
 Rust toolchain is required in the CI environment. For GitHub Actions, for example, you
 can use the [`dtolnay/rust-toolchain`] action.
 
-If you use the [`build.targets`](../configuration.md#buildtargets) option to generate
-API docs for a fixed set of targets, then remember to also install the same targets in
-CI.
+If you use the [`build.targets`](../reference/configuration.md#buildtargets) option to
+generate API docs for a fixed set of targets, then remember to also install the same
+targets in CI.
 
 ### Installing the preprocessor
 

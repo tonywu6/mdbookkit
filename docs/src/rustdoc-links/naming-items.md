@@ -69,8 +69,8 @@ If you are documenting a workspace that features multiple libraries, then items 
 them are not implicitly introduced, as that could create ambiguity.
 
 Instead, to make things easier, you may use the
-[`build.preludes`](configuration.md#buildpreludes) configuration to explicitly introduce
-items into scope.
+[`build.preludes`](reference/configuration.md#buildpreludes) configuration to explicitly
+introduce items into scope.
 
 As an example, assuming the crate `tracing_subscriber` is in your workspace. With the
 following `book.toml`:
@@ -93,9 +93,10 @@ Items from that crate can now be linked to without having to write out the crate
 Of course, for more comprehensive documentation, you might wish to mention the APIs that
 your libraries depend on as well.
 
-The preprocessor provides the [`build.packages`](configuration.md#buildpackages) option
-that allows you to build docs for extra packages. You may then refer to items in such
-packages using the same syntax:
+The preprocessor provides the
+[`build.packages`](reference/configuration.md#buildpackages) option that allows you to
+build docs for extra packages. You may then refer to items in such packages using the
+same syntax:
 
 > ```md
 > - [`Patch`][::annotate_snippets::Patch]

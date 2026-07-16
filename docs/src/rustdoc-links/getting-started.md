@@ -166,7 +166,7 @@ Continue reading to learn more about the preprocessor!
 
 - Understand [how the preprocessor resolves items](naming-items.md).
 
-- See how to [customize the preprocessor](configuration.md).
+- See how to [customize the preprocessor](reference/configuration.md).
 
 <!-- prettier-ignore-start -->
 [`cargo doc`]: https://doc.rust-lang.org/cargo/commands/cargo-doc.html

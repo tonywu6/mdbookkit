@@ -9,7 +9,7 @@ configuration key. Unless otherwise specified, the option should be added under 
 ## `[build]`
 
 The `[build]` table customizes how the preprocessor
-[compiles your API docs](naming-items.md#under-the-hood).
+[compiles your API docs](../naming-items.md#under-the-hood).
 
 ### `build.targets`
 
@@ -32,7 +32,7 @@ targets = ["aarch64-unknown-linux-gnu", "aarch64-apple-darwin"]
 - default: host platform
 
 Build API docs for specific targets. See the
-[conditional compilation guide](how-to/conditional-compilation.md#specifying-targets)
+[conditional compilation guide](../how-to/conditional-compilation.md#specifying-targets)
 for more info.
 
 Should be an array of [target triples], such as `"x86_64-unknown-linux-gnu"`.
@@ -43,7 +43,7 @@ If unset, the preprocessor builds API docs for the current platform.
 >
 > When this option is used, the preprocessor generates docs.rs links that will include
 > the specified target in their paths. Please see the relevant
-> [section in the conditional compilation guide](how-to/conditional-compilation.md#caveat-target-aware-links)
+> [section in the conditional compilation guide](../how-to/conditional-compilation.md#caveat-target-aware-links)
 > for the reasoning and implications of this behavior.
 
 ### `build.features`
@@ -62,12 +62,12 @@ build.features = ["foo", "bar", "serde/derive"]
 - default: none
 
 Build API docs with extra Cargo features enabled. See the
-[conditional compilation guide](how-to/conditional-compilation.md#specifying-features)
+[conditional compilation guide](../how-to/conditional-compilation.md#specifying-features)
 more info.
 
 > [!NOTE]
 >
-> {% include "_snippets/cargo-features-quirk.md" %}
+> {% include "../_snippets/cargo-features-quirk.md" %}
 
 ### `build.all-features`
 
@@ -85,7 +85,7 @@ build.all-features = true
 - default: `false`
 
 Pass the `--all-features` flag to `cargo doc` when building API docs. See the
-[conditional compilation guide](how-to/conditional-compilation.md#specifying-features)
+[conditional compilation guide](../how-to/conditional-compilation.md#specifying-features)
 for more info.
 
 ### `build.no-default-features`
@@ -104,7 +104,7 @@ build.no-default-features = true
 - default: `false`
 
 Pass the `--no-default-features` flag to `cargo doc` when building API docs. See the
-[conditional compilation guide](how-to/conditional-compilation.md#specifying-features)
+[conditional compilation guide](../how-to/conditional-compilation.md#specifying-features)
 for more info.
 
 ### `build.packages`
@@ -134,15 +134,15 @@ packages = [{ workspace = true, dependencies = true }]
 </details></p>
 
 - type: either an array of strings (package names) and/or
-  [selectors](how-to/package-selection.md#documenting-workspace-packages), or
-  [`"unspecified"`](how-to/package-selection.md#documenting-everything)
+  [selectors](../how-to/package-selection.md#documenting-workspace-packages), or
+  [`"unspecified"`](../how-to/package-selection.md#documenting-everything)
 - default: selects the default members of your workspace
 
 Build API docs only for specific packages. You can only create links to crates from
 packages whose docs have been built.
 
-See the [package selection guide](how-to/package-selection.md) for more info, as well as
-the possible values that you can include in the array.
+See the [package selection guide](../how-to/package-selection.md) for more info, as well
+as the possible values that you can include in the array.
 
 If unset, the preprocessor only build docs for your workspace packages (specifically,
 the [`default-members`] in your workspace).
@@ -167,7 +167,7 @@ preludes = [
 - default: see below
 
 Introduce additional items into scope when resolving links. **See
-[Naming items](naming-items.md) for an introduction.**
+[Naming items](../naming-items.md) for an introduction.**
 
 Should be an array of paths that are valid to be placed in a [`use` declaration][`use`],
 _without the leading `use` or the ending semicolon_.
@@ -184,7 +184,7 @@ writing out their full paths. For example:
 If unset, the default value of this option depends on your workspace layout:
 
 - If you have a single package that is a library, then as a
-  [convenience feature](naming-items.md#referring-to-your-own-crate), this option
+  [convenience feature](../naming-items.md#referring-to-your-own-crate), this option
   implicitly introduces every item exported from your library into scope.
 
   This also means you can use the `[crate::*]` syntax to refer to items from your
@@ -218,7 +218,7 @@ cargo-args = [
 <figcaption>
 
 This example emulates how docs.rs handles broken links in API docs. See the
-[self-hosting guide](how-to/self-hosting-cargo-docs.md#caveats) for more info.
+[self-hosting guide](../how-to/self-hosting-cargo-docs.md#caveats) for more info.
 
 </figcaption>
 
@@ -378,7 +378,7 @@ for example, `cargo +nightly doc`.
 If you specify `preprocessor.rustdoc-link.build` as a TOML array instead of a table, you
 enable the multi-stage build mode. In this mode, the preprocessor resolves links over
 multiple "passes." **See the
-[conditional compilation guide](how-to/conditional-compilation.md#multi-stage-builds)
+[conditional compilation guide](../how-to/conditional-compilation.md#multi-stage-builds)
 for more info.**
 
 Each item in the array should be a table. In each table, you can individually specify
@@ -524,8 +524,8 @@ the item being linked to:
 Using a path for `base-url` has 2 main use cases. Please see their respective guides for
 more info:
 
-- [You would like to preview API docs during local development](how-to/local-development.md)
-- [You would like to self-host your API docs](how-to/self-hosting-cargo-docs.md)
+- [You would like to preview API docs during local development](../how-to/local-development.md)
+- [You would like to self-host your API docs](../how-to/self-hosting-cargo-docs.md)
 
 Links for [`std`] items always point to <https://doc.rust-lang.org> regardless of this
 option.

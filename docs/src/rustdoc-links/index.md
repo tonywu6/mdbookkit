@@ -75,7 +75,7 @@ See how to configure the preprocessor **for specific scenarios,** such as:
 - How to [use the preprocessor in CI/CD](how-to/continuous-integration.md)
 
 Finally, you can check out the list of
-[all available configuration options](configuration.md).
+[all available configuration options](reference/configuration.md).
 
 Happy linking!
 

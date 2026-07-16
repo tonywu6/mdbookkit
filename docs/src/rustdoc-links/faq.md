@@ -24,9 +24,9 @@ Note that the preprocessor currently does not support
 ## "cannot specify features for packages outside of workspace"
 
 This fatal error could occur if you use both the
-[`build.packages`](configuration.md#buildpackages) and the
-[`build.features`](configuration.md#buildfeatures) option to enable features from
-dependencies, like so:
+[`build.packages`](reference/configuration.md#buildpackages) and the
+[`build.features`](reference/configuration.md#buildfeatures) option to enable features
+from dependencies, like so:
 
 ```toml config-example
 [preprocessor.rustdoc-links]
@@ -56,7 +56,7 @@ This fatal error could occur because the preprocessor cannot find your Cargo pro
 
 This could happen if the directory containing your book (containing the `book.toml`
 file) is not within a Cargo project. You can tell the preprocessor where your project is
-by setting the [`manifest-dir`](configuration.md#manifest-dir) option.
+by setting the [`manifest-dir`](reference/configuration.md#manifest-dir) option.
 
 If you are not working with a Cargo project, then this preprocessor is not really
 useful.
@@ -64,7 +64,7 @@ useful.
 ## "could not determine the versions of these packages"
 
 This warning could appear if you try to link to a dev or build dependency by adding the
-package to the [`build.packages`](configuration.md#buildpackages) option.
+package to the [`build.packages`](reference/configuration.md#buildpackages) option.
 
 Due to an issue in Cargo, attempting to document dev or build dependencies results in
 Cargo exiting with an error. Therefore, it is currently not possible to use the
@@ -88,9 +88,9 @@ preprocessor to generate a URL. Some known examples are:
 
 - If an item from another crate is [re-exported with `#[doc(inline)]`][doc-inline], but
   that crate is not included in
-  [the list of packages to build docs for](configuration.md#buildpackages). In this
-  case, try rewriting the link to point to the original item instead of the re-exported
-  location.
+  [the list of packages to build docs for](reference/configuration.md#buildpackages). In
+  this case, try rewriting the link to point to the original item instead of the
+  re-exported location.
 
 <!-- prettier-ignore-start -->
 [doc-hidden]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/the-doc-attribute.html#hidden

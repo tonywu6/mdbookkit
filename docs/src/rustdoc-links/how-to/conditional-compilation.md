@@ -29,8 +29,9 @@ compilation process.
 
 ## Specifying features
 
-Use [`build.features`](../configuration.md#buildfeatures) to enable additional features.
-This option corresponds to the [`--feature` option in `cargo doc`][`--features`].
+Use [`build.features`](../reference/configuration.md#buildfeatures) to enable additional
+features. This option corresponds to the [`--feature` option in
+`cargo doc`][`--features`].
 
 ```toml config-example
 [preprocessor.rustdoc-links]
@@ -56,8 +57,8 @@ build.no-default-features = true
 
 ## Specifying targets
 
-Use [`build.targets`](../configuration.md#buildtargets) to enable additional targets.
-This option corresponds to the [`--target` option in `cargo doc`][`--target`].
+Use [`build.targets`](../reference/configuration.md#buildtargets) to enable additional
+targets. This option corresponds to the [`--target` option in `cargo doc`][`--target`].
 
 ```toml config-example
 [preprocessor.rustdoc-links]
@@ -139,7 +140,7 @@ build options that this preprocessor supports are largely modeled after those th
 docs.rs supports.
 
 If you would like to reuse your docs.rs configuration rather than duplicating them, you
-can use the [`build.docs-rs`](../configuration.md#builddocs-rs) flag:
+can use the [`build.docs-rs`](../reference/configuration.md#builddocs-rs) flag:
 
 ```toml config-example
 [preprocessor.rustdoc-links]

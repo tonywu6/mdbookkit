@@ -12,8 +12,9 @@ libraries, then this default configuration is not applied, because it would be a
 which "crate" you are referring to.
 
 If you still would like to use the `crate::*` notation to refer to items in one of the
-packages, then you can use the [`build.preludes`](../configuration.md#buildpreludes)
-option to introduce them into scope. For example:
+packages, then you can use the
+[`build.preludes`](../reference/configuration.md#buildpreludes) option to introduce them
+into scope. For example:
 
 ```toml config-example
 [preprocessor.rustdoc-links]

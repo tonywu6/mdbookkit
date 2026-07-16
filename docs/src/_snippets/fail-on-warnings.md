@@ -18,8 +18,8 @@ at the `warning` level.
 Can be either:
 
 - `"ci"`. The preprocessor will exit with an error if it is
-  [running in a CI environment](how-to/continuous-integration.md#detecting-ci) and there
-  are warnings.
+  [running in a CI environment](../how-to/continuous-integration.md#detecting-ci) and
+  there are warnings.
 
   If it is not running in CI, the preprocessor prints out warnings but will exit with
   `0` (unless there are errors).

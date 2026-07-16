@@ -112,7 +112,8 @@ repo-url-template = "https://github.com/example/example/{tree}/{ref}/{path}"
 > not attempt to guess such information.
 
 The `repo-url-template` option supports further tweaking. Please see
-[the reference](../configuration.md#repo-url-template) for further information.
+[the reference](../reference/configuration.md#repo-url-template) for further
+information.
 
 <!-- prettier-ignore-start -->
 [mdbook-html]: https://rust-lang.github.io/mdBook/format/configuration/renderers.html#html-renderer-options

@@ -57,12 +57,12 @@ preprocessor can reuse this setting to know how to generate permalinks:
 - [Codeberg](https://codeberg.org)
 - [Tangled](https://tangled.org)
 
-See the [remote URL guide](how-to/remote-url.md#using-a-custom-permalink-format) for a
-walkthrough.
+See the [remote URL guide](../how-to/remote-url.md#using-a-custom-permalink-format) for
+a walkthrough.
 
 If your forge is supported but you don't set `git-repository-url`, the preprocessor will
 try to detect a format by
-[checking your `git remote` configuration](how-to/remote-url.md#configuring-git-remote).
+[checking your `git remote` configuration](../how-to/remote-url.md#configuring-git-remote).
 
 If your forge is not supported, you can use the
 [`repo-url-template`](#repo-url-template) option to fully customize the permalink
@@ -113,7 +113,7 @@ The base URL where your book is hosted.
 
 Set this to a fully-qualified URL (that begins with `https://` and contains a domain
 name) to enable the preprocessor to
-[validate links to your book that use hardcoded URLs instead of paths](how-to/hardcoded-links.md#checking-urls-to-your-book).
+[validate links to your book that use hardcoded URLs instead of paths](../how-to/hardcoded-links.md#checking-urls-to-your-book).
 
 ## `repo-url-template`
 
@@ -164,7 +164,7 @@ Customize the URL format that the preprocessor will use to generate permalinks.
 
 If this option is not set, the preprocessor will try to
 [detect a URL format from the environment](#outputhtmlgit-repository-url). See the
-[remote URL guide](how-to/remote-url.md#using-a-custom-permalink-format) for a
+[remote URL guide](../how-to/remote-url.md#using-a-custom-permalink-format) for a
 walkthrough.
 
 If your remote repository is on one of the
@@ -174,7 +174,7 @@ If your remote repository is on one of the
 Within the template URL, you can specify the following placeholders, which will be
 replaced at runtime by their actual values:
 
-{% include "_snippets/repo-url-template-placeholders.md" %}
+{% include "../_snippets/repo-url-template-placeholders.md" %}
 
 Placeholders may appear in the URL path, as [query][url-query] values, or in the
 [fragment][url-fragment].
@@ -247,7 +247,7 @@ params.tag = "tag"
 You may specify multiple values for each key. The preprocessor will use the first value
 in the list when generating links, and consider all values when matching URLs in order
 to
-[check hardcoded links to your repository](how-to/hardcoded-links.md#checking-urls-to-your-repo)
+[check hardcoded links to your repository](../how-to/hardcoded-links.md#checking-urls-to-your-repo)
 (so for GitHub, links using either `tree` or `blob` can be checked).
 
 ## `always-link`
@@ -291,7 +291,7 @@ remote-name = "upstream"
 When neither the [`output.html.git-repository-url`](#outputhtmlgit-repository-url) nor
 the [`repo-url-template`](#repo-url-template) is specified, to determine a suitable URL
 format to use for permalinks, the preprocessor will check the URL of an existing Git
-remote. See the [remote URL guide](how-to/remote-url.md#configuring-git-remote) for a
+remote. See the [remote URL guide](../how-to/remote-url.md#configuring-git-remote) for a
 walkthough.
 
 By default, the preprocessor will check the `origin` remote. Specify the `remote-name`
@@ -335,15 +335,15 @@ editor-uri = "txmt://open?url={url}"
 Enables the development mode.
 
 If enabled, and the preprocessor is running locally (not
-[in a CI environment](how-to/continuous-integration.md)), then it will generate links
+[in a CI environment](../how-to/continuous-integration.md)), then it will generate links
 more suitable for local previewing, instead of the usual permalinks.
 
-See the [local development guide](how-to/local-development.md) for more information.
+See the [local development guide](../how-to/local-development.md) for more information.
 
 ### `dev-mode.editor-uri`
 
 When `dev-mode` is active, for clickable links, the preprocessor generates URLs that
-[open the file or directory in your text editor](how-to/local-development.md#opening-files-in-your-editor).
+[open the file or directory in your text editor](../how-to/local-development.md#opening-files-in-your-editor).
 
 By default, this editor is VS Code, which [listens to][vscode-uri] the special
 `vscode://file/{path}` URI.
@@ -351,8 +351,8 @@ By default, this editor is VS Code, which [listens to][vscode-uri] the special
 If you use a different text editor that also supports this form of URL handling, then
 you can use the `dev-mode.editor-uri` option to generate preview links for your editor.
 See the
-[local development guide](how-to/local-development.md#opening-files-in-your-editor) for
-a walkthrough.
+[local development guide](../how-to/local-development.md#opening-files-in-your-editor)
+for a walkthrough.
 
 For example, to open links in [Zed](https://zed.dev):
 
@@ -375,8 +375,9 @@ replaced at runtime by their actual values:
 ### `dev-mode.embed-images`
 
 When `dev-mode` is active, for links that are used in
-[images or videos](tutorial.md#images), the preprocessor generates URLs such that they
-can be previewed locally, without needing your browser to access your remote repository.
+[images or videos](../getting-started.md#images), the preprocessor generates URLs such
+that they can be previewed locally, without needing your browser to access your remote
+repository.
 
 The preprocessor achieves this using
 [data URLs](https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Schemes/data),

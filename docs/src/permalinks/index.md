@@ -27,12 +27,12 @@ Here is a link to the project's [Cargo.toml](/Cargo.toml).
 
 ## Overview
 
-Follow the [quickstart tutorial](tutorial.md) to try out the preprocessor!
+Follow the [quickstart tutorial](getting-started.md) to try out the preprocessor!
 
 Feature highlights:
 
-- [Use file paths as links](tutorial.md#linking-by-paths). The preprocessor converts
-  them to links to your Git repository.
+- [Use file paths as links](getting-started.md#linking-by-paths). The preprocessor
+  converts them to links to your Git repository.
 
 - Links are anchored to the Git commit at the time your book is built.
 
@@ -40,10 +40,10 @@ Feature highlights:
   also
   [define your own permalink format](how-to/remote-url.md#using-a-custom-permalink-format).
 
-- Use permalinks to display [images](tutorial.md#images) and
-  [media files](tutorial.md#html-links).
+- Use permalinks to display [images](getting-started.md#images) and
+  [media files](getting-started.md#html-links).
 
-- [Get warnings](tutorial.md#check) when links become broken.
+- [Get warnings](getting-started.md#check) when links become broken.
 
 <figure>
 
