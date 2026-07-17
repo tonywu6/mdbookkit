@@ -34,4 +34,5 @@
 - [Reference](permalinks/reference/index.md)
   - [Configuration](permalinks/reference/configuration.md)
   - [Environment variables](permalinks/reference/environment-variables.md)
+  - [Behaviors](permalinks/reference/behaviors.md)
 - [CHANGELOG](permalinks/CHANGELOG.md)
