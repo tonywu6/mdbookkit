@@ -4,9 +4,9 @@
 
 [Code changes from v2.0.1 to v3.0.0](https://github.com/tonywu6/mdbookkit/compare/mdbook-permalinks-v2.0.1..book-permalinks-v3.0.0)
 
-### Upgrading from v2
+### Breaking changes
 
-Although this is a major version increase, no extra migration steps are required when upgrading! Version 3 of the preprocessor remains largely compatible with the previous version.
+- [The `book-url` option has been removed.](#v3.0.0-book-url)
 
 ### <!-- 0 --> Added
 
@@ -28,9 +28,9 @@ Although this is a major version increase, no extra migration steps are required
 
 ### <!-- 2 --> Changed
 
-- **The `book-url` option has been soft-deprecated.** Instead, you can simply use mdBook's `output.html.site-url` option and specify the same value.
+- **<span id="v3.0.0-book-url">\[BREAKING\]</span> The `book-url` option has been removed:** Instead, simply use mdBook's `output.html.site-url` option and specify the same value.
 
-  The `book-url` option previously enabled the preprocessor to validate hard-coded links to your book's website. Such validation is still supported because the preprocessor can now reuse the value of `output.html.site-url`. For more info, see the relevant section in the [URL checking guide](https://docs.tonywu.dev/mdbookkit/permalinks/how-to/hardcoded-links#checking-urls-to-your-book).
+  The `book-url` option previously enabled the preprocessor to validate hard-coded links to your book's website. Such validation is still supported. The preprocessor can now reuse the value of `output.html.site-url`. For more info, see the relevant section in the [URL checking guide](https://docs.tonywu.dev/mdbookkit/permalinks/how-to/hardcoded-links#checking-urls-to-your-book).
 
 - When running in an empty Git repository (one without any commit), the preprocessor will no longer fail with an error, but will instead emit a warning.
 
