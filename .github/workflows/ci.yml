@@ -123,6 +123,8 @@ jobs:
       - name: Test
         run: |
           just cov --no-fail-fast
+        env:
+          CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: false
         shell: bash
 
       - name: Upload coverage

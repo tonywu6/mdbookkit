@@ -80,6 +80,10 @@ pub struct Options {
     #[serde(default)]
     #[serde(deserialize_with = "via::<UnstableFeature<QualifyBookLinks>, _, _>")]
     pub qualify_book_links: QualifyBookLinks,
+    #[serde(default)]
+    #[serde(deserialize_with = "via::<UnstableFeature<SiteUrl>, _, _>")]
+    // compat option for private use to avoid building for HTML
+    pub site_url: SiteUrl,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -202,6 +206,15 @@ pub struct QualifyBookLinks(pub bool);
 
 impl From<UnstableFeature<QualifyBookLinks>> for QualifyBookLinks {
     fn from(UnstableFeature(value): UnstableFeature<QualifyBookLinks>) -> Self {
+        value
+    }
+}
+
+#[derive(Deserialize, Debug, Default)]
+pub struct SiteUrl(pub Option<BaseUrl>);
+
+impl From<UnstableFeature<SiteUrl>> for SiteUrl {
+    fn from(UnstableFeature(value): UnstableFeature<SiteUrl>) -> Self {
         value
     }
 }

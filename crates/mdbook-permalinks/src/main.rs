@@ -12,7 +12,7 @@ use tracing::{Level, debug, error_span, info, instrument, trace, warn};
 use url::Url;
 
 use mdbookkit::{
-    book::{PreprocessorHelper, book_from_stdin, should_emit_issues},
+    book::{PreprocessorHelper, book_from_stdin},
     config::{BaseDir, validate_config_examples},
     diagnostics::{IssueReporter, SourceCode},
     emit, emit_debug, emit_error,
@@ -110,10 +110,13 @@ impl Environment {
         let Config {
             repo_url: _,
             site_url,
-            options,
+            mut options,
         } = config;
 
-        let site_url = site_url.unwrap_or_default().resolve(&book.base_dir.path);
+        let site_url = site_url
+            .or_else(|| options.site_url.0.take())
+            .unwrap_or_default()
+            .resolve(&book.base_dir.path);
 
         Ok(Ok(Self {
             repo,
@@ -211,10 +214,8 @@ impl Environment {
             Ok(())
         })?;
 
-        if should_emit_issues(ctx) {
-            for report in IssueReporter::sorted(reports) {
-                report.emit(emit!());
-            }
+        for report in IssueReporter::sorted(reports) {
+            report.emit(emit!());
         }
 
         ctx.for_each_page_mut(book, |path, content| {

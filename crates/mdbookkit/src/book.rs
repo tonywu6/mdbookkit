@@ -438,23 +438,3 @@ fn patch_mdbook_output_0_4(book: Book) -> Result<String> {
 
     Ok(serde_json::to_string(&book)?)
 }
-
-#[cfg(not(debug_assertions))]
-#[inline(always)]
-pub fn should_emit_issues(_: &PreprocessorContext) -> bool {
-    true
-}
-
-#[cfg(debug_assertions)]
-#[inline(always)]
-pub fn should_emit_issues(ctx: &PreprocessorContext) -> bool {
-    use crate::{env::TruthyStr, env_var};
-
-    env_var!(NEXTEST);
-
-    if NEXTEST.truthy().is_some() {
-        ctx.renderer == "markdown"
-    } else {
-        true
-    }
-}

@@ -86,6 +86,13 @@ impl TestBook {
         let stderr_svg = self.path.stderr_svg();
 
         let stderr = &*result.get_output().stderr;
+        // deduplicate stderr in case the preprocessor had to run twice due to
+        // [output.html] and [output.markdown]
+        let stderr = if stderr[0..stderr.len() / 2] == stderr[stderr.len() / 2..] {
+            &stderr[0..stderr.len() / 2]
+        } else {
+            stderr
+        };
         let stderr = String::from_utf8_lossy(stderr);
 
         eprint!("--- stderr\n{stderr}");

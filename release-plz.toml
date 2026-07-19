@@ -5,6 +5,7 @@ git_tag_name = "{{ package }}-v{{ version }}"
 release_always = true
 
 [[package]]
+changelog_update = false
 git_release_enable = false
 name = "mdbookkit"
 semver_check = false

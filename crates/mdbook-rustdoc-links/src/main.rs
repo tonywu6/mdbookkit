@@ -7,7 +7,7 @@ use tap::TryConv;
 use tracing::{Level, debug, error_span, info, info_span, warn};
 
 use mdbookkit::{
-    book::{PreprocessorHelper, book_from_stdin, should_emit_issues},
+    book::{PreprocessorHelper, book_from_stdin},
     config::validate_config_examples,
     diagnostics::IssueReporter,
     emit, emit_error, emit_warning,
@@ -116,10 +116,8 @@ fn mdbook() -> Result<(), ()> {
         });
     }
 
-    if should_emit_issues(&ctx) {
-        for issues in IssueReporter::sorted(issues) {
-            issues.emit(emit!());
-        }
+    for issues in IssueReporter::sorted(issues) {
+        issues.emit(emit!());
     }
 
     tracker.symlink_docs().or_else(emit_warning!()).ok();
