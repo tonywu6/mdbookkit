@@ -110,13 +110,10 @@ impl Environment {
         let Config {
             repo_url: _,
             site_url,
-            mut options,
+            options,
         } = config;
 
-        let site_url = site_url
-            .or_else(|| options.site_url.take())
-            .unwrap_or_default()
-            .resolve(&book.base_dir.path);
+        let site_url = site_url.unwrap_or_default().resolve(&book.base_dir.path);
 
         Ok(Ok(Self {
             repo,

@@ -77,8 +77,6 @@ pub struct Options {
     pub dev_mode: DevMode,
     #[serde(default)]
     pub fail_on_warnings: FailOnWarnings,
-    #[serde(default, alias = "book-url")]
-    pub site_url: Option<BaseUrl>,
     #[serde(default)]
     #[serde(deserialize_with = "via::<UnstableFeature<QualifyBookLinks>, _, _>")]
     pub qualify_book_links: QualifyBookLinks,
