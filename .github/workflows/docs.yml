@@ -9,7 +9,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  MDBOOK_LOG: debug
+  MDBOOK_LOG: info
 
 concurrency:
   group: ${{ github.workflow }}

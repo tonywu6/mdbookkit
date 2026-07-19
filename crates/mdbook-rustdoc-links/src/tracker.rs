@@ -857,6 +857,17 @@ impl<'a> IssueReportContext<'a> {
         }
 
         if likely_intra_doc && !resolved && !rustdoc_warnings {
+            let mut notes = Vec::with_capacity(2);
+
+            if matches!(link.kind, ShortcutUnknown) {
+                notes.push(Note::help({
+                    r"to escape `[` and `]` characters, add '\' before them like `\[` or `\]`"
+                }));
+            };
+            notes.push(Note::help(doc_link!(
+                see = "faq#rustdoc-did-not-process-this-link"
+            )));
+
             let issue = IssueReport::level(IssueLevel::Warning)
                 .title("unresolved link")
                 .annotations(vec![
@@ -865,7 +876,9 @@ impl<'a> IssueReportContext<'a> {
                         .label("rustdoc did not process this link")
                         .build(),
                 ])
+                .notes(notes)
                 .build();
+
             issues.push(issue);
         }
 

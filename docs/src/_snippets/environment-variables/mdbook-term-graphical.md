@@ -6,6 +6,21 @@ variable:
 <figure>
 
 <figcaption>
+  Example diagnostic output when the preprocessor is in logging mode (either <code>CI</code>
+  or <code>MDBOOK_LOG</code> has been set).
+</figcaption>
+
+```shell
+MDBOOK_LOG=warn mdbook build
+```
+
+{% include "/crates/" ~ preprocessor ~ "/tests/book_mdbookkit_term_logging/stderr/data.svg" %}
+
+</figure>
+
+<figure>
+
+<figcaption>
   Example diagnostic output using the <code>unicode</code> mode. <br>
   This is the default format when none of <code>CI</code>, <code>MDBOOK_LOG</code>,
   or <code>MDBOOKKIT_TERM_GRAPHICAL</code> is specified.
@@ -31,20 +46,5 @@ MDBOOKKIT_TERM_GRAPHICAL=ascii MDBOOK_LOG=warn mdbook build
 ```
 
 {% include "/crates/" ~ preprocessor ~ "/tests/book_mdbookkit_term_ascii/stderr/data.svg" %}
-
-</figure>
-
-<figure>
-
-<figcaption>
-  Example diagnostic output when the preprocessor is in logging mode (either <code>CI</code>
-  or <code>MDBOOK_LOG</code> has been set).
-</figcaption>
-
-```shell
-MDBOOK_LOG=warn mdbook build
-```
-
-{% include "/crates/" ~ preprocessor ~ "/tests/book_mdbookkit_term_logging/stderr/data.svg" %}
 
 </figure>

@@ -99,7 +99,7 @@ serving content:
 - You can include the `.html` extension in the URL. The preprocessor will remove the
   extension before looking for a matching `.md` file.
 
-- If your URL ends with a [trailing slash][trailing-slash], the preprocessor will check
+- If your URL ends with a trailing slash[^trailing-slash], the preprocessor will check
   whether a matching directory exists and has an `index.md` file. This is based on how
   most web servers and hosting providers will serve the `index.html` file if the link
   reaches a directory.
@@ -113,3 +113,9 @@ serving content:
 [mdbook-html]: https://rust-lang.github.io/mdBook/format/configuration/renderers.html#html-renderer-options
 [trailing-slash]: https://github.com/slorber/trailing-slash-guide?tab=readme-ov-file#trailing-slash-guide
 <!-- prettier-ignore-end -->
+
+[^trailing-slash]:
+    To learn more about how trailing slashes complicate how book content can be
+    accessed, see <https://github.com/slorber/trailing-slash-guide>. See also specific
+    examples
+    [relevant to Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/routing/advanced/html-handling/).

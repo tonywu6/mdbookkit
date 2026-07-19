@@ -3,6 +3,9 @@ warning: unresolved link
   |
 1 | - [`text::get_width`]
   |   ^^^^^^^^^^^^^^^^^^^ rustdoc did not process this link
+  |
+  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`
+  = help: for more info, see https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#rustdoc-did-not-process-this-link
 
 warning: unresolved link to `utf8_width::get_width`
  --> index.md:9:5

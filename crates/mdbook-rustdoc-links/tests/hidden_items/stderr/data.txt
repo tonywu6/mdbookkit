@@ -3,5 +3,8 @@ warning: unresolved link
   |
 1 | - [`crate::hidden`]
   |   ^^^^^^^^^^^^^^^^^ rustdoc did not process this link
+  |
+  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`
+  = help: for more info, see https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#rustdoc-did-not-process-this-link
 
  WARN mdbook-rustdoc-links: finished with warnings

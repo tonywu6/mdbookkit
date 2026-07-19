@@ -68,6 +68,7 @@ pub fn run() -> Result<(), ()> {
                             '`' => Some("&#96;"),
                             '\n' => Some("&#10;"),
                             '\r' => Some("&#13;"),
+                            '\\' => Some("&#92;"),
                             _ => None,
                         });
                         Ok(Some(template.into()))

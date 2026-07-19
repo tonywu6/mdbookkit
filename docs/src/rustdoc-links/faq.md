@@ -76,7 +76,38 @@ For more information, see
 ## "rustdoc did not process this link"
 
 This warning diagnostic appears when the preprocessor was not able to resolve a item but
-`rustdoc` did not issue a diagnostic for it.
+`rustdoc` did not issue a diagnostic for it. Possible reasons are:
+
+### Accidental links
+
+The preprocessor may show this warning for text that wasn't meant to be an intra-doc
+link.
+
+This most often happens with text surrounded by square brackets, which matches the
+syntax of [shortcut links](writing-links.md#shortcut-links). You can escape the brackets
+with `\[` and `\]`:
+
+```diff
+- The text was surrounded by [square brackets].
++ The text was surrounded by \[square brackets\].
+```
+
+<figure>
+
+{% include "/crates/mdbook-rustdoc-links/tests/book_accidental_shortcut_link/stderr/data.svg" %}
+
+<figcaption>
+  Without escaping the brackets, the preprocessor considers this a potential intra-doc link.
+</figcaption>
+
+</figure>
+
+Currently, the preprocessor is less restrictive [than
+`rustdoc`][rustdoc-preprocess-link] in what it considers a possible link, to avoid
+having false negatives, so it may pick up some text that doesn't contain valid Rust
+syntax.
+
+### `rustdoc` edge cases
 
 Normally, when an item fails to resolve, such as when the item does not exist, `rustdoc`
 generates a corresponding warning. However, in very specific circumstances, `rustdoc`
@@ -95,4 +126,5 @@ preprocessor to generate a URL. Some known examples are:
 <!-- prettier-ignore-start -->
 [doc-hidden]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/the-doc-attribute.html#hidden
 [doc-inline]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/re-exports.html#inlining-with-docinline
+[rustdoc-preprocess-link]: https://github.com/rust-lang/rust/blob/1.97.1/src/librustdoc/passes/collect_intra_doc_links.rs#L940
 <!-- prettier-ignore-end -->

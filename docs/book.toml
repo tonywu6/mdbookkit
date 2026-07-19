@@ -12,9 +12,8 @@ extra-watch-dirs = [
   "scripts",
   "web",
   "Cargo.toml",
-  "../README.md",
-  "../crates/mdbook-rustdoc-links/README.md",
-  "../crates/mdbook-permalinks/README.md",
+  "../crates/mdbook-rustdoc-links/CHANGELOG.md",
+  "../crates/mdbook-permalinks/CHANGELOG.md",
 ]
 use-default-preprocessors = false
 

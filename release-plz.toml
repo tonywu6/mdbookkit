@@ -81,15 +81,15 @@ postprocessors = [
 ]
 
 [[changelog.commit_parsers]]
-group = "<!-- 0 --> New features"
+group = "<!-- 0 --> Added"
 message = "^feat"
 
 [[changelog.commit_parsers]]
-group = "<!-- 1 --> Fixes"
+group = "<!-- 1 --> Fixed"
 message = "^fix"
 
 [[changelog.commit_parsers]]
-group = "<!-- 2 --> Changes"
+group = "<!-- 2 --> Changed"
 message = "^refactor|^perf"
 
 [[changelog.commit_parsers]]
