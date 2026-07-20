@@ -5,7 +5,7 @@
 <div class="hidden">
 
 **For best results, view this page at
-[https://docs.tonywu.dev/mdbookkit/rustdoc-links](https://docs.tonywu.dev/mdbookkit/).**
+[https://docs.tonywu.dev/mdbookkit/rustdoc-links](https://docs.tonywu.dev/mdbookkit/rustdoc-links/index).**
 
 </div>
 
@@ -59,25 +59,25 @@ can keep them up-to-date.
 
 ## Overview
 
-Follow the [quickstart tutorial](https://docs.tonywu.dev/mdbookkit/getting-started.html) to try out the preprocessor!
+Follow the [quickstart tutorial](https://docs.tonywu.dev/mdbookkit/rustdoc-links/getting-started) to try out the preprocessor!
 
 For **writing documentation,**
 
-- Learn how to [write links](https://docs.tonywu.dev/mdbookkit/writing-links.html) when using this preprocessor.
+- Learn how to [write links](https://docs.tonywu.dev/mdbookkit/rustdoc-links/writing-links) when using this preprocessor.
 
-- Learn how to [refer to Rust items by name](https://docs.tonywu.dev/mdbookkit/naming-items.html) in links so that the
+- Learn how to [refer to Rust items by name](https://docs.tonywu.dev/mdbookkit/rustdoc-links/naming-items) in links so that the
   preprocessor can resolve them.
 
 See how to configure the preprocessor **for specific scenarios,** such as:
 
-- How to link to [items in dependencies](https://docs.tonywu.dev/mdbookkit/how-to/package-selection.html)
+- How to link to [items in dependencies](https://docs.tonywu.dev/mdbookkit/rustdoc-links/how-to/package-selection)
 
-- How to link to [conditionally-compiled items](https://docs.tonywu.dev/mdbookkit/how-to/conditional-compilation.html)
+- How to link to [conditionally-compiled items](https://docs.tonywu.dev/mdbookkit/rustdoc-links/how-to/conditional-compilation)
 
-- How to [use the preprocessor in CI/CD](https://docs.tonywu.dev/mdbookkit/how-to/continuous-integration.html)
+- How to [use the preprocessor in CI/CD](https://docs.tonywu.dev/mdbookkit/rustdoc-links/how-to/continuous-integration)
 
 Finally, you can check out the list of
-[all available configuration options](https://docs.tonywu.dev/mdbookkit/reference/configuration.html).
+[all available configuration options](https://docs.tonywu.dev/mdbookkit/rustdoc-links/reference/configuration).
 
 Happy linking!
 
@@ -87,8 +87,8 @@ Happy linking!
 
 ## License
 
-This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/LICENSE-APACHE.md) and the
-[MIT License](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/LICENSE-MIT.md).
+This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/392893d61518af7166d03260d9899af16912a749/LICENSE-APACHE.md) and the
+[MIT License](https://github.com/tonywu6/mdbookkit/tree/392893d61518af7166d03260d9899af16912a749/LICENSE-MIT.md).
 
 [^1]: Text adapted from [<cite>A Tour of The Rust Standard Library</cite>][tour]
 

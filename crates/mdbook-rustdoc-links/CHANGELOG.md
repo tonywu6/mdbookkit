@@ -1,10 +1,16 @@
 # CHANGELOG
 
+## 3.0.2
+
+[Code changes from v3.0.1 to v3.0.2](https://github.com/tonywu6/mdbookkit/compare/mdbook-rustdoc-links-v3.0.1...mdbook-rustdoc-links-v3.0.2)
+
+This is a re-release of version 3.0.0 with no changes, to correct an issue with the README file.
+
 ## 3.0.1
 
 [Code changes from v3.0.0 to v3.0.1](https://github.com/tonywu6/mdbookkit/compare/mdbook-rustdoc-links-v3.0.0...mdbook-rustdoc-links-v3.0.1)
 
-This is a re-release of version 3.0.0 with no changes.
+This is a re-release of version 3.0.0 with no changes, to correct an issue with GitHub Releases.
 
 ## 3.0.0
 
