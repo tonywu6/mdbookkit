@@ -387,8 +387,8 @@ warning in your terminal, similar to the following:
 
 <figure>
 
-{% filter replace("crates/mdbook-permalinks/tests/book_tutorial_check/", "") %}
-{% include "/crates/mdbook-permalinks/tests/book_tutorial_check/stderr/data.svg" %}
+{% filter replace("crates/mdbook-permalinks/tests/book_homepage/", "") %}
+{% include "/crates/mdbook-permalinks/tests/book_homepage/stderr/data.svg" %}
 {% endfilter %}
 
 <figcaption>

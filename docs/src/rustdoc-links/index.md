@@ -50,9 +50,7 @@ Should you want to refactor your code, the preprocessor also checks your links, 
 can keep them up-to-date.
 
 <figure>
-
-{% include "/crates/mdbook-rustdoc-links/tests/book_homepage/stderr/data.svg" %}
-
+  <img src="/crates/mdbook-rustdoc-links/tests/book_homepage/stderr/data.svg">
 </figure>
 
 ## Overview

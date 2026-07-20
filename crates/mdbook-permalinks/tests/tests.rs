@@ -65,7 +65,7 @@ test_case![dev_mode_editor_uri, exit(0), env = ["CI" = ""]];
 test_case![dev_mode_in_ci, exit(0), env = ["CI" = "1"]];
 
 test_case![
-    book_tutorial_check,
+    book_homepage,
     exit(0),
     env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
 ];
