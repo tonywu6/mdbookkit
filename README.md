@@ -2,10 +2,10 @@
 
 # mdbookkit
 
-Quality-of-life plugins for your [mdBook] project.
+Quality-of-life plugins for your [mdBook] project!
 
 [![link to documentation](https://img.shields.io/github/actions/workflow/status/tonywu6/mdbookkit/docs.yml?event=release&style=flat-square&label=docs)](https://docs.tonywu.dev/mdbookkit/)
-[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](https://github.com/tonywu6/mdbookkit/tree/df6f0d10c553909a2abeebf25aaf3872dbd06a96/LICENSE-APACHE.md)
+[![MIT/Apache-2.0 licensed](https://img.shields.io/crates/l/mdbookkit?style=flat-square)](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/LICENSE-APACHE.md)
 
 ## mdbook-rustdoc-links
 
@@ -16,7 +16,7 @@ Use [intra-doc links][rustdoc] in [mdBook].
 [About](https://docs.tonywu.dev/mdbookkit/rustdoc-links/index.html)
 | [Quickstart](https://docs.tonywu.dev/mdbookkit/rustdoc-links/getting-started.html)
 | [Guides](https://docs.tonywu.dev/mdbookkit/rustdoc-links/how-to/index.html)
-| [Options](https://docs.tonywu.dev/mdbookkit/rustdoc-links/configuration.html)
+| [Options](https://docs.tonywu.dev/mdbookkit/rustdoc-links/reference/configuration.html)
 
 <!-- prettier-ignore-end -->
 
@@ -31,9 +31,9 @@ Generate permalinks to files in your Git repository.
 <!-- prettier-ignore-start -->
 
 [About](https://docs.tonywu.dev/mdbookkit/permalinks/index.html)
-| [Quickstart](https://docs.tonywu.dev/mdbookkit/permalinks/tutorial.html)
+| [Quickstart](https://docs.tonywu.dev/mdbookkit/permalinks/getting-started.html)
 | [Guides](https://docs.tonywu.dev/mdbookkit/permalinks/how-to/index.html)
-| [Options](https://docs.tonywu.dev/mdbookkit/permalinks/configuration.html)
+| [Options](https://docs.tonywu.dev/mdbookkit/permalinks/reference/configuration.html)
 
 <!-- prettier-ignore-end -->
 
@@ -43,8 +43,8 @@ cargo install mdbook-permalinks
 
 ## License
 
-This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/df6f0d10c553909a2abeebf25aaf3872dbd06a96/LICENSE-APACHE.md) and the
-[MIT License](https://github.com/tonywu6/mdbookkit/tree/df6f0d10c553909a2abeebf25aaf3872dbd06a96/LICENSE-MIT.md).
+This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/LICENSE-APACHE.md) and the
+[MIT License](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/LICENSE-MIT.md).
 
 <!-- prettier-ignore-start -->
 [mdBook]: https://rust-lang.github.io/mdBook/
