@@ -4,7 +4,7 @@
 
 [Code changes from v2.0.1 to v3.0.0](https://github.com/tonywu6/mdbookkit/compare/mdbook-rustdoc-links-v2.0.1...mdbook-rustdoc-links-v3.0.0)
 
-The preprocessor has been rewritten to **no longer depend on rust-analyzer to function!** Instead, it utilizes `cargo doc` directly.
+The preprocessor has been rewritten to **no longer depend on rust-analyzer!** Instead, it utilizes `cargo doc` directly.
 
 - The preprocessor now requires **only a _stable_ Rust toolchain** (nightly not required).
 
@@ -14,7 +14,7 @@ The preprocessor has been rewritten to **no longer depend on rust-analyzer to fu
 
   For example, you can now both use the [disambiguator syntax](https://docs.tonywu.dev/mdbookkit/rustdoc-links/writing-links#namespaces-and-disambiguators) and link to struct fields, where the previous version [did not support them](https://github.com/tonywu6/mdbookkit/blob/mdbook-rustdoc-links-v2.0.1/docs/src/rustdoc-links/supported-syntax.md#unsupported-syntax). There were also [subtle cases](https://github.com/tonywu6/mdbookkit/blob/mdbook-rustdoc-links-v2.0.1/docs/src/rustdoc-links/known-issues.md#incorrectunresolvable-links) in which the preprocessor would generate incorrect links.
 
-  In other words, if `cargo doc` can successfully resolve an intra-doc link in a doc comment, then the preprocessor is now expected to also resolve the same link in mdBook (so long as the item is ["in scope"](https://docs.tonywu.dev/mdbookkit/rustdoc-links/naming-items)). If you notice any discrepancies, please don't hesitate to [file an issue](https://github.com/tonywu6/mdbookkit/issues)!
+  > In other words, if `cargo doc` can successfully resolve an intra-doc link in a doc comment, then the preprocessor is now expected to also resolve the same link in mdBook (so long as the item is ["in scope"](https://docs.tonywu.dev/mdbookkit/rustdoc-links/naming-items)). If you notice any discrepancies, please don't hesitate to [file an issue](https://github.com/tonywu6/mdbookkit/issues)!
 
 - The preprocessor also inherits [rustdoc's **incredibly helpful diagnostics**](https://doc.rust-lang.org/stable/rustdoc/lints.html).
 

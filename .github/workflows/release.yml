@@ -5,10 +5,7 @@ permissions:
   contents: write
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
-    branches: [main]
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
@@ -18,7 +15,7 @@ jobs:
     name: Pull request
     runs-on: ubuntu-latest
 
-    if: github.repository_owner == 'tonywu6' && github.event.workflow_run.conclusion == 'success'
+    if: github.repository_owner == 'tonywu6'
 
     permissions:
       contents: write
@@ -51,7 +48,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
 
-    if: github.repository_owner == 'tonywu6' && github.event.workflow_run.conclusion == 'success'
+    if: github.repository_owner == 'tonywu6'
 
     permissions:
       contents: write

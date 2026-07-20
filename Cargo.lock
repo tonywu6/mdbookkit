@@ -1022,7 +1022,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-permalinks"
-version = "2.0.1"
+version = "3.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1055,7 +1055,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-rustdoc-links"
-version = "2.0.1"
+version = "3.0.0"
 dependencies = [
  "anyhow",
  "cargo_metadata",
@@ -1081,7 +1081,7 @@ dependencies = [
 
 [[package]]
 name = "mdbookkit"
-version = "2.0.1"
+version = "3.0.0"
 dependencies = [
  "annotate-snippets",
  "anyhow",

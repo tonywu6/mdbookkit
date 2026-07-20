@@ -1,5 +1,7 @@
 # CHANGELOG
 
+(This changelog is no longer updated beyond this point.)
+
 ## 2.0.1
 
 [Code changes from v2.0.0 to v2.0.1](https://github.com/tonywu6/mdbookkit/compare/mdbookkit-v2.0.0...mdbookkit-v2.0.1)

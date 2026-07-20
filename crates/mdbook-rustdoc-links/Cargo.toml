@@ -1,7 +1,7 @@
 [package]
 name = "mdbook-rustdoc-links"
 publish = true
-version = "2.0.1"
+version = "3.0.0"
 
 edition.workspace = true
 
@@ -10,13 +10,13 @@ license.workspace = true
 repository.workspace = true
 
 categories = ["text-processing", "development-tools", "command-line-utilities"]
-description = "Link to Rust API docs by name in mdBook"
+description = "mdBook preprocessor to support intra-doc links"
 documentation = "https://docs.tonywu.dev/mdbookkit/rustdoc-links"
 homepage = "https://docs.tonywu.dev/mdbookkit/rustdoc-links"
 keywords = ["mdbook", "markdown", "documentation", "rust-analyzer", "rustdoc"]
 readme = "README.md"
 
-exclude = ["src/tests", "tests"]
+exclude = ["tests"]
 
 [dependencies]
 anyhow = { workspace = true }
