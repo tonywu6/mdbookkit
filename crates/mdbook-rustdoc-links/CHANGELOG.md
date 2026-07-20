@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.0.1
+
+[Code changes from v3.0.0 to v3.0.1](https://github.com/tonywu6/mdbookkit/compare/mdbook-rustdoc-links-v3.0.0...mdbook-rustdoc-links-v3.0.1)
+
+This is a re-release of version 3.0.0 with no changes.
+
 ## 3.0.0
 
 [Code changes from v2.0.1 to v3.0.0](https://github.com/tonywu6/mdbookkit/compare/mdbook-rustdoc-links-v2.0.1...mdbook-rustdoc-links-v3.0.0)
