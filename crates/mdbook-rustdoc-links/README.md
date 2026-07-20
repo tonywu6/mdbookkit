@@ -87,8 +87,8 @@ Happy linking!
 
 ## License
 
-This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/LICENSE-APACHE.md) and the
-[MIT License](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/LICENSE-MIT.md).
+This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/7d3b6af50a2ba1aa4235c6a11396c7d77d939815/LICENSE-APACHE.md) and the
+[MIT License](https://github.com/tonywu6/mdbookkit/tree/7d3b6af50a2ba1aa4235c6a11396c7d77d939815/LICENSE-MIT.md).
 
 [^1]: Text adapted from [<cite>A Tour of The Rust Standard Library</cite>][tour]
 

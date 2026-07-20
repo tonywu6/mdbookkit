@@ -23,7 +23,7 @@ Here is a link to the project's [Cargo.toml](/Cargo.toml).
 
 <figure class="fig-text">
 
-Here is a link to the project's [Cargo.toml](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/Cargo.toml).
+Here is a link to the project's [Cargo.toml](https://github.com/tonywu6/mdbookkit/tree/7d3b6af50a2ba1aa4235c6a11396c7d77d939815/Cargo.toml).
 
 </figure>
 
@@ -63,8 +63,8 @@ Link rot happens all the time. The preprocessor will tell you about it.
 
 ## License
 
-This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/LICENSE-APACHE.md) and the
-[MIT License](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/LICENSE-MIT.md).
+This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/7d3b6af50a2ba1aa4235c6a11396c7d77d939815/LICENSE-APACHE.md) and the
+[MIT License](https://github.com/tonywu6/mdbookkit/tree/7d3b6af50a2ba1aa4235c6a11396c7d77d939815/LICENSE-MIT.md).
 
 <!-- prettier-ignore-start -->
 [mdBook]: https://rust-lang.github.io/mdBook/
