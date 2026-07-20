@@ -46,17 +46,10 @@ Feature highlights:
 - [Get warnings](getting-started.md#check) when links become broken.
 
 <figure>
-
-{% filter replace("crates/mdbook-permalinks/tests/book_tutorial_check/", "") %}
-{% include "/crates/mdbook-permalinks/tests/book_tutorial_check/stderr/data.svg" %}
-{% endfilter %}
-
-<figcaption>
-
-Link rot happens all the time. The preprocessor will tell you about it.
-
-</figcaption>
-
+  <img src="/crates/mdbook-permalinks/tests/book_homepage/stderr/data.svg">
+  <figcaption>
+    Link rot happens all the time. The preprocessor will tell you about it.
+  </figcaption>
 </figure>
 
 ## License

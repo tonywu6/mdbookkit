@@ -23,7 +23,7 @@ Here is a link to the project's [Cargo.toml](/Cargo.toml).
 
 <figure class="fig-text">
 
-Here is a link to the project's [Cargo.toml](https://github.com/tonywu6/mdbookkit/tree/392893d61518af7166d03260d9899af16912a749/Cargo.toml).
+Here is a link to the project's [Cargo.toml](https://github.com/tonywu6/mdbookkit/tree/7b0155dae0ba3eb0e31e8a8e5a0e5682915bd2d4/Cargo.toml).
 
 </figure>
 
@@ -48,23 +48,16 @@ Feature highlights:
 - [Get warnings](https://docs.tonywu.dev/mdbookkit/permalinks/getting-started#check) when links become broken.
 
 <figure>
-
-
-<svg width="740px" height="200px" xmlns="http://www.w3.org/2000/svg">&#10;  <style>&#10;    .fg { fill: #B2B2B2 }&#10;    .bg { fill: #1A1A1A }&#10;    .fg-bright-blue { fill: #5CADF1 }&#10;    .fg-yellow { fill: #D19A66 }&#10;    .container {&#10;      padding: 0 10px;&#10;      line-height: 18px;&#10;    }&#10;    .bold { font-weight: bold; }&#10;    tspan {&#10;      font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;&#10;      white-space: pre;&#10;      line-height: 18px;&#10;    }&#10;  </style>&#10;&#10;  <rect width="100%" height="100%" y="0"  class="bg" />&#10;&#10;  <text xml:space="preserve" class="container fg">&#10;    <tspan x="10px" y="28px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "../nook.toml"</tspan>&#10;</tspan>&#10;    <tspan x="10px" y="46px"><tspan> </tspan><tspan class="fg-bright-blue bold"> ╭▸ </tspan><tspan>src/tutorial.md:1:19</tspan>&#10;</tspan>&#10;    <tspan x="10px" y="64px"><tspan>  </tspan><tspan class="fg-bright-blue bold">│</tspan>&#10;</tspan>&#10;    <tspan x="10px" y="82px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">│</tspan><tspan> See &#91;&#96;book.toml&#96;&#93;&#40;</tspan><tspan class="fg-yellow bold">../nook.toml</tspan><tspan>&#41; for more info.</tspan>&#10;</tspan>&#10;    <tspan x="10px" y="100px"><tspan>  </tspan><tspan class="fg-bright-blue bold">│</tspan><tspan>                   </tspan><tspan class="fg-yellow bold">┯━━━━━━━━━━━</tspan>&#10;</tspan>&#10;    <tspan x="10px" y="118px"><tspan>  </tspan><tspan class="fg-bright-blue bold">│</tspan><tspan>                   </tspan><tspan class="fg-bright-blue bold">│</tspan>&#10;</tspan>&#10;    <tspan x="10px" y="136px"><tspan>  </tspan><tspan class="fg-bright-blue bold">│</tspan><tspan>                   </tspan><tspan class="fg-yellow bold">resolves to a path that doesn't exist:</tspan>&#10;</tspan>&#10;    <tspan x="10px" y="154px"><tspan>  </tspan><tspan class="fg-bright-blue bold">╰╴</tspan><tspan>                  </tspan><tspan class="fg-bright-blue bold">"nook.toml"</tspan>&#10;</tspan>&#10;    <tspan x="10px" y="172px">&#10;</tspan>&#10;    <tspan x="10px" y="190px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: finished with warnings</tspan>&#10;</tspan>&#10;  </text>&#10;&#10;</svg>&#10;
-
-
-<figcaption>
-
-Link rot happens all the time. The preprocessor will tell you about it.
-
-</figcaption>
-
+  <img src="https://github.com/tonywu6/mdbookkit/raw/7b0155dae0ba3eb0e31e8a8e5a0e5682915bd2d4/crates/mdbook-permalinks/tests/book_homepage/stderr/data.svg">
+  <figcaption>
+    Link rot happens all the time. The preprocessor will tell you about it.
+  </figcaption>
 </figure>
 
 ## License
 
-This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/392893d61518af7166d03260d9899af16912a749/LICENSE-APACHE.md) and the
-[MIT License](https://github.com/tonywu6/mdbookkit/tree/392893d61518af7166d03260d9899af16912a749/LICENSE-MIT.md).
+This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/7b0155dae0ba3eb0e31e8a8e5a0e5682915bd2d4/LICENSE-APACHE.md) and the
+[MIT License](https://github.com/tonywu6/mdbookkit/tree/7b0155dae0ba3eb0e31e8a8e5a0e5682915bd2d4/LICENSE-MIT.md).
 
 <!-- prettier-ignore-start -->
 [mdBook]: https://rust-lang.github.io/mdBook/

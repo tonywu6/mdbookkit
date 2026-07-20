@@ -1,10 +1,10 @@
 warning: broken link to "../nook.toml"
-  ╭▸ crates/mdbook-permalinks/tests/book_tutorial_check/src/tutorial.md:1:19
+  ╭▸ crates/mdbook-permalinks/tests/book_homepage/src/index.md:1:19
   │
 1 │ See [`book.toml`](../nook.toml) for more info.
   │                   ┯━━━━━━━━━━━
   │                   │
   │                   resolves to a path that doesn't exist:
-  ╰╴                  "crates/mdbook-permalinks/tests/book_tutorial_check/nook.toml"
+  ╰╴                  "crates/mdbook-permalinks/tests/book_homepage/nook.toml"
 
  WARN mdbook-permalinks: finished with warnings
