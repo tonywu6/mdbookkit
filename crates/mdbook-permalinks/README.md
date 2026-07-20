@@ -23,27 +23,29 @@ Here is a link to the project's [Cargo.toml](/Cargo.toml).
 
 <figure class="fig-text">
 
-Here is a link to the project's [Cargo.toml](https://github.com/tonywu6/mdbookkit/tree/df6f0d10c553909a2abeebf25aaf3872dbd06a96/Cargo.toml).
+Here is a link to the project's [Cargo.toml](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/Cargo.toml).
 
 </figure>
 
 ## Overview
 
-Follow the [quickstart tutorial](https://docs.tonywu.dev/mdbookkit/tutorial.html) to try out the preprocessor!
+Follow the [quickstart tutorial](https://docs.tonywu.dev/mdbookkit/getting-started.html) to try out the preprocessor!
 
-- [Use file paths as links](https://docs.tonywu.dev/mdbookkit/tutorial.html#linking-by-paths) and get links to your Git
-  repository.
+Feature highlights:
+
+- [Use file paths as links](https://docs.tonywu.dev/mdbookkit/getting-started.html#linking-by-paths). The preprocessor
+  converts them to links to your Git repository.
 
 - Links are anchored to the Git commit at the time your book is built.
-
-- Display [images](https://docs.tonywu.dev/mdbookkit/tutorial.html#images) and [media files](https://docs.tonywu.dev/mdbookkit/tutorial.html#html-links) in your
-  repository.
 
 - Supports repositories on GitHub, Codeberg, and Tangled out of the box, but you can
   also
   [define your own permalink format](https://docs.tonywu.dev/mdbookkit/how-to/remote-url.html#using-a-custom-permalink-format).
 
-- [Get warnings](https://docs.tonywu.dev/mdbookkit/tutorial.html#check) when links become broken.
+- Use permalinks to display [images](https://docs.tonywu.dev/mdbookkit/getting-started.html#images) and
+  [media files](https://docs.tonywu.dev/mdbookkit/getting-started.html#html-links).
+
+- [Get warnings](https://docs.tonywu.dev/mdbookkit/getting-started.html#check) when links become broken.
 
 <figure>
 
@@ -61,8 +63,8 @@ Link rot happens all the time. The preprocessor will tell you about it.
 
 ## License
 
-This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/df6f0d10c553909a2abeebf25aaf3872dbd06a96/LICENSE-APACHE.md) and the
-[MIT License](https://github.com/tonywu6/mdbookkit/tree/df6f0d10c553909a2abeebf25aaf3872dbd06a96/LICENSE-MIT.md).
+This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/LICENSE-APACHE.md) and the
+[MIT License](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/LICENSE-MIT.md).
 
 <!-- prettier-ignore-start -->
 [mdBook]: https://rust-lang.github.io/mdBook/

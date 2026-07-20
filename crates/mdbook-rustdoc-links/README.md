@@ -12,10 +12,10 @@
 Documenting your Rust project using [mdBook]? Link to your API docs à la rustdoc!
 
 > Rustdoc is capable of directly linking to other rustdoc pages using the path of the
-> item as a link. This is referred to as an ["intra-doc link"][intra-doc-link].
+> item as a link. This is referred to as an "intra-doc link".
 
-This [preprocessor] brings such _intra-doc links_ to mdBook. With it, you can
-effortlessly add hyperlinks from your book to documentation hosted on
+This [preprocessor] brings such [_intra-doc links_][intra-doc-link] to mdBook. With it,
+you can effortlessly add hyperlinks from your book to documentation hosted on
 [docs.rs](https://docs.rs), as well as to Rust's
 [Standard Library documentation](https://doc.rust-lang.org/stable/std).
 
@@ -28,7 +28,7 @@ The [`option`](https://doc.rust-lang.org/stable/std/option/index.html) and
 optional and error-handling types ...
 ```
 
-You simply mention items by name ...
+You simply mention items by name, as if writing doc comments ...
 
 ```md
 The [`option`][std::option] and [`result`][std::result] modules define optional and
@@ -41,10 +41,19 @@ collections. [^1]
 
 <figure class="fig-text">
 
-The [`option`](https://doc.rust-lang.org/1.96.0/core/option/index.html "mod core::option") and [`result`](https://doc.rust-lang.org/1.96.0/core/result/index.html "mod core::result") modules define optional and
-error-handling types, [`Option<T>`](https://doc.rust-lang.org/1.96.0/core/option/enum.Option.html "enum core::option::Option") and [`Result<T, E>`](https://doc.rust-lang.org/1.96.0/core/result/enum.Result.html "enum core::result::Result"). The [`iter`](https://doc.rust-lang.org/1.96.0/core/iter/index.html "mod core::iter") module
-defines Rust's iterator trait, [`Iterator`](https://doc.rust-lang.org/1.96.0/core/iter/traits/iterator/trait.Iterator.html "trait core::iter::traits::iterator::Iterator"), which works with the `for` loop to access
+The [`option`](https://doc.rust-lang.org/1.97.1/core/option/index.html "mod core::option") and [`result`](https://doc.rust-lang.org/1.97.1/core/result/index.html "mod core::result") modules define optional and
+error-handling types, [`Option<T>`](https://doc.rust-lang.org/1.97.1/core/option/enum.Option.html "enum core::option::Option") and [`Result<T, E>`](https://doc.rust-lang.org/1.97.1/core/result/enum.Result.html "enum core::result::Result"). The [`iter`](https://doc.rust-lang.org/1.97.1/core/iter/index.html "mod core::iter") module
+defines Rust's iterator trait, [`Iterator`](https://doc.rust-lang.org/1.97.1/core/iter/traits/iterator/trait.Iterator.html "trait core::iter::traits::iterator::Iterator"), which works with the `for` loop to access
 collections. [^1]
+
+</figure>
+
+Should you want to refactor your code, the preprocessor also checks your links, so you
+can keep them up-to-date.
+
+<figure>
+
+<svg width="740px" height="146px" xmlns="http://www.w3.org/2000/svg">&#10;  <style>&#10;    .fg { fill: #B2B2B2 }&#10;    .bg { fill: #1A1A1A }&#10;    .fg-bright-blue { fill: #5CADF1 }&#10;    .fg-yellow { fill: #D19A66 }&#10;    .container {&#10;      padding: 0 10px;&#10;      line-height: 18px;&#10;    }&#10;    .bold { font-weight: bold; }&#10;    tspan {&#10;      font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;&#10;      white-space: pre;&#10;      line-height: 18px;&#10;    }&#10;  </style>&#10;&#10;  <rect width="100%" height="100%" y="0"  class="bg" />&#10;&#10;  <text xml:space="preserve" class="container fg">&#10;    <tspan x="10px" y="28px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: unresolved link to &#96;shlex::quote&#96;</tspan>&#10;</tspan>&#10;    <tspan x="10px" y="46px"><tspan> </tspan><tspan class="fg-bright-blue bold"> ╭▸ </tspan><tspan>index.md:1:15</tspan>&#10;</tspan>&#10;    <tspan x="10px" y="64px"><tspan>  </tspan><tspan class="fg-bright-blue bold">│</tspan>&#10;</tspan>&#10;    <tspan x="10px" y="82px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">│</tspan><tspan> The &#91;&#96;quote&#96;&#93;&#91;</tspan><tspan class="fg-yellow bold">shlex::quote</tspan><tspan>&#93; function is deprecated and will be removed soon!</tspan>&#10;</tspan>&#10;    <tspan x="10px" y="100px"><tspan>  </tspan><tspan class="fg-bright-blue bold">╰╴</tspan><tspan>              </tspan><tspan class="fg-yellow bold">━━━━━━━━━━━━</tspan><tspan> </tspan><tspan class="fg-yellow bold">no item named &#96;quote&#96; in module &#96;shlex&#96;</tspan>&#10;</tspan>&#10;    <tspan x="10px" y="118px">&#10;</tspan>&#10;    <tspan x="10px" y="136px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-rustdoc-links</tspan><tspan>: finished with warnings</tspan>&#10;</tspan>&#10;  </text>&#10;&#10;</svg>&#10;
 
 </figure>
 
@@ -54,22 +63,21 @@ Follow the [quickstart tutorial](https://docs.tonywu.dev/mdbookkit/getting-start
 
 For **writing documentation,**
 
-- Learn about all the [syntax features for writing links](https://docs.tonywu.dev/mdbookkit/writing-links.html) when using
-  this preprocessor. Hint: it's almost exactly the same as when writing doc comments.
+- Learn how to [write links](https://docs.tonywu.dev/mdbookkit/writing-links.html) when using this preprocessor.
 
 - Learn how to [refer to Rust items by name](https://docs.tonywu.dev/mdbookkit/naming-items.html) in links so that the
   preprocessor can resolve them.
 
 See how to configure the preprocessor **for specific scenarios,** such as:
 
-- How to link to [items from dependencies](https://docs.tonywu.dev/mdbookkit/how-to/package-selection.html)
+- How to link to [items in dependencies](https://docs.tonywu.dev/mdbookkit/how-to/package-selection.html)
 
 - How to link to [conditionally-compiled items](https://docs.tonywu.dev/mdbookkit/how-to/conditional-compilation.html)
 
 - How to [use the preprocessor in CI/CD](https://docs.tonywu.dev/mdbookkit/how-to/continuous-integration.html)
 
 Finally, you can check out the list of
-[all available configuration options](https://docs.tonywu.dev/mdbookkit/configuration.html).
+[all available configuration options](https://docs.tonywu.dev/mdbookkit/reference/configuration.html).
 
 Happy linking!
 
@@ -79,8 +87,8 @@ Happy linking!
 
 ## License
 
-This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/df6f0d10c553909a2abeebf25aaf3872dbd06a96/LICENSE-APACHE.md) and the
-[MIT License](https://github.com/tonywu6/mdbookkit/tree/df6f0d10c553909a2abeebf25aaf3872dbd06a96/LICENSE-MIT.md).
+This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/LICENSE-APACHE.md) and the
+[MIT License](https://github.com/tonywu6/mdbookkit/tree/88431989183b48e8c052751b39f547e8824ea677/LICENSE-MIT.md).
 
 [^1]: Text adapted from [<cite>A Tour of The Rust Standard Library</cite>][tour]
 
