@@ -23,7 +23,7 @@ Here is a link to the project's [Cargo.toml](/Cargo.toml).
 
 <figure class="fig-text">
 
-Here is a link to the project's [Cargo.toml](https://github.com/tonywu6/mdbookkit/tree/7b0155dae0ba3eb0e31e8a8e5a0e5682915bd2d4/Cargo.toml).
+Here is a link to the project's [Cargo.toml](https://github.com/tonywu6/mdbookkit/tree/9fee25e50b174d4a456cad976f744198498d53ff/Cargo.toml).
 
 </figure>
 
@@ -48,7 +48,7 @@ Feature highlights:
 - [Get warnings](https://docs.tonywu.dev/mdbookkit/permalinks/getting-started#check) when links become broken.
 
 <figure>
-  <img src="https://github.com/tonywu6/mdbookkit/raw/7b0155dae0ba3eb0e31e8a8e5a0e5682915bd2d4/crates/mdbook-permalinks/tests/book_homepage/stderr/data.svg">
+  <img src="https://github.com/tonywu6/mdbookkit/raw/9fee25e50b174d4a456cad976f744198498d53ff/crates/mdbook-permalinks/tests/book_homepage/stderr/data.svg">
   <figcaption>
     Link rot happens all the time. The preprocessor will tell you about it.
   </figcaption>
@@ -56,8 +56,8 @@ Feature highlights:
 
 ## License
 
-This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/7b0155dae0ba3eb0e31e8a8e5a0e5682915bd2d4/LICENSE-APACHE.md) and the
-[MIT License](https://github.com/tonywu6/mdbookkit/tree/7b0155dae0ba3eb0e31e8a8e5a0e5682915bd2d4/LICENSE-MIT.md).
+This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/9fee25e50b174d4a456cad976f744198498d53ff/LICENSE-APACHE.md) and the
+[MIT License](https://github.com/tonywu6/mdbookkit/tree/9fee25e50b174d4a456cad976f744198498d53ff/LICENSE-MIT.md).
 
 <!-- prettier-ignore-start -->
 [mdBook]: https://rust-lang.github.io/mdBook/

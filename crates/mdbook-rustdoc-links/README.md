@@ -52,7 +52,7 @@ Should you want to refactor your code, the preprocessor also checks your links, 
 can keep them up-to-date.
 
 <figure>
-  <img src="https://github.com/tonywu6/mdbookkit/raw/7b0155dae0ba3eb0e31e8a8e5a0e5682915bd2d4/crates/mdbook-rustdoc-links/tests/book_homepage/stderr/data.svg">
+  <img src="https://github.com/tonywu6/mdbookkit/raw/9fee25e50b174d4a456cad976f744198498d53ff/crates/mdbook-rustdoc-links/tests/book_homepage/stderr/data.svg">
 </figure>
 
 ## Overview
@@ -85,8 +85,8 @@ Happy linking!
 
 ## License
 
-This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/7b0155dae0ba3eb0e31e8a8e5a0e5682915bd2d4/LICENSE-APACHE.md) and the
-[MIT License](https://github.com/tonywu6/mdbookkit/tree/7b0155dae0ba3eb0e31e8a8e5a0e5682915bd2d4/LICENSE-MIT.md).
+This project is released under the [Apache 2.0 License](https://github.com/tonywu6/mdbookkit/tree/9fee25e50b174d4a456cad976f744198498d53ff/LICENSE-APACHE.md) and the
+[MIT License](https://github.com/tonywu6/mdbookkit/tree/9fee25e50b174d4a456cad976f744198498d53ff/LICENSE-MIT.md).
 
 [^1]: Text adapted from [<cite>A Tour of The Rust Standard Library</cite>][tour]
 
