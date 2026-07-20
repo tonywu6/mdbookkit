@@ -1,0 +1,19 @@
+warning: unresolved link to `std::path::PurePath`
+  ╭▸ environment-variables.md:1:5
+  │
+1 │ - [`std::path::PurePath`]
+  ╰╴    ━━━━━━━━━━━━━━━━━━━ no item named `PurePath` in module `path`
+
+warning: incompatible link kind for `Iterator`
+  ╭▸ environment-variables.md:2:5
+  │
+2 │ - [`struct@Iterator`]
+  │     ━━━━━━━━━━━━━━━ this link resolved to a trait, which is not a struct
+  ╰╴
+help: to link to the trait, prefix with `trait@`
+  ╭╴
+2 - - [`struct@Iterator`]
+2 + - [`trait@Iterator`]
+  ╰╴
+
+ WARN mdbook-rustdoc-links: finished with warnings

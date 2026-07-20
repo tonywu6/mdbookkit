@@ -3,11 +3,21 @@
 use std::{borrow::Cow, ops::Range};
 
 use mdbook_markdown::pulldown_cmark::{Event, Options};
-use pulldown_cmark_to_cmark::{Error, cmark};
-use tap::Pipe;
-use tracing::{debug, trace, trace_span};
+use pulldown_cmark_to_cmark::{Error, State, cmark_resume};
 
-use crate::write_str;
+pub fn locate_text(source: &str, sliced: &str) -> Option<Range<usize>> {
+    let sliced_lower = sliced.as_ptr();
+    let sliced_upper = unsafe { sliced_lower.add(sliced.len()) };
+    let source_lower = source.as_ptr();
+    let source_upper = unsafe { source_lower.add(source.len()) };
+    if source_lower <= sliced_lower && sliced_upper <= source_upper {
+        let lower = unsafe { sliced_lower.offset_from_unsigned(source_lower) };
+        let upper = unsafe { sliced_upper.offset_from_unsigned(source_lower) };
+        Some(lower..upper)
+    } else {
+        None
+    }
+}
 
 /// _Patch_ a Markdown string, instead of regenerating it entirely, in order to preserve
 /// as much of the original Markdown source as possible, especially with regard to whitespace.
@@ -17,102 +27,114 @@ use crate::write_str;
 /// for mdBook preprocessors, because downstream preprocessors may need to work on
 /// syntax that is whitespace-sensitive. Normalizing all whitespace could cause such
 /// usage to no longer be recognized.
-pub struct PatchStream<'a, S> {
-    source: &'a str,
-    stream: S,
-    range: Option<Range<usize>>,
-    patch: Option<String>,
+///
+/// `stream` should be an [`Iterator`] that yields tuples of `(events, range)`:
+///
+/// - `events` should be an [`Iterator`] yielding [`Event`]s which are the replacement
+///   Markdown to be rendered into `source` using [`pulldown_cmark_to_cmark`].
+///
+/// - `range`, when it is `Some(..)`, is the byte span in `source` that should be patched
+///   using `events`.
+///
+///   If it is `None`, `events` are the original [`Event`]s parsed from `source` that are
+///   in between two patches. When applying patches that span multiple lines, the original
+///   events are necessary for generating Markdown with the correct indentation, such as
+///   when the patch occurs within a blockquote.
+#[inline]
+pub fn patch_stream<'a, E, S>(source: &'a str, stream: S) -> Result<String, Error>
+where
+    E: Iterator<Item = Event<'a>>,
+    S: Iterator<Item = (E, Option<Range<usize>>)>,
+{
+    let stream = PatchStream {
+        stream,
+        state: None,
+    };
+    let mut content = String::with_capacity(source.len());
+    let mut emitted = 0..0;
+    for chunk in stream {
+        let (chunk, span) = chunk?;
+        let leading = emitted.end..span.start;
+        content.push_str(&source[leading]);
+        content.push_str(&chunk);
+        emitted = span;
+    }
+    let trailing = emitted.end..source.len();
+    content.push_str(&source[trailing]);
+    Ok(content)
 }
 
-impl<'a, 'b, E, S> Iterator for PatchStream<'a, S>
+struct PatchStream<'a, S> {
+    stream: S,
+    state: Option<State<'a>>,
+}
+
+impl<'a, E, S> Iterator for PatchStream<'a, S>
 where
-    E: Iterator<Item = Event<'b>>,
-    S: Iterator<Item = Spanned<E>>,
+    E: Iterator<Item = Event<'a>>,
+    S: Iterator<Item = (E, Option<Range<usize>>)>,
 {
-    type Item = Result<Cow<'a, str>, Error>;
+    type Item = Result<(String, Range<usize>), Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let range = self.range.clone()?;
+        loop {
+            let (events, span) = self.stream.next()?;
+            let state = self.state.take().unwrap_or_default();
 
-        if let Some(patch) = self.patch.take() {
-            trace!("- {range:?} {:?}", &self.source[range.clone()]);
-            trace!("+ {range:?} {patch:?}");
-            return Some(Ok(Cow::Owned(patch)));
+            if let Some(span) = span {
+                let mut state = state;
+                let mut chunk = String::new();
+                let mut trailing_newline = false;
+
+                for event in events {
+                    trailing_newline = if let Event::InlineHtml(text)
+                    | Event::Text(text)
+                    | Event::Html(text) = &event
+                    {
+                        text.ends_with('\n')
+                    } else {
+                        false
+                    };
+
+                    match cmark_resume(std::iter::once(event), &mut chunk, Some(state)) {
+                        Ok(next) => state = next,
+                        Err(err) => return Some(Err(err)),
+                    }
+                }
+
+                if trailing_newline
+                    && let padding = state.padding.join("")
+                    && !padding.is_empty()
+                    && chunk.ends_with(&padding)
+                {
+                    chunk.truncate(chunk.len() - padding.len());
+                }
+
+                self.state = Some(state);
+                return Some(Ok((chunk, span)));
+                //
+            } else {
+                //
+                match cmark_resume(events, &mut NullWriter, Some(state)) {
+                    Ok(next) => self.state = Some(next),
+                    Err(err) => return Some(Err(err)),
+                }
+
+                struct NullWriter;
+                impl std::fmt::Write for NullWriter {
+                    fn write_str(&mut self, _: &str) -> std::fmt::Result {
+                        Ok(())
+                    }
+                }
+            }
         }
-
-        let Some((events, span)) = self.stream.next() else {
-            let range = range.end..;
-            trace!("  {range:?}");
-            trace!("  EOF");
-            self.range = None;
-            return Some(Ok(Cow::Borrowed(&self.source[range])));
-        };
-
-        if range.start > span.start {
-            debug!("span {span:?} is before already yielded span {range:?}");
-            return Some(Err(Error::FormatFailed(Default::default())));
-        }
-
-        let patch = match trace_span!("chunk", ?span)
-            .in_scope(|| String::new().pipe(|mut out| cmark(events, &mut out).and(Ok(out))))
-        {
-            Err(error) => return Some(Err(error)),
-            Ok(patch) => patch,
-        };
-
-        self.range = Some(span.clone());
-        self.patch = Some(patch);
-
-        let range = range.end..span.start;
-        trace!("  {range:?}");
-        Some(Ok(Cow::Borrowed(&self.source[range])))
-    }
-}
-
-impl<'a, S> PatchStream<'a, S> {
-    /// Create a new patch stream.
-    ///
-    /// `stream` should be an [`Iterator`] yielding tuples of `(events, range)`:
-    ///
-    /// - `events` is an [`Iterator`] yielding [`Event`]s which is the replacement
-    ///   Markdown to be rendered into `source` using [`pulldown_cmark_to_cmark`].
-    ///
-    /// - `range` is a [`Range<usize>`] representing the byte span in `source` that
-    ///   should be patched.
-    ///
-    /// **The yielded ranges must not overlap or decrease**, that is, for `span1` and
-    /// `span2`, where `span1` is yielded before `span2`, `span1.end <= span2.start`.
-    ///
-    /// # Panics
-    ///
-    /// Panic if ranges in `stream` are not monotonically increasing.
-    pub fn new(source: &'a str, stream: S) -> Self {
-        Self {
-            source,
-            stream,
-            range: Some(0..0),
-            patch: None,
-        }
-    }
-}
-
-impl<'a, S> PatchStream<'a, S>
-where
-    Self: Iterator<Item = Result<Cow<'a, str>, Error>>,
-{
-    /// Render the patched Markdown source.
-    pub fn into_string(self) -> Result<String, Error> {
-        let mut out = String::new();
-        for chunk in self {
-            write_str!(out, "{}", chunk?);
-        }
-        Ok(out)
     }
 }
 
 /// <https://github.com/rust-lang/mdBook/blob/v0.5.1/crates/mdbook-markdown/src/lib.rs#L46-L50>
 ///
 /// See also [`markdown_options`][super::book::BookConfigHelper::markdown_options].
+#[inline]
 pub const fn default_markdown_options() -> Options {
     Options::empty()
         .union(Options::ENABLE_TABLES)
@@ -123,3 +145,31 @@ pub const fn default_markdown_options() -> Options {
 }
 
 pub type Spanned<T> = (T, Range<usize>);
+
+#[inline(always)]
+pub fn replace_char_if_needed<'a, 'r, F>(text: &'a str, mut replacer: F) -> Cow<'a, str>
+where
+    F: FnMut(char) -> Option<&'r str>,
+{
+    let mut replaced = Cow::Borrowed(text);
+
+    for (b, c) in text.char_indices() {
+        match replaced {
+            Cow::Borrowed(text) => match replacer(c) {
+                None => {}
+                Some(s) => {
+                    let mut buf = String::with_capacity(b + s.len());
+                    buf.push_str(&text[0..b]);
+                    buf.push_str(s);
+                    replaced = Cow::Owned(buf);
+                }
+            },
+            Cow::Owned(ref mut buf) => match replacer(c) {
+                None => buf.push(c),
+                Some(s) => buf.push_str(s),
+            },
+        }
+    }
+
+    replaced
+}

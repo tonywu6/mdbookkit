@@ -1,0 +1,117 @@
+warning: broken link to "/index.md"
+ --> crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:5:6
+  |
+5 | - [](/index.md)
+  |      ^^^^^^^^^ resolves to a path that doesn't exist
+  |
+note: the following path is available: "/crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md"
+help: try using a relative path starting from the current page:
+  |
+5 - - [](/index.md)
+5 + - []()
+  |
+help: ... or use an absolute path starting from the root of your repository:
+  |
+5 | - [](/crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md)
+  |      +++++++++++++++++++++++++++++++++++++++++++++++++++
+  = note: `mdbook-permalinks` will convert this path to a format accepted by mdBook
+
+warning: broken link to "/ignored.txt"
+ --> crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:6:6
+  |
+6 | - [](/ignored.txt)
+  |      ^^^^^^^^^^^^ resolves to a path that doesn't exist
+  |
+note: the following path is available: "/crates/mdbook-permalinks/tests/ambiguous_paths/src/ignored.txt"
+help: try using a relative path starting from the current page:
+  |
+6 - - [](/ignored.txt)
+6 + - [](ignored.txt)
+  |
+help: ... or use an absolute path starting from the root of your repository:
+  |
+6 | - [](/crates/mdbook-permalinks/tests/ambiguous_paths/src/ignored.txt)
+  |      +++++++++++++++++++++++++++++++++++++++++++++++++++
+  = note: `mdbook-permalinks` will convert this path to a format accepted by mdBook
+
+warning: broken link to "/docs/guide"
+ --> crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:8:6
+  |
+8 | - [](/docs/guide)
+  |      ^^^^^^^^^^^ resolves to a path that doesn't exist
+  |
+note: the following path is available: "/crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md"
+help: try using a relative path starting from the current page:
+  |
+8 - - [](/docs/guide)
+8 + - []()
+  |
+help: ... or use an absolute path starting from the root of your repository:
+  |
+8 - - [](/docs/guide)
+8 + - [](/crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md)
+  |
+  = note: `mdbook-permalinks` will convert this path to a format accepted by mdBook
+
+warning: broken link to "/docs/guide/intro"
+ --> crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:9:6
+  |
+9 | - [](/docs/guide/intro)
+  |      ^^^^^^^^^^^^^^^^^ resolves to a path that doesn't exist
+  |
+note: the following path is available: "/crates/mdbook-permalinks/tests/ambiguous_paths/src/intro.md"
+help: try using a relative path starting from the current page:
+  |
+9 - - [](/docs/guide/intro)
+9 + - [](intro.md)
+  |
+help: ... or use an absolute path starting from the root of your repository:
+  |
+9 - - [](/docs/guide/intro)
+9 + - [](/crates/mdbook-permalinks/tests/ambiguous_paths/src/intro.md)
+  |
+  = note: `mdbook-permalinks` will convert this path to a format accepted by mdBook
+
+warning: broken link to "/docs/guide/draft"
+  --> crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:10:6
+   |
+10 | - [](/docs/guide/draft)
+   |      ^^^^^^^^^^^^^^^^^ resolves to a path that doesn't exist
+
+warning: ambiguous link to `/`
+  --> crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:12:6
+   |
+12 | - [](/)
+   |      ^
+   |
+note: with `mdbook-permalinks`, this link could also mean a permalink to the root of the repository
+help: to link to the root of the repo, try using a full URL:
+   |
+12 | - []([CARGO_PKG_REPOSITORY]/tree/HEAD/)
+   |      ++++++++++++++++++++++++++++++++++++++++++++++
+   = note: `mdbook-permalinks` will update this link to point to the correct commit or tag
+help: to link to the homepage of the book, try using an absolute path to the source directory:
+   |
+12 | - [](/crates/mdbook-permalinks/tests/ambiguous_paths/src/)
+   |       +++++++++++++++++++++++++++++++++++++++++++++++++++
+   = note: `mdbook-permalinks` will convert this path to a format accepted by mdBook
+
+warning: ambiguous link to `/`
+  --> crates/mdbook-permalinks/tests/ambiguous_paths/src/index.md:13:6
+   |
+13 | - [](/#ambiguous-paths)
+   |      ^^^^^^^^^^^^^^^^^
+   |
+note: with `mdbook-permalinks`, this link could also mean a permalink to the root of the repository
+help: to link to the root of the repo, try using a full URL:
+   |
+13 | - []([CARGO_PKG_REPOSITORY]/tree/HEAD/#ambiguous-paths)
+   |      ++++++++++++++++++++++++++++++++++++++++++++++
+   = note: `mdbook-permalinks` will update this link to point to the correct commit or tag
+help: to link to the homepage of the book, try using an absolute path to the source directory:
+   |
+13 | - [](/crates/mdbook-permalinks/tests/ambiguous_paths/src/#ambiguous-paths)
+   |      +++++++++++++++++++++++++++++++++++++++++++++++++++
+   = note: `mdbook-permalinks` will convert this path to a format accepted by mdBook
+
+ WARN mdbook-permalinks: finished with warnings

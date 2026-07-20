@@ -1,0 +1,94 @@
+warning: broken link to "SUMMARY.md"
+ --> crates/mdbook-permalinks/tests/html_links/src/diagnostics.md:1:1
+  |
+1 | <a href="SUMMARY.md">SUMMARY</a>
+  | ^^^^^^^^^^^^^^^^^^^^^
+  | |
+  | file is not included in `SUMMARY.md`:
+  | "crates/mdbook-permalinks/tests/html_links/src/SUMMARY.md"
+  |
+  = note: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output
+
+warning: broken link to "https://git.example.org/tree/HEAD/LICENSE-GPL.md"
+ --> crates/mdbook-permalinks/tests/html_links/src/diagnostics.md:3:1
+  |
+3 | <a href="https://git.example.org/tree/HEAD/LICENSE-GPL.md">
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  | |
+  | resolves to a path that doesn't exist:
+  | "LICENSE-GPL.md"
+
+warning: broken link to "../static/image.png"
+  --> crates/mdbook-permalinks/tests/html_links/src/diagnostics.md:7:1
+   |
+ 7 | / <img
+ 8 | |   src="../static/image.png"
+ 9 | |   width="1280"
+10 | |   height="720"
+11 | |   alt="image"
+12 | | />
+   | |  ^
+   | |  |
+   | |__resolves to a path that doesn't exist:
+   |    "crates/mdbook-permalinks/tests/html_links/static/image.png"
+
+warning: broken link to "/LICENSE.png"
+  --> crates/mdbook-permalinks/tests/html_links/src/diagnostics.md:14:2
+   |
+14 | [<img src="/LICENSE.png">](/LICENSE-GPL.md)
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^
+   |  |
+   |  resolves to a path that doesn't exist:
+   |  "LICENSE.png"
+
+warning: broken link to "/LICENSE-GPL.md"
+  --> crates/mdbook-permalinks/tests/html_links/src/diagnostics.md:14:28
+   |
+14 | [<img src="/LICENSE.png">](/LICENSE-GPL.md)
+   |                            ^^^^^^^^^^^^^^^ resolves to a path that doesn't exist
+15 |
+16 | <custom-element src="/LICENSE-GPL.md" href="/LICENSE-ISC.md"></custom-element>
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   | |
+   | resolves to a path that doesn't exist:
+   | "LICENSE-GPL.md"
+
+warning: broken link to "/LICENSE-ISC.md"
+  --> crates/mdbook-permalinks/tests/html_links/src/diagnostics.md:16:1
+   |
+16 | <custom-element src="/LICENSE-GPL.md" href="/LICENSE-ISC.md"></custom-element>
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   | |
+   | resolves to a path that doesn't exist:
+   | "LICENSE-ISC.md"
+
+warning: broken link to "/parsing.md"
+  --> crates/mdbook-permalinks/tests/html_links/src/diagnostics.md:18:1
+   |
+18 | <link rel="canonical" href="/parsing.md">
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   | |
+   | resolves to a path that doesn't exist:
+   | "parsing.md"
+   |
+note: the following path is available: "/crates/mdbook-permalinks/tests/html_links/src/parsing.md"
+help: try using a relative path starting from the current page:
+        "parsing.md"
+help: ... or use an absolute path starting from the root of your repository:
+        "/crates/mdbook-permalinks/tests/html_links/src/parsing.md"
+   |
+   = note: `mdbook-permalinks` will convert this path to a format accepted by mdBook
+
+warning: broken link to "parsing.md/"
+  --> crates/mdbook-permalinks/tests/html_links/src/diagnostics.md:20:1
+   |
+20 | <a href="parsing.md/"></a>
+   | ^^^^^^^^^^^^^^^^^^^^^^
+   | |
+   | resolves to a path that isn't a directory:
+   | "crates/mdbook-permalinks/tests/html_links/src/parsing.md/"
+   |
+help: try removing the trailing slash:
+        "parsing.md"
+
+ WARN mdbook-permalinks: finished with warnings

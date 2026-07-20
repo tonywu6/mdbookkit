@@ -1,5 +1,5 @@
-**/*.snap
-**/*.snap.new
+crates/*/tests/*/out/**/*.md
+crates/*/README.md
 
 docs/build
 docs/dist

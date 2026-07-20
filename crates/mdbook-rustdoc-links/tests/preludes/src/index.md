@@ -1,0 +1,4 @@
+- [`Result`]
+- [`std::result::Result`]
+- [`fun`]
+- [`crate::fun`]

@@ -19,7 +19,7 @@ const built = await esbuild.build({
   outdir: relpath("../src/web"),
   entryNames: "[name]-[hash]",
   metafile: true,
-  logLevel: "CI" in process.env ? "info" : undefined,
+  logLevel: process.env["CI"] ? "info" : undefined,
 });
 
 const css: string[] = [];

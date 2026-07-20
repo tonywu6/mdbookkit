@@ -1,0 +1,432 @@
+use std::{
+    ffi::{OsStr, OsString},
+    fmt::Display,
+    path::{Path, PathBuf},
+    sync::LazyLock,
+};
+
+use anstyle::RgbColor;
+use anstyle_svg::Palette;
+use anyhow::{Context, Result, bail};
+use camino::{Utf8Path, Utf8PathBuf};
+use mdbookkit::error::WithDebugContext;
+use regex::Regex;
+use snapbox::{
+    Assert, Data, IntoData, RedactedValue, Redactions, assert::DEFAULT_ACTION_ENV, cmd::Command,
+    data::DataFormat, dir::DirRoot, utils::current_dir,
+};
+use tap::{Pipe, TryConv};
+
+pub use anyhow;
+pub use camino;
+pub use regex;
+pub use snapbox;
+
+#[derive(Default)]
+pub struct TestBook {
+    pub path: TestRoot<'static>,
+    pub code: i32,
+    pub env_vars: Vec<(&'static str, &'static str)>,
+    pub redacted: Vec<(&'static str, RedactedValue)>,
+}
+
+impl TestBook {
+    pub fn run(&self) -> Result<()> {
+        let test_exe = std::env::vars().filter_map(|(k, v)| {
+            let k = k.strip_prefix("CARGO_BIN_EXE_mdbook-")?;
+            let k = format!("MDBOOK_preprocessor__{k}__command");
+            let v = if cfg!(windows) {
+                // https://github.com/comex/rust-shlex/issues/20
+                v.escape_default().to_string()
+            } else {
+                v
+            };
+            Some((k, v))
+        });
+
+        let temp_dir = DirRoot::mutable_temp()?;
+        let temp_dir = temp_dir
+            .path()
+            .expect("temp dir should have a path")
+            .try_conv::<&Utf8Path>()?;
+
+        let result = self
+            .cargo("bin", current_dir!())
+            .args(["mdbook", "build"])
+            .arg(self.path.book_dir())
+            .env("MDBOOK_build__build_dir", temp_dir)
+            .envs(load_env([
+                ("MDBOOK_LOG", "warn,mdbookkit::diagnostics=info"),
+                ("MDBOOKKIT_TERM_GRAPHICAL", "ascii"),
+                ("FORCE_COLOR", "1"),
+                ("CARGO_TERM_COLOR", "never"),
+                ("RUST_BACKTRACE", "0"),
+                ("CI", ""),
+            ]))
+            .envs(load_env(self.env_vars.iter().copied()))
+            .envs(load_env(test_exe))
+            .pipe(|this| {
+                if cfg!(windows) {
+                    let path = std::env::var_os("PATH");
+                    let path = (path.iter())
+                        .flat_map(std::env::split_paths)
+                        .map(PathBuf::into_os_string);
+                    let path = std::iter::once(OsStr::new("C:\\Program Files\\Git\\bin").into())
+                        .chain(path);
+                    let path = std::env::join_paths(path).unwrap();
+                    this.env("PATH", path)
+                } else {
+                    this
+                }
+            })
+            .assert()
+            .code(self.code);
+
+        let stderr_txt = self.path.stderr_txt();
+        let stderr_svg = self.path.stderr_svg();
+
+        let stderr = &*result.get_output().stderr;
+        // deduplicate stderr in case the preprocessor had to run twice due to
+        // [output.html] and [output.markdown]
+        let stderr = if stderr[0..stderr.len() / 2] == stderr[stderr.len() / 2..] {
+            &stderr[0..stderr.len() / 2]
+        } else {
+            stderr
+        };
+        let stderr = String::from_utf8_lossy(stderr);
+
+        eprint!("--- stderr\n{stderr}");
+
+        let assert = self.assert()?;
+
+        let mut results = vec![
+            assert.try_eq_text(None, &stderr, stderr_svg),
+            assert.try_eq_text(None, &stderr, stderr_txt),
+        ];
+
+        if self.code == 0 {
+            for page in self.path.expected_pages()? {
+                let page = page?;
+                let name = page.name();
+                let expected = page.expected();
+                let actual = self.path.actual_page(name, temp_dir)?;
+                results.push(assert.try_eq_text(Some(&name), actual, expected));
+            }
+        }
+
+        match (&results[0], &results[1]) {
+            (_, Err(txt)) => eprintln!("{txt}"),
+            (Err(svg), Ok(())) => eprintln!("{svg}"),
+            (Ok(()), Ok(())) => {}
+        }
+
+        for result in results[2..].iter() {
+            if let Err(error) = result {
+                eprintln!("{error}")
+            }
+        }
+
+        if results.iter().any(Result::is_err) {
+            bail!("some snapshots have changed")
+        }
+
+        Ok(())
+    }
+
+    pub fn assert(&self) -> Result<Assert> {
+        let mut redactions = Redactions::new();
+        redactions.insert("[TEST_DIR]", normalize_paths(self.path.root_dir.as_str()))?;
+        redactions.insert("[EXIT_CODE]", Regex::new(r"exit (status|code):")?)?; // windows
+        redactions.insert("[ELAPSED]", Regex::new(r"in (?<redacted>\d+\.\d+s)")?)?;
+        for (placeholder, matcher) in &self.redacted {
+            redactions.insert(placeholder, matcher.clone())?;
+        }
+        Ok(default_assert().redact_with(redactions))
+    }
+
+    pub fn cargo(&self, command: &str, wd: impl AsRef<Path>) -> Command {
+        Command::new(env!("CARGO")).arg(command).current_dir(wd)
+    }
+}
+
+#[macro_export]
+macro_rules! test_mdbook {
+    [
+        $name:ident, exit($code:literal)
+        $( , env = [$($env:tt)*] )?
+        $( , redacted = [$($redacted:tt)*] )?
+    ] => {
+        pub fn $name() -> $crate::anyhow::Result<$crate::TestBook> {
+            Ok($crate::TestBook {
+                path: $crate::TestRoot {
+                    name: stringify!($name),
+                    root_dir: $crate::snapbox::current_dir!().try_into()?,
+                },
+                code: $code,
+                env_vars: $crate::test_mdbook!(@key_values $($($env)*)?),
+                redacted: $crate::test_mdbook!(@key_values $($($redacted)*)?),
+            })
+        }
+    };
+
+    (@key_values $($key:literal = $val:expr),*) => {
+        vec![$(($key, $val)),*]
+    };
+    (@key_values $($tt:tt)+) => {
+        $($tt)+
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct TestRoot<'a> {
+    pub root_dir: Utf8PathBuf,
+    pub name: &'a str,
+}
+
+impl TestRoot<'_> {
+    pub fn book_dir(&self) -> Utf8PathBuf {
+        self.root_dir.join(self.name)
+    }
+
+    pub fn dist_dir(&self) -> Utf8PathBuf {
+        self.book_dir().join("out")
+    }
+
+    pub fn stderr_dir(&self) -> Utf8PathBuf {
+        self.book_dir().join("stderr")
+    }
+
+    fn stderr_txt(&self) -> Data {
+        self.test_data(self.stderr_dir().join("data.txt"), DataFormat::Text)
+    }
+
+    fn stderr_svg(&self) -> Data {
+        self.test_data(self.stderr_dir().join("data.svg"), DataFormat::TermSvg)
+    }
+
+    pub fn expected_pages(&self) -> Result<impl Iterator<Item = Result<TestPage<'_>>>> {
+        let root = self.book_dir();
+
+        let iter = std::fs::read_dir(root.join("src").as_std_path())
+            .context("error reading src dir")?
+            .map(|path| {
+                let path = path?.path().try_conv::<Utf8PathBuf>()?;
+
+                if path.extension() != Some("md") || path.file_name() == Some("SUMMARY.md") {
+                    return Ok(None);
+                }
+
+                let root = self.book_dir();
+                let name = path
+                    .strip_prefix(root.join("src"))
+                    .expect("path is under src dir")
+                    .to_owned();
+
+                Ok(Some(TestPage { name, root: self }))
+            })
+            .filter_map(Result::transpose);
+
+        Ok(iter)
+    }
+
+    fn actual_page(&self, name: &Utf8Path, temp: &Utf8Path) -> Result<String> {
+        let text = std::fs::read_to_string(temp.join(name))
+            .or_else(|_| std::fs::read_to_string(temp.join("markdown").join(name)))
+            .with_path_debug(name.as_std_path())
+            .context("mdbook did not build this file")?;
+        Ok(text)
+    }
+
+    fn test_data(&self, path: impl AsRef<Utf8Path>, format: DataFormat) -> Data {
+        Data::read_from(self.book_dir().join(path).as_std_path(), Some(format))
+    }
+}
+
+impl Default for TestRoot<'static> {
+    fn default() -> Self {
+        Self {
+            root_dir: ".".into(),
+            name: "",
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub struct TestPage<'a> {
+    name: Utf8PathBuf,
+    root: &'a TestRoot<'a>,
+}
+
+impl TestPage<'_> {
+    pub fn name(&self) -> &Utf8Path {
+        &self.name
+    }
+
+    pub fn expected(&self) -> Data {
+        let path = Utf8Path::new("out").join(&self.name);
+        self.root.test_data(path, DataFormat::Text)
+    }
+
+    pub fn toc_item(&self) -> String {
+        format!("- []({})", self.name)
+    }
+
+    pub fn mod_item(&self) -> String {
+        let path = &self.name;
+        let name = self.mod_name();
+        format!("#[doc = include_str!({path:?})]\npub mod {name} {{}}")
+    }
+
+    pub fn mod_name(&self) -> String {
+        static RE: LazyLock<Regex> =
+            LazyLock::new(|| Regex::new(r"^[^a-z_]+|[^a-z0-9_]+").unwrap());
+        RE.replace_all(self.name.with_extension("").as_str(), "_")
+            .into()
+    }
+}
+
+fn load_env<'a, A, K, V>(vars: A) -> impl Iterator<Item = (OsString, OsString)>
+where
+    A: IntoIterator<Item = (K, V)>,
+    K: AsRef<str> + 'a,
+    V: AsRef<OsStr> + 'a,
+{
+    vars.into_iter().map(|(key, default)| {
+        let key = key.as_ref();
+        let val = if let Some(overridden) = std::env::var_os(format!("TESTING_{key}")) {
+            eprintln! { "--- overriding env var {key:?} = {:?} (over {:?})",
+            &*overridden.to_string_lossy(), default.as_ref().display() };
+            overridden
+        } else {
+            default.as_ref().to_owned()
+        };
+        (key.into(), val)
+    })
+}
+
+pub trait AssertUtil {
+    fn try_eq_text(
+        &self,
+        name: Option<&dyn Display>,
+        actual: impl AsRef<str>,
+        expected: Data,
+    ) -> snapbox::assert::Result<()>;
+}
+
+impl AssertUtil for Assert {
+    fn try_eq_text(
+        &self,
+        name: Option<&dyn Display>,
+        actual: impl AsRef<str>,
+        expected: Data,
+    ) -> snapbox::assert::Result<()> {
+        let format = likely_format(&expected);
+        let expected = text_fallback(expected);
+        let actual = actual.as_ref();
+        let actual = normalize_paths(actual);
+        let actual = &*actual;
+        if format == DataFormat::TermSvg {
+            let rendered = self.redactions().redact(actual.trim_end());
+            let rendered = render_svg(&rendered);
+            let expected = expected.is(DataFormat::Text);
+            self.try_eq(name, rendered.into_data().raw(), expected.raw())
+        } else if format == DataFormat::Text {
+            let rendered = anstream::adapter::strip_str(actual).to_string();
+            let rendered = self.redactions().redact(&rendered);
+            self.try_eq(name, rendered.into_data().raw(), expected.raw())
+        } else {
+            self.try_eq(name, actual.into(), expected)
+        }
+    }
+}
+
+fn text_fallback(data: Data) -> Data {
+    if data.format() != DataFormat::Error {
+        data
+    } else if let Some(path) = data.source().and_then(|source| source.as_path()) {
+        Data::read_from(path, Some(DataFormat::Text))
+    } else {
+        Data::new().is(DataFormat::Text)
+    }
+}
+
+fn likely_format(data: &Data) -> DataFormat {
+    let format = data.format();
+    if format == DataFormat::Error {
+        let extension = data
+            .source()
+            .and_then(|source| source.as_path())
+            .and_then(|path| path.extension())
+            .map(|ext| ext.as_encoded_bytes());
+        match extension {
+            Some(b"svg") => DataFormat::TermSvg,
+            Some(b"txt" | b"md") => DataFormat::Text,
+            _ => format,
+        }
+    } else {
+        format
+    }
+}
+
+pub fn default_assert() -> Assert {
+    Assert::new().action_env(DEFAULT_ACTION_ENV)
+}
+
+fn normalize_paths(text: &str) -> String {
+    static DRIVE_LETTER: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"(?i)(\b|/)[CDE]:[\\/]{1,2}").unwrap());
+    static PATH_SEPARATOR: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"([\p{L}\p{N}.])\\{1,2}([\p{L}\p{N}.])").unwrap());
+    let text = DRIVE_LETTER.replace_all(text, "/");
+    let text = PATH_SEPARATOR.replace_all(&text, "$1/$2");
+    text.into_owned()
+}
+
+fn render_svg(text: &str) -> String {
+    const fn rgb(r: u8, g: u8, b: u8) -> RgbColor {
+        RgbColor(r, g, b)
+    }
+
+    const BG_COLOR: RgbColor = rgb(26, 26, 26);
+    const FG_COLOR: RgbColor = rgb(178, 178, 178);
+
+    const PALETTE: Palette = Palette([
+        //
+        rgb(54, 60, 70),
+        rgb(224, 108, 117),
+        rgb(150, 196, 117),
+        rgb(209, 154, 102),
+        rgb(92, 173, 241),
+        rgb(198, 120, 221),
+        rgb(81, 181, 195),
+        rgb(211, 211, 211),
+        //
+        rgb(54, 60, 70),
+        rgb(224, 108, 117),
+        rgb(150, 196, 117),
+        rgb(209, 154, 102),
+        rgb(92, 173, 241),
+        rgb(198, 120, 221),
+        rgb(81, 181, 195),
+        rgb(211, 211, 211),
+        // rgb(110, 112, 116),
+        // rgb(224, 108, 117),
+        // rgb(168, 220, 131),
+        // rgb(244, 183, 127),
+        // rgb(95, 183, 255),
+        // rgb(224, 135, 251),
+        // rgb(94, 211, 227),
+        // rgb(250, 250, 250),
+    ]);
+
+    anstyle_svg::Term::new()
+        .bg_color(BG_COLOR.into())
+        .fg_color(FG_COLOR.into())
+        .palette(PALETTE)
+        .render_svg(text)
+        .replace(
+            "SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;",
+            "Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;",
+        )
+        .replace(r#"rx="4.5""#, "")
+}

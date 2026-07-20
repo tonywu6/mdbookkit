@@ -1,0 +1,4 @@
+- [](https://codeberg.org/tonywu6/mdbookkit/src/commit/[GIT_REVISION]/crates/mdbook-permalinks/tests/git_url_codeberg/book.toml)
+- ![](https://codeberg.org/tonywu6/mdbookkit/raw/commit/[GIT_REVISION]/crates/mdbook-permalinks/tests/git_url_codeberg/book.toml)
+- [](https://codeberg.org/tonywu6/mdbookkit/src/commit/[GIT_REVISION]/.editorconfig)
+- ![](https://codeberg.org/tonywu6/mdbookkit/raw/commit/[GIT_REVISION]/.editorconfig)

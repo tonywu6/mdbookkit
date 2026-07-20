@@ -1,0 +1,4 @@
+- [`cats::orange`](https://docs.rs/cats/0.1.0/cats/fn.orange.html "fn cats::orange")
+- [`crate::orange`](https://docs.rs/cats/0.1.0/cats/fn.orange.html "fn cats::orange")
+- [`dogs::dachshund`]
+- [`crate::dachshund`]

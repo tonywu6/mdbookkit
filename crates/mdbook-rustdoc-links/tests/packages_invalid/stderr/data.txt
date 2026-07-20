@@ -1,0 +1,13 @@
+ WARN mdbook-rustdoc-links: error while resolving package versions
+
+Caused by:
+    0: --- stderr
+       error: expected a version like "1.32"
+    1: command exited with [EXIT_CODE] 101
+    2: [COMMAND_DEBUG] "cargo" "tree" "--no-dedupe" "--format" "{p}" "--prefix" "none" "--edges" "normal" "--package" "@@@@@" "--depth" "0"
+       
+note: the following options have been specified, which may have caused the error:
+    - build.packages
+
+ERROR mdbook-rustdoc-links: build failed
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

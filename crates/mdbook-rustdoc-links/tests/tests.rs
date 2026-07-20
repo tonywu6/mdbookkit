@@ -1,0 +1,325 @@
+use std::fmt::Write;
+
+use anyhow::{Context, Result};
+use lol_html::{HtmlRewriter, element};
+use mdbook_markdown::pulldown_cmark::{Event, LinkType::*, Parser, Tag};
+use tap::Pipe;
+use url::Url;
+
+use mdbookkit::markdown::default_markdown_options;
+use mdbookkit_testing::{
+    TestBook,
+    regex::Regex,
+    snapbox::{IntoData, RedactedValue, Redactions, assert_data_eq},
+    test_mdbook,
+};
+
+macro_rules! test_case {
+    [$name:ident, redacted = [$($redacted:tt)+], $($args:tt)+] => {
+        mod $name {
+            use super::*;
+            test_mdbook![$name, $($args)+, redacted = [$($redacted)+]];
+        }
+        #[test]
+        fn $name() -> Result<()> {
+            run_test($name::$name()?, ".")
+        }
+    };
+    [$name:ident, $($args:tt)+] => {
+        test_case![$name, redacted = [redacted()], $($args)+];
+    }
+}
+
+test_case![rustdoc, exit(0)];
+test_case![targets, exit(0)];
+test_case![targets_proc_macro, exit(0)];
+test_case![targets_preserve_order, exit(0)];
+test_case![packages, exit(0)];
+test_case![packages_unspecified, exit(0)];
+test_case![preludes, exit(0)];
+test_case![preludes_implicit, exit(0)];
+test_case![preludes_bin, exit(0)];
+test_case![features, exit(0)];
+test_case![cargo_customize, exit(0)];
+test_case![runner, exit(0)];
+test_case![docs_rs, exit(0)];
+test_case![workspace, exit(0)];
+test_case![workspace_deps, exit(0)];
+test_case![workspace_all, exit(0)];
+test_case![multi_stage, exit(0)];
+test_case![packages_dev, exit(0)];
+test_case![diagnostics_order, exit(0)];
+
+test_case![packages_invalid, exit(101)];
+test_case![packages_empty_list, exit(101)];
+test_case![
+    features_resolver_quirk,
+    exit(101),
+    // flaky cargo logs such as "Blocking waiting for ..."
+    env = ["CARGO_TERM_QUIET" = "true"]
+];
+test_case![features_resolver_quirk_fix, exit(0)];
+test_case![preludes_invalid, exit(101)];
+test_case![compilation_error, exit(101)];
+test_case![multi_stage_some_failed, exit(0)];
+test_case![multi_stage_all_failed, exit(101)];
+test_case![runner_bad_command, exit(101)];
+test_case![
+    runner_not_found,
+    redacted = [{
+        let mut redacted = redacted();
+        redacted.push((
+            "[ENOENT]",
+            Regex::new(r"No such file or directory \(os error 2\)|program not found")
+                .unwrap()
+                .into(),
+        ));
+        redacted
+    }],
+    exit(101)
+];
+test_case![runner_unreliable_exit, exit(101)];
+test_case![manifest_invalid, exit(101)];
+test_case![deserialize_workspace, exit(101)];
+test_case![deserialize_package, exit(101)];
+test_case![hidden_items, exit(0)];
+test_case![
+    fail_on_warnings_in_ci,
+    exit(101),
+    env = [
+        "CI" = "true",
+        "MDBOOK_LOG" = "warn",
+        "MDBOOKKIT_TERM_GRAPHICAL" = ""
+    ]
+];
+
+test_case![
+    debug_logs,
+    exit(0),
+    env = [
+        "MDBOOK_LOG" = "warn,mdbook_rustdoc_links=trace",
+        "MDBOOKKIT_TERM_GRAPHICAL" = "",
+        "CARGO_TERM_QUIET" = "true" // flaky cargo logs
+    ]
+];
+test_case![
+    link_report,
+    exit(0),
+    env = [
+        "MDBOOK_LOG" = "warn,mdbook_rustdoc_links[link-report]=info",
+        "MDBOOKKIT_LINK_REPORT" = "1"
+    ]
+];
+
+test_case![base_url, exit(0), env = ["CI" = "1"]];
+
+test_case![
+    book_ambiguous_link,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
+test_case![
+    book_escape_generics,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
+test_case![
+    book_getting_started,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
+test_case![
+    book_mdbookkit_term_ascii,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "ascii"]
+];
+test_case![
+    book_mdbookkit_term_unicode,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
+test_case![
+    book_mdbookkit_term_logging,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = ""]
+];
+test_case![
+    book_unsupported_generics,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
+test_case![
+    book_homepage,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
+test_case![
+    book_accidental_shortcut_link,
+    exit(0),
+    env = ["MDBOOKKIT_TERM_GRAPHICAL" = "unicode"]
+];
+
+#[test]
+fn base_url_local() -> Result<()> {
+    test_mdbook![base_url_local, exit(0), redacted = [redacted()]];
+    run_test(base_url_local()?, ".")?;
+
+    let book = base_url_local()?;
+    let root = book.path.book_dir();
+    for path in [
+        "src/api/x86_64-unknown-linux-gnu/utf8parse/struct.Parser.html",
+        "src/api/aarch64-unknown-linux-gnu/pin_project_lite/macro.pin_project.html",
+        "src/api/base_url_local/fn.fun.html",
+    ] {
+        assert!(root.join(path).exists(), "{path} doesn't exist");
+    }
+
+    Ok(())
+}
+
+#[test]
+fn manifest_dir() -> Result<()> {
+    test_mdbook![manifest_dir, exit(0)];
+    run_test(manifest_dir()?, "rust")
+}
+
+#[test]
+fn rustdoc_parity() -> Result<()> {
+    let book = rustdoc::rustdoc()?;
+
+    book.cargo("clean", book.path.book_dir()).assert().success();
+    book.cargo("doc", book.path.book_dir()).assert().success();
+
+    let base = format! { "https://docs.rs/{}/0.1.0/{}/", book.path.name, book.path.name }
+        .parse::<Url>()?;
+
+    let mut upstream = String::new();
+    let mut expected = String::new();
+
+    for page in book.path.expected_pages()? {
+        let page = page?;
+
+        writeln!(upstream, "# {}\n", page.name())?;
+        writeln!(expected, "# {}\n", page.name())?;
+
+        let html = format!("{}/index.html", page.mod_name());
+        let base = base.join(&html)?.join(".")?;
+
+        let html = (book.path.book_dir())
+            .join("target/doc")
+            .join(book.path.name)
+            .join(html);
+
+        let html = std::fs::read_to_string(&html)
+            .context(html)
+            .context("rustdoc did not emit this file")?;
+
+        let link_ignored = |url: &Url| {
+            url.scheme() != "https" ||
+            // links pointing at the same directory as the page itself
+            // are likely [inline](links) that are broken
+            url.as_str().starts_with(base.as_str())
+        };
+
+        lol_html::Settings::new()
+            .append_element_content_handler(element!(".top-doc a", |elem| {
+                if elem.get_attribute("class").as_deref() == Some("doc-anchor") {
+                    return Ok(());
+                }
+                let Some(href) = elem.get_attribute("href") else {
+                    return Ok(());
+                };
+                let href = base.join(&href)?;
+                if link_ignored(&href) {
+                    return Ok(());
+                }
+                let title = elem.get_attribute("title").unwrap_or_default();
+                let title = title.replace("\r\n", "\n"); // windows
+                writeln!(upstream, "{href} {title:?}",)?;
+                Ok(())
+            }))
+            .pipe(|cb| HtmlRewriter::new(cb, |_: &[u8]| ()))
+            .pipe(|mut wr| wr.write(html.as_bytes()).and_then(|_| wr.end()))?;
+
+        let rendered = page.expected().to_string();
+
+        for event in Parser::new_ext(&rendered, default_markdown_options()) {
+            if let Event::Start(Tag::Link {
+                dest_url,
+                title,
+                link_type: Inline | Reference | Collapsed | Shortcut,
+                ..
+            }) = event
+                && let Ok(url) = dest_url.parse::<Url>()
+                && !link_ignored(&url)
+            {
+                writeln!(expected, "{url} {:?}", &*title)?;
+            }
+        }
+
+        writeln!(upstream)?;
+        writeln!(expected)?;
+    }
+
+    let redactions = {
+        let mut redactions = Redactions::new();
+        for (k, v) in redacted() {
+            redactions.insert(k, v)?;
+        }
+        redactions.insert(
+            "[CRATE]",
+            r"https://docs\.rs/(?<redacted>[a-z_-]+/[0-9.]+)/".parse::<Regex>()?,
+        )?;
+        redactions
+    };
+
+    let upstream = redactions.redact(&upstream).into_data().raw();
+    let expected = redactions.redact(&expected).into_data().raw();
+
+    assert_data_eq!(upstream, expected);
+
+    Ok(())
+}
+
+fn run_test(book: TestBook, manifest_dir: &str) -> Result<()> {
+    let manifest_dir = book.path.book_dir().join(manifest_dir);
+    let _ = book.cargo("clean", manifest_dir).output();
+    book.run()
+}
+
+fn redacted() -> Vec<(&'static str, RedactedValue)> {
+    vec![
+        (
+            "[RUST_VERSION]",
+            Regex::new(
+                r"https://doc\.rust-lang\.org/(?<redacted>nightly|1\.\d+\.\d+)/(core|alloc|std)/",
+            )
+            .unwrap()
+            .into(),
+        ),
+        (
+            "[TEMP_DIR]",
+            Regex::new(r"\.tmp[A-Za-z0-9]+").unwrap().into(),
+        ),
+        (
+            "[BUILD_HASH]",
+            Regex::new(r"/lib.+?-(?<redacted>[a-z0-9]+?)\.rmeta")
+                .unwrap()
+                .into(),
+        ),
+        (
+            "[CARGO_STDERR]",
+            Regex::new(
+                r"--- cargo stderr\n       (?<redacted>(.|\s|\n)+?)\n       error: could not",
+            )
+            .unwrap()
+            .into(),
+        ),
+        (
+            "[COMMAND_DEBUG]",
+            Regex::new(r": (?<redacted>(?:command|running):(?: cd .+? &&)?)")
+                .unwrap()
+                .into(),
+        ), // windows
+    ]
+}

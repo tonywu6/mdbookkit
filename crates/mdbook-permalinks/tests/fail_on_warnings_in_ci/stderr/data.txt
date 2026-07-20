@@ -1,0 +1,6 @@
+ WARN mdbook-permalinks: crates/mdbook-permalinks/tests/fail_on_warnings_in_ci/src/continuous-integration.md:1:5: broken link to "../static/cover.png"
+  crates/mdbook-permalinks/tests/fail_on_warnings_in_ci/src/continuous-integration.md:1:5: resolves to a path that doesn't exist:
+  crates/mdbook-permalinks/tests/fail_on_warnings_in_ci/src/continuous-integration.md:1:5: "crates/mdbook-permalinks/tests/fail_on_warnings_in_ci/static/cover.png"
+ WARN mdbook-permalinks: crates/mdbook-permalinks/tests/fail_on_warnings_in_ci/src/continuous-integration.md:3:61: broken link to "/LICENSE-GPL.md": resolves to a path that doesn't exist
+ERROR mdbook-permalinks: treating warnings as errors because CI=1 (option `fail-on-warnings` set to "ci" by default)
+ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

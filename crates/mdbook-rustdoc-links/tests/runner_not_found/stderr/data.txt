@@ -1,0 +1,12 @@
+ WARN mdbook-rustdoc-links: error while resolving package versions
+
+Caused by:
+    0: failed to spawn command
+    1: [ENOENT]
+    2: [COMMAND_DEBUG] ":"
+       
+note: the following options have been specified, which may have caused the error:
+    - build.runner
+
+ERROR mdbook-rustdoc-links: build failed
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

@@ -1,0 +1,366 @@
+DEBUG mdbook-rustdoc-links: Config {
+    builder: BuilderConfig {
+        manifest_dir: None,
+        build: [
+            Builder {
+                targets: [
+                    "aarch64-unknown-linux-gnu",
+                ],
+                options: BuildOptions {
+                    preludes: None,
+                    packages: None,
+                    features: FeatureSelection {
+                        features: [],
+                        all_features: None,
+                        no_default_features: None,
+                    },
+                    rustc_args: [],
+                    rustdoc_args: [],
+                    cargo: CargoOptions {
+                        toolchain: None,
+                        cargo_args: [],
+                        runner: CommandRunner(
+                            None,
+                        ),
+                    },
+                    docs_rs: None,
+                },
+            },
+            Builder {
+                targets: [],
+                options: BuildOptions {
+                    preludes: None,
+                    packages: Some(
+                        [
+                            Selector(
+                                PackageSelector {
+                                    name: None,
+                                    workspace: Default,
+                                    dependencies: false,
+                                },
+                            ),
+                        ],
+                    ),
+                    features: FeatureSelection {
+                        features: [
+                            "fancy",
+                        ],
+                        all_features: None,
+                        no_default_features: None,
+                    },
+                    rustc_args: [],
+                    rustdoc_args: [],
+                    cargo: CargoOptions {
+                        toolchain: None,
+                        cargo_args: [],
+                        runner: CommandRunner(
+                            Some(
+                                CustomCommand(
+                                    "bash" "-c" "$*",
+                                ),
+                            ),
+                        ),
+                    },
+                    docs_rs: None,
+                },
+            },
+        ],
+        build_options: BuildOptions {
+            preludes: None,
+            packages: None,
+            features: FeatureSelection {
+                features: [],
+                all_features: None,
+                no_default_features: None,
+            },
+            rustc_args: [],
+            rustdoc_args: [],
+            cargo: CargoOptions {
+                toolchain: None,
+                cargo_args: [],
+                runner: CommandRunner(
+                    None,
+                ),
+            },
+            docs_rs: None,
+        },
+    },
+    env: EnvConfig {
+        base_url: BaseUrlConfig {
+            dev: BaseUrl(
+                "https://docs.rs/{pkg_name}/{version}/",
+            ),
+            release: BaseUrl(
+                "https://docs.rs/{pkg_name}/{version}/",
+            ),
+        },
+    },
+    fail_on_warnings: Unspecified,
+}
+TRACE mdbook-rustdoc-links:page_read: link >>> span=2..11 dest="fancy" title="fancy" file="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link +++ span=3..10 event=Code(Borrowed("fancy")) parent=2..11 file="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link <<< span=2..11 file="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link >>> span=14..21 dest="f80" title="f80" file="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link +++ span=15..20 event=Code(Borrowed("f80")) parent=14..21 file="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link <<< span=14..21 file="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link >>> span=24..40 dest="PhantomData<T>" title="PhantomData<T>" file="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link +++ span=25..36 event=Text(Borrowed("PhantomData")) parent=24..40 file="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link +++ span=36..39 event=InlineHtml(Borrowed("<T>")) parent=24..40 file="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read: link <<< span=24..40 file="file://[TEST_DIR]/debug_logs/src/index.md"
+TRACE mdbook-rustdoc-links:page_read:normalized: link >>> span=0..32 dest="PhantomData<T>" title="PhantomData<T>" file="file://[TEST_DIR]/debug_logs/src/index.md" link="PhantomData<T>" span=24..40
+TRACE mdbook-rustdoc-links:page_read:normalized: link +++ span=1..12 event=Text(Borrowed("PhantomData")) parent=0..32 file="file://[TEST_DIR]/debug_logs/src/index.md" link="PhantomData<T>" span=24..40
+TRACE mdbook-rustdoc-links:page_read:normalized: link +++ span=12..15 event=InlineHtml(Borrowed("<T>")) parent=0..32 file="file://[TEST_DIR]/debug_logs/src/index.md" link="PhantomData<T>" span=24..40
+TRACE mdbook-rustdoc-links:page_read:normalized: link <<< span=0..32 file="file://[TEST_DIR]/debug_logs/src/index.md" link="PhantomData<T>" span=24..40
+DEBUG mdbook-rustdoc-links: resolved manifest dir: [TEST_DIR]/debug_logs
+ INFO mdbook-rustdoc-links: running build #1 [aarch64-unknown-linux-gnu]
+ INFO mdbook-rustdoc-links:build:prepare: started instance=1 preparing
+ INFO mdbook-rustdoc-links:build:prepare: cargo metadata instance=1 preparing
+ INFO mdbook-rustdoc-links:build:prepare: resolving packages instance=1 preparing
+DEBUG mdbook-rustdoc-links:build: resolved options: Builder {
+    targets: [
+        "aarch64-unknown-linux-gnu",
+    ],
+    options: BuildOptions {
+        preludes: None,
+        packages: None,
+        features: FeatureSelection {
+            features: [],
+            all_features: None,
+            no_default_features: None,
+        },
+        rustc_args: [],
+        rustdoc_args: [],
+        cargo: CargoOptions {
+            toolchain: None,
+            cargo_args: [],
+            runner: CommandRunner(
+                None,
+            ),
+        },
+        docs_rs: None,
+    },
+} instance=1
+DEBUG mdbook-rustdoc-links:build: resolved packages: {
+    debug_logs@0.1.0,
+} instance=1
+DEBUG mdbook-rustdoc-links:build: resolved preludes: [
+    "debug_logs::*",
+] instance=1
+DEBUG mdbook-rustdoc-links:build: resolved path mappings: PathMapper {
+    target: "[TEST_DIR]/debug_logs/target",
+} instance=1
+ INFO mdbook-rustdoc-links:build:cargo-doc: started instance=1 cargo doc
+TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: [], filenames: ["[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/doc/debug_logs/index.html"], executable: None, fresh: false }) instance=1
+TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=1
+ INFO mdbook-rustdoc-links:build:cargo-check: started instance=1 cargo check
+TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: [], filenames: ["[TEST_DIR]/debug_logs/target/aarch64-unknown-linux-gnu/debug/deps/libdebug_logs-[BUILD_HASH].rmeta"], executable: None, fresh: false }) instance=1
+TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=1
+TRACE mdbook-rustdoc-links:build: CompilerOutput {
+    targets: {
+        "aarch64-unknown-linux-gnu",
+    },
+    crates: {
+        "debug_logs": PackageId {
+            repr: "path+file://[TEST_DIR]/debug_logs#0.1.0",
+        },
+    },
+    libs: {
+        "debug_logs [aarch64-unknown-linux-gnu]": "aarch64-unknown-linux-gnu/debug/deps/libdebug_logs-[BUILD_HASH].rmeta",
+    },
+    docs: {
+        "debug_logs [aarch64-unknown-linux-gnu]": "aarch64-unknown-linux-gnu/doc/debug_logs/index.html",
+    },
+    paths: PathMapper {
+        target: "[TEST_DIR]/debug_logs/target",
+    },
+    ..
+} instance=1
+DEBUG mdbook-rustdoc-links:build: rustdoc input:
+//! - <span mdbook-rustdoc-links>[`fancy`]</span>
+//! - <span mdbook-rustdoc-links>[`f80`]</span>
+//! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>
+ instance=1
+ INFO mdbook-rustdoc-links:build:rustdoc: started instance=1 rustdoc [aarch64-unknown-linux-gnu]
+TRACE mdbook-rustdoc-links:build: --- rustdoc stderr
+{"$message_type":"diagnostic","message":"unresolved link to `fancy`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"<anon>","byte_start":35,"byte_end":40,"line_start":1,"line_end":1,"column_start":36,"column_end":41,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[`fancy`]</span>","highlight_start":36,"highlight_end":41}],"label":"no item named `fancy` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null},{"message":"`#[warn(rustdoc::broken_intra_doc_links)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `fancy`\n --> <anon>:1:36/n  |\n1 | //! - <span mdbook-rustdoc-links>[`fancy`]</span>\n  |                                    ^^^^^ no item named `fancy` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default/n\n"}
+{"$message_type":"diagnostic","message":"unresolved link to `f80`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"<anon>","byte_start":85,"byte_end":88,"line_start":2,"line_end":2,"column_start":36,"column_end":39,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[`f80`]</span>","highlight_start":36,"highlight_end":39}],"label":"no item named `f80` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `f80`\n --> <anon>:2:36/n  |\n2 | //! - <span mdbook-rustdoc-links>[`f80`]</span>\n  |                                    ^^^ no item named `f80` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n/n"}
+{"$message_type":"diagnostic","message":"unresolved link to `PhantomData`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"<anon>","byte_start":148,"byte_end":162,"line_start":3,"line_end":3,"column_start":51,"column_end":65,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>","highlight_start":51,"highlight_end":65}],"label":"no item named `PhantomData` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `PhantomData`\n --> <anon>:3:51/n  |\n3 | //! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>\n  |                                                   ^^^^^^^^^^^^^^ no item named `PhantomData` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n/n"}
+{"$message_type":"diagnostic","message":"unclosed HTML tag `T`","code":{"code":"rustdoc::invalid_html_tags","explanation":null},"level":"warning","spans":[{"file_name":"<anon>","byte_start":143,"byte_end":146,"line_start":3,"line_end":3,"column_start":46,"column_end":49,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>","highlight_start":46,"highlight_end":49}],"label":null,"suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"`#[warn(rustdoc::invalid_html_tags)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null},{"message":"try marking as source code","code":null,"level":"help","spans":[{"file_name":"<anon>","byte_start":132,"byte_end":132,"line_start":3,"line_end":3,"column_start":35,"column_end":35,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>","highlight_start":35,"highlight_end":35}],"label":null,"suggested_replacement":"`","suggestion_applicability":"MaybeIncorrect","expansion":null},{"file_name":"<anon>","byte_start":146,"byte_end":146,"line_start":3,"line_end":3,"column_start":49,"column_end":49,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>","highlight_start":49,"highlight_end":49}],"label":null,"suggested_replacement":"`","suggestion_applicability":"MaybeIncorrect","expansion":null}],"children":[],"rendered":null}],"rendered":"warning: unclosed HTML tag `T`\n --> <anon>:3:46/n  |\n3 | //! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>\n  |                                              ^^^\n  |\n  = note: `#[warn(rustdoc::invalid_html_tags)]` on by default/nhelp: try marking as source code/n  |\n3 | //! - <span mdbook-rustdoc-links>[`PhantomData<T>`][PhantomData<T>]</span>\n  |                                   +              +\n/n"}
+{"$message_type":"diagnostic","message":"4 warnings emitted","code":null,"level":"warning","spans":[],"children":[],"rendered":"warning: 4 warnings emitted/n\n"} instance=1
+TRACE mdbook-rustdoc-links:build:debug: line 1, link "fancy", warning: unresolved link to `fancy`
+ --> <anon>:1:36
+  |
+1 | //! - <span mdbook-rustdoc-links>[`fancy`]</span>
+  |                                    ^^^^^ no item named `fancy` in scope
+  |
+  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`
+  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default
+
+ instance=1
+TRACE mdbook-rustdoc-links:build:debug: line 2, link "f80", warning: unresolved link to `f80`
+ --> <anon>:2:36
+  |
+2 | //! - <span mdbook-rustdoc-links>[`f80`]</span>
+  |                                    ^^^ no item named `f80` in scope
+  |
+  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`
+
+ instance=1
+TRACE mdbook-rustdoc-links:build:debug: line 3, link "PhantomData<T>", warning: unresolved link to `PhantomData`
+ --> <anon>:3:51
+  |
+3 | //! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>
+  |                                                   ^^^^^^^^^^^^^^ no item named `PhantomData` in scope
+  |
+  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`
+
+ instance=1
+TRACE mdbook-rustdoc-links:build:debug: line 3, link "PhantomData<T>", warning: unclosed HTML tag `T`
+ --> <anon>:3:46
+  |
+3 | //! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>
+  |                                              ^^^
+  |
+  = note: `#[warn(rustdoc::invalid_html_tags)]` on by default
+help: try marking as source code
+  |
+3 | //! - <span mdbook-rustdoc-links>[`PhantomData<T>`][PhantomData<T>]</span>
+  |                                   +              +
+
+ instance=1
+TRACE mdbook-rustdoc-links:build:debug: could not determine primary line
+
+Caused by:
+    Diagnostic { message: "4 warnings emitted", code: None, level: Warning, spans: [], children: [], rendered: Some("warning: 4 warnings emitted/n\n") } instance=1
+ INFO mdbook-rustdoc-links: build #1 done
+ INFO mdbook-rustdoc-links: running build #2 [default targets, "fancy", workspace members, (additional options), ..]
+ INFO mdbook-rustdoc-links:build:prepare: started instance=2 preparing
+ INFO mdbook-rustdoc-links:build:prepare: cargo metadata instance=2 preparing
+ INFO mdbook-rustdoc-links:build:prepare: resolving packages instance=2 preparing
+DEBUG mdbook-rustdoc-links:build: resolved options: Builder {
+    targets: [],
+    options: BuildOptions {
+        preludes: None,
+        packages: Some(
+            [
+                Selector(
+                    PackageSelector {
+                        name: None,
+                        workspace: Default,
+                        dependencies: false,
+                    },
+                ),
+            ],
+        ),
+        features: FeatureSelection {
+            features: [
+                "fancy",
+            ],
+            all_features: None,
+            no_default_features: None,
+        },
+        rustc_args: [],
+        rustdoc_args: [],
+        cargo: CargoOptions {
+            toolchain: None,
+            cargo_args: [],
+            runner: CommandRunner(
+                Some(
+                    CustomCommand(
+                        "bash" "-c" "$*",
+                    ),
+                ),
+            ),
+        },
+        docs_rs: None,
+    },
+} instance=2
+DEBUG mdbook-rustdoc-links:build: resolved packages: {
+    debug_logs@0.1.0,
+} instance=2
+DEBUG mdbook-rustdoc-links:build: resolved preludes: [
+    "debug_logs::*",
+] instance=2
+ INFO mdbook-rustdoc-links:build:prepare: cargo metadata instance=2 preparing
+DEBUG mdbook-rustdoc-links:build: resolved path mappings: PathMapper {
+    target: "[TEST_DIR]/debug_logs/target":"[TEST_DIR]/debug_logs/target",
+} instance=2
+ INFO mdbook-rustdoc-links:build:cargo-doc: started instance=2 cargo doc
+TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: ["fancy"], filenames: ["[TEST_DIR]/debug_logs/target/doc/debug_logs/index.html"], executable: None, fresh: false }) instance=2
+TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=2
+ INFO mdbook-rustdoc-links:build:cargo-check: started instance=2 cargo check
+TRACE mdbook-rustdoc-links:build: CompilerArtifact(Artifact { package_id: PackageId { repr: "path+file://[TEST_DIR]/debug_logs#0.1.0" }, manifest_path: "[TEST_DIR]/debug_logs/Cargo.toml", target: Target { name: "debug_logs", kind: [Lib], crate_types: [Lib], required_features: [], src_path: "[TEST_DIR]/debug_logs/src/lib.rs", edition: E2024, doctest: true, test: true, doc: true }, profile: ArtifactProfile { opt_level: "0", debuginfo: Full, debug_assertions: true, overflow_checks: true, test: false }, features: ["fancy"], filenames: ["[TEST_DIR]/debug_logs/target/debug/deps/libdebug_logs-[BUILD_HASH].rmeta"], executable: None, fresh: false }) instance=2
+TRACE mdbook-rustdoc-links:build: BuildFinished(BuildFinished { success: true }) instance=2
+TRACE mdbook-rustdoc-links:build: CompilerOutput {
+    targets: {},
+    crates: {
+        "debug_logs": PackageId {
+            repr: "path+file://[TEST_DIR]/debug_logs#0.1.0",
+        },
+    },
+    libs: {
+        "debug_logs [*]": "debug/deps/libdebug_logs-[BUILD_HASH].rmeta",
+    },
+    docs: {
+        "debug_logs [*]": "doc/debug_logs/index.html",
+    },
+    paths: PathMapper {
+        target: "[TEST_DIR]/debug_logs/target":"[TEST_DIR]/debug_logs/target",
+    },
+    ..
+} instance=2
+DEBUG mdbook-rustdoc-links:build: rustdoc input:
+//! - <span mdbook-rustdoc-links>[`fancy`]</span>
+//! - <span mdbook-rustdoc-links>[`f80`]</span>
+//! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>
+ instance=2
+ INFO mdbook-rustdoc-links:build:rustdoc: started instance=2 rustdoc
+TRACE mdbook-rustdoc-links:build: --- rustdoc stderr
+{"$message_type":"diagnostic","message":"unresolved link to `f80`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"<anon>","byte_start":85,"byte_end":88,"line_start":2,"line_end":2,"column_start":36,"column_end":39,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[`f80`]</span>","highlight_start":36,"highlight_end":39}],"label":"no item named `f80` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null},{"message":"`#[warn(rustdoc::broken_intra_doc_links)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `f80`\n --> <anon>:2:36/n  |\n2 | //! - <span mdbook-rustdoc-links>[`f80`]</span>\n  |                                    ^^^ no item named `f80` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default/n\n"}
+{"$message_type":"diagnostic","message":"unresolved link to `PhantomData`","code":{"code":"rustdoc::broken_intra_doc_links","explanation":null},"level":"warning","spans":[{"file_name":"<anon>","byte_start":148,"byte_end":162,"line_start":3,"line_end":3,"column_start":51,"column_end":65,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>","highlight_start":51,"highlight_end":65}],"label":"no item named `PhantomData` in scope","suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`","code":null,"level":"help","spans":[],"children":[],"rendered":null}],"rendered":"warning: unresolved link to `PhantomData`\n --> <anon>:3:51/n  |\n3 | //! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>\n  |                                                   ^^^^^^^^^^^^^^ no item named `PhantomData` in scope/n  |\n  = help: to escape `[` and `]` characters, add '\\' before them like `\\[` or `\\]`\n/n"}
+{"$message_type":"diagnostic","message":"unclosed HTML tag `T`","code":{"code":"rustdoc::invalid_html_tags","explanation":null},"level":"warning","spans":[{"file_name":"<anon>","byte_start":143,"byte_end":146,"line_start":3,"line_end":3,"column_start":46,"column_end":49,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>","highlight_start":46,"highlight_end":49}],"label":null,"suggested_replacement":null,"suggestion_applicability":null,"expansion":null}],"children":[{"message":"`#[warn(rustdoc::invalid_html_tags)]` on by default","code":null,"level":"note","spans":[],"children":[],"rendered":null},{"message":"try marking as source code","code":null,"level":"help","spans":[{"file_name":"<anon>","byte_start":132,"byte_end":132,"line_start":3,"line_end":3,"column_start":35,"column_end":35,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>","highlight_start":35,"highlight_end":35}],"label":null,"suggested_replacement":"`","suggestion_applicability":"MaybeIncorrect","expansion":null},{"file_name":"<anon>","byte_start":146,"byte_end":146,"line_start":3,"line_end":3,"column_start":49,"column_end":49,"is_primary":true,"text":[{"text":"//! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>","highlight_start":49,"highlight_end":49}],"label":null,"suggested_replacement":"`","suggestion_applicability":"MaybeIncorrect","expansion":null}],"children":[],"rendered":null}],"rendered":"warning: unclosed HTML tag `T`\n --> <anon>:3:46/n  |\n3 | //! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>\n  |                                              ^^^\n  |\n  = note: `#[warn(rustdoc::invalid_html_tags)]` on by default/nhelp: try marking as source code/n  |\n3 | //! - <span mdbook-rustdoc-links>[`PhantomData<T>`][PhantomData<T>]</span>\n  |                                   +              +\n/n"}
+{"$message_type":"diagnostic","message":"3 warnings emitted","code":null,"level":"warning","spans":[],"children":[],"rendered":"warning: 3 warnings emitted/n\n"} instance=2
+TRACE mdbook-rustdoc-links:build:debug: Element { tag_name: "a", attributes: [Attribute { name: "href", value: "../debug_logs/fn.fancy.html" }, Attribute { name: "title", value: "fn debug_logs::fancy" }] } instance=2
+TRACE mdbook-rustdoc-links:build:debug: line 2, link "f80", warning: unresolved link to `f80`
+ --> <anon>:2:36
+  |
+2 | //! - <span mdbook-rustdoc-links>[`f80`]</span>
+  |                                    ^^^ no item named `f80` in scope
+  |
+  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`
+  = note: `#[warn(rustdoc::broken_intra_doc_links)]` on by default
+
+ instance=2
+TRACE mdbook-rustdoc-links:build:debug: line 3, link "PhantomData<T>", warning: unresolved link to `PhantomData`
+ --> <anon>:3:51
+  |
+3 | //! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>
+  |                                                   ^^^^^^^^^^^^^^ no item named `PhantomData` in scope
+  |
+  = help: to escape `[` and `]` characters, add '\' before them like `\[` or `\]`
+
+ instance=2
+TRACE mdbook-rustdoc-links:build:debug: line 3, link "PhantomData<T>", warning: unclosed HTML tag `T`
+ --> <anon>:3:46
+  |
+3 | //! - <span mdbook-rustdoc-links>[PhantomData<T>][PhantomData<T>]</span>
+  |                                              ^^^
+  |
+  = note: `#[warn(rustdoc::invalid_html_tags)]` on by default
+help: try marking as source code
+  |
+3 | //! - <span mdbook-rustdoc-links>[`PhantomData<T>`][PhantomData<T>]</span>
+  |                                   +              +
+
+ instance=2
+TRACE mdbook-rustdoc-links:build:debug: could not determine primary line
+
+Caused by:
+    Diagnostic { message: "3 warnings emitted", code: None, level: Warning, spans: [], children: [], rendered: Some("warning: 3 warnings emitted/n\n") } instance=2
+ INFO mdbook-rustdoc-links: build #2 done
+DEBUG mdbook-rustdoc-links: index.md:1:5: 1 link resolved: https://docs.rs/debug_logs/0.1.0/debug_logs/fn.fancy.html
+ WARN mdbook-rustdoc-links: index.md:2:5: unresolved link to `f80`: no item named `f80` in scope
+ WARN mdbook-rustdoc-links: index.md:3:3: unresolved link to `PhantomData`: no item named `PhantomData` in scope
+ WARN mdbook-rustdoc-links: index.md:3:15: unclosed HTML tag `T`
+ INFO mdbook-rustdoc-links: processed 3 links: 1 resolved; 2 unresolved
+ WARN mdbook-rustdoc-links: finished with warnings

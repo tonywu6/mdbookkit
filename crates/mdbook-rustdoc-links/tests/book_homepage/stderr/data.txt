@@ -1,0 +1,7 @@
+warning: unresolved link to `shlex::quote`
+  ╭▸ index.md:1:15
+  │
+1 │ The [`quote`][shlex::quote] function is deprecated and will be removed soon!
+  ╰╴              ━━━━━━━━━━━━ no item named `quote` in module `shlex`
+
+ WARN mdbook-rustdoc-links: finished with warnings

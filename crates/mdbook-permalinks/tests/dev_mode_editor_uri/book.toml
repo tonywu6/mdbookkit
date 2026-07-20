@@ -1,0 +1,12 @@
+[preprocessor.permalinks]
+unstable-features = true
+
+[preprocessor.permalinks.dev-mode]
+editor-uri = "zed://file/{path}"
+
+[output.markdown]
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

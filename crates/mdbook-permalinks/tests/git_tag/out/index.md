@@ -1,0 +1,1 @@
+- [](https://github.com/lorem/ipsum/tree/[GIT_REVISION]/book.toml)

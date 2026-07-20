@@ -1,0 +1,14 @@
+ERROR mdbook-rustdoc-links: failed to find a Cargo project
+
+Caused by:
+    0: this preprocessor will run `cargo doc`, which requires a Cargo project
+    1: help: for more info, see https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#failed-to-find-a-cargo-project
+    2: --- stderr
+       error: failed to parse manifest at `[TEST_DIR]/manifest_invalid/Cargo.toml`
+       
+       Caused by:
+         `resolver` setting `000` is not valid, valid options are "1", "2" or "3"
+    3: command exited with [EXIT_CODE] 101
+    4: [COMMAND_DEBUG] "cargo" "locate-project" "--message-format=json" "--workspace"
+       
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

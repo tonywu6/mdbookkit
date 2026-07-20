@@ -1,0 +1,6 @@
+ WARN mdbook-permalinks: preprocessor will be disabled
+
+Caused by:
+    0: could not obtain the necessary git information to generate permalinks
+    1: could not find repository at '[TEST_DIR]/git_no_repo'; class=Repository (6); code=NotFound (-3)
+    2: help: this preprocessor requires a git repository to work

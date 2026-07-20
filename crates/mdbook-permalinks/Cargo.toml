@@ -1,49 +1,42 @@
 [package]
 name = "mdbook-permalinks"
 publish = true
-version = "2.0.1"
+version = "3.0.0"
 
 edition.workspace = true
-rust-version.workspace = true
 
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
 
 categories = ["text-processing", "development-tools", "command-line-utilities"]
-description = "Generate permalinks in mdBook using paths"
+description = "mdBook preprocessor to generate Git permalinks"
 documentation = "https://docs.tonywu.dev/mdbookkit/permalinks"
+homepage = "https://docs.tonywu.dev/mdbookkit/permalinks"
 keywords = ["mdbook", "markdown", "documentation", "git", "permalink"]
 readme = "README.md"
 
-exclude = ["src/tests", "tests"]
+exclude = ["tests"]
 
 [dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true }
-git2 = { version = "0.20.4", default-features = false }
-gix-url = { version = "0.34.0" }
+data-encoding = "2.11.0"
+git2 = { version = "0.21.0", default-features = false }
+gix-url = { version = "0.36.1" }
+lol_html = { workspace = true }
 mdbook-markdown = { workspace = true }
 mdbook-preprocessor = { workspace = true }
 mdbookkit = { workspace = true }
-miette = { workspace = true }
-percent-encoding = { version = "2.3.2" }
+percent-encoding = { workspace = true }
 serde = { workspace = true }
 tap = { workspace = true }
-thiserror = { workspace = true }
 tracing = { workspace = true }
 url = { workspace = true, features = ["serde"] }
 
 [dev-dependencies]
-assert_cmd = { workspace = true }
-insta = { workspace = true }
 mdbookkit = { workspace = true, features = ["_testing"] }
-predicates = { workspace = true }
-rstest = { workspace = true }
-tempfile = { workspace = true }
-
-[features]
-_testing = ["mdbookkit/_testing"]
+mdbookkit-testing = { workspace = true }
 
 [package.metadata.binstall]
 pkg-fmt = "tgz"

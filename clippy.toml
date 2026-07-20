@@ -1,0 +1,7 @@
+disallowed-methods = [
+  { path = "camino::Utf8Path::from_path" },
+  { path = "camino::Utf8PathBuf::from_path_buf" },
+  { path = "url::Url::from_directory_path" },
+  { path = "url::Url::from_file_path" },
+  { path = "url::Url::make_relative" },
+]

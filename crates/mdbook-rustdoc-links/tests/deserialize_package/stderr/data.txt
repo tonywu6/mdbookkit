@@ -1,0 +1,10 @@
+ERROR mdbook-rustdoc-links: failed to read preprocessor config from book.toml
+
+Caused by:
+    TOML parse error at line 2, column 21
+      |
+    2 | packages = ["itoa", 1]
+      |                     ^
+    invalid type: integer `1`, expected package spec
+    
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

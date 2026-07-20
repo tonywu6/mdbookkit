@@ -1,0 +1,24 @@
+{
+  "details": {
+    "body": [
+      "<details>",
+      "  <summary>$1</summary>\n",
+      "${TM_SELECTED_TEXT/\\n+$//}\n",
+      "</details>\n",
+    ],
+  },
+  "paragraph": {
+    "body": "<p>${TM_SELECTED_TEXT}</p>",
+  },
+  "raw": {
+    "body": ["{% raw %}\n", "${TM_SELECTED_TEXT/\\n+$//}\n", "{% endraw %}\n"],
+  },
+  "prettier-ignore": {
+    "prefix": ["ignore"],
+    "body": [
+      "${BLOCK_COMMENT_START} prettier-ignore-start ${BLOCK_COMMENT_END}",
+      "${TM_SELECTED_TEXT/\\n+$//}",
+      "${BLOCK_COMMENT_START} prettier-ignore-end ${BLOCK_COMMENT_END}\n",
+    ],
+  },
+}

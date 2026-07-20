@@ -101,7 +101,7 @@ body {
   h3,
   h4,
   h5 {
-    code {
+    code:not(:first-child, :last-child) {
       color: var(--inline-code-color);
     }
   }
@@ -109,6 +109,7 @@ body {
   ul,
   ol {
     padding-inline-start: 1.8rem;
+    margin-block: 1rem;
     line-height: 1.6;
   }
 
@@ -153,10 +154,56 @@ body {
   }
 
   details {
-    margin-block: 2rem;
+    > summary {
+      color: var(--links);
+      text-decoration: underline dotted 1px;
+      text-underline-offset: 0.6ex;
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
 
-    &[open] > summary {
-      margin-block-end: 1rem;
+      &::before {
+        content: "⊕ ";
+      }
+
+      > .summary-collapsed {
+        display: inline;
+      }
+
+      > .summary-expanded {
+        display: none;
+      }
+    }
+
+    > :not(:first-child) {
+      margin: 1rem 2ch;
+    }
+
+    &[open] {
+      padding-block-end: 0.2rem;
+      padding-inline-start: 0.25rem;
+      margin-inline-start: -0.25rem;
+      outline: 0.5rem solid transparent;
+
+      > summary {
+        margin-block-end: 1rem;
+
+        &::before {
+          content: "⊖ ";
+        }
+
+        > .summary-collapsed {
+          display: none;
+        }
+
+        > .summary-expanded {
+          display: inline;
+        }
+      }
+
+      > :last-child {
+        margin-block-end: 0.3rem;
+      }
     }
   }
 
@@ -232,6 +279,7 @@ body {
     min-width: 0;
     min-height: 0;
     margin: 1.8rem;
+    overflow: auto hidden;
 
     @media screen and (width <= 768px) {
       margin: 0;
@@ -243,6 +291,11 @@ body {
 
     > * {
       margin-block: 0;
+    }
+
+    > :not(svg, p:has(> svg)) {
+      position: sticky;
+      left: 0;
     }
 
     > figcaption {
@@ -365,6 +418,21 @@ figure.fig-text {
   }
 }
 
+.chapter {
+  li.chapter-item,
+  li.header-item {
+    line-height: 1.5em !important;
+
+    .chapter-link-wrapper {
+      margin-block-end: 0.5em;
+    }
+  }
+}
+
+.sidebar code {
+  line-height: 1.5em !important;
+}
+
 /* à la Google's developer docs */
 @media screen and (width <= 420px) {
   :root {
@@ -406,7 +474,7 @@ figure.fig-text {
       padding-inline: 0;
       margin-block-end: 1rem;
 
-      > :not(pre, img, picture, video, :has(img, picture, video)) {
+      > :not(pre, svg, img, picture, video, :has(img, picture, video)) {
         padding-inline: var(--blockquote-padding-inline);
       }
     }
@@ -450,10 +518,20 @@ html.light {
   .fig-text {
     background-color: #f6f7f680;
   }
+
+  details[open] {
+    outline-color: #f6f7f680;
+    background-color: #f6f7f680;
+  }
 }
 
 html.rust {
   .fig-text {
+    background-color: #f6f7f680;
+  }
+
+  details[open] {
+    outline-color: #f6f7f680;
     background-color: #f6f7f680;
   }
 }
@@ -462,16 +540,31 @@ html.coal {
   .fig-text {
     background-color: #1d1f2180;
   }
+
+  details[open] {
+    outline-color: #1d1f2180;
+    background-color: #1d1f2180;
+  }
 }
 
 html.navy {
   .fig-text {
     background-color: #1d1f2180;
   }
+
+  details[open] {
+    outline-color: #1d1f2180;
+    background-color: #1d1f2180;
+  }
 }
 
 html.ayu {
   .fig-text {
+    background-color: #191f2680;
+  }
+
+  details[open] {
+    outline-color: #191f2680;
     background-color: #191f2680;
   }
 }

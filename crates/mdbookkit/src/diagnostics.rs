@@ -1,405 +1,529 @@
-//! Error reporting for preprocessors.
-
-use std::{borrow::Borrow, collections::BTreeMap, fmt, io::Write as _};
-
-use miette::{
-    Diagnostic, GraphicalReportHandler, GraphicalTheme, LabeledSpan, MietteError,
-    MietteSpanContents, Severity, SourceCode, SourceSpan, SpanContents,
+use std::{
+    borrow::Cow,
+    collections::{BTreeMap, BTreeSet},
+    fmt::{Debug, Display},
+    io::Write,
+    ops::Range,
 };
-use owo_colors::Style;
-use tap::{Pipe, Tap, TapFallible};
-use tracing::{Level, debug, error, info, level_filters::LevelFilter, trace, warn};
+
+pub use annotate_snippets;
+use annotate_snippets::{
+    Annotation, AnnotationKind, Group, Message, Patch, Renderer, Snippet, renderer::DecorStyle,
+};
+use bon::Builder;
+use tap::{Pipe, Tap};
+use tracing::Level;
 
 use crate::{
     emit_debug,
-    env::{is_colored, is_logging},
-    error::{ExpectFmt, put_severity},
-    logging::stderr,
-    write_str,
+    env::{MDBOOKKIT_TERM_GRAPHICAL, TruthyStr, is_colored, is_logging},
+    error::put_severity,
+    level_enabled, lexicographic_ordering,
+    logging::{EmitCallsite, stderr},
+    util::{Lexicographic, LexicographicOrd},
 };
 
-/// Trait for Markdown diagnostics. This will eventually be printed to stderr.
-///
-/// Each [`IssueItem`] represents a specific message, such as a warning, associated with
-/// an [`Issue`] (the type and severity of the issue) and a location in the Markdown
-/// source, represented by [`LabeledSpan`].
-pub trait IssueItem: Send + Sync {
-    type Kind: Issue;
-    fn issue(&self) -> Self::Kind;
-    fn label(&self) -> LabeledSpan;
+#[derive(Builder, Debug)]
+#[builder(start_fn = level)]
+pub struct IssueReport<'a> {
+    #[builder(start_fn)]
+    level: IssueLevel,
+    #[builder(into)]
+    title: Cow<'a, str>,
+    #[builder(default)]
+    annotations: Vec<Highlight<'a>>,
+    #[builder(default)]
+    patches: Vec<Suggestion<'a>>,
+    #[builder(default)]
+    notes: Vec<Note<'a>>,
+    #[builder(default)]
+    secondary: Vec<IssueReport<'a>>,
 }
 
-/// Trait for diagnostics classes, like an error code.
-pub trait Issue: fmt::Debug + Default + Clone + Send + Sync {
-    fn title(&self) -> impl fmt::Display;
-    fn level(&self) -> Level;
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum IssueLevel {
+    Error,
+    Warning,
+    Info,
+    Help,
+    Note,
 }
 
-/// A collection of [`IssueItem`]s associated with a Markdown file.
-pub struct Diagnostics<'a, K, P> {
-    text: &'a str,
-    name: K,
-    issues: Vec<P>,
+#[derive(Builder, Debug)]
+#[builder(start_fn = span)]
+pub struct Highlight<'a> {
+    #[builder(start_fn)]
+    span: Range<usize>,
+    kind: AnnotationKind,
+    #[builder(into)]
+    label: Option<Cow<'a, str>>,
 }
 
-impl<K, P> Diagnostics<'_, K, P>
-where
-    K: Title,
-    P: IssueItem,
-{
-    /// Render a report of the diagnostics using [miette]'s graphical reporting
-    pub fn to_report(&self) -> String {
-        let handler = if is_colored() {
-            GraphicalTheme::unicode()
+#[derive(Builder, Debug)]
+#[builder(start_fn = span)]
+pub struct Suggestion<'a> {
+    #[builder(start_fn)]
+    span: Range<usize>,
+    #[builder(into)]
+    repl: Cow<'a, str>,
+}
+
+#[derive(Builder, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[builder(start_fn = level)]
+pub struct Note<'a> {
+    #[builder(start_fn)]
+    level: IssueLevel,
+    #[builder(into)]
+    message: Cow<'a, str>,
+}
+
+#[must_use]
+pub struct IssueReporter<'a> {
+    pub issues: Vec<IssueReport<'a>>,
+    pub source: SourceCode<'a>,
+}
+
+#[derive(Clone)]
+pub struct SourceCode<'a> {
+    pub source_code: &'a str,
+    pub source_path: Cow<'a, str>,
+}
+
+impl<'a> IssueReporter<'a> {
+    pub fn emit(self, emit: EmitCallsite) {
+        let source = self.source.clone();
+        if let Some(style) = is_graphical() {
+            let renderer = if is_colored() {
+                Renderer::styled()
+            } else {
+                Renderer::plain()
+            }
+            .decor_style(style);
+            for report in (self.issues.into_iter())
+                // filtering done manually
+                .filter(|issue| emit.level_enabled(issue.level.into()))
+                .inspect(|issue| put_severity(issue.level.into()))
+                .map(|issue| issue_to_report(issue, source.clone()))
+            {
+                writeln!(stderr(), "{}\n", renderer.render(&report))
+                    .or_else(emit_debug!("failed to print to stderr: {:?}"))
+                    .ok();
+            }
         } else {
-            GraphicalTheme::unicode_nocolor()
-        }
-        .tap_mut(|t| t.characters.error = "error:".into())
-        .tap_mut(|t| t.characters.warning = "warning:".into())
-        .tap_mut(|t| t.characters.advice = "info:".into())
-        .tap_mut(|t| t.styles.advice = Style::new().green().stderr())
-        .tap_mut(|t| t.styles.warning = Style::new().yellow().stderr())
-        .tap_mut(|t| t.styles.error = Style::new().red().stderr())
-        .tap_mut(|t| {
-            // pre-emptively specify colors for all diagnostics, just for this collection
-            // doing this because miette doesn't support associating colors with labels yet
-            t.styles.highlights = if is_colored() {
-                self.issues
-                    .iter()
-                    .map(|item| level_style(item.issue().level()))
-                    .collect()
-            } else {
-                vec![Style::new()]
-            }
-        })
-        .pipe(GraphicalReportHandler::new_themed);
-
-        let mut output = String::new();
-        handler.render_report(&mut output, self).expect_fmt();
-        output
-    }
-
-    pub fn to_traces(&self) {
-        for item in self.issues.iter() {
-            let issue = item.issue();
-            let label = item.label();
-            let source = self
-                .read_span(label.inner(), 0, 0)
-                .expect("self.read_span infallible");
-            let path = source.name().unwrap_or("<anonymous>");
-            let line = source.line() + 1;
-            let column = source.column() + 1;
-            let title = issue.title();
-            let level = issue.level();
-            let label = label.label().unwrap_or_default();
-            let message = format_args!("{path}:{line}:{column}: {title}");
-            let message = if label.is_empty() {
-                message
-            } else {
-                format_args!("{message}: {label}")
-            };
-            if level >= Level::TRACE {
-                trace!("{message}")
-            } else if level >= Level::DEBUG {
-                debug!("{message}")
-            } else if level >= Level::INFO {
-                info!("{message}")
-            } else if level >= Level::WARN {
-                warn!("{message}")
-            } else {
-                error!("{message}")
+            for issue in self.issues {
+                // filtering done by tracing
+                issue_to_traces(&issue, &source, &emit);
             }
         }
     }
 }
 
-impl<'a, K, P> Diagnostics<'a, K, P>
-where
-    P: IssueItem,
-{
-    pub fn new(text: &'a str, name: K, issues: Vec<P>) -> Self {
-        Self { text, name, issues }
+fn is_graphical() -> Option<DecorStyle> {
+    match MDBOOKKIT_TERM_GRAPHICAL.truthy() {
+        None => {
+            if is_logging() {
+                None
+            } else {
+                Some(DecorStyle::Unicode)
+            }
+        }
+        Some("ascii") => Some(DecorStyle::Ascii),
+        Some(_) => Some(DecorStyle::Unicode),
+    }
+}
+
+#[must_use]
+pub fn issue_to_report<'a>(issue: IssueReport<'a>, source: SourceCode<'a>) -> Vec<Group<'a>> {
+    macro_rules! snippet {
+        ($items:ident, $kind:ident) => {{
+            let mut is_empty = true;
+            Snippet::source(source.source_code)
+                .path(source.source_path.clone())
+                .$kind(($items.$kind.into_iter().map(<_>::into)).inspect(|_| is_empty = false))
+                .pipe(|v| if is_empty { None } else { Some(v) })
+        }};
     }
 
-    pub fn name(&self) -> &K {
-        &self.name
+    let mut sections = Vec::with_capacity(1 + issue.secondary.len());
+
+    let primary = annotate_snippets::Level::from(issue.level)
+        .primary_title(issue.title)
+        .elements(snippet!(issue, annotations))
+        .elements(snippet!(issue, patches))
+        .elements(issue.notes.into_iter().map(Message::from));
+
+    sections.push(primary);
+
+    for issue in issue.secondary {
+        let secondary = annotate_snippets::Level::from(issue.level)
+            .secondary_title(issue.title)
+            .elements(snippet!(issue, annotations))
+            .elements(snippet!(issue, patches))
+            .elements(issue.notes.into_iter().map(Message::from));
+
+        sections.push(secondary);
     }
 
-    fn status(&self) -> P::Kind {
-        self.issues
+    sections
+}
+
+pub fn issue_to_traces<'a>(
+    issue: &'a IssueReport<'a>,
+    source: &'a SourceCode<'a>,
+    emit: &EmitCallsite,
+) {
+    struct IssueFormatter<'a> {
+        issue: &'a IssueReport<'a>,
+        source: &'a SourceCode<'a>,
+    }
+
+    impl<'a> Display for IssueFormatter<'a> {
+        fn fmt<'d>(&'d self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            let Self { issue, source } = self;
+
+            let IssueReport {
+                title, annotations, ..
+            } = issue;
+
+            let path = &source.source_path;
+
+            let span_info =
+                |span: Option<&'d Highlight<'_>>| -> Option<(usize, usize, Option<&'d str>)> {
+                    let Highlight { span, label, .. } = span?;
+                    let (line, col) = byte_to_line_col(source.source_code, span.start)?;
+                    Some((line, col, label.as_deref()))
+                };
+
+            if annotations.len() == 1 {
+                if let Some((line, col, label)) = span_info(annotations.iter().next()) {
+                    write!(f, "{path}:{line}:{col}: {title}")?;
+                    if let Some(label) = label {
+                        write!(f, ": {label}")?;
+                    }
+                } else {
+                    write!(f, "{path}: {title}")?;
+                }
+            } else {
+                if let Some((line, col, _)) = span_info(annotations.iter().next()) {
+                    write!(f, "{path}:{line}:{col}: {title}")?;
+                } else {
+                    write!(f, "{path}: {title}")?;
+                }
+                for (line, col, label) in annotations.iter().filter_map(|span| {
+                    let (line, col, label) = span_info(Some(span))?;
+                    Some((line, col, label?))
+                }) {
+                    write!(f, "\n  {path}:{line}:{col}: {label}")?;
+                }
+            }
+
+            Ok(())
+        }
+    }
+
+    let level = issue.level;
+    let formatter = IssueFormatter { issue, source };
+
+    match level {
+        IssueLevel::Error => (emit.error)(format_args!("{formatter}")),
+        IssueLevel::Warning => (emit.warn)(format_args!("{formatter}")),
+        IssueLevel::Info => (emit.info)(format_args!("{formatter}")),
+        IssueLevel::Help => (emit.info)(format_args!("{formatter}")),
+        IssueLevel::Note => (emit.debug)(format_args!("{formatter}")),
+    }
+}
+
+impl<'a> IssueReport<'a> {
+    #[inline(always)]
+    pub fn if_enabled(level: IssueLevel) -> Option<IssueReportBuilder<'a>> {
+        match level {
+            IssueLevel::Error => {
+                if level_enabled!(Level::ERROR) {
+                    Some(Self::level(level))
+                } else {
+                    None
+                }
+            }
+            IssueLevel::Warning => {
+                if level_enabled!(Level::WARN) {
+                    Some(Self::level(level))
+                } else {
+                    None
+                }
+            }
+            IssueLevel::Info => {
+                if level_enabled!(Level::INFO) {
+                    Some(Self::level(level))
+                } else {
+                    None
+                }
+            }
+            IssueLevel::Help => {
+                if level_enabled!(Level::INFO) {
+                    Some(Self::level(level))
+                } else {
+                    None
+                }
+            }
+            IssueLevel::Note => {
+                if level_enabled!(Level::DEBUG) {
+                    Some(Self::level(level))
+                } else {
+                    None
+                }
+            }
+        }
+    }
+
+    #[inline]
+    pub fn annotations(&mut self, item: Highlight<'a>) -> &mut Self {
+        self.annotations.push(item);
+        self
+    }
+
+    #[inline]
+    pub fn secondary(&mut self, item: IssueReport<'a>) -> &mut Self {
+        self.secondary.push(item);
+        self
+    }
+
+    #[inline]
+    pub fn note(&mut self, note: Note<'a>) -> &mut Self {
+        self.notes.push(note);
+        self
+    }
+
+    pub fn iter_labels(&self) -> impl Iterator<Item = &str> {
+        self.annotations
             .iter()
-            .map(|p| p.issue())
-            .min_by_key(|s| s.level())
-            .unwrap_or_default()
-    }
-}
-
-impl<K, P> Diagnostic for Diagnostics<'_, K, P>
-where
-    K: Title,
-    P: IssueItem,
-{
-    fn severity(&self) -> Option<Severity> {
-        match self.status().level() {
-            Level::ERROR => Some(Severity::Error),
-            Level::WARN => Some(Severity::Warning),
-            _ => Some(Severity::Advice),
-        }
+            .filter_map(|anno| anno.label.as_deref())
     }
 
-    fn source_code(&self) -> Option<&dyn SourceCode> {
-        Some(self)
-    }
-
-    fn labels(&self) -> Option<Box<dyn Iterator<Item = LabeledSpan> + '_>> {
-        Some(Box::new(self.issues.iter().map(|p| p.label())))
-    }
-
-    fn help(&self) -> Option<Box<dyn fmt::Display + '_>> {
-        // miette doesn't print the file name if there are no labels to report
-        // so we print it here
-        if self.issues.is_empty() {
-            Some(Box::new(format!("in {}", self.name)))
-        } else {
-            None
-        }
-    }
-}
-
-impl<K, P> SourceCode for Diagnostics<'_, K, P>
-where
-    K: Title,
-    P: Send + Sync,
-{
-    fn read_span<'a>(
-        &'a self,
-        span: &SourceSpan,
-        context_lines_before: usize,
-        context_lines_after: usize,
-    ) -> Result<Box<dyn SpanContents<'a> + 'a>, MietteError> {
-        let inner = self
-            .text
-            .read_span(span, context_lines_before, context_lines_after)?;
-        let contents = MietteSpanContents::new_named(
-            self.name.to_string(),
-            inner.data(),
-            *inner.span(),
-            inner.line(),
-            inner.column(),
-            inner.line_count(),
-        )
-        .with_language("markdown");
-        Ok(Box::new(contents))
-    }
-}
-
-impl<K, P: IssueItem> fmt::Debug for Diagnostics<'_, K, P> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(&self.status(), f)
-    }
-}
-
-impl<K, P: IssueItem> fmt::Display for Diagnostics<'_, K, P> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Display::fmt(&self.status().title(), f)
-    }
-}
-
-impl<K, P: IssueItem> std::error::Error for Diagnostics<'_, K, P> {}
-
-/// Builder for printing diagnostics over multiple files.
-pub struct ReportBuilder<'a, K, P, F> {
-    items: Vec<Diagnostics<'a, K, P>>,
-    name_display: F,
-    level_filter: LevelFilter,
-}
-
-impl<'a, K, P, F> ReportBuilder<'a, K, P, F> {
-    pub fn new(items: Vec<Diagnostics<'a, K, P>>, name_display: F) -> Self {
-        Self {
-            items,
-            name_display,
-            level_filter: max_level(),
-        }
-    }
-
-    /// Specify how file names should be printed.
-    pub fn name_display<G>(self, name_display: G) -> ReportBuilder<'a, K, P, G>
-    where
-        G: for<'b> Fn(&'b K) -> String,
-    {
-        let Self {
-            items,
-            level_filter,
-            ..
-        } = self;
-        ReportBuilder {
-            items,
-            name_display,
-            level_filter,
-        }
-    }
-
-    pub fn level_filter(mut self, level: LevelFilter) -> Self {
-        self.level_filter = level;
-        self
-    }
-
-    pub fn filtered<Q>(mut self, mut f: impl FnMut(&K) -> bool) -> Self
-    where
-        K: Borrow<Q>,
-        Q: Eq + ?Sized,
-    {
-        self.items.retain(|d| f(&d.name));
-        self
-    }
-}
-
-impl<'a, K, P, F> ReportBuilder<'a, K, P, F>
-where
-    P: IssueItem,
-{
-    pub fn build(self) -> Reporter<'a, P>
-    where
-        F: for<'b> Fn(&'b K) -> String,
-    {
-        let Self {
-            items,
-            name_display,
-            level_filter,
-        } = self;
-
-        let items = items
+    fn append(&mut self, other: &mut Self) -> &mut Self {
+        self.annotations = self
+            .annotations
+            .drain(..)
+            .chain(other.annotations.drain(..))
+            .collect::<BTreeSet<_>>()
             .into_iter()
-            .flat_map(|Diagnostics { text, name, issues }| {
-                Self::grouped(level_filter, issues)
-                    .into_iter()
-                    .map(|(level, issues)| {
-                        let name = name_display(&name);
-                        (level, Diagnostics { text, name, issues })
-                    })
-                    .collect::<Vec<_>>()
-            })
-            .collect::<Vec<_>>()
-            .tap_mut(|items| {
-                items.sort_by(|(l1, d1), (l2, d2)| (l2, &d1.name).cmp(&(l1, &d2.name)))
-            })
-            .into_iter()
-            .map(|(_, d)| d)
             .collect();
 
-        Reporter { items }
-    }
-
-    fn grouped(max: LevelFilter, issues: Vec<P>) -> BTreeMap<Level, Vec<P>> {
-        let mut groups = BTreeMap::<_, Vec<_>>::new();
-        for item in issues {
-            let level = item.issue().level();
-            if level > max {
-                continue;
-            }
-            groups.entry(level).or_default().push(item);
-        }
-        groups
-    }
-}
-
-pub struct Reporter<'a, P> {
-    items: Vec<Diagnostics<'a, String, P>>,
-}
-
-impl<P> Reporter<'_, P>
-where
-    P: IssueItem,
-{
-    pub fn to_level(&self) -> Option<Level> {
-        self.items.iter().map(|p| p.status().level()).min()
-    }
-
-    pub fn to_stderr(&self) -> &Self {
-        if self.items.is_empty() {
-            return self;
-        }
-
-        if is_logging() {
-            self.to_traces();
-        } else {
-            write!(stderr(), "\n{}", self.to_report())
-                .tap_err(emit_debug!())
-                .ok();
-            if let Some(level) = self.to_level() {
-                // explicitly set severity because graphical reports
-                // do not go through tracing
-                put_severity(level);
-            }
-        };
+        self.secondary = self
+            .secondary
+            .drain(..)
+            .chain(other.secondary.drain(..))
+            .collect::<Vec<_>>()
+            .pipe(Self::merged);
 
         self
     }
 
-    pub fn to_report(&self) -> String {
-        self.items.iter().fold(String::new(), |mut out, diag| {
-            write_str!(out, "{}\n", diag.to_report());
-            out
-        })
+    fn merged(mut issues: Vec<Self>) -> Vec<Self> {
+        let mut deduped = BTreeMap::<_, Vec<_>>::new();
+        for (index, issue) in issues.iter().enumerate() {
+            deduped
+                .entry(Lexicographic(IssueReportKey(issue)))
+                .or_default()
+                .push(index);
+        }
+        let indices = deduped
+            .into_values()
+            .collect::<Vec<_>>()
+            .tap_mut(|indices| indices.sort());
+
+        for indices in indices.iter() {
+            let (issues, tail) = issues.split_at_mut(indices[0] + 1);
+            let offset = issues.len();
+            let head = &mut issues[indices[0]];
+            for idx in &indices[1..] {
+                head.append(&mut tail[*idx - offset]);
+            }
+        }
+
+        let mut indices = indices.iter().peekable();
+        issues
+            .into_iter()
+            .enumerate()
+            .filter_map(|(idx, item)| {
+                if indices.peek()?[0] == idx {
+                    indices.next();
+                    Some(item)
+                } else {
+                    None
+                }
+            })
+            .collect()
     }
 
-    pub fn to_traces(&self) {
-        for item in self.items.iter() {
-            item.to_traces();
+    fn sort_key(&self) -> impl Ord + use<> {
+        let span = self
+            .annotations
+            .iter()
+            .map(|anno| (anno.span.start, anno.span.end))
+            .next();
+        (self.level, span)
+    }
+}
+
+impl<'a> IssueReporter<'a> {
+    #[inline]
+    pub fn sorted(issues: Vec<Self>) -> Vec<Self> {
+        let mut sorted = vec![];
+
+        for Self { issues, source } in issues {
+            let mut levels = BTreeMap::<_, Vec<_>>::new();
+            for issue in issues {
+                let level = tracing::Level::from(issue.level);
+                levels.entry(level).or_default().push(issue);
+            }
+
+            for (level, issues) in levels {
+                let mut issues = IssueReport::merged(issues);
+                issues.sort_by_key(|issue| issue.sort_key());
+                sorted.push((level, issues, source.clone()));
+            }
+        }
+
+        sorted.sort_by(|(level1, _, _), (level2, _, _)| level2.cmp(level1));
+
+        sorted
+            .into_iter()
+            .map(|(_, issues, source)| Self { issues, source })
+            .collect()
+    }
+}
+
+impl<'a> Note<'a> {
+    pub fn help(message: impl Into<Cow<'a, str>>) -> Self {
+        Self::level(IssueLevel::Help).message(message).build()
+    }
+
+    #[allow(clippy::self_named_constructors)]
+    pub fn note(message: impl Into<Cow<'a, str>>) -> Self {
+        Self::level(IssueLevel::Note).message(message).build()
+    }
+}
+
+impl<'a> Highlight<'a> {
+    pub fn primary(span: Range<usize>, text: impl Into<Cow<'a, str>>) -> Self {
+        Self::span(span)
+            .kind(AnnotationKind::Primary)
+            .label(text)
+            .build()
+    }
+
+    pub fn context(span: Range<usize>, text: impl Into<Cow<'a, str>>) -> Self {
+        Self::span(span)
+            .kind(AnnotationKind::Context)
+            .label(text)
+            .build()
+    }
+}
+
+impl<'a> From<Highlight<'a>> for Annotation<'a> {
+    #[inline]
+    fn from(this: Highlight<'a>) -> Self {
+        let Highlight { span, kind, label } = this;
+        let highlight = matches!(this.kind, AnnotationKind::Primary);
+        kind.span(span).label(label).highlight_source(highlight)
+    }
+}
+
+impl<'a> From<Suggestion<'a>> for Patch<'a> {
+    #[inline]
+    fn from(this: Suggestion<'a>) -> Self {
+        Patch::new(this.span, this.repl)
+    }
+}
+
+impl<'a> From<Note<'a>> for Message<'a> {
+    #[inline]
+    fn from(this: Note<'a>) -> Self {
+        annotate_snippets::Level::from(this.level).message(this.message)
+    }
+}
+
+impl From<IssueLevel> for annotate_snippets::Level<'static> {
+    #[inline]
+    fn from(value: IssueLevel) -> Self {
+        match value {
+            IssueLevel::Error => annotate_snippets::Level::ERROR,
+            IssueLevel::Warning => annotate_snippets::Level::WARNING,
+            IssueLevel::Info => annotate_snippets::Level::INFO,
+            IssueLevel::Note => annotate_snippets::Level::NOTE,
+            IssueLevel::Help => annotate_snippets::Level::HELP,
         }
     }
 }
 
-const fn level_style(level: Level) -> Style {
-    match level {
-        Level::TRACE => Style::new().dimmed(),
-        Level::DEBUG => Style::new().blue(),
-        Level::INFO => Style::new().green(),
-        Level::WARN => Style::new().yellow(),
-        Level::ERROR => Style::new().red(),
-    }
-}
-
-/// [LevelFilter::current] always returns `TRACE` for some reason
-fn max_level() -> LevelFilter {
-    if tracing::enabled!(Level::TRACE) {
-        LevelFilter::TRACE
-    } else if tracing::enabled!(Level::DEBUG) {
-        LevelFilter::DEBUG
-    } else if tracing::enabled!(Level::INFO) {
-        LevelFilter::INFO
-    } else if tracing::enabled!(Level::WARN) {
-        LevelFilter::WARN
-    } else {
-        LevelFilter::ERROR
-    }
-}
-
-trait StyleCompat {
-    fn stderr(self) -> Self;
-}
-
-impl StyleCompat for Style {
-    fn stderr(self) -> Self {
-        if is_colored() { self } else { Style::new() }
-    }
-}
-
-pub trait Title: fmt::Display + Send + Sync {}
-
-impl<K: fmt::Display + Send + Sync> Title for K {}
-
-#[macro_export]
-macro_rules! plural {
-    ( $num:expr, $singular:expr ) => {
-        $crate::plural!($num, $singular, concat!($singular, "s"))
-    };
-    ( $num:expr, $singular:expr, $plural:expr ) => {{
-        let num = $num;
-        match num {
-            1 => format!("{num} {}", $singular),
-            _ => format!("{num} {}", $plural),
+impl From<IssueLevel> for tracing::Level {
+    #[inline]
+    fn from(value: IssueLevel) -> Self {
+        match value {
+            IssueLevel::Error => tracing::Level::ERROR,
+            IssueLevel::Warning => tracing::Level::WARN,
+            IssueLevel::Info => tracing::Level::INFO,
+            IssueLevel::Note => tracing::Level::DEBUG,
+            IssueLevel::Help => tracing::Level::INFO,
         }
-    }};
+    }
+}
+
+fn byte_to_line_col(text: &str, byte: usize) -> Option<(usize, usize)> {
+    if byte >= text.len() {
+        return None;
+    }
+    let mut scanned = 0;
+    for (line, text) in text.split('\n').enumerate() {
+        if scanned + text.len() >= byte {
+            let mut count = 0;
+            for (column, (ch, _)) in text.char_indices().enumerate() {
+                if scanned + ch >= byte {
+                    return Some((line + 1, column + 1));
+                } else {
+                    count = ch;
+                }
+            }
+            return Some((line + 1, count + 1));
+        } else {
+            scanned += text.len() + '\n'.len_utf8();
+        }
+    }
+    None
+}
+
+struct IssueReportKey<'a>(&'a IssueReport<'a>);
+
+impl LexicographicOrd for IssueReportKey<'_> {
+    fn head(&self) -> impl Ord {
+        (
+            self.0.level,
+            &self.0.title,
+            &self.0.patches,
+            &self.0.notes,
+            (self.0.secondary)
+                .iter()
+                .map(|item| Lexicographic(Self(item)))
+                .collect::<Vec<_>>(),
+        )
+    }
+}
+
+impl LexicographicOrd for &'_ Highlight<'_> {
+    fn head(&self) -> impl Ord {
+        (range_ord(&self.span), self.kind, &self.label)
+    }
+}
+
+impl LexicographicOrd for &'_ Suggestion<'_> {
+    fn head(&self) -> impl Ord {
+        (range_ord(&self.span), &self.repl)
+    }
+}
+
+lexicographic_ordering!(Highlight<'_>);
+lexicographic_ordering!(Suggestion<'_>);
+
+fn range_ord<T: Ord>(range: &Range<T>) -> impl Ord {
+    (&range.start, &range.end)
 }

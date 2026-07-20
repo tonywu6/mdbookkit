@@ -1,0 +1,130 @@
+# Common/Known issues
+
+## "no item ... in module `temporary_crate_0`"
+
+This warning could appear if you try to use the `crate::*` or `self::*` notation to link
+to an item in your project, but you have not properly configured the preprocessor.
+
+If your Cargo workspace consists of a single lib crate that you are documenting, then
+the `crate::*` notation should work by default. Otherwise, this may not work out of the
+box because:
+
+1. You are working with a Cargo workspace containing multiple libraries, in which case
+   the preprocessor wouldn't be able to tell which library "`crate`" refers to.
+2. You are working with a bin crate.
+3. You are trying to link to a private item.
+
+In case you are have multiple libraries, you can use the
+[`build.preludes`](naming-items.md#using-the-buildpreludes-option) option to explicitly
+introduce items from your crate into the "`crate`" scope.
+
+Note that the preprocessor currently does not support
+[linking to private items](naming-items.md#items-that-cannot-be-linked-to).
+
+## "cannot specify features for packages outside of workspace"
+
+This fatal error could occur if you use both the
+[`build.packages`](reference/configuration.md#buildpackages) and the
+[`build.features`](reference/configuration.md#buildfeatures) option to enable features
+from dependencies, like so:
+
+```toml config-example
+[preprocessor.rustdoc-links]
+build.features = ["serde/derive"]
+build.packages = ["serde"]
+```
+
+Due to a quirk in Cargo, selecting dependency features this way currently results in an
+error. A workaround to include at least one workspace member in the `build.packages`
+option, for example:
+
+```diff config-example
+  [preprocessor.rustdoc-links]
+  build.features = ["serde/derive"]
+- build.packages = ["serde"]
++ build.packages = [{ workspace = true }]
+```
+
+For more information, see
+[Cargo issue #16990](https://github.com/rust-lang/cargo/issues/16990).
+
+## "failed to find a Cargo project"
+
+This fatal error could occur because the preprocessor cannot find your Cargo project
+(package or workspace), without which it cannot run
+[`cargo doc`](naming-items.md#under-the-hood).
+
+This could happen if the directory containing your book (containing the `book.toml`
+file) is not within a Cargo project. You can tell the preprocessor where your project is
+by setting the [`manifest-dir`](reference/configuration.md#manifest-dir) option.
+
+If you are not working with a Cargo project, then this preprocessor is not really
+useful.
+
+## "could not determine the versions of these packages"
+
+This warning could appear if you try to link to a dev or build dependency by adding the
+package to the [`build.packages`](reference/configuration.md#buildpackages) option.
+
+Due to an issue in Cargo, attempting to document dev or build dependencies results in
+Cargo exiting with an error. Therefore, it is currently not possible to use the
+preprocessor to generate links to them.
+
+For more information, see
+[Cargo issue #11105](https://github.com/rust-lang/cargo/issues/11105).
+
+## "rustdoc did not process this link"
+
+This warning diagnostic appears when the preprocessor was not able to resolve a item but
+`rustdoc` did not issue a diagnostic for it. Possible reasons are:
+
+### Accidental links
+
+The preprocessor may show this warning for text that wasn't meant to be an intra-doc
+link.
+
+This most often happens with text surrounded by square brackets, which matches the
+syntax of [shortcut links](writing-links.md#shortcut-links). You can escape the brackets
+with `\[` and `\]`:
+
+```diff
+- The text was surrounded by [square brackets].
++ The text was surrounded by \[square brackets\].
+```
+
+<figure>
+
+{% include "/crates/mdbook-rustdoc-links/tests/book_accidental_shortcut_link/stderr/data.svg" %}
+
+<figcaption>
+  Without escaping the brackets, the preprocessor considers this a potential intra-doc link.
+</figcaption>
+
+</figure>
+
+Currently, the preprocessor is less restrictive [than
+`rustdoc`][rustdoc-preprocess-link] in what it considers a possible link, to avoid
+having false negatives, so it may pick up some text that doesn't contain valid Rust
+syntax.
+
+### `rustdoc` edge cases
+
+Normally, when an item fails to resolve, such as when the item does not exist, `rustdoc`
+generates a corresponding warning. However, in very specific circumstances, `rustdoc`
+considers an item resolved, but does not generate the necessary files for the
+preprocessor to generate a URL. Some known examples are:
+
+- If an item is marked as [`#[doc(hidden)]`][doc-hidden]. It is currently not possible
+  to link to a hidden item.
+
+- If an item from another crate is [re-exported with `#[doc(inline)]`][doc-inline], but
+  that crate is not included in
+  [the list of packages to build docs for](reference/configuration.md#buildpackages). In
+  this case, try rewriting the link to point to the original item instead of the
+  re-exported location.
+
+<!-- prettier-ignore-start -->
+[doc-hidden]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/the-doc-attribute.html#hidden
+[doc-inline]: https://doc.rust-lang.org/stable/rustdoc/write-documentation/re-exports.html#inlining-with-docinline
+[rustdoc-preprocess-link]: https://github.com/rust-lang/rust/blob/1.97.1/src/librustdoc/passes/collect_intra_doc_links.rs#L940
+<!-- prettier-ignore-end -->

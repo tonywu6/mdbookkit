@@ -15,18 +15,20 @@ on:
       - main
 
   schedule:
-    - cron: "32 21 * * 0" # nightly test for RA
+    - cron: "32 21 1 * *"
+      timezone: America/New_York
 
   workflow_dispatch:
     inputs:
       windows:
         default: false
         type: boolean
+      macos:
+        default: false
+        type: boolean
 
 env:
   CARGO_TERM_COLOR: always
-  MDBOOK_LOG: debug
-  RUST_BACKTRACE: "1"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
@@ -45,32 +47,58 @@ jobs:
         platform:
           - ubuntu-latest
           - windows-latest
+          - macos-latest
 
         windows:
-          - ${{ inputs.windows }}
+          - ${{ inputs.windows || false }}
+        macos:
+          - ${{ inputs.macos || false }}
 
         exclude:
           - platform: windows-latest
             windows: false
+          - platform: macos-latest
+            macos: false
 
       fail-fast: false
 
     runs-on: ${{ matrix.platform }}
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Set git to use LF
+        if: ${{ startsWith(matrix.platform, 'windows') }}
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
 
-      - uses: dtolnay/rust-toolchain@master
+      - uses: actions/checkout@v6
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
         with:
           toolchain: stable
-          components: rust-src # speeds up rust-analyzer indexing
+          targets: x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu
+          components: rust-src, llvm-tools
         id: rustup
 
-      - uses: cargo-bins/cargo-binstall@v1.16.6
+      - name: Install nightly toolchain
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: nightly
+          targets: x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu
+          components: rust-src, llvm-tools
+        id: rustup-nightly
 
-      - uses: tonywu6/cache-hit-please@v1.1.0
+      - run: rustup default stable
+        shell: bash
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: |
+            cargo-binstall
+            just@1.56.0
+
+      - uses: tonywu6/cache-hit-please@v1.1.1
         id: cache
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -89,65 +117,18 @@ jobs:
 
       - name: Prepare binaries
         run: |
-          cargo bin --install
-          cargo xtask rust-analyzer download
-
-      - name: Build tests
-        run: cargo test --no-run
+          cargo bin -- --install
+        shell: bash
 
       - name: Test
-        run: cargo test --no-fail-fast -- --include-ignored
-
-  test_rustdoc_link_ra:
-    name: (rustdoc-link) Test RA
-
-    needs:
-      - test
-
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-
-    strategy:
-      matrix:
-        ra-version:
-          - "2025-12-01"
-          - "nightly"
-      fail-fast: false
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-          components: rust-src # speeds up rust-analyzer indexing
-        id: rustup
-
-      - uses: cargo-bins/cargo-binstall@v1.16.6
-
-      - uses: tonywu6/cache-hit-please@v1.1.0
-        id: cache
+        run: |
+          just cov --no-fail-fast
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: false
+        shell: bash
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v7
         with:
-          deps: |
-            ${{runner.os}}
-            ${{runner.arch}}
-            ${{steps.rustup.outputs.cachekey}}
-            ${{hashFiles('**/Cargo.toml')}}
-            ${{hashFiles('**/Cargo.lock')}}
-            ${{github.workflow}}
-            ${{github.run_id}}
-          path: |
-            .bin/
-            target/
-
-      - run: cargo xtask rust-analyzer download
-        env:
-          RA_VERSION: ${{ matrix.ra-version }}
-
-      - name: Test
-        run: cargo test --package mdbook-rustdoc-links --no-fail-fast -- --include-ignored
+          name: llvm-cov
+          path: target/llvm-cov/html

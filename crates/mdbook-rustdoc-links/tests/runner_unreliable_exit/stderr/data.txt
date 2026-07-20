@@ -1,0 +1,20 @@
+ WARN mdbook-rustdoc-links: `rustdoc` did not succeed
+
+Caused by:
+    0: --- rustdoc stderr
+       error: sup
+        --> <anon>:3:10
+         |
+       3 | use std; compile_error!("sup");
+         |          ^^^^^^^^^^^^^^^^^^^^^
+       
+       error: aborting due to 1 previous error
+    1: rustdoc finished with errors
+    2: [COMMAND_DEBUG] "bash" "bin/runner.sh" "rustdoc" "--out-dir" "[TEST_DIR]/runner_unreliable_exit/target/[TEMP_DIR]" "--edition" "2024" "--crate-type" "lib" "--error-format" "json" "-" "--extern" "runner_unreliable_exit=[TEST_DIR]/runner_unreliable_exit/target/debug/deps/librunner_unreliable_exit-[BUILD_HASH].rmeta" "-L" "dependency=[TEST_DIR]/runner_unreliable_exit/target/debug/deps" "--crate-name" "temporary_crate_0"
+       
+note: the following options have been specified, which may have caused the error:
+    - build.preludes
+    - build.runner
+
+ERROR mdbook-rustdoc-links: build failed
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

@@ -1,0 +1,6 @@
+[test-groups]
+mdbook-rustdoc-links-rustdoc = { max-threads = 1 }
+
+[[profile.default.overrides]]
+filter = 'package(mdbook-rustdoc-links) and test(rustdoc)'
+test-group = 'mdbook-rustdoc-links-rustdoc'

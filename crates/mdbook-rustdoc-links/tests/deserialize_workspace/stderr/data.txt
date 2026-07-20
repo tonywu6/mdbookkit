@@ -1,0 +1,10 @@
+ERROR mdbook-rustdoc-links: failed to read preprocessor config from book.toml
+
+Caused by:
+    TOML parse error at line 8, column 17
+      |
+    8 |   { workspace = "crates/*" },
+      |                 ^^^^^^^^^^
+    unknown variant `crates/*`, expected one of `default`, `all`, `none`
+    
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

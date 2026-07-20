@@ -14,7 +14,7 @@ export default {
       },
     },
     {
-      files: ["**/CHANGELOG.md"],
+      files: ["crates/*/CHANGELOG.md"],
       options: {
         proseWrap: "never",
         // does not play nice with GitHub releases

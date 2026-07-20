@@ -1,0 +1,295 @@
+<svg width="961px" height="2432px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .fg { fill: #B2B2B2 }
+    .bg { fill: #1A1A1A }
+    .fg-bright-blue { fill: #5CADF1 }
+    .fg-bright-cyan { fill: #51B5C3 }
+    .fg-bright-green { fill: #96C475 }
+    .fg-bright-red { fill: #E06C75 }
+    .fg-yellow { fill: #D19A66 }
+    .container {
+      padding: 0 10px;
+      line-height: 18px;
+    }
+    .bold { font-weight: bold; }
+    tspan {
+      font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;
+      white-space: pre;
+      line-height: 18px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" y="0"  class="bg" />
+
+  <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "https://example.org/book"</tspan>
+</tspan>
+    <tspan x="10px" y="46px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:1:6</tspan>
+</tspan>
+    <tspan x="10px" y="64px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="82px"><tspan class="fg-bright-blue bold">1</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">https://example.org/book</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="100px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">link doesn't match any file in the book</tspan>
+</tspan>
+    <tspan x="10px" y="118px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="136px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+</tspan>
+    <tspan x="10px" y="154px"><tspan>          "crates/mdbook-permalinks/tests/book_links/src/index.md"</tspan>
+</tspan>
+    <tspan x="10px" y="172px"><tspan>          "crates/mdbook-permalinks/tests/book_links/src/README.md"</tspan>
+</tspan>
+    <tspan x="10px" y="190px">
+</tspan>
+    <tspan x="10px" y="208px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "https://example.org/book/"</tspan>
+</tspan>
+    <tspan x="10px" y="226px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:2:6</tspan>
+</tspan>
+    <tspan x="10px" y="244px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="262px"><tspan class="fg-bright-blue bold">2</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">https://example.org/book/</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="280px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">link doesn't match any file in the book</tspan>
+</tspan>
+    <tspan x="10px" y="298px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="316px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+</tspan>
+    <tspan x="10px" y="334px"><tspan>          "crates/mdbook-permalinks/tests/book_links/src/index.md"</tspan>
+</tspan>
+    <tspan x="10px" y="352px"><tspan>          "crates/mdbook-permalinks/tests/book_links/src/README.md"</tspan>
+</tspan>
+    <tspan x="10px" y="370px">
+</tspan>
+    <tspan x="10px" y="388px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "https://example.org/book/1.book-links/"</tspan>
+</tspan>
+    <tspan x="10px" y="406px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:4:6</tspan>
+</tspan>
+    <tspan x="10px" y="424px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="442px"><tspan class="fg-bright-blue bold">4</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">https://example.org/book/1.book-links/</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="460px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">link doesn't match any file in the book</tspan>
+</tspan>
+    <tspan x="10px" y="478px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="496px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+</tspan>
+    <tspan x="10px" y="514px"><tspan>          "crates/mdbook-permalinks/tests/book_links/src/1.book-links/index.md"</tspan>
+</tspan>
+    <tspan x="10px" y="532px"><tspan>          "crates/mdbook-permalinks/tests/book_links/src/1.book-links/README.md"</tspan>
+</tspan>
+    <tspan x="10px" y="550px">
+</tspan>
+    <tspan x="10px" y="568px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "https://example.org/book/1.book-links.md"</tspan>
+</tspan>
+    <tspan x="10px" y="586px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:5:6</tspan>
+</tspan>
+    <tspan x="10px" y="604px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="622px"><tspan class="fg-bright-blue bold">5</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">https://example.org/book/1.book-links.md</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="640px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">unexpected `.md` extension in link path</tspan>
+</tspan>
+    <tspan x="10px" y="658px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="676px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because the output path of this page won't contain the `.md` extension, this link won't work correctly</tspan>
+</tspan>
+    <tspan x="10px" y="694px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the resolved path is "crates/mdbook-permalinks/tests/book_links/src/1.book-links.md"</tspan>
+</tspan>
+    <tspan x="10px" y="712px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try removing the extension:</tspan>
+</tspan>
+    <tspan x="10px" y="730px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="748px"><tspan class="fg-bright-blue bold">5</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [](</tspan><tspan class="fg-bright-red">https://example.org/book/1.book-links.md</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="766px"><tspan class="fg-bright-blue bold">5</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">https://example.org/book/1.book-links</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="784px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="802px">
+</tspan>
+    <tspan x="10px" y="820px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "https://example.org/book/1.book-links.md#links"</tspan>
+</tspan>
+    <tspan x="10px" y="838px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:6:6</tspan>
+</tspan>
+    <tspan x="10px" y="856px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="874px"><tspan class="fg-bright-blue bold">6</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">https://example.org/book/1.book-links.md#links</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="892px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">unexpected `.md` extension in link path</tspan>
+</tspan>
+    <tspan x="10px" y="910px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="928px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because the output path of this page won't contain the `.md` extension, this link won't work correctly</tspan>
+</tspan>
+    <tspan x="10px" y="946px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the resolved path is "crates/mdbook-permalinks/tests/book_links/src/1.book-links.md"</tspan>
+</tspan>
+    <tspan x="10px" y="964px"><tspan class="fg-bright-cyan bold">help</tspan><tspan>: try removing the extension:</tspan>
+</tspan>
+    <tspan x="10px" y="982px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1000px"><tspan class="fg-bright-blue bold">6</tspan><tspan> </tspan><tspan class="fg-bright-red">- </tspan><tspan>- [](</tspan><tspan class="fg-bright-red">https://example.org/book/1.book-links.md#links</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1018px"><tspan class="fg-bright-blue bold">6</tspan><tspan> </tspan><tspan class="fg-bright-green">+ </tspan><tspan>- [](</tspan><tspan class="fg-bright-green">https://example.org/book/1.book-links#links</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1036px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1054px">
+</tspan>
+    <tspan x="10px" y="1072px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "https://example.org/book/trailing-slash/draft.md"</tspan>
+</tspan>
+    <tspan x="10px" y="1090px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:8:6</tspan>
+</tspan>
+    <tspan x="10px" y="1108px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1126px"><tspan class="fg-bright-blue bold">8</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">https://example.org/book/trailing-slash/draft.md</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1144px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan>
+</tspan>
+    <tspan x="10px" y="1162px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1180px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">file is not included in `SUMMARY.md`:</tspan>
+</tspan>
+    <tspan x="10px" y="1198px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">"crates/mdbook-permalinks/tests/book_links/src/trailing-slash/draft.md"</tspan>
+</tspan>
+    <tspan x="10px" y="1216px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1234px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
+</tspan>
+    <tspan x="10px" y="1252px">
+</tspan>
+    <tspan x="10px" y="1270px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "https://example.org/book/trailing-slash/draft"</tspan>
+</tspan>
+    <tspan x="10px" y="1288px"><tspan> </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:9:6</tspan>
+</tspan>
+    <tspan x="10px" y="1306px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1324px"><tspan class="fg-bright-blue bold">9</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">https://example.org/book/trailing-slash/draft</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1342px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan>
+</tspan>
+    <tspan x="10px" y="1360px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1378px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">file is not included in `SUMMARY.md`:</tspan>
+</tspan>
+    <tspan x="10px" y="1396px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-bright-blue bold">"crates/mdbook-permalinks/tests/book_links/src/trailing-slash/draft.md"</tspan>
+</tspan>
+    <tspan x="10px" y="1414px"><tspan>  </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1432px"><tspan>  </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: because this Markdown file is not referenced in `SUMMARY.md`, it will not be available in the output</tspan>
+</tspan>
+    <tspan x="10px" y="1450px">
+</tspan>
+    <tspan x="10px" y="1468px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "https://example.org/book/trailing-slash.html"</tspan>
+</tspan>
+    <tspan x="10px" y="1486px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:11:6</tspan>
+</tspan>
+    <tspan x="10px" y="1504px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1522px"><tspan class="fg-bright-blue bold">11</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">https://example.org/book/trailing-slash.html</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1540px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">link doesn't match any file in the book</tspan>
+</tspan>
+    <tspan x="10px" y="1558px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1576px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+</tspan>
+    <tspan x="10px" y="1594px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/trailing-slash.md"</tspan>
+</tspan>
+    <tspan x="10px" y="1612px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/trailing-slash.html"</tspan>
+</tspan>
+    <tspan x="10px" y="1630px">
+</tspan>
+    <tspan x="10px" y="1648px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "https://example.org/book/trailing-slash.md"</tspan>
+</tspan>
+    <tspan x="10px" y="1666px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:12:6</tspan>
+</tspan>
+    <tspan x="10px" y="1684px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1702px"><tspan class="fg-bright-blue bold">12</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">https://example.org/book/trailing-slash.md</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1720px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">link doesn't match any file in the book</tspan>
+</tspan>
+    <tspan x="10px" y="1738px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1756px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+</tspan>
+    <tspan x="10px" y="1774px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/trailing-slash.md"</tspan>
+</tspan>
+    <tspan x="10px" y="1792px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/trailing-slash.md/index.md"</tspan>
+</tspan>
+    <tspan x="10px" y="1810px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/trailing-slash.md/README.md"</tspan>
+</tspan>
+    <tspan x="10px" y="1828px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/trailing-slash.md.md"</tspan>
+</tspan>
+    <tspan x="10px" y="1846px">
+</tspan>
+    <tspan x="10px" y="1864px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "https://example.org/book/staging/"</tspan>
+</tspan>
+    <tspan x="10px" y="1882px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:14:6</tspan>
+</tspan>
+    <tspan x="10px" y="1900px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1918px"><tspan class="fg-bright-blue bold">14</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">https://example.org/book/staging/</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="1936px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">link doesn't match any file in the book</tspan>
+</tspan>
+    <tspan x="10px" y="1954px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="1972px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+</tspan>
+    <tspan x="10px" y="1990px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/staging/index.md"</tspan>
+</tspan>
+    <tspan x="10px" y="2008px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/staging/README.md"</tspan>
+</tspan>
+    <tspan x="10px" y="2026px">
+</tspan>
+    <tspan x="10px" y="2044px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "https://example.org/book/staging"</tspan>
+</tspan>
+    <tspan x="10px" y="2062px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:15:6</tspan>
+</tspan>
+    <tspan x="10px" y="2080px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2098px"><tspan class="fg-bright-blue bold">15</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">https://example.org/book/staging</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="2116px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">directory has no `index.md` file</tspan>
+</tspan>
+    <tspan x="10px" y="2134px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2152px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: without an `index.md` file at this location, the link will lead to a 404 error</tspan>
+</tspan>
+    <tspan x="10px" y="2170px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: the resolved path is "crates/mdbook-permalinks/tests/book_links/src/staging"</tspan>
+</tspan>
+    <tspan x="10px" y="2188px">
+</tspan>
+    <tspan x="10px" y="2206px"><tspan class="fg-yellow bold">warning</tspan><tspan class="bold">: broken link to "https://example.org/book/404"</tspan>
+</tspan>
+    <tspan x="10px" y="2224px"><tspan>  </tspan><tspan class="fg-bright-blue bold">--&gt; </tspan><tspan>crates/mdbook-permalinks/tests/book_links/src/2.broken-links.md:17:6</tspan>
+</tspan>
+    <tspan x="10px" y="2242px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2260px"><tspan class="fg-bright-blue bold">17</tspan><tspan> </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan> - [](</tspan><tspan class="fg-yellow bold">https://example.org/book/404</tspan><tspan>)</tspan>
+</tspan>
+    <tspan x="10px" y="2278px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan><tspan>      </tspan><tspan class="fg-yellow bold">^^^^^^^^^^^^^^^^^^^^^^^^^^^^</tspan><tspan> </tspan><tspan class="fg-yellow bold">link doesn't match any file in the book</tspan>
+</tspan>
+    <tspan x="10px" y="2296px"><tspan>   </tspan><tspan class="fg-bright-blue bold">|</tspan>
+</tspan>
+    <tspan x="10px" y="2314px"><tspan>   </tspan><tspan class="fg-bright-blue bold">= </tspan><tspan class="bold">note</tspan><tspan>: for this link to be accessible, expected any of the following files, but found none:</tspan>
+</tspan>
+    <tspan x="10px" y="2332px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/404.md"</tspan>
+</tspan>
+    <tspan x="10px" y="2350px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/404/index.md"</tspan>
+</tspan>
+    <tspan x="10px" y="2368px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/404/README.md"</tspan>
+</tspan>
+    <tspan x="10px" y="2386px"><tspan>           "crates/mdbook-permalinks/tests/book_links/src/404"</tspan>
+</tspan>
+    <tspan x="10px" y="2404px">
+</tspan>
+    <tspan x="10px" y="2422px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: finished with warnings</tspan>
+</tspan>
+  </text>
+
+</svg>

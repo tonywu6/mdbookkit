@@ -74,7 +74,7 @@ use std::{
 use console::StyledObject;
 use tap::{Pipe, Tap};
 use tracing::{
-    Event, Subscriber,
+    Event, Level, Subscriber,
     field::{Field, Visit},
     span::{Attributes, Id},
 };
@@ -87,8 +87,9 @@ use tracing_subscriber::{
 };
 
 use crate::{
-    env::{MDBOOK_LOG, is_colored, is_logging, set_colored, set_logging},
+    env::{MDBOOK_LOG, is_colored, is_logging},
     error::EventLevelLayer,
+    level_enabled,
 };
 
 use self::writer::{MultiProgressTicker, MultiProgressWriter};
@@ -113,51 +114,13 @@ macro_rules! is_branded {
     }};
 }
 
-pub struct Logging {
-    pub logging: Option<bool>,
-    pub colored: Option<bool>,
-    pub level: LevelFilter,
-}
-
-impl Logging {
-    pub fn init(self) {
-        init_logging(self);
-    }
-}
-
-impl Default for Logging {
-    fn default() -> Self {
-        Self {
-            logging: None,
-            colored: None,
-            level: LevelFilter::INFO,
-        }
-    }
-}
-
-fn init_logging(options: Logging) {
-    if let Some(logging) = options.logging {
-        set_logging(logging);
-    }
-
-    if let Some(colored) = options.colored {
-        set_colored(colored);
-    }
-
-    // https://github.com/rust-lang/mdBook/blob/v0.5.2/src/main.rs#L93
-
-    let filter = EnvFilter::builder()
-        .with_default_directive(options.level.into())
-        .parse_lossy(MDBOOK_LOG.as_deref().unwrap_or_default());
-
-    let max_level = filter.max_level_hint().unwrap_or(options.level);
-
+pub fn init_logging() {
     let logger = tracing_subscriber::fmt::layer()
         .compact()
         .without_time()
-        .with_file(max_level > LevelFilter::DEBUG)
-        .with_line_number(max_level > LevelFilter::DEBUG)
-        .with_target(is_colored() && max_level > LevelFilter::INFO)
+        .with_file(level_enabled!(Level::TRACE))
+        .with_line_number(level_enabled!(Level::TRACE))
+        .with_target(is_colored() && level_enabled!(Level::DEBUG))
         .with_ansi(is_colored())
         .with_writer(|| TICKER.writer())
         .with_filter(if TICKER.is_enabled() {
@@ -173,11 +136,113 @@ fn init_logging(options: Logging) {
     });
 
     tracing_subscriber::registry()
+        // don't globally filter events, or else in case warnings are suppressed,
+        // the preprocessor will no longer exit with failure when running in CI
         .with(EventLevelLayer)
-        .with(filter)
-        .with(logger)
-        .with(ticker)
+        .with(logger.with_filter(ENV_FILTER.filter.clone()))
+        .with(ticker.with_filter(ENV_FILTER.filter.clone()))
         .init();
+}
+
+static ENV_FILTER: LazyLock<EnvFilterStore> = LazyLock::new(|| {
+    let filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::INFO.into())
+        .parse_lossy(MDBOOK_LOG.as_deref().unwrap_or_default());
+    let access = tracing_subscriber::registry().with(filter.clone());
+    EnvFilterStore { access, filter }
+});
+
+struct EnvFilterStore {
+    access: tracing_subscriber::layer::Layered<EnvFilter, tracing_subscriber::Registry>,
+    filter: EnvFilter,
+}
+
+#[doc(hidden)]
+#[inline(always)]
+pub fn level_enabled(level: Option<&tracing::Metadata<'_>>) -> bool {
+    if let Some(metadata) = level {
+        ENV_FILTER.access.enabled(metadata)
+    } else {
+        false
+    }
+}
+
+#[macro_export]
+macro_rules! level_enabled {
+    ( $level:expr ) => {{ $crate::logging::level_enabled(Some($crate::callsite!($level))) }};
+    ( dyn $metadata:expr ) => {{ $crate::logging::level_enabled($metadata) }};
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! callsite {
+    ( $level:expr ) => {{
+        static CALLSITE: ::tracing::callsite::DefaultCallsite =
+            ::tracing::callsite::DefaultCallsite::new(&METADATA);
+        static METADATA: ::tracing::Metadata<'static> = {
+            ::tracing::Metadata::new(
+                "_",
+                module_path!(),
+                $level,
+                Some(file!()),
+                Some(line!()),
+                Some(module_path!()),
+                ::tracing::field::FieldSet::new(&[], ::tracing::callsite::Identifier(&CALLSITE)),
+                ::tracing::metadata::Kind::EVENT,
+            )
+        };
+        &METADATA
+    }};
+}
+
+#[macro_export]
+macro_rules! emit {
+    () => {
+        $crate::logging::EmitCallsite {
+            trace: |args| ::tracing::trace!("{args}"),
+            debug: |args| ::tracing::debug!("{args}"),
+            info: |args| ::tracing::info!("{args}"),
+            warn: |args| ::tracing::warn!("{args}"),
+            error: |args| ::tracing::error!("{args}"),
+            trace_metadata: $crate::callsite!(::tracing::Level::TRACE),
+            debug_metadata: $crate::callsite!(::tracing::Level::DEBUG),
+            info_metadata: $crate::callsite!(::tracing::Level::INFO),
+            warn_metadata: $crate::callsite!(::tracing::Level::WARN),
+            error_metadata: $crate::callsite!(::tracing::Level::ERROR),
+        }
+    };
+}
+
+#[doc(hidden)]
+#[must_use]
+pub struct EmitCallsite {
+    pub trace: fn(std::fmt::Arguments<'_>),
+    pub debug: fn(std::fmt::Arguments<'_>),
+    pub info: fn(std::fmt::Arguments<'_>),
+    pub warn: fn(std::fmt::Arguments<'_>),
+    pub error: fn(std::fmt::Arguments<'_>),
+    pub trace_metadata: &'static tracing::Metadata<'static>,
+    pub debug_metadata: &'static tracing::Metadata<'static>,
+    pub info_metadata: &'static tracing::Metadata<'static>,
+    pub warn_metadata: &'static tracing::Metadata<'static>,
+    pub error_metadata: &'static tracing::Metadata<'static>,
+}
+
+impl EmitCallsite {
+    #[inline(always)]
+    pub fn level_enabled(&self, level: Level) -> bool {
+        if level_enabled(Some(self.trace_metadata)) {
+            level <= Level::TRACE
+        } else if level_enabled(Some(self.debug_metadata)) {
+            level <= Level::DEBUG
+        } else if level_enabled(Some(self.info_metadata)) {
+            level <= Level::INFO
+        } else if level_enabled(Some(self.warn_metadata)) {
+            level <= Level::WARN
+        } else {
+            level <= Level::ERROR
+        }
+    }
 }
 
 macro_rules! derive_event {
@@ -292,22 +357,17 @@ where
         // n.b. using extensions_mut involves a RwLock write, which will cause
         // derive_event to deadlock when it tries to read from the same span
 
-        if let Some(TickerData { key, .. }) = span.extensions().get::<TickerData>() {
-            if let Some(tx) = TICKER.sender() {
-                tx.send(ProgressTick::TickerFinish { key }).ok();
-            } else {
-                derive_event!(id, span.metadata(), "finished");
-            }
+        if let Some(TickerData { key, .. }) = span.extensions().get::<TickerData>()
+            && let Some(tx) = TICKER.sender()
+        {
+            tx.send(ProgressTick::TickerFinish { key }).ok();
         } else if let Some(parent) = span.parent()
             && let Some(TickerData { key, .. }) = parent.extensions().get::<TickerData>()
             && let Some(TickerItem(item)) = span.extensions().get::<TickerItem>()
+            && let Some(tx) = TICKER.sender()
         {
-            if let Some(tx) = TICKER.sender() {
-                let item = item.clone();
-                tx.send(ProgressTick::ItemDone { key, item }).ok();
-            } else {
-                derive_event!(id, span.metadata(), "finished");
-            }
+            let item = item.clone();
+            tx.send(ProgressTick::ItemDone { key, item }).ok();
         }
     }
 
@@ -455,41 +515,15 @@ pub fn styled<D>(val: D) -> StyledObject<D> {
 }
 
 #[macro_export]
-macro_rules! emit_trace {
-    () => {
-        |e| ::tracing::trace!("{:?}", e)
+macro_rules! plural {
+    ( $num:expr, $singular:expr ) => {
+        $crate::plural!($num, $singular, concat!($singular, "s"))
     };
-    ($fmt:expr) => {
-        |e| ::tracing::trace!($fmt, e)
-    };
-}
-
-#[macro_export]
-macro_rules! emit_debug {
-    () => {
-        |e| ::tracing::debug!("{:?}", e)
-    };
-    ($fmt:expr) => {
-        |e| ::tracing::debug!($fmt, e)
-    };
-}
-
-#[macro_export]
-macro_rules! emit_warning {
-    () => {
-        |e| ::tracing::warn!("{:?}", e)
-    };
-    ($fmt:expr) => {
-        |e| ::tracing::warn!($fmt, e)
-    };
-}
-
-#[macro_export]
-macro_rules! emit_error {
-    () => {
-        |e| ::tracing::error!("{:?}", e)
-    };
-    ($fmt:expr) => {
-        |e| ::tracing::error!($fmt, e)
-    };
+    ( $num:expr, $singular:expr, $plural:expr ) => {{
+        let num = $num;
+        match num {
+            1 => format!("{num} {}", $singular),
+            _ => format!("{num} {}", $plural),
+        }
+    }};
 }

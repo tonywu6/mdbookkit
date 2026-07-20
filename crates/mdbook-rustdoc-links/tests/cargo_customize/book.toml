@@ -1,0 +1,14 @@
+[preprocessor.rustdoc-links.build]
+cargo-args = ["-Z", "build-dir-new-layout"]
+packages = "unspecified"
+rustc-args = ["--check-cfg", "cfg(mdbook)", "--cfg", "mdbook"]
+rustdoc-args = ["-Z", "unstable-options", "--document-hidden-items"]
+targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"]
+toolchain = "nightly"
+
+[output.markdown]
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

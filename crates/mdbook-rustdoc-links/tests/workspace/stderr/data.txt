@@ -1,0 +1,17 @@
+warning: unresolved link to `dogs::dachshund`
+ --> index.md:3:5
+  |
+3 | - [`dogs::dachshund`]
+  |     ^^^^^^^^^^^^^^^ no item named `dogs` in scope
+
+warning: unresolved link to `crate::dachshund`
+ --> index.md:4:5
+  |
+4 | - [`crate::dachshund`]
+  |     ^^^^^^^^^^^^^^^^ no item named `dachshund` in module `temporary_crate_0`
+  |
+  = note: in order to resolve links, the preprocessor creates a temporary crate;
+          the following prelude has been implicitly added to the temporary crate:
+          `use cats::*;`
+
+ WARN mdbook-rustdoc-links: finished with warnings

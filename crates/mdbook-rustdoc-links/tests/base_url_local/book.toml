@@ -1,0 +1,21 @@
+[preprocessor.rustdoc-links]
+base-url = "/api"
+unstable-features = true
+
+[[preprocessor.rustdoc-links.build]]
+packages = ["utf8parse"]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[[preprocessor.rustdoc-links.build]]
+packages = ["pin-project-lite"]
+targets = ["aarch64-unknown-linux-gnu"]
+
+[[preprocessor.rustdoc-links.build]]
+packages = [{ workspace = true, dependencies = false }]
+
+[output.markdown]
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

@@ -1,0 +1,8 @@
+[package]
+edition = "2024"
+name = "book_accidental_shortcut_link"
+publish = false
+version = "0.1.0"
+
+[workspace]
+resolver = "3"

@@ -1,0 +1,10 @@
+[preprocessor.rustdoc-links.build]
+features = ["anstyle-parse/utf8"]
+packages = ["anstyle-parse", { workspace = true }]
+
+[output.markdown]
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

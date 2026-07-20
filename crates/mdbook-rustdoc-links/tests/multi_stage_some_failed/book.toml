@@ -1,0 +1,12 @@
+[[preprocessor.rustdoc-links.build]]
+targets = ["aarch64-unknown-linux-gnu"]
+
+[[preprocessor.rustdoc-links.build]]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[output.markdown]
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

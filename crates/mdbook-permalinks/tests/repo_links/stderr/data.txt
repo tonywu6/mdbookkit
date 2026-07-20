@@ -1,0 +1,19 @@
+warning: broken link to "https://git.example.org/tree/HEAD/crates/mdbook-permalinks/tests/repo_links/src/index"
+  --> crates/mdbook-permalinks/tests/repo_links/src/index.md:16:6
+   |
+16 | - [](https://git.example.org/tree/HEAD/crates/mdbook-permalinks/tests/repo_links/src/index)
+   |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |      |
+   |      resolves to a path that doesn't exist:
+   |      "crates/mdbook-permalinks/tests/repo_links/src/index"
+
+warning: broken link to "https://git.example.org/tree/HEAD/LICENSE-GPL.md"
+  --> crates/mdbook-permalinks/tests/repo_links/src/index.md:28:6
+   |
+28 | - [](https://git.example.org/tree/HEAD/LICENSE-GPL.md)
+   |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |      |
+   |      resolves to a path that doesn't exist:
+   |      "LICENSE-GPL.md"
+
+ WARN mdbook-permalinks: finished with warnings

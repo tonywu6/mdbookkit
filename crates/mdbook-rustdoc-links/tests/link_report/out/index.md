@@ -1,0 +1,3 @@
+- [`crate::example_fn`](https://docs.rs/link_report/0.1.0/link_report/fn.example_fn.html "fn link_report::example_fn")
+- [`std::fmt::from_fn`](https://doc.rust-lang.org/[RUST_VERSION]/core/fmt/builders/fn.from_fn.html "fn core::fmt::builders::from_fn")
+- [`std::slice::from_ref`](https://doc.rust-lang.org/[RUST_VERSION]/core/slice/raw/fn.from_ref.html "fn core::slice::raw::from_ref")

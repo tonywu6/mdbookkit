@@ -1,0 +1,9 @@
+[preprocessor.rustdoc-links.build]
+packages = []
+
+[output.markdown]
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

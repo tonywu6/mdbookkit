@@ -1,0 +1,51 @@
+warning: broken link to "/book/static/data.txt"
+ --> crates/mdbook-permalinks/tests/site_url_absolute_paths/src/page.md:1:16
+  |
+1 | - [`data.txt`](/book/static/data.txt)
+  |                ^^^^^^^^^^^^^^^^^^^^^ resolves to a path that doesn't exist
+  |
+note: the following path is available: "/crates/mdbook-permalinks/tests/site_url_absolute_paths/src/static/data.txt"
+help: try using a relative path starting from the current page:
+  |
+1 - - [`data.txt`](/book/static/data.txt)
+1 + - [`data.txt`](static/data.txt)
+  |
+help: ... or use an absolute path starting from the root of your repository:
+  |
+1 - - [`data.txt`](/book/static/data.txt)
+1 + - [`data.txt`](/crates/mdbook-permalinks/tests/site_url_absolute_paths/src/static/data.txt)
+  |
+  = note: `mdbook-permalinks` will convert this path to a format accepted by mdBook
+
+warning: broken link to "/book/static/data.txt?utm_source=docs#L15"
+ --> crates/mdbook-permalinks/tests/site_url_absolute_paths/src/page.md:2:16
+  |
+2 | - [`data.txt`](/book/static/data.txt?utm_source=docs#L15)
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |                |
+  |                resolves to a path that doesn't exist:
+  |                "book/static/data.txt"
+  |
+note: the following path is available: "/crates/mdbook-permalinks/tests/site_url_absolute_paths/src/static/data.txt"
+help: try using a relative path starting from the current page:
+  |
+2 - - [`data.txt`](/book/static/data.txt?utm_source=docs#L15)
+2 + - [`data.txt`](static/data.txt?utm_source=docs#L15)
+  |
+help: ... or use an absolute path starting from the root of your repository:
+  |
+2 - - [`data.txt`](/book/static/data.txt?utm_source=docs#L15)
+2 + - [`data.txt`](/crates/mdbook-permalinks/tests/site_url_absolute_paths/src/static/data.txt?utm_source=docs#L15)
+  |
+  = note: `mdbook-permalinks` will convert this path to a format accepted by mdBook
+
+warning: broken link to "https://git.example.org/tree/HEAD/book/static/data.txt"
+ --> crates/mdbook-permalinks/tests/site_url_absolute_paths/src/page.md:4:16
+  |
+4 | - [`data.txt`](https://git.example.org/tree/HEAD/book/static/data.txt)
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |                |
+  |                resolves to a path that doesn't exist:
+  |                "book/static/data.txt"
+
+ WARN mdbook-permalinks: finished with warnings

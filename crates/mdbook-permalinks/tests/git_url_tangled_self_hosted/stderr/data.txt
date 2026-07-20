@@ -1,0 +1,12 @@
+ WARN mdbook-permalinks: help: it looks like you are using a self-hosted Tangled knot
+ WARN mdbook-permalinks: help: if so, you can set `output.html.git-repository-url` to your repo's "https://tangled.org" URL
+ERROR mdbook-permalinks: could not initialize the preprocessor
+
+Caused by:
+    0: could not obtain the necessary git information to generate permalinks
+    1: unsupported repository URL
+    2: in `output.html.git-repository-url`: "git@knot.example.org:lorem/ipsum"
+    3: unsupported remote "knot.example.org"
+    4: help: use the `repo-url-template` option to define a custom URL scheme
+    5: help: for more info, see https://docs.tonywu.dev/mdbookkit/permalinks/how-to/remote-url
+ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

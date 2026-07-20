@@ -1,1 +1,1 @@
-{{#include ../../../crates/mdbook-permalinks/CHANGELOG.md}}
+{% include "/crates/mdbook-permalinks/CHANGELOG.md" %}

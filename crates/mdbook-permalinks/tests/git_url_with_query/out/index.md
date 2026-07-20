@@ -1,0 +1,3 @@
+- [](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/crates/mdbook-permalinks/tests/git_url_with_query/book.toml?h=[GIT_REVISION])
+- [](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/raw/.editorconfig?h=[GIT_REVISION])
+- [](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/.editorconfig?h=b676ac4)

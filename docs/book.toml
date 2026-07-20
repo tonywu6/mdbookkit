@@ -12,9 +12,10 @@ extra-watch-dirs = [
   "scripts",
   "web",
   "Cargo.toml",
-  "../crates",
-  "../README.md",
+  "../crates/mdbook-rustdoc-links/CHANGELOG.md",
+  "../crates/mdbook-permalinks/CHANGELOG.md",
 ]
+use-default-preprocessors = false
 
 [output.html]
 additional-css = ["web/loader.css"]
@@ -24,39 +25,46 @@ git-repository-icon = "fab-github"
 git-repository-url = "https://github.com/tonywu6/mdbookkit"
 hash-files = true
 preferred-dark-theme = "ayu"
-site-url = "/mdbookkit/"
+site-url = "https://docs.tonywu.dev/mdbookkit/"
 
 [output.html.playground]
 runnable = false
 
 [preprocessor.rustdoc-links]
-after = ["links"]
-cache-dir = "build"
-command = "cargo run --package mdbook-rustdoc-links --all-features"
-manifest-dir = "."
-rust-analyzer = "cargo xtask rust-analyzer analyzer"
+after = ["doc"]
+command = "cargo run --package mdbook-rustdoc-links"
+
+[preprocessor.rustdoc-links.build]
+packages = [
+  "annotate-snippets",
+  "mdbookkit",
+  "serde",
+  "tracing-subscriber",
+  "url",
+]
+preludes = [
+  "std::marker::PhantomData",
+  "mdbookkit::{env, markdown}",
+  "tracing_subscriber::{fmt, EnvFilter, Layer}",
+]
 
 [preprocessor.permalinks]
-after = ["rustdoc-links"]
-always-link = [".rs"]
-book-url = "https://docs.tonywu.dev/mdbookkit/"
-command = "cargo run --package mdbook-permalinks --all-features"
+after = ["doc", "rustdoc-links"]
+command = "cargo run --package mdbook-permalinks"
+dev-mode = true
+unstable-features = true
 
 [preprocessor.app]
 command = "node scripts/preprocessor.ts"
 
 [preprocessor.doc]
-after = ["links"]
 command = "cargo run -- preprocess"
 
 [preprocessor.doc.socials."/"]
-image = "src/media/social.webp"
 title = "mdbookkit"
 
 [preprocessor.doc.socials."/rustdoc-links/"]
-image = "src/rustdoc-links/media/social.webp"
 title = "mdbook-rustdoc-links"
 
 [preprocessor.doc.socials."/permalinks/"]
-image = "src/permalinks/media/social.webp"
 title = "mdbook-permalinks"

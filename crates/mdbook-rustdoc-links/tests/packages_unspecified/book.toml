@@ -1,0 +1,9 @@
+[preprocessor.rustdoc-links.build]
+packages = ["tap", { name = "anstyle-parse", dependencies = true }]
+
+[output.markdown]
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

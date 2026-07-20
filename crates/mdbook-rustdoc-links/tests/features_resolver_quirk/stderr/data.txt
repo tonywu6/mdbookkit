@@ -1,0 +1,15 @@
+ WARN mdbook-rustdoc-links: error while resolving package versions
+
+Caused by:
+    0: --- stderr
+       error: cannot specify features for packages outside of workspace
+    1: command exited with [EXIT_CODE] 101
+    2: [COMMAND_DEBUG] "cargo" "tree" "--features" "anstyle-parse/utf8" "--no-dedupe" "--format" "{p}" "--prefix" "none" "--edges" "normal" "--package" "anstyle-parse" "--depth" "0"
+       
+help: for more info, see https://docs.tonywu.dev/mdbookkit/rustdoc-links/faq#cannot-specify-features-for-packages-outside-of-workspace
+note: the following options have been specified, which may have caused the error:
+    - build.features
+    - build.packages
+
+ERROR mdbook-rustdoc-links: build failed
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

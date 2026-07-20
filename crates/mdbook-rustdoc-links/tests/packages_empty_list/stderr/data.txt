@@ -1,0 +1,12 @@
+ERROR mdbook-rustdoc-links: failed to read preprocessor config from book.toml
+
+Caused by:
+    TOML parse error at line 2, column 12
+      |
+    2 | packages = []
+      |            ^^
+    package list cannot be `[]`
+    help: to run `cargo doc` without specifying any package, use `packages = "unspecified"`
+    this will build docs for all packages and dependencies
+    
+ERROR mdbook_core::utils: The "rustdoc-links" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status

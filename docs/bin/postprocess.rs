@@ -1,7 +1,7 @@
 use std::{
     collections::{HashMap, HashSet},
+    env::current_dir,
     fmt::Write,
-    path::PathBuf,
 };
 
 use anyhow::{Context, Result};
@@ -17,39 +17,44 @@ use tap::{Pipe, Tap};
 use tracing::{debug, error, info, info_span, trace};
 use url::Url;
 
-use mdbookkit::{error::OnWarning, url::UrlFromPath};
+use mdbookkit::{
+    book::BookToml,
+    error::{FailOnWarnings, Show, WithDebugContext},
+    url::{ToUtf8Path, UrlFromPath, UrlUtil},
+};
 
-pub fn run(root_dir: PathBuf) -> Result<()> {
+pub fn run() -> Result<()> {
     let jinja =
         Environment::new().tap_mut(|env| env.add_template("index.html", OPEN_GRAPH).unwrap());
 
-    let root_dir = std::fs::canonicalize(root_dir)?.to_directory_url();
+    let root_dir = current_dir()?.into_utf8_path()?;
 
-    let book_toml_path = root_dir.join("book.toml")?;
-
-    let book_toml = book_toml_path
-        .path()
+    let mut book_toml = root_dir
+        .join("book.toml")
         .pipe(std::fs::read_to_string)?
-        .pipe_deref(toml::from_str::<BookToml>)?;
+        .parse::<BookToml>()?;
 
     debug!("{book_toml:#?}");
 
-    let src_dir = book_toml.book.src.as_deref().unwrap_or("src");
-    let src_dir = root_dir.join(&format!("{src_dir}/"))?;
+    let src_dir = root_dir.join_os(&book_toml.inner().book.src).dir_to_url();
 
-    let out_dir = book_toml.build.build_dir.as_deref().unwrap_or("book");
-    let out_dir = root_dir.join(&format!("{out_dir}/"))?;
+    let out_dir = root_dir
+        .join_os(&book_toml.inner().build.build_dir)
+        .dir_to_url();
 
-    let BookToml {
-        preprocessor:
-            PreprocessorConfig {
-                permalinks: PermalinksConfig { book_url },
-                ..
-            },
-        ..
-    } = book_toml;
+    let root_dir = root_dir.dir_to_url();
 
-    let metadata = (book_toml.preprocessor.doc.socials.0)
+    let site_url = book_toml
+        .html_config::<Url>("site-url")?
+        .context("missing site-url")?;
+
+    let metadata = book_toml
+        .preprocessor::<MetadataConfig>(&["mdbook-doc"])?
+        .unwrap_or_default()
+        .socials
+        .0;
+
+    let metadata = metadata
         .into_iter()
         .map(|(prefix, metadata)| -> Result<(_, PageMetadata)> {
             let image = match metadata.image {
@@ -59,11 +64,11 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
             let image = if let Ok(image) = image.parse::<Url>() {
                 image
             } else {
-                let image = book_toml_path.join(&image)?;
-                let image = src_dir
+                let image = root_dir.join(&image)?;
+                let image = (src_dir.as_base())
                     .make_relative(&image)
-                    .context("Failed to make relative path to image")?;
-                book_url.join(&image)?
+                    .context("failed to make relative path to image")?;
+                (site_url.as_base()).make_absolute(&image)
             };
             let metadata = PageMetadata {
                 title: metadata.title,
@@ -80,47 +85,44 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
     let mut book_links: HashMap<Url, HashSet<Url>> = HashMap::new();
 
     for path in glob(out_dir.join("**/*.html")?.path())? {
-        let file_url = path?.to_file_url();
+        let file_url = path?.to_utf8_path()?.file_to_url();
         let html = std::fs::read_to_string(file_url.path())?;
 
         let _span = info_span!("html").entered();
 
-        info!(%file_url);
+        info!(file = ?file_url.show());
 
         let (og_title, og_description) = {
             let mut title = String::new();
             let mut description = String::new();
 
-            Settings {
-                element_content_handlers: vec![
-                    text!("main > h1:first-of-type", |text| {
-                        title.push_str(text.as_str());
-                        Ok(())
-                    }),
-                    text!("main > p:first-of-type", |text| {
-                        description.push_str(text.as_str());
-                        Ok(())
-                    }),
-                    element!("[id]", |elem| {
-                        if let Some(id) = elem.get_attribute("id") {
-                            let url = file_url.clone().tap_mut(|u| u.set_fragment(Some(&id)));
-                            fragments.insert(url);
-                        }
-                        Ok(())
-                    }),
-                ],
-                ..Default::default()
-            }
-            .pipe(|settings| HtmlRewriter::new(settings, |_: &[u8]| ()))
-            .pipe(|mut wr| wr.write(html.as_bytes()).and(Ok(wr)))?
-            .pipe(|wr| wr.end())?;
+            Settings::new()
+                .append_element_content_handler(text!("main > h1:first-of-type", |text| {
+                    title.push_str(text.as_str());
+                    Ok(())
+                }))
+                .append_element_content_handler(text!("main > p:first-of-type", |text| {
+                    description.push_str(text.as_str());
+                    Ok(())
+                }))
+                .append_element_content_handler(element!("[id]", |elem| {
+                    if let Some(id) = elem.get_attribute("id") {
+                        let url = file_url.clone().tap_mut(|u| u.set_fragment(Some(&id)));
+                        fragments.insert(url);
+                    }
+                    Ok(())
+                }))
+                .pipe(|settings| HtmlRewriter::new(settings, |_: &[u8]| ()))
+                .pipe(|mut wr| wr.write(html.as_bytes()).and(Ok(wr)))?
+                .pipe(|wr| wr.end())?;
 
             (collapse_whitespace(title), collapse_whitespace(description))
         };
 
-        let pathname = out_dir
+        let pathname = (out_dir.as_base())
             .make_relative(&file_url)
-            .context("Failed to get page pathname")?
+            .context("failed to get page pathname")?
+            .encoded_path()
             .replace("index.html", "")
             .replace(".html", "")
             .pipe(|p| format!("/{p}"));
@@ -148,9 +150,9 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
             }
         });
 
-        let og_url = book_url.join(&pathname[1..])?;
+        let og_url = site_url.join(&pathname[1..])?;
 
-        let og_site_name = book_toml.book.title.as_deref();
+        let og_site_name = book_toml.inner().book.title.as_deref();
 
         let ctx = json!({
             "og_title": og_title,
@@ -162,83 +164,93 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
 
         debug!(?ctx);
 
-        let html = RewriteStrSettings {
-            element_content_handlers: vec![
-                element!("title", |elem| {
-                    let title = suffix.iter().fold(og_title.clone(), |mut out, suffix| {
-                        write!(&mut out, " | {suffix}").and(Ok(out)).unwrap()
-                    });
-                    trace!(title);
-                    elem.set_inner_content(&title, ContentType::Text);
-                    Ok(())
-                }),
-                element!(r#"img[src]"#, |elem| {
-                    let src = elem.get_attribute("src").unwrap();
-                    let src = file_url.join(&src)?;
-                    let src = match src.scheme() {
-                        "file" => src,
-                        _ => return Ok(()),
-                    };
-                    let src = match src.to_file_path() {
-                        Ok(path) => path,
-                        Err(()) => return Ok(()),
-                    };
-                    let img = image::open(src)?;
-                    elem.set_attribute("width", &img.width().to_string())?;
-                    elem.set_attribute("height", &img.height().to_string())?;
-                    trace!(?elem);
-                    Ok(())
-                }),
-                element!(r#"img[src^="https://img.shields.io/"]"#, |elem| {
+        let html = RewriteStrSettings::new()
+            .append_element_content_handler(element!("title", |elem| {
+                let title = suffix.iter().fold(og_title.clone(), |mut out, suffix| {
+                    write!(&mut out, " | {suffix}").and(Ok(out)).unwrap()
+                });
+                trace!(title);
+                elem.set_inner_content(&title, ContentType::Text);
+                Ok(())
+            }))
+            .append_element_content_handler(element!(r#"img[src]"#, |elem| {
+                if elem.has_attribute("width") || elem.has_attribute("height") {
+                    return Ok(());
+                }
+                let src = elem.get_attribute("src").unwrap();
+                let src = file_url.join(&src)?;
+                let src = match src.scheme() {
+                    "file" => src,
+                    _ => return Ok(()),
+                };
+                let src = match src.to_file_path() {
+                    Ok(path) => path,
+                    Err(()) => return Ok(()),
+                };
+                match src.extension().map(|e| e.as_encoded_bytes()) {
+                    None => return Ok(()),
+                    Some(b"svg") => return Ok(()),
+                    _ => {}
+                }
+                let img = image::open(&src)
+                    .with_path_debug(&*src)
+                    .context("failed to read image")?;
+                elem.set_attribute("width", &img.width().to_string())?;
+                elem.set_attribute("height", &img.height().to_string())?;
+                trace!(?elem);
+                Ok(())
+            }))
+            .append_element_content_handler(element!(
+                r#"img[src^="https://img.shields.io/"]"#,
+                |elem| {
                     elem.set_attribute("height", "20")?;
                     elem.set_attribute("fetchpriority", "low")?;
                     trace!(?elem);
                     Ok(())
-                }),
-                element!(r#"meta[property^="og:"]"#, |elem| {
-                    elem.remove();
-                    Ok(())
-                }),
-                element!(r#"meta[name="description"]"#, |elem| {
-                    let meta = jinja.get_template("index.html").unwrap().render(&ctx)?;
-                    elem.set_attribute("content", &og_description)?;
-                    elem.before(&meta, ContentType::Html);
-                    Ok(())
-                }),
-                element!(r#"h1.menu-title"#, |elem| {
-                    if let Some(suffix) = suffix.iter().nth_back(1) {
-                        elem.set_inner_content(suffix, ContentType::Text);
-                    }
-                    Ok(())
-                }),
-                element!(r#"a"#, |elem| {
-                    let Some(href) = elem
-                        .get_attribute("href")
-                        .and_then(|href| file_url.join(&href).ok())
-                    else {
-                        return Ok(());
-                    };
-                    if href.scheme() == "file" {
-                        if href.fragment().is_some() {
-                            if let Some(set) = book_links.get_mut(&file_url) {
-                                set.insert(href);
-                            } else {
-                                let mut set = HashSet::default();
-                                set.insert(href);
-                                book_links.insert(file_url.clone(), set);
-                            }
+                }
+            ))
+            .append_element_content_handler(element!(r#"meta[property^="og:"]"#, |elem| {
+                elem.remove();
+                Ok(())
+            }))
+            .append_element_content_handler(element!(r#"meta[name="description"]"#, |elem| {
+                let meta = jinja.get_template("index.html").unwrap().render(&ctx)?;
+                elem.set_attribute("content", &og_description)?;
+                elem.before(&meta, ContentType::Html);
+                Ok(())
+            }))
+            .append_element_content_handler(element!(r#"h1.menu-title"#, |elem| {
+                if let Some(suffix) = suffix.iter().nth_back(1) {
+                    elem.set_inner_content(suffix, ContentType::Text);
+                }
+                Ok(())
+            }))
+            .append_element_content_handler(element!(r#"a"#, |elem| {
+                let Some(href) = elem
+                    .get_attribute("href")
+                    .and_then(|href| file_url.join(&href).ok())
+                else {
+                    return Ok(());
+                };
+                if href.scheme() == "file" {
+                    if href.fragment().is_some() {
+                        if let Some(set) = book_links.get_mut(&file_url) {
+                            set.insert(href);
+                        } else {
+                            let mut set = HashSet::default();
+                            set.insert(href);
+                            book_links.insert(file_url.clone(), set);
                         }
-                    } else if href.origin() != book_url.origin() {
-                        elem.set_attribute("target", "_blank").unwrap();
-                        elem.set_attribute("rel", "noreferrer").unwrap();
                     }
-                    trace!(?elem);
-                    Ok(())
-                }),
-            ],
-            ..Default::default()
-        }
-        .pipe(|settings| rewrite_str(&html, settings))?;
+                } else if href.origin() != site_url.origin() {
+                    elem.set_attribute("target", "_blank").unwrap();
+                    elem.set_attribute("rel", "noreferrer").unwrap();
+                }
+                trace!(?elem);
+                Ok(())
+            }))
+            .pipe(|settings| rewrite_str(&html, settings))
+            .map_err(anyhow::Error::from)?;
 
         std::fs::write(file_url.path(), html)?;
     }
@@ -250,67 +262,30 @@ pub fn run(root_dir: PathBuf) -> Result<()> {
             {
                 let id = format!("#{id}");
                 link.set_fragment(None);
-                let src = out_dir
-                    .make_relative(&file_url)
-                    .unwrap()
+                let src = (out_dir.as_base())
+                    .show_path(&file_url)
+                    .to_string()
                     .replace(".html", ".md");
-                let dst = out_dir
-                    .make_relative(&link)
-                    .unwrap()
+                let dst = (out_dir.as_base())
+                    .show_path(&file_url)
+                    .to_string()
                     .replace(".html", ".md");
-                error!("{src} references non-existent {id:?} in {dst}");
+                error!("{src:?} references non-existent {id:?} in {dst:?}");
             }
         }
     }
 
-    OnWarning::FailInCi.check()
+    FailOnWarnings::InPipelines.check()
 }
 
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-struct BookToml {
-    book: BookConfig,
-    build: BuildConfig,
-    preprocessor: PreprocessorConfig,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-struct BookConfig {
-    #[serde(default)]
-    title: Option<String>,
-    #[serde(default)]
-    src: Option<String>,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-struct BuildConfig {
-    #[serde(default)]
-    build_dir: Option<String>,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-struct PreprocessorConfig {
-    permalinks: PermalinksConfig,
-    doc: MetadataConfig,
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-struct PermalinksConfig {
-    book_url: Url,
-}
-
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case")]
 struct MetadataConfig {
     #[serde(default)]
     socials: Socials,
 }
 
-#[derive(Deserialize, Default, Debug)]
+#[derive(Deserialize, Debug, Default)]
 struct Socials(HashMap<String, PageMetadata>);
 
 #[derive(Deserialize, Debug)]
@@ -321,16 +296,20 @@ struct PageMetadata {
 }
 
 static OPEN_GRAPH: &str = r##"
+    {% if og_image %}
+    <meta name="twitter:card"           content="summary_large_image">
+    <meta name="twitter:image"          content="{{ og_image }}">
+    <meta name="twitter:image:alt"      content="toolkit for mdBook">
+    <meta property="og:image"           content="{{ og_image }}">
+    {% else %}
+    <meta name="twitter:card"           content="summary">
+    {% endif %}
     <meta property="og:type"            content="article">
     <meta property="og:title"           content="{{ og_title }}">
     <meta property="og:url"             content="{{ og_url }}">
-    <meta property="og:image"           content="{{ og_image }}">
     <meta property="og:description"     content="{{ og_description }}">
     <meta property="og:site_name"       content="{{ og_site_name }}">
-    <meta name="twitter:card"           content="summary_large_image">
     <meta name="twitter:title"          content="{{ og_title }}">
-    <meta name="twitter:image"          content="{{ og_image }}">
-    <meta name="twitter:image:alt"      content="toolkit for mdBook">
     <meta name="twitter:description"    content="{{ og_description }}">
     <meta name="theme-color"            content="#d2a6ff">
 "##;

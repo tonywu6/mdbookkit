@@ -1,0 +1,4 @@
+- [`Result`](https://doc.rust-lang.org/[RUST_VERSION]/std/io/error/type.Result.html "type std::io::error::Result")
+- [`std::result::Result`](https://doc.rust-lang.org/[RUST_VERSION]/core/result/enum.Result.html "enum core::result::Result")
+- [`fun`]
+- [`crate::fun`]

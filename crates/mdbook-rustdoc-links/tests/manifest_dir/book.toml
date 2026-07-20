@@ -1,0 +1,9 @@
+[preprocessor.rustdoc-links]
+manifest-dir = "rust"
+
+[output.markdown]
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

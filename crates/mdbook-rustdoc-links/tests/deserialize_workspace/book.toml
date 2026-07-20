@@ -1,0 +1,16 @@
+[preprocessor.rustdoc-links.build]
+packages = [
+  { workspace = "none" },
+  { workspace = true },
+  { workspace = false },
+  { workspace = "default" },
+  { workspace = "all" },
+  { workspace = "crates/*" },
+]
+
+[output.markdown]
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = true

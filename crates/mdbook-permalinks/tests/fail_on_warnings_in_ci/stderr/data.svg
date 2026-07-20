@@ -1,0 +1,36 @@
+<svg width="1583px" height="128px" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .fg { fill: #B2B2B2 }
+    .bg { fill: #1A1A1A }
+    .fg-red { fill: #E06C75 }
+    .fg-yellow { fill: #D19A66 }
+    .container {
+      padding: 0 10px;
+      line-height: 18px;
+    }
+    .bold { font-weight: bold; }
+    tspan {
+      font: 14px Menlo, Roboto Mono, Ubuntu Mono, Liberation Mono, Consolas, ui-monospace, monospace;
+      white-space: pre;
+      line-height: 18px;
+    }
+  </style>
+
+  <rect width="100%" height="100%" y="0"  class="bg" />
+
+  <text xml:space="preserve" class="container fg">
+    <tspan x="10px" y="28px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: crates/mdbook-permalinks/tests/fail_on_warnings_in_ci/src/continuous-integration.md:1:5: broken link to "../static/cover.png"</tspan>
+</tspan>
+    <tspan x="10px" y="46px"><tspan>  crates/mdbook-permalinks/tests/fail_on_warnings_in_ci/src/continuous-integration.md:1:5: resolves to a path that doesn't exist:</tspan>
+</tspan>
+    <tspan x="10px" y="64px"><tspan>  crates/mdbook-permalinks/tests/fail_on_warnings_in_ci/src/continuous-integration.md:1:5: "crates/mdbook-permalinks/tests/fail_on_warnings_in_ci/static/cover.png"</tspan>
+</tspan>
+    <tspan x="10px" y="82px"><tspan class="fg-yellow"> WARN</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: crates/mdbook-permalinks/tests/fail_on_warnings_in_ci/src/continuous-integration.md:3:61: broken link to "/LICENSE-GPL.md": resolves to a path that doesn't exist</tspan>
+</tspan>
+    <tspan x="10px" y="100px"><tspan class="fg-red">ERROR</tspan><tspan> </tspan><tspan class="bold">mdbook-permalinks</tspan><tspan>: treating warnings as errors because CI=1 (option `fail-on-warnings` set to "ci" by default)</tspan>
+</tspan>
+    <tspan x="10px" y="118px"><tspan>ERROR mdbook_core::utils: The "permalinks" preprocessor exited unsuccessfully with [EXIT_CODE] 1 status</tspan>
+</tspan>
+  </text>
+
+</svg>

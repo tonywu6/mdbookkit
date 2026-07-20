@@ -1,7 +1,15 @@
-fmt: fmt-cargo fmt-prettier
+import "scripts/variables.just"
 
-fmt-cargo:
-    -cargo fmt
+mod check "scripts/check.justfile"
+mod docs
 
-fmt-prettier:
-    -pnpm exec prettier --write .
+default:
+    just --list
+
+[positional-arguments]
+test *args:
+    cargo bin -- nextest run $@
+
+[positional-arguments]
+cov *args:
+    cargo bin -- llvm-cov nextest --html $@

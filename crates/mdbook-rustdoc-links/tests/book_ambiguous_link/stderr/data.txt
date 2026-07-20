@@ -1,0 +1,16 @@
+warning: `std::vec` is both a module and a macro
+  ╭▸ rustdoc-links/writing-links.md:1:5
+  │
+1 │ > [`std::vec`] can be either a module or a macro.
+  │     ━━━━━━━━ ambiguous link
+  ╰╴
+help: to link to the module, prefix with `mod@`
+  ╭╴
+1 │ > [`mod@std::vec`] can be either a module or a macro.
+  ╰╴    ++++
+help: to link to the macro, add an exclamation mark
+  ╭╴
+1 │ > [`std::vec!`] can be either a module or a macro.
+  ╰╴            +
+
+ WARN mdbook-rustdoc-links: finished with warnings
