@@ -23,7 +23,7 @@ lol_html = "3.0.0"
 mdbook-markdown = { version = "0.5.4" }
 mdbook-preprocessor = { version = "0.5.4" }
 mdbookkit = { path = "crates/mdbookkit", version = "3" }
-mdbookkit-testing = { path = "crates/mdbookkit-testing", version = "0.1" }
+mdbookkit-testing = { path = "crates/mdbookkit-testing" }
 minijinja = "2.21.0"
 percent-encoding = "2.3.2"
 pulldown-cmark-to-cmark = "22.0.0"
