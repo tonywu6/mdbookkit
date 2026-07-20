@@ -565,22 +565,30 @@ impl Resolver<'_> {
                 RepoLink { .. } => unreachable!(),
             };
 
-            let href = (self.page_url.as_base())
-                .make_relative(&file)
-                .expect("both should be file urls");
-
             if self.env.options.qualify_book_links.0
                 && let Some(base) = self.env.site_url.as_http_url()
             {
-                let mut href = base.as_base().make_absolute(&href);
-                href.replace_suffix(".md", ".html");
+                let href = (self.env.book.base_dir.as_file_url().as_base())
+                    .make_relative(&file)
+                    .expect("both should be file urls");
+
+                let href = (base.as_base())
+                    .make_absolute(&href)
+                    .tap_mut(|href| href.replace_suffix(".md", ""));
+
                 link.permalink(href.into());
-            } else if href != link.href() {
-                trace!("rewriting to book link: {:?}", href.show_path());
-                link.book_link(href);
             } else {
-                trace!("keeping the link as-is");
-                link.no_change();
+                let href = (self.page_url.as_base())
+                    .make_relative(&file)
+                    .expect("both should be file urls");
+
+                if href != link.href() {
+                    trace!("rewriting to book link: {:?}", href.show_path());
+                    link.book_link(href);
+                } else {
+                    trace!("keeping the link as-is");
+                    link.no_change();
+                }
             }
         }
     }
