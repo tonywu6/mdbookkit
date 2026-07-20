@@ -116,7 +116,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           dry-run: ${{ !(github.event_name == 'release' || inputs.tag) }}
           ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.ref }}
-        if: ${{ github.event_name != 'release' || steps.bins.outputs.mdbook-rustdoc-links }}
+        if: ${{ steps.bins.outputs.mdbook-rustdoc-links }}
 
       - name: Build mdbook-permalinks
         uses: taiki-e/upload-rust-binary-action@v1
@@ -130,7 +130,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           dry-run: ${{ !(github.event_name == 'release' || inputs.tag) }}
           ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.ref }}
-        if: ${{ github.event_name != 'release' || steps.bins.outputs.mdbook-permalinks }}
+        if: ${{ steps.bins.outputs.mdbook-permalinks }}
 
       - uses: actions/upload-artifact@v7
         with:
