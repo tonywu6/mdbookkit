@@ -470,9 +470,10 @@ where
             if !deserialized.is_empty() {
                 Ok(Some(deserialized))
             } else {
-                let err = format! { "package list cannot be `[]`\nhelp: to run `cargo doc` \
+                #[rustfmt::skip]
+                let err = format!("package list cannot be `[]`\nhelp: to run `cargo doc` \
                 without specifying any package, use `packages = {UNSPECIFIED:?}`\n\
-                this will build docs for all packages and dependencies" };
+                this will build docs for all packages and dependencies");
                 Err(serde::de::Error::custom(err))
             }
         }

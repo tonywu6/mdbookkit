@@ -1071,15 +1071,15 @@ impl Display for Statistics {
             has_warnings,
         } = self;
         let processed = resolved + unresolved;
-        write! { f,
-            "processed {processed}: {resolved} resolved",
-            processed = plural!(processed, "link"),
-        }?;
+        #[rustfmt::skip]
+        write! ( f, "processed {processed}: {resolved} resolved",
+            processed = plural!(processed, "link") )?;
         if *unresolved > 0 {
             write!(f, "; {unresolved} unresolved")?
         }
         if *has_warnings > 0 {
-            write! { f, "; {}",plural!(has_warnings, "has warnings", "have warnings") }?
+            #[rustfmt::skip]
+            write!(f, "; {}", plural!(has_warnings, "has warnings", "have warnings"))?;
         }
         Ok(())
     }

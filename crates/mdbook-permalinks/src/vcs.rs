@@ -494,9 +494,10 @@ fn derive_pattern(url: &gix_url::Url) -> Result<Url> {
     }
 
     if is_on_domain("github.com", host) {
+        #[rustfmt::skip]
         let malformed = || {
-            format! { "malformed path {path:?}: expected URL for {host:?} \
-            to begin with `/<owner>/<repo>`" }
+            format!("malformed path {path:?}: expected URL for {host:?} \
+            to begin with `/<owner>/<repo>`")
         };
 
         let mut iter = path.split('/').skip_while(|c| c.is_empty());
@@ -508,9 +509,10 @@ fn derive_pattern(url: &gix_url::Url) -> Result<Url> {
     }
 
     if is_on_domain("codeberg.org", host) {
+        #[rustfmt::skip]
         let malformed = || {
-            format! { "malformed path {path:?}: expected URL for {host:?} \
-            to begin with `/<owner>/<repo>`" }
+            format!("malformed path {path:?}: expected URL for {host:?} \
+            to begin with `/<owner>/<repo>`")
         };
 
         let mut iter = path.split('/').skip_while(|c| c.is_empty());
@@ -522,9 +524,10 @@ fn derive_pattern(url: &gix_url::Url) -> Result<Url> {
     }
 
     if is_on_domain("tangled.org", host) {
+        #[rustfmt::skip]
         let malformed = || {
-            format! { "malformed path {path:?}: expected URL for {host:?} \
-            to begin with `/<owner>/<repo>` or `/<did>`" }
+            format!("malformed path {path:?}: expected URL for {host:?} \
+            to begin with `/<owner>/<repo>` or `/<did>`")
         };
 
         let mut iter = path.split('/').skip_while(|c| c.is_empty());

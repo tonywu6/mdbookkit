@@ -133,10 +133,10 @@ pub fn link_issue<'a, 'r>(
                     Ok(())
                 });
 
-                notes.extend([Note::note(format! {
+                notes.extend([Note::note(format!(
                     "for this link to be accessible, expected any of the \
                     following files, but found none:{expected}"
-                })]);
+                ))]);
             }
 
             DirectoryHasNoIndexFile => {
@@ -231,9 +231,9 @@ pub fn link_issue<'a, 'r>(
                 GitIgnored => {
                     "resolves to a path that is gitignored".into()
                 },
-                Inaccessible(e) => { format! {
+                Inaccessible(e) => { format!(
                     "resolves to a path that cannot be accessed: I/O error: {e}"
-                }.into() }
+                ).into() }
                 NotInRepo => {
                     "resolves to a path that is outside of the repository".into()
                 },
@@ -271,10 +271,10 @@ pub fn link_issue<'a, 'r>(
             let from_repo = from_repo.clone().into_decoded();
             let from_page = from_page.clone().into_decoded();
 
-            let note = format! {
+            let note = format!(
                 "the following path is available: {:?}",
                 from_repo.show_path()
-            };
+            );
             let note = IssueReport::level(IssueLevel::Note).title(note).build();
 
             let help1 = send_patch(
