@@ -190,7 +190,8 @@ fn rustdoc_parity() -> Result<()> {
     book.cargo("clean", book.path.book_dir()).assert().success();
     book.cargo("doc", book.path.book_dir()).assert().success();
 
-    let base = format! { "https://docs.rs/{}/0.1.0/{}/", book.path.name, book.path.name }
+    #[rustfmt::skip]
+    let base = format!("https://docs.rs/{}/0.1.0/{}/", book.path.name, book.path.name)
         .parse::<Url>()?;
 
     let mut upstream = String::new();

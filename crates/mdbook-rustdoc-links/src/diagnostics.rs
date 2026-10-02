@@ -122,10 +122,10 @@ impl DiagnosticNotes {
         }
         self.visited.options_specified = true;
         let options = self.print_specified_options("")?;
-        let note = format! {
+        let note = format!(
             "the following options have been specified, which \
             may have affected link resolution:\n{options}",
-        };
+        );
         Some(note)
     }
 
@@ -152,10 +152,10 @@ impl DiagnosticNotes {
             .map(|module| format!("use {module};"))
             .collect::<Vec<_>>()
             .join("\n");
-        let note = format! {
+        let note = format!(
             "in order to resolve links, the preprocessor creates a temporary crate;\n\
             the following prelude has been implicitly added to the temporary crate:\n`{preludes}`"
-        };
+        );
         Some(note)
     }
 
@@ -165,10 +165,10 @@ impl DiagnosticNotes {
         }
         self.visited.preludes_not_derived = true;
         let reason = self.preludes_not_derived?;
-        let note = format! {
+        let note = format!(
             "in order to resolve links, the preprocessor creates a temporary crate;\n\
             a prelude was not implicitly added to the temporary crate because:\n{reason}"
-        };
+        );
         Some(note)
     }
 

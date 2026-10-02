@@ -294,8 +294,9 @@ where
     vars.into_iter().map(|(key, default)| {
         let key = key.as_ref();
         let val = if let Some(overridden) = std::env::var_os(format!("TESTING_{key}")) {
-            eprintln! { "--- overriding env var {key:?} = {:?} (over {:?})",
-            &*overridden.to_string_lossy(), default.as_ref().display() };
+            #[rustfmt::skip]
+            eprintln!("--- overriding env var {key:?} = {:?} (over {:?})",
+            &*overridden.to_string_lossy(), default.as_ref().display());
             overridden
         } else {
             default.as_ref().to_owned()

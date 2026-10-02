@@ -4,15 +4,15 @@
   "devDependencies": {
     "@std/encoding": "jsr:^1.0.11",
     "@std/path": "jsr:^1.1.6",
-    "@types/node": "^26.4.0",
+    "@types/node": "^26.6.3",
     "esbuild": "^0.28.2",
     "mermaid": "^11.17.2",
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.9",
     "stylelint": "^16.26.1",
     "stylelint-config-recess-order": "^6.1.0",
     "stylelint-config-standard": "^38.0.0",
     "typescript": "^5.9.3",
-    "wrangler": "^4.128.0"
+    "wrangler": "^4.145.0"
   },
   "type": "module",
   "engines": {
